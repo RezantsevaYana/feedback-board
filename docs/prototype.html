@@ -204,6 +204,17 @@ select.input { width: auto; padding: 6px 10px; }
 .prio-tag[data-p="high"], .prio-tag[data-p="critical"] { color: var(--bug); background: color-mix(in srgb, var(--bug) 12%, transparent); }
 .col-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 16px 4px; }
 
+/* ---------- feature ranking ---------- */
+.rank { display: grid; gap: 8px; max-width: 860px; }
+.rank-row { display: grid; grid-template-columns: 44px 1fr 56px; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.rank-row:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.rank-n { font-family: var(--font-display); font-weight: 600; font-size: 20px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.rank-row.top .rank-n { color: var(--accent); }
+.rank-row .card-body { gap: 6px; }
+.rank-row h3 { font-size: 16px; font-weight: 600; }
+.rank-note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+@media (max-width: 480px) { .rank-row { grid-template-columns: 30px 1fr 48px; gap: 10px; } .rank-n { font-size: 16px; } }
+
 /* ---------- screen 3: admin ---------- */
 .login { max-width: 380px; margin: 40px auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 14px; }
 .login h2 { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
@@ -225,9 +236,19 @@ td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
 .prio { font-size: 12px; }
 
-.drawer-bg { position: fixed; inset: 0; z-index: 20; background: var(--overlay); display: flex; justify-content: flex-end; }
-.drawer { width: min(520px, 100%); height: 100%; background: var(--surface); overflow-y: auto; padding: 20px max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) 20px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); display: grid; gap: 14px; align-content: start; }
+/* modal: card details on the board and in the admin */
+.modal-bg { position: fixed; inset: 0; z-index: 20; background: var(--overlay); display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.modal { width: min(680px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: clamp(18px, 3vw, 28px); display: grid; gap: 14px; align-content: start; }
+.modal.post { max-width: none; border: 0; }
 .drawer-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+body.locked { overflow: hidden; }
+@media (max-width: 480px) {
+  .modal-bg { padding: 0; }
+  .modal { width: 100%; height: 100%; max-height: none; border-radius: 0; padding-top: calc(18px + env(safe-area-inset-top, 0px)); padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .modal { animation: rise .16s ease-out; }
+}
 .mono { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; border-radius: 8px; background: color-mix(in srgb, var(--bug) 10%, transparent); }
@@ -281,8 +302,8 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
   const TYPE = { bug: 'Баг', feature: 'Фича' };
   const HINTS = {
     host: '<b>Так виджет выглядит на чужом сайте.</b> Нажмите «Обратная связь» в правом нижнем углу и отправьте баг или фичу. Скриншот можно перетащить, выбрать файлом или вставить через Ctrl+V. Вкладка «Мои» показывает статусы ваших предложений.',
-    board: '<b>Публичная доска проекта Kooly.</b> Колонки — это статусы, сразу видно, что в работе и что готово. Голосуйте 👍 (один голос с браузера, повторный клик отменяет), открывайте карточки. Отклонённые на доске не показываются, но открываются по прямой ссылке из «Моих». Можно переключиться на вид «Список».',
-    admin: '<b>Админка.</b> Пароль заполнен, просто нажмите «Войти». Перетаскивайте карточки между колонками, чтобы сменить статус: изменение сразу видно на доске и в «Моих» виджета. Клик по карточке открывает её. Есть и вид «Таблица».'
+    board: '<b>Публичная доска проекта Kooly.</b> Колонки — это статусы, сразу видно, что в работе и что готово. Голосуйте 👍 (один голос с браузера, повторный клик отменяет). Клик по карточке открывает подробности в модальном окне. Отклонённые на доске не показываются, но открываются по прямой ссылке из «Моих». Можно переключиться на вид «Список» или «Топ фич», где идеи ранжированы по голосам.',
+    admin: '<b>Админка.</b> Пароль заполнен, просто нажмите «Войти». Перетаскивайте карточки между колонками, чтобы сменить статус: изменение сразу видно на доске и в «Моих» виджета. Клик по карточке открывает модальное окно для редактирования. Есть и вид «Таблица».'
   };
 
   // ---------- placeholder screenshots ----------
@@ -334,7 +355,7 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
   const ui = {
     view: 'host',
     widget: { open: false, tab: 'send', type: '', title: '', description: '', files: [], errors: {}, sentId: null },
-    board: { view: 'kanban', type: 'all', status: 'active', sort: 'top', postId: null },
+    board: { view: 'kanban', topScope: 'open', type: 'all', status: 'active', sort: 'top', postId: null },
     admin: { view: 'kanban', logged: false, type: 'all', status: 'all', priority: 'all', showHidden: true, sort: 'new', drawer: null, confirmDelete: false }
   };
   try { const v = localStorage.getItem(KEY + '-view'); if (v && HINTS[v]) ui.view = v; } catch (e) {}
@@ -543,17 +564,50 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
       </div>
     </article>`;
 
+  function renderTop(chip) {
+    const b = ui.board;
+    const list = db.posts
+      .filter(p => p.type === 'feature' && !p.hidden && p.status !== 'rejected' && (b.topScope === 'all' || p.status !== 'done'))
+      .sort((x, y) => y.votes - x.votes || x.created - y.created);
+    let rank = 0;
+    const rows = list.map((p, i) => {
+      if (i === 0 || p.votes !== list[i - 1].votes) rank = i + 1;  // равные голоса — одно место
+      return `
+        <article class="rank-row ${rank <= 3 && p.votes > 0 ? 'top' : ''}">
+          <span class="rank-n" aria-label="Место ${rank}">${rank}</span>
+          <div class="card-body" data-action="open-post" data-id="${p.id}" role="link" tabindex="0">
+            <h3>${esc(p.title)}</h3>
+            <div class="meta">${pill(p.status)}<span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span></div>
+          </div>
+          ${voteBtn(p)}
+        </article>`;
+    }).join('');
+    return `
+      <div class="filters">
+        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}${chip('view', 'top', 'Топ фич')}</div>
+        <span class="spacer"></span>
+        <div class="chips">${chip('topScope', 'open', 'Ещё не сделаны')}${chip('topScope', 'all', 'Все, включая готовые')}</div>
+      </div>
+      <p class="rank-note">Фичи по числу голосов. Голосуйте за то, что нужно вам, чтобы команда видела, что делать в первую очередь.</p>
+      <div class="rank">${rows || '<div class="empty">Пока нет фич для рейтинга.</div>'}</div>`;
+  }
+
   function renderBoard() {
-    if (ui.board.postId) return renderPost(ui.board.postId);
     const b = ui.board, list = boardPosts();
     const chip = (key, val, label) => `<button data-action="b-filter" data-key="${key}" data-val="${val}" aria-pressed="${b[key] === val}">${label}</button>`;
+    if (b.view === 'top') return `
+      <div class="board-head">
+        <div><h1>Kooly · топ фич</h1><p>Самые востребованные идеи пользователей.</p></div>
+        <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
+      </div>
+      ${renderTop(chip)}`;
     if (b.view === 'kanban') return `
       <div class="board-head">
         <div><h1>Kooly · предложения</h1><p>Баги и идеи от пользователей. Голосуйте за то, что нужно вам.</p></div>
         <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
       </div>
       <div class="filters">
-        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}</div>
+        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}${chip('view', 'top', 'Топ фич')}</div>
         <div class="chips">${chip('type', 'all', 'Все')}${chip('type', 'bug', 'Баги')}${chip('type', 'feature', 'Фичи')}</div>
         <span class="spacer"></span>
         <div class="chips">${chip('sort', 'top', 'Популярные')}${chip('sort', 'new', 'Новые')}</div>
@@ -565,7 +619,7 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
         <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
       </div>
       <div class="filters">
-        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}</div>
+        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}${chip('view', 'top', 'Топ фич')}</div>
         <div class="chips">${chip('type', 'all', 'Все')}${chip('type', 'bug', 'Баги')}${chip('type', 'feature', 'Фичи')}</div>
         <select class="input" id="b-status" data-action="b-status" aria-label="Статус">
           <option value="active">Все статусы</option>
@@ -589,20 +643,24 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
       </div>`;
   }
 
-  function renderPost(id) {
-    const p = byId(id);
-    const back = `<button class="back" data-action="go-board">← Все предложения</button>`;
-    if (!p || p.hidden) return `${back}<div class="post"><h1>Предложение не найдено</h1><p class="desc">Возможно, его удалили или скрыли.</p></div>`;
-    return `${back}
-      <article class="post">
-        <div class="row">${typeTag(p.type)}${pill(p.status)}</div>
+  function renderPostModal() {
+    const p = byId(ui.board.postId);
+    const close = `<button type="button" class="icon-btn" data-action="b-close" aria-label="Закрыть">✕</button>`;
+    const inner = !p || p.hidden
+      ? `<div class="drawer-top"><h1>Предложение не найдено</h1>${close}</div><p class="desc">Возможно, его удалили или скрыли.</p>`
+      : renderPost(p, close);
+    $('#layer').innerHTML = `<div class="modal-bg" data-action="b-close"><article class="modal post" role="dialog" aria-modal="true" aria-label="Предложение">${inner}</article></div>`;
+  }
+
+  function renderPost(p, close) {
+    return `
+        <div class="drawer-top"><span class="row">${typeTag(p.type)}${pill(p.status)}</span>${close}</div>
         <h1>${esc(p.title)}</h1>
         <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>Создано ${fmt(p.created)}</span><span>Статус изменён ${fmt(p.statusChanged)}</span><span class="mono">#${p.id}</span></div>
         <p class="desc">${esc(p.description)}</p>
         ${p.images.length ? `<div class="shots">${p.images.map(src => `<button data-action="zoom" data-src="${esc(src)}" aria-label="Открыть скриншот"><img src="${src}" alt="Скриншот"></button>`).join('')}</div>` : ''}
         ${p.comment ? `<div class="answer"><b>Ответ команды</b><p>${esc(p.comment)}</p></div>` : ''}
-        <div class="row">${voteBtn(p)}<span class="note">${p.votes} ${plural(p.votes, 'голос', 'голоса', 'голосов')}</span></div>
-      </article>`;
+        <div class="row">${voteBtn(p)}<span class="note">${p.votes} ${plural(p.votes, 'голос', 'голоса', 'голосов')}</span></div>`;
   }
   const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c; };
 
@@ -673,8 +731,8 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
     if (!p) { $('#layer').innerHTML = ''; return; }
     const opt = (cur, map) => Object.entries(map).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${v}</option>`).join('');
     $('#layer').innerHTML = `
-      <div class="drawer-bg" data-action="a-close">
-        <form class="drawer" id="drawer-form" role="dialog" aria-label="Карточка предложения">
+      <div class="modal-bg" data-action="a-close">
+        <form class="modal" id="drawer-form" role="dialog" aria-modal="true" aria-label="Карточка предложения">
           <div class="drawer-top"><span class="row">${typeTag(p.type)}<span class="mono">#${p.id} · ${fmt(p.created)} · ${esc(p.author || 'Аноним')} · 👍 ${p.votes}</span></span><button type="button" class="icon-btn" data-action="a-close" aria-label="Закрыть">✕</button></div>
           <label class="field"><span>Заголовок</span><input class="input" id="d-title" value="${esc(p.title)}" maxlength="120"></label>
           <label class="field"><span>Описание</span><textarea class="input" id="d-desc" rows="6" maxlength="5000">${esc(p.description)}</textarea></label>
@@ -701,8 +759,15 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
     $('#hint').innerHTML = HINTS[ui.view];
     const scr = $('#screen');
     scr.innerHTML = ui.view === 'host' ? renderHost() : ui.view === 'board' ? renderBoard() : renderAdmin();
+    renderLayer();
+  }
+
+  // modal layer above the screen: admin card, board card, or nothing
+  function renderLayer() {
     if (ui.view === 'admin' && ui.admin.drawer) renderDrawer();
-    else if (!$('#layer .lightbox')) $('#layer').innerHTML = '';
+    else if (ui.view === 'board' && ui.board.postId) renderPostModal();
+    else $('#layer').innerHTML = '';
+    document.body.classList.toggle('locked', !!$('#layer').innerHTML);
   }
 
   // ---------- events ----------
@@ -719,7 +784,10 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
       case 'w-again': Object.assign(w, { sentId: null, type: '', title: '', description: '', files: [], errors: {} }); render(); break;
       case 'go-board': go('board'); break;
       case 'go-host': ui.widget.open = true; ui.widget.tab = 'send'; go('host'); break;
-      case 'open-post': go('board', { postId: id }); break;
+      case 'open-post':
+        if (ui.view === 'board') { ui.board.postId = id; renderLayer(); }
+        else go('board', { postId: id });
+        break;
       case 'b-filter': ui.board[el.dataset.key] = el.dataset.val; render(); break;
       case 'vote': {
         const p = byId(id); if (!p) break;
@@ -727,11 +795,12 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
         save(); render(); break;
       }
       case 'zoom': e.stopPropagation(); lightbox(el.dataset.src); break;
-      case 'close-lightbox': $('#layer').innerHTML = ''; if (ui.view === 'admin' && ui.admin.drawer) renderDrawer(); break;
+      case 'close-lightbox': renderLayer(); break;
+      case 'b-close': if (e.target === el || el.tagName === 'BUTTON') { ui.board.postId = null; renderLayer(); } break;
       case 'logout': ui.admin.logged = false; render(); break;
       case 'a-view': ui.admin.view = el.dataset.val; render(); break;
-      case 'a-open': ui.admin.drawer = id; ui.admin.confirmDelete = false; renderDrawer(); break;
-      case 'a-close': if (e.target === el || el.tagName === 'BUTTON') { ui.admin.drawer = null; renderDrawer(); } break;
+      case 'a-open': ui.admin.drawer = id; ui.admin.confirmDelete = false; renderLayer(); break;
+      case 'a-close': if (e.target === el || el.tagName === 'BUTTON') { ui.admin.drawer = null; renderLayer(); } break;
       case 'a-hide': { const p = byId(ui.admin.drawer); p.hidden = !p.hidden; save(); render(); toast(p.hidden ? 'Скрыто с доски' : 'Снова на доске'); break; }
       case 'a-delete': ui.admin.confirmDelete = true; renderDrawer(); break;
       case 'a-delete-no': ui.admin.confirmDelete = false; renderDrawer(); break;
@@ -741,8 +810,9 @@ td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); bo
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      if ($('#layer .lightbox')) { $('#layer').innerHTML = ''; if (ui.admin.drawer) renderDrawer(); }
-      else if (ui.admin.drawer) { ui.admin.drawer = null; renderDrawer(); }
+      if ($('#layer .lightbox')) renderLayer();
+      else if (ui.view === 'admin' && ui.admin.drawer) { ui.admin.drawer = null; renderLayer(); }
+      else if (ui.view === 'board' && ui.board.postId) { ui.board.postId = null; renderLayer(); }
       else if (ui.widget.open) { ui.widget.open = false; render(); }
     }
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.card-body')) { e.preventDefault(); e.target.click(); }
