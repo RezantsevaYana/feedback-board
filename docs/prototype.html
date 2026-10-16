@@ -1,0 +1,835 @@
+<title>Feedback Board Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: sticky top bar with screen switcher; each screen is a working mock (host site + widget, public board, admin) */
+:root {
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --surface-2: #e9edf1;
+  --line: #d6dce2;
+  --fg: #15202a;
+  --muted: #5b6977;
+  --accent: #0b7a6b;
+  --accent-fg: #ffffff;
+  --accent-soft: #dcf0eb;
+  --bug: #c0392f;
+  --feature: #2560c4;
+  --s-new: #66727f;
+  --s-review: #7748cc;
+  --s-planned: #2560c4;
+  --s-progress: #a86300;
+  --s-done: #1d8547;
+  --s-rejected: #c0392f;
+  --host-side: #1d2a35;
+  --host-side-fg: #c9d3dc;
+  --overlay: rgba(10, 16, 22, .6);
+  --shadow: 0 10px 30px rgba(15, 30, 45, .16);
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1317; --surface: #161d23; --surface-2: #1e272f; --line: #2b3640; --fg: #e4eaef; --muted: #93a0ac;
+    --accent: #3cc2aa; --accent-fg: #052520; --accent-soft: #123530;
+    --bug: #f07468; --feature: #6fa3f5;
+    --s-new: #9aa6b2; --s-review: #b393f2; --s-planned: #6fa3f5; --s-progress: #f0a845; --s-done: #4fcf85; --s-rejected: #f07468;
+    --host-side: #0a1014; --host-side-fg: #a9b6c1; --overlay: rgba(0, 0, 0, .7); --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1317; --surface: #161d23; --surface-2: #1e272f; --line: #2b3640; --fg: #e4eaef; --muted: #93a0ac;
+  --accent: #3cc2aa; --accent-fg: #052520; --accent-soft: #123530;
+  --bug: #f07468; --feature: #6fa3f5;
+  --s-new: #9aa6b2; --s-review: #b393f2; --s-planned: #6fa3f5; --s-progress: #f0a845; --s-done: #4fcf85; --s-rejected: #f07468;
+  --host-side: #0a1014; --host-side-fg: #a9b6c1; --overlay: rgba(0, 0, 0, .7); --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+a { color: var(--accent); }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.brand-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; color: var(--accent-fg); }
+.chip { font-family: var(--font-body); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+.tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; flex-wrap: wrap; }
+.tab { border: 0; background: transparent; padding: 6px 12px; border-radius: 7px; font-weight: 500; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.tab .n { font-family: var(--font-mono); font-size: 12px; opacity: .7; margin-right: 4px; }
+.spacer { flex: 1; }
+.link-btn { border: 0; background: none; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; padding: 4px; font-size: 13px; }
+
+.hint { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; margin-block: 16px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 14px; }
+.hint b { color: var(--fg); font-weight: 600; }
+
+main { padding-bottom: 48px; }
+
+/* ---------- buttons, fields, pills ---------- */
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--surface-2); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn-primary:hover { background: var(--accent); filter: brightness(1.08); }
+.btn-danger { color: var(--bug); }
+.field { display: grid; gap: 6px; }
+.field > span { font-size: 13px; font-weight: 500; }
+.field small { color: var(--muted); font-size: 12px; }
+.input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; }
+textarea.input { resize: vertical; min-height: 96px; }
+.input.invalid { border-color: var(--bug); }
+.err { color: var(--bug); font-size: 12px; }
+
+.pill { --c: var(--s-new); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 99px; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.pill[data-s="under_review"] { --c: var(--s-review); }
+.pill[data-s="planned"] { --c: var(--s-planned); }
+.pill[data-s="in_progress"] { --c: var(--s-progress); }
+.pill[data-s="done"] { --c: var(--s-done); }
+.pill[data-s="rejected"] { --c: var(--s-rejected); }
+.type { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--feature); }
+.type[data-t="bug"] { color: var(--bug); }
+
+/* ---------- screen 1: host site + widget ---------- */
+.browser { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.browser-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.dots { display: flex; gap: 6px; } .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; }
+.url { flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--muted); background: var(--surface); border-radius: 6px; padding: 4px 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.host { position: relative; height: 640px; display: grid; grid-template-columns: 220px 1fr; overflow: hidden; }
+.host-side { background: var(--host-side); color: var(--host-side-fg); padding: 16px 12px; display: grid; align-content: start; gap: 4px; font-size: 14px; }
+.host-side .ws { font-weight: 600; color: #fff; padding: 0 8px 12px; }
+.host-side div.ch { padding: 5px 8px; border-radius: 6px; }
+.host-side div.ch.on { background: rgba(255,255,255,.1); color: #fff; }
+.host-main { display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.host-head { padding: 14px 20px; border-bottom: 1px solid var(--line); font-weight: 600; }
+.host-feed { padding: 16px 20px; display: grid; align-content: start; gap: 14px; overflow: hidden; }
+.msg { display: grid; grid-template-columns: 34px 1fr; gap: 10px; }
+.ava { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 13px; color: #fff; }
+.msg b { font-weight: 600; } .msg time { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.msg p { margin: 2px 0 0; }
+
+.fb-launcher { position: absolute; right: 20px; bottom: 20px; z-index: 3; border: 0; border-radius: 99px; padding: 11px 18px; background: var(--accent); color: var(--accent-fg); font-weight: 600; box-shadow: var(--shadow); display: flex; gap: 8px; align-items: center; }
+.fb-panel { position: absolute; right: 20px; bottom: 76px; z-index: 4; width: 370px; max-height: calc(100% - 96px); display: grid; grid-template-rows: auto auto 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.fb-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
+.fb-head h3 { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+.icon-btn { border: 0; background: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
+.icon-btn:hover { background: var(--surface-2); }
+.fb-tabs { display: flex; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+.fb-tab { border: 0; background: none; padding: 8px 0; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.fb-tab[aria-selected="true"] { color: var(--fg); border-color: var(--accent); }
+.fb-body { overflow-y: auto; padding: 14px 16px 16px; display: grid; gap: 14px; align-content: start; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seg button { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 10px; text-align: left; display: grid; gap: 2px; }
+.seg button b { font-weight: 600; }
+.seg button small { color: var(--muted); font-size: 12px; }
+.seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.drop { border: 1px dashed var(--line); border-radius: 9px; padding: 12px; text-align: center; color: var(--muted); font-size: 13px; }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop label { color: var(--accent); text-decoration: underline; cursor: pointer; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.thumb { position: relative; width: 64px; height: 48px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: var(--surface-2); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb button { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: 0; background: var(--overlay); color: #fff; font-size: 11px; line-height: 1; display: grid; place-items: center; }
+.note { font-size: 12px; color: var(--muted); }
+.fb-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.done-box { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 20px 0; }
+.done-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.mine { display: grid; gap: 2px; }
+.mine button { border: 0; background: none; text-align: left; padding: 10px 8px; border-radius: 8px; display: grid; gap: 4px; }
+.mine button:hover { background: var(--surface-2); }
+.empty { color: var(--muted); text-align: center; padding: 24px 8px; font-size: 14px; }
+
+/* ---------- screen 2: board ---------- */
+.board-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.board-head h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(22px, 4vw, 30px); }
+.board-head p { margin: 4px 0 0; color: var(--muted); }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button { border: 1px solid var(--line); background: var(--surface); padding: 5px 12px; border-radius: 99px; font-size: 14px; }
+.chips button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+select.input { width: auto; padding: 6px 10px; }
+.list { display: grid; gap: 10px; }
+.card { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+.card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.card-body { min-width: 0; display: grid; gap: 4px; cursor: pointer; }
+.card-body h3 { font-size: 16px; font-weight: 600; }
+.excerpt { color: var(--muted); font-size: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.vote { width: 56px; border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 7px 0 5px; display: grid; justify-items: center; gap: 2px; font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+.vote:hover { border-color: var(--accent); }
+.vote[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.post { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(16px, 3vw, 28px); display: grid; gap: 16px; max-width: 780px; }
+.post h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 3.4vw, 26px); line-height: 1.25; }
+.post .desc { white-space: pre-wrap; max-width: 65ch; margin: 0; }
+.shots { display: flex; flex-wrap: wrap; gap: 10px; }
+.shots button { border: 1px solid var(--line); padding: 0; border-radius: 8px; overflow: hidden; width: 160px; height: 110px; background: var(--surface-2); }
+.shots img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.answer { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; }
+.answer b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.answer p { margin: 0; white-space: pre-wrap; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.back { border: 0; background: none; color: var(--muted); padding: 0; margin-bottom: 14px; }
+
+/* ---------- kanban (board + admin) ---------- */
+.kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(210px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: start; }
+.col { background: var(--surface-2); border-radius: var(--radius); padding: 10px; display: grid; gap: 8px; align-content: start; min-height: 240px; border: 2px solid transparent; }
+.col.over { border-color: var(--accent); background: var(--accent-soft); }
+.col-head { display: flex; justify-content: space-between; align-items: center; padding: 2px 2px 4px; }
+.col-head .mono { font-variant-numeric: tabular-nums; }
+.kcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 6px; }
+.kcard:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.kcard[draggable="true"] { cursor: grab; }
+.kcard.dragging { opacity: .4; }
+.kcard.is-hidden { opacity: .55; }
+.kcard h4 { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.35; }
+.kcard .card-body { gap: 6px; }
+.kcard-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.kcard .meta { font-size: 12px; }
+.vote.sm { width: auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 12px; border-radius: 99px; }
+.vote.sm svg { width: 13px; height: 13px; }
+.prio-tag { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+.prio-tag[data-p="high"], .prio-tag[data-p="critical"] { color: var(--bug); background: color-mix(in srgb, var(--bug) 12%, transparent); }
+.col-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 16px 4px; }
+
+/* ---------- screen 3: admin ---------- */
+.login { max-width: 380px; margin: 40px auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 14px; }
+.login h2 { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
+.admin-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.admin-head h1 { font-family: var(--font-display); font-weight: 600; font-size: 22px; }
+.who { color: var(--muted); font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+.stat b { font-family: var(--font-mono); color: var(--fg); margin-left: 4px; font-variant-numeric: tabular-nums; }
+.table-box { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 860px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tr.is-hidden td { opacity: .55; }
+td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.title-btn { border: 0; background: none; padding: 0; text-align: left; font-weight: 500; }
+.title-btn:hover { color: var(--accent); text-decoration: underline; }
+td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.prio { font-size: 12px; }
+
+.drawer-bg { position: fixed; inset: 0; z-index: 20; background: var(--overlay); display: flex; justify-content: flex-end; }
+.drawer { width: min(520px, 100%); height: 100%; background: var(--surface); overflow-y: auto; padding: 20px max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) 20px; padding-top: calc(20px + env(safe-area-inset-top, 0px)); display: grid; gap: 14px; align-content: start; }
+.drawer-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.mono { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; border-radius: 8px; background: color-mix(in srgb, var(--bug) 10%, transparent); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: 8px; font-size: 14px; }
+.lightbox { position: fixed; inset: 0; z-index: 50; background: var(--overlay); display: grid; place-items: center; padding: 24px; cursor: zoom-out; }
+.lightbox img { max-height: 90vh; border-radius: 8px; background: var(--surface); }
+
+@media (max-width: 720px) {
+  .host { grid-template-columns: 1fr; height: 600px; }
+  .host-side { display: none; }
+  .grid2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .fb-panel { inset: 0; width: auto; max-height: none; border-radius: 0; border: 0; }
+  .card { grid-template-columns: 48px 1fr; }
+  .card > .pill { grid-column: 2; justify-self: start; }
+  .vote { width: 48px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fb-panel { animation: rise .18s ease-out; }
+  @keyframes rise { from { transform: translateY(8px); opacity: .4; } }
+}
+</style>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 3h12v8H6l-4 3V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Feedback Board <span class="chip">прототип</span></div>
+    <nav class="tabs" role="tablist" aria-label="Экраны">
+      <button class="tab" role="tab" data-view="host"><span class="n">1</span>Виджет на сайте</button>
+      <button class="tab" role="tab" data-view="board"><span class="n">2</span>Публичная доска</button>
+      <button class="tab" role="tab" data-view="admin"><span class="n">3</span>Админка</button>
+    </nav>
+    <span class="spacer"></span>
+    <button class="link-btn" id="reset">Сбросить демо-данные</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hint" id="hint"></div>
+  <section id="screen"></section>
+</main>
+
+<div id="layer"></div>
+
+<script>
+(() => {
+  // ---------- dictionaries ----------
+  const STATUS = { new: 'Новое', under_review: 'На рассмотрении', planned: 'Запланировано', in_progress: 'В работе', done: 'Готово', rejected: 'Отклонено' };
+  const PRIORITY = { '': '—', low: 'Низкий', medium: 'Средний', high: 'Высокий', critical: 'Критический' };
+  const PRIO_ORDER = { critical: 4, high: 3, medium: 2, low: 1, '': 0 };
+  const TYPE = { bug: 'Баг', feature: 'Фича' };
+  const HINTS = {
+    host: '<b>Так виджет выглядит на чужом сайте.</b> Нажмите «Обратная связь» в правом нижнем углу и отправьте баг или фичу. Скриншот можно перетащить, выбрать файлом или вставить через Ctrl+V. Вкладка «Мои» показывает статусы ваших предложений.',
+    board: '<b>Публичная доска проекта Kooly.</b> Колонки — это статусы, сразу видно, что в работе и что готово. Голосуйте 👍 (один голос с браузера, повторный клик отменяет), открывайте карточки. Отклонённые на доске не показываются, но открываются по прямой ссылке из «Моих». Можно переключиться на вид «Список».',
+    admin: '<b>Админка.</b> Пароль заполнен, просто нажмите «Войти». Перетаскивайте карточки между колонками, чтобы сменить статус: изменение сразу видно на доске и в «Моих» виджета. Клик по карточке открывает её. Есть и вид «Таблица».'
+  };
+
+  // ---------- placeholder screenshots ----------
+  function shot(hue, label) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
+      <rect width="640" height="420" fill="hsl(${hue},30%,96%)"/>
+      <rect width="640" height="36" fill="hsl(${hue},25%,88%)"/>
+      <circle cx="20" cy="18" r="6" fill="hsl(${hue},20%,72%)"/><circle cx="40" cy="18" r="6" fill="hsl(${hue},20%,72%)"/>
+      <rect x="0" y="36" width="150" height="384" fill="hsl(${hue},30%,22%)"/>
+      <rect x="20" y="60" width="100" height="10" rx="5" fill="hsl(${hue},20%,50%)"/><rect x="20" y="84" width="80" height="10" rx="5" fill="hsl(${hue},20%,40%)"/><rect x="20" y="108" width="90" height="10" rx="5" fill="hsl(${hue},20%,40%)"/>
+      <rect x="180" y="64" width="300" height="14" rx="7" fill="hsl(${hue},15%,78%)"/>
+      <rect x="180" y="96" width="420" height="10" rx="5" fill="hsl(${hue},15%,86%)"/><rect x="180" y="116" width="380" height="10" rx="5" fill="hsl(${hue},15%,86%)"/>
+      <rect x="180" y="150" width="420" height="150" rx="10" fill="none" stroke="hsl(0,75%,52%)" stroke-width="4" stroke-dasharray="10 6"/>
+      <text x="390" y="232" text-anchor="middle" font-family="sans-serif" font-size="22" fill="hsl(0,65%,45%)">${label}</text>
+    </svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  // ---------- seed data ----------
+  const DAY = 864e5;
+  const now = Date.now();
+  function seed() {
+    const p = (id, type, title, description, author, status, priority, votes, days, extra = {}) =>
+      ({ id, type, title, description, author, status, priority, votes, comment: '', hidden: false, images: [], created: now - days * DAY, statusChanged: now - Math.max(0, days - 2) * DAY, ...extra });
+    return {
+      nextId: 109,
+      posts: [
+        p(101, 'feature', 'Тёмная тема в веб-версии', 'Вечером глаза устают от белого фона. Хочется переключатель темы в настройках профиля, и чтобы по умолчанию тема бралась из системы.', 'Марина К.', 'planned', 'medium', 23, 21, { comment: 'Взяли в план на ноябрь. Начнём с чата и календаря.' }),
+        p(102, 'bug', 'Уведомления приходят дважды на телефоне', 'После обновления в понедельник каждое сообщение в рабочем чате приходит двумя пушами подряд. Android 14, приложение последней версии.', 'Алексей', 'in_progress', 'high', 17, 6, { images: [shot(210, 'два одинаковых пуша')] }),
+        p(103, 'feature', 'Отложенная отправка сообщений', 'Иногда пишу коллегам вечером и не хочу их будить. Было бы удобно выбрать «отправить завтра в 9:00».', '', 'under_review', '', 14, 9),
+        p(104, 'bug', 'Не прикрепляется файл больше 20 МБ', 'Пытаюсь отправить презентацию 24 МБ: крутится загрузка и через минуту пропадает без ошибки. Хотя бы сообщение о лимите показать.', 'Денис П.', 'new', '', 6, 2, { images: [shot(30, 'загрузка без ошибки')] }),
+        p(105, 'feature', 'Поиск по закреплённым сообщениям', 'В канале #разработка закреплено 40+ сообщений, найти нужное невозможно. Нужен поиск или хотя бы фильтр.', 'Ольга', 'new', '', 9, 4),
+        p(106, 'bug', 'Сбивается часовой пояс в календаре', 'Встречи, созданные из Новосибирска, у коллег в Москве показываются на час раньше. Видимо, не учитывается пояс автора.', 'Игорь Н.', 'done', 'critical', 11, 30, { comment: 'Исправили в версии 3.12. Спасибо за подробное описание!' }),
+        p(107, 'feature', 'Реакции эмодзи на сообщения', 'Чтобы не писать «ок» и «спасибо» отдельными сообщениями.', 'Аноним из маркетинга', 'rejected', 'low', 3, 40, { comment: 'Реакции уже есть: наведите на сообщение и нажмите на смайлик справа. Сделаем подсказку заметнее.' }),
+        p(108, 'feature', 'Статус «в отпуске» с датой возвращения', 'Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября, и не ждать ответа.', 'Марина К.', 'new', '', 4, 1)
+      ],
+      voted: { 101: true },
+      mine: [108, 107],
+      name: ''
+    };
+  }
+
+  // ---------- state ----------
+  const KEY = 'fb-proto-v1';
+  let db;
+  try { db = JSON.parse(localStorage.getItem(KEY)) || seed(); } catch (e) { db = seed(); }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
+
+  const ui = {
+    view: 'host',
+    widget: { open: false, tab: 'send', type: '', title: '', description: '', files: [], errors: {}, sentId: null },
+    board: { view: 'kanban', type: 'all', status: 'active', sort: 'top', postId: null },
+    admin: { view: 'kanban', logged: false, type: 'all', status: 'all', priority: 'all', showHidden: true, sort: 'new', drawer: null, confirmDelete: false }
+  };
+  try { const v = localStorage.getItem(KEY + '-view'); if (v && HINTS[v]) ui.view = v; } catch (e) {}
+
+  // ---------- helpers ----------
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = t => new Date(t).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  const byId = id => db.posts.find(p => p.id === id);
+  const pill = s => `<span class="pill" data-s="${s}">${STATUS[s]}</span>`;
+  const typeTag = t => `<span class="type" data-t="${t}">${t === 'bug' ? '● ' : '◆ '}${TYPE[t]}</span>`;
+  const thumbIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H3V10h4Zm0 0 4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"/></svg>`;
+  const $ = s => document.querySelector(s);
+
+  let toastTimer;
+  function toast(text) {
+    const el = document.createElement('div');
+    el.className = 'toast'; el.textContent = text; el.setAttribute('role', 'status');
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+    document.body.appendChild(el);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.remove(), 2200);
+  }
+  function lightbox(src) {
+    $('#layer').innerHTML = `<div class="lightbox" data-action="close-lightbox"><img src="${esc(src)}" alt="Скриншот"></div>`;
+  }
+
+  function go(view, opts = {}) {
+    ui.view = view;
+    if (view === 'board') ui.board.postId = opts.postId ?? null;
+    try { localStorage.setItem(KEY + '-view', view); } catch (e) {}
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  // ---------- screen 1: host + widget ----------
+  function renderHost() {
+    const w = ui.widget;
+    const msgs = [
+      ['Лена', '#7a5ad8', '10:14', 'Ребята, у меня опять пуши дублируются, кому писать?'],
+      ['Саша', '#0b7a6b', '10:16', 'Кажется, в чат разработки. Или в тред про релиз…'],
+      ['Лена', '#7a5ad8', '10:17', 'Я туда на прошлой неделе писала, не знаю, что с этим стало 🙃'],
+      ['Тимур', '#c47a12', '10:21', 'Кстати, давно хочу отложенную отправку. Куда такие идеи кидать?']
+    ];
+    return `
+      <div class="browser">
+        <div class="browser-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">https://kooly.example.com/chat/general</span></div>
+        <div class="host">
+          <aside class="host-side" aria-hidden="true">
+            <div class="ws">Kooly</div>
+            <div class="ch on"># общий</div><div class="ch"># разработка</div><div class="ch"># релизы</div><div class="ch"># kooly-feedback</div>
+          </aside>
+          <div class="host-main">
+            <div class="host-head"># общий</div>
+            <div class="host-feed">
+              ${msgs.map(([n, c, t, m]) => `<div class="msg"><span class="ava" style="background:${c}">${n[0]}</span><div><b>${n}</b><time>${t}</time><p>${m}</p></div></div>`).join('')}
+            </div>
+          </div>
+          ${w.open ? renderPanel() : ''}
+          <button class="fb-launcher" data-action="w-toggle" aria-expanded="${w.open}">
+            ${w.open ? '<span aria-hidden="true">✕</span> Закрыть' : `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3h12v8H6l-4 3V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg> Обратная связь`}
+          </button>
+        </div>
+      </div>
+      <p class="note" style="margin-top:12px">Подключение на сайте: <code class="mono">&lt;script src="https://feedback.example.com/widget.js" data-project="kooly" defer&gt;&lt;/script&gt;</code></p>`;
+  }
+
+  function renderPanel() {
+    const w = ui.widget;
+    const mineCount = db.mine.filter(byId).length;
+    let body;
+    if (w.tab === 'mine') body = renderMine();
+    else if (w.sentId) body = `
+      <div class="done-box">
+        <span class="done-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg></span>
+        <h3>Спасибо! Предложение на доске</h3>
+        <p class="note">Статус можно отслеживать во вкладке «Мои» или на доске.</p>
+        <div class="row" style="justify-content:center">
+          <button class="btn btn-primary" data-action="open-post" data-id="${w.sentId}">Открыть на доске</button>
+          <button class="btn" data-action="w-again">Отправить ещё</button>
+        </div>
+      </div>`;
+    else body = renderForm();
+    return `
+      <div class="fb-panel" role="dialog" aria-label="Обратная связь">
+        <div class="fb-head"><h3>Обратная связь</h3><button class="icon-btn" data-action="w-toggle" aria-label="Закрыть">✕</button></div>
+        <div class="fb-tabs" role="tablist">
+          <button class="fb-tab" role="tab" aria-selected="${w.tab === 'send'}" data-action="w-tab" data-tab="send">Отправить</button>
+          <button class="fb-tab" role="tab" aria-selected="${w.tab === 'mine'}" data-action="w-tab" data-tab="mine">Мои${mineCount ? ` · ${mineCount}` : ''}</button>
+        </div>
+        <div class="fb-body">${body}</div>
+      </div>`;
+  }
+
+  function renderForm() {
+    const w = ui.widget, e = w.errors;
+    const ph = w.type === 'bug' ? 'Что произошло и как это повторить? Что ожидали увидеть?' : w.type === 'feature' ? 'Что хотите и зачем? Какую задачу это решит?' : 'Сначала выберите тип выше';
+    return `
+      <form id="fb-form" novalidate style="display:grid;gap:14px">
+        <div class="field">
+          <span>Что отправляем?</span>
+          <div class="seg">
+            <button type="button" data-action="w-type" data-type="bug" aria-pressed="${w.type === 'bug'}"><b>Баг</b><small>Что-то сломалось</small></button>
+            <button type="button" data-action="w-type" data-type="feature" aria-pressed="${w.type === 'feature'}"><b>Фича</b><small>Идея или улучшение</small></button>
+          </div>
+          ${e.type ? `<span class="err">${e.type}</span>` : ''}
+        </div>
+        <label class="field"><span>Заголовок</span>
+          <input class="input ${e.title ? 'invalid' : ''}" id="fb-title" data-bind="title" maxlength="120" value="${esc(w.title)}" placeholder="${w.type === 'bug' ? 'Например: не открывается календарь' : 'Коротко, в одну строку'}">
+          ${e.title ? `<span class="err">${e.title}</span>` : ''}
+        </label>
+        <label class="field"><span>Описание</span>
+          <textarea class="input ${e.description ? 'invalid' : ''}" id="fb-desc" data-bind="description" maxlength="5000" placeholder="${ph}">${esc(w.description)}</textarea>
+          ${e.description ? `<span class="err">${e.description}</span>` : ''}
+        </label>
+        <div class="field"><span>Скриншоты <small>· до 5 файлов, до 5 МБ</small></span>
+          <div class="drop" id="fb-drop">Перетащите сюда, вставьте Ctrl+V или <label for="fb-file">выберите файл</label>
+            <input type="file" id="fb-file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+          </div>
+          ${w.files.length ? `<div class="thumbs">${w.files.map((f, i) => `<div class="thumb"><img src="${f}" alt=""><button type="button" data-action="w-unfile" data-i="${i}" aria-label="Убрать скриншот">✕</button></div>`).join('')}</div>` : ''}
+          ${e.files ? `<span class="err">${e.files}</span>` : ''}
+        </div>
+        <label class="field"><span>Ваше имя <small>· по желанию</small></span>
+          <input class="input" id="fb-name" data-bind="name" maxlength="80" value="${esc(db.name)}" placeholder="Можно оставить пустым">
+        </label>
+        <p class="note">Предложение и скриншоты будут видны всем на доске.</p>
+        <div class="fb-foot">
+          <button type="button" class="link-btn" data-action="go-board">Все предложения →</button>
+          <button type="submit" class="btn btn-primary">Отправить</button>
+        </div>
+      </form>`;
+  }
+
+  function renderMine() {
+    const items = db.mine.map(byId).filter(p => p && !p.hidden);
+    if (!items.length) return `<div class="empty">Вы ещё ничего не отправляли из этого браузера.</div>`;
+    return `<div class="mine">${items.map(p => `
+      <button data-action="open-post" data-id="${p.id}">
+        <span class="row" style="gap:8px">${typeTag(p.type)}${pill(p.status)}</span>
+        <span>${esc(p.title)}</span>
+      </button>`).join('')}</div>
+      <p class="note">Список хранится в этом браузере. Нажмите на предложение, чтобы открыть его на доске.</p>`;
+  }
+
+  function validate() {
+    const w = ui.widget, e = {};
+    if (!w.type) e.type = 'Выберите: баг или фича.';
+    const t = w.title.trim(), d = w.description.trim();
+    if (t.length < 3) e.title = 'Напишите заголовок, хотя бы 3 символа.';
+    if (d.length < 10) e.description = 'Опишите подробнее, хотя бы 10 символов.';
+    return e;
+  }
+
+  function addFiles(list) {
+    const w = ui.widget;
+    const imgs = [...list].filter(f => /^image\/(png|jpeg|webp|gif)$/.test(f.type));
+    if (!imgs.length) return;
+    w.errors.files = '';
+    const room = 5 - w.files.length;
+    if (imgs.length > room) w.errors.files = 'Можно приложить не больше 5 скриншотов.';
+    imgs.slice(0, Math.max(0, room)).forEach(f => {
+      if (f.size > 5 * 1024 * 1024) { w.errors.files = `«${f.name}» больше 5 МБ.`; render(); return; }
+      const r = new FileReader();
+      r.onload = () => { w.files.push(r.result); render(); };
+      r.readAsDataURL(f);
+    });
+    render();
+  }
+
+  // ---------- screen 2: board ----------
+  const BOARD_COLS = ['new', 'under_review', 'planned', 'in_progress', 'done'];
+  const ADMIN_COLS = [...BOARD_COLS, 'rejected'];
+
+  function boardPosts() {
+    const b = ui.board;
+    let list = db.posts.filter(p => !p.hidden && p.status !== 'rejected');
+    if (b.type !== 'all') list = list.filter(p => p.type === b.type);
+    if (b.view === 'list' && b.status !== 'active') list = list.filter(p => p.status === b.status);
+    return list.sort((a, c) => b.sort === 'top' ? c.votes - a.votes || c.created - a.created : c.created - a.created);
+  }
+  const voteBtn = (p, sm) => `<button class="vote${sm ? ' sm' : ''}" data-action="vote" data-id="${p.id}" aria-pressed="${!!db.voted[p.id]}" aria-label="${db.voted[p.id] ? 'Отменить голос' : 'Проголосовать'}">${thumbIcon}<span>${p.votes}</span></button>`;
+
+  function kanban(cols, list, card, admin) {
+    return `<div class="kanban">${cols.map(s => {
+      const items = list.filter(p => p.status === s);
+      return `<section class="col" data-col="${s}" aria-label="${STATUS[s]}">
+        <div class="col-head">${pill(s)}<span class="mono">${items.length}</span></div>
+        ${items.length ? items.map(card).join('') : `<div class="col-empty">${admin ? 'Перетащите карточку сюда' : 'Пока пусто'}</div>`}
+      </section>`;
+    }).join('')}</div>`;
+  }
+
+  const boardCard = p => `
+    <article class="kcard">
+      <div class="kcard-top">${typeTag(p.type)}${voteBtn(p, true)}</div>
+      <div class="card-body" data-action="open-post" data-id="${p.id}" role="link" tabindex="0">
+        <h4>${esc(p.title)}</h4>
+        <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${p.images.length ? `<span>📎 ${p.images.length}</span>` : ''}${p.comment ? '<span>💬</span>' : ''}</div>
+      </div>
+    </article>`;
+
+  const adminCard = p => `
+    <article class="kcard ${p.hidden ? 'is-hidden' : ''}" draggable="true" data-drag="${p.id}">
+      <div class="kcard-top">${typeTag(p.type)}<span class="row" style="gap:4px">${p.priority ? `<span class="prio-tag" data-p="${p.priority}">${PRIORITY[p.priority]}</span>` : ''}${p.hidden ? '<span class="chip">скрыто</span>' : ''}</span></div>
+      <div class="card-body" data-action="a-open" data-id="${p.id}" role="button" tabindex="0">
+        <h4>${esc(p.title)}</h4>
+        <div class="meta"><span>👍 ${p.votes}</span><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${p.images.length ? `<span>📎 ${p.images.length}</span>` : ''}</div>
+      </div>
+    </article>`;
+
+  function renderBoard() {
+    if (ui.board.postId) return renderPost(ui.board.postId);
+    const b = ui.board, list = boardPosts();
+    const chip = (key, val, label) => `<button data-action="b-filter" data-key="${key}" data-val="${val}" aria-pressed="${b[key] === val}">${label}</button>`;
+    if (b.view === 'kanban') return `
+      <div class="board-head">
+        <div><h1>Kooly · предложения</h1><p>Баги и идеи от пользователей. Голосуйте за то, что нужно вам.</p></div>
+        <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
+      </div>
+      <div class="filters">
+        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}</div>
+        <div class="chips">${chip('type', 'all', 'Все')}${chip('type', 'bug', 'Баги')}${chip('type', 'feature', 'Фичи')}</div>
+        <span class="spacer"></span>
+        <div class="chips">${chip('sort', 'top', 'Популярные')}${chip('sort', 'new', 'Новые')}</div>
+      </div>
+      ${kanban(BOARD_COLS, list, boardCard, false)}`;
+    return `
+      <div class="board-head">
+        <div><h1>Kooly · предложения</h1><p>Баги и идеи от пользователей. Голосуйте за то, что нужно вам.</p></div>
+        <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
+      </div>
+      <div class="filters">
+        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}</div>
+        <div class="chips">${chip('type', 'all', 'Все')}${chip('type', 'bug', 'Баги')}${chip('type', 'feature', 'Фичи')}</div>
+        <select class="input" id="b-status" data-action="b-status" aria-label="Статус">
+          <option value="active">Все статусы</option>
+          ${['new', 'under_review', 'planned', 'in_progress', 'done'].map(s => `<option value="${s}" ${b.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}
+        </select>
+        <span class="spacer"></span>
+        <div class="chips">${chip('sort', 'top', 'Популярные')}${chip('sort', 'new', 'Новые')}</div>
+      </div>
+      <div class="list">
+        ${list.length ? list.map(p => `
+          <article class="card">
+            ${voteBtn(p)}
+            <div class="card-body" data-action="open-post" data-id="${p.id}" role="link" tabindex="0">
+              ${typeTag(p.type)}
+              <h3>${esc(p.title)}</h3>
+              <div class="excerpt">${esc(p.description)}</div>
+              <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${p.images.length ? `<span>📎 ${p.images.length}</span>` : ''}${p.comment ? '<span>💬 ответ команды</span>' : ''}</div>
+            </div>
+            ${pill(p.status)}
+          </article>`).join('') : `<div class="empty">Под эти фильтры ничего не нашлось.</div>`}
+      </div>`;
+  }
+
+  function renderPost(id) {
+    const p = byId(id);
+    const back = `<button class="back" data-action="go-board">← Все предложения</button>`;
+    if (!p || p.hidden) return `${back}<div class="post"><h1>Предложение не найдено</h1><p class="desc">Возможно, его удалили или скрыли.</p></div>`;
+    return `${back}
+      <article class="post">
+        <div class="row">${typeTag(p.type)}${pill(p.status)}</div>
+        <h1>${esc(p.title)}</h1>
+        <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>Создано ${fmt(p.created)}</span><span>Статус изменён ${fmt(p.statusChanged)}</span><span class="mono">#${p.id}</span></div>
+        <p class="desc">${esc(p.description)}</p>
+        ${p.images.length ? `<div class="shots">${p.images.map(src => `<button data-action="zoom" data-src="${esc(src)}" aria-label="Открыть скриншот"><img src="${src}" alt="Скриншот"></button>`).join('')}</div>` : ''}
+        ${p.comment ? `<div class="answer"><b>Ответ команды</b><p>${esc(p.comment)}</p></div>` : ''}
+        <div class="row">${voteBtn(p)}<span class="note">${p.votes} ${plural(p.votes, 'голос', 'голоса', 'голосов')}</span></div>
+      </article>`;
+  }
+  const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c; };
+
+  // ---------- screen 3: admin ----------
+  function renderAdmin() {
+    const a = ui.admin;
+    if (!a.logged) return `
+      <form class="login" id="login-form">
+        <h2>Вход для команды</h2>
+        <label class="field"><span>Email</span><input class="input" id="login-email" type="email" value="admin@kooly.local"></label>
+        <label class="field"><span>Пароль</span><input class="input" id="login-pass" type="password" value="prototype"></label>
+        <button class="btn btn-primary" type="submit">Войти</button>
+        <p class="note">Админов заводим консольной командой. Регистрации нет.</p>
+      </form>`;
+    let list = db.posts.slice();
+    if (!a.showHidden) list = list.filter(p => !p.hidden);
+    if (a.type !== 'all') list = list.filter(p => p.type === a.type);
+    if (a.view === 'table' && a.status !== 'all') list = list.filter(p => p.status === a.status);
+    if (a.priority !== 'all') list = list.filter(p => p.priority === (a.priority === 'none' ? '' : a.priority));
+    list.sort((x, y) => a.sort === 'top' ? y.votes - x.votes : a.sort === 'priority' ? PRIO_ORDER[y.priority] - PRIO_ORDER[x.priority] || y.created - x.created : y.created - x.created);
+    const count = s => db.posts.filter(p => p.status === s).length;
+    const opt = (cur, map, extra = '') => extra + Object.entries(map).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${v}</option>`).join('');
+    return `
+      <div class="admin-head">
+        <h1>Предложения</h1>
+        <div class="who">
+          <select class="input" id="a-project" aria-label="Проект"><option>Kooly</option></select>
+          <span>admin@kooly.local</span><button class="link-btn" data-action="logout">Выйти</button>
+        </div>
+      </div>
+      <div class="stats">
+        <span class="stat">Новые<b>${count('new')}</b></span><span class="stat">На рассмотрении<b>${count('under_review')}</b></span>
+        <span class="stat">Запланировано<b>${count('planned')}</b></span><span class="stat">В работе<b>${count('in_progress')}</b></span>
+        <span class="stat">Готово<b>${count('done')}</b></span><span class="stat">Отклонено<b>${count('rejected')}</b></span>
+      </div>
+      <div class="filters">
+        <div class="chips"><button data-action="a-view" data-val="kanban" aria-pressed="${a.view === 'kanban'}">Канбан</button><button data-action="a-view" data-val="table" aria-pressed="${a.view === 'table'}">Таблица</button></div>
+        <select class="input" id="a-type" data-afilter="type" aria-label="Тип">${opt(a.type, TYPE, `<option value="all">Все типы</option>`)}</select>
+        ${a.view === 'table' ? `<select class="input" id="a-status" data-afilter="status" aria-label="Статус">${opt(a.status, STATUS, `<option value="all">Все статусы</option>`)}</select>` : ''}
+        <select class="input" id="a-priority" data-afilter="priority" aria-label="Приоритет"><option value="all">Любой приоритет</option><option value="none" ${a.priority === 'none' ? 'selected' : ''}>Без приоритета</option>${['critical', 'high', 'medium', 'low'].map(k => `<option value="${k}" ${a.priority === k ? 'selected' : ''}>${PRIORITY[k]}</option>`).join('')}</select>
+        <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="a-hidden" data-afilter="showHidden" ${a.showHidden ? 'checked' : ''}> Показывать скрытые</label>
+        <span class="spacer"></span>
+        <select class="input" id="a-sort" data-afilter="sort" aria-label="Сортировка">${opt(a.sort, { new: 'Сначала новые', top: 'По голосам', priority: 'По приоритету' })}</select>
+      </div>
+      ${a.view === 'kanban' ? kanban(ADMIN_COLS, list, adminCard, true) : `
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Тип</th><th>Заголовок</th><th>Статус</th><th>Приоритет</th><th>👍</th><th>Автор</th><th>Дата</th><th></th></tr></thead>
+          <tbody>
+            ${list.length ? list.map(p => `
+              <tr class="${p.hidden ? 'is-hidden' : ''}">
+                <td>${typeTag(p.type)}</td>
+                <td><button class="title-btn" data-action="a-open" data-id="${p.id}">${esc(p.title)}</button>${p.images.length ? ` <span class="note">📎${p.images.length}</span>` : ''}</td>
+                <td><select id="st-${p.id}" data-field="status" data-id="${p.id}" aria-label="Статус">${opt(p.status, STATUS)}</select></td>
+                <td><select id="pr-${p.id}" data-field="priority" data-id="${p.id}" aria-label="Приоритет" class="prio">${opt(p.priority, PRIORITY)}</select></td>
+                <td class="num">${p.votes}</td>
+                <td>${esc(p.author || 'Аноним')}</td>
+                <td class="num">${fmt(p.created)}</td>
+                <td>${p.hidden ? '<span class="chip">скрыто</span>' : ''}</td>
+              </tr>`).join('') : `<tr><td colspan="8"><div class="empty">Ничего не найдено.</div></td></tr>`}
+          </tbody>
+        </table>
+      </div>`}`;
+  }
+
+  function renderDrawer() {
+    const a = ui.admin, p = a.drawer && byId(a.drawer);
+    if (!p) { $('#layer').innerHTML = ''; return; }
+    const opt = (cur, map) => Object.entries(map).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${v}</option>`).join('');
+    $('#layer').innerHTML = `
+      <div class="drawer-bg" data-action="a-close">
+        <form class="drawer" id="drawer-form" role="dialog" aria-label="Карточка предложения">
+          <div class="drawer-top"><span class="row">${typeTag(p.type)}<span class="mono">#${p.id} · ${fmt(p.created)} · ${esc(p.author || 'Аноним')} · 👍 ${p.votes}</span></span><button type="button" class="icon-btn" data-action="a-close" aria-label="Закрыть">✕</button></div>
+          <label class="field"><span>Заголовок</span><input class="input" id="d-title" value="${esc(p.title)}" maxlength="120"></label>
+          <label class="field"><span>Описание</span><textarea class="input" id="d-desc" rows="6" maxlength="5000">${esc(p.description)}</textarea></label>
+          ${p.images.length ? `<div class="field"><span>Скриншоты</span><div class="shots">${p.images.map(src => `<button type="button" data-action="zoom" data-src="${esc(src)}" aria-label="Открыть скриншот"><img src="${src}" alt="Скриншот"></button>`).join('')}</div></div>` : ''}
+          <div class="grid2">
+            <label class="field"><span>Статус</span><select class="input" id="d-status" style="width:100%">${opt(p.status, STATUS)}</select></label>
+            <label class="field"><span>Приоритет <small>· виден только команде</small></span><select class="input" id="d-priority" style="width:100%">${opt(p.priority, PRIORITY)}</select></label>
+          </div>
+          <label class="field"><span>Ответ команды <small>· виден всем на доске</small></span><textarea class="input" id="d-comment" rows="3" maxlength="2000" placeholder="Например, почему отклонили или когда планируем">${esc(p.comment)}</textarea></label>
+          <div class="row">
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+            <button class="btn" type="button" data-action="a-hide">${p.hidden ? 'Показать на доске' : 'Скрыть с доски'}</button>
+            <span class="spacer"></span>
+            <button class="btn btn-danger" type="button" data-action="a-delete">Удалить</button>
+          </div>
+          ${a.confirmDelete ? `<div class="confirm"><span>Удалить предложение и скриншоты навсегда?</span><span class="spacer"></span><button class="btn btn-danger" type="button" data-action="a-delete-yes">Удалить</button><button class="btn" type="button" data-action="a-delete-no">Отмена</button></div>` : ''}
+        </form>
+      </div>`;
+  }
+
+  // ---------- render ----------
+  function render() {
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === ui.view));
+    $('#hint').innerHTML = HINTS[ui.view];
+    const scr = $('#screen');
+    scr.innerHTML = ui.view === 'host' ? renderHost() : ui.view === 'board' ? renderBoard() : renderAdmin();
+    if (ui.view === 'admin' && ui.admin.drawer) renderDrawer();
+    else if (!$('#layer .lightbox')) $('#layer').innerHTML = '';
+  }
+
+  // ---------- events ----------
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-action], [data-view]');
+    if (!el) return;
+    if (el.dataset.view && !el.dataset.action) return go(el.dataset.view);
+    const act = el.dataset.action, id = +el.dataset.id, w = ui.widget;
+    switch (act) {
+      case 'w-toggle': w.open = !w.open; render(); break;
+      case 'w-tab': w.tab = el.dataset.tab; render(); break;
+      case 'w-type': w.type = el.dataset.type; delete w.errors.type; render(); break;
+      case 'w-unfile': w.files.splice(+el.dataset.i, 1); w.errors.files = ''; render(); break;
+      case 'w-again': Object.assign(w, { sentId: null, type: '', title: '', description: '', files: [], errors: {} }); render(); break;
+      case 'go-board': go('board'); break;
+      case 'go-host': ui.widget.open = true; ui.widget.tab = 'send'; go('host'); break;
+      case 'open-post': go('board', { postId: id }); break;
+      case 'b-filter': ui.board[el.dataset.key] = el.dataset.val; render(); break;
+      case 'vote': {
+        const p = byId(id); if (!p) break;
+        if (db.voted[id]) { delete db.voted[id]; p.votes--; } else { db.voted[id] = true; p.votes++; }
+        save(); render(); break;
+      }
+      case 'zoom': e.stopPropagation(); lightbox(el.dataset.src); break;
+      case 'close-lightbox': $('#layer').innerHTML = ''; if (ui.view === 'admin' && ui.admin.drawer) renderDrawer(); break;
+      case 'logout': ui.admin.logged = false; render(); break;
+      case 'a-view': ui.admin.view = el.dataset.val; render(); break;
+      case 'a-open': ui.admin.drawer = id; ui.admin.confirmDelete = false; renderDrawer(); break;
+      case 'a-close': if (e.target === el || el.tagName === 'BUTTON') { ui.admin.drawer = null; renderDrawer(); } break;
+      case 'a-hide': { const p = byId(ui.admin.drawer); p.hidden = !p.hidden; save(); render(); toast(p.hidden ? 'Скрыто с доски' : 'Снова на доске'); break; }
+      case 'a-delete': ui.admin.confirmDelete = true; renderDrawer(); break;
+      case 'a-delete-no': ui.admin.confirmDelete = false; renderDrawer(); break;
+      case 'a-delete-yes': db.posts = db.posts.filter(p => p.id !== ui.admin.drawer); ui.admin.drawer = null; save(); render(); toast('Предложение удалено'); break;
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if ($('#layer .lightbox')) { $('#layer').innerHTML = ''; if (ui.admin.drawer) renderDrawer(); }
+      else if (ui.admin.drawer) { ui.admin.drawer = null; renderDrawer(); }
+      else if (ui.widget.open) { ui.widget.open = false; render(); }
+    }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.card-body')) { e.preventDefault(); e.target.click(); }
+  });
+
+  document.addEventListener('input', e => {
+    const b = e.target.dataset.bind;
+    if (!b) return;
+    if (b === 'name') { db.name = e.target.value; save(); }
+    else { ui.widget[b] = e.target.value; if (ui.widget.errors[b]) { delete ui.widget.errors[b]; e.target.classList.remove('invalid'); } }
+  });
+
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.id === 'fb-file') { addFiles(t.files); t.value = ''; return; }
+    if (t.id === 'b-status') { ui.board.status = t.value; render(); return; }
+    if (t.dataset.afilter) { ui.admin[t.dataset.afilter] = t.type === 'checkbox' ? t.checked : t.value; render(); return; }
+    if (t.dataset.field && t.closest('table')) {
+      const p = byId(+t.dataset.id);
+      if (t.dataset.field === 'status' && p.status !== t.value) { p.status = t.value; p.statusChanged = Date.now(); toast(`Статус: ${STATUS[t.value]}. Уже на доске`); }
+      if (t.dataset.field === 'priority') { p.priority = t.value; toast(`Приоритет: ${PRIORITY[t.value]}`); }
+      save(); render();
+    }
+  });
+
+  document.addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    if (f.id === 'fb-form') {
+      const w = ui.widget;
+      w.errors = validate();
+      if (Object.keys(w.errors).length) { render(); return; }
+      const p = { id: db.nextId++, type: w.type, title: w.title.trim(), description: w.description.trim(), author: db.name.trim(), status: 'new', priority: '', votes: 0, comment: '', hidden: false, images: w.files.slice(), created: Date.now(), statusChanged: Date.now() };
+      db.posts.unshift(p); db.mine.unshift(p.id);
+      save();
+      w.sentId = p.id; render();
+    } else if (f.id === 'login-form') {
+      ui.admin.logged = true; render();
+    } else if (f.id === 'drawer-form') {
+      const p = byId(ui.admin.drawer);
+      const title = $('#d-title').value.trim(), desc = $('#d-desc').value.trim();
+      if (title.length < 3 || desc.length < 10) { toast('Заголовок от 3 символов, описание от 10'); return; }
+      const st = $('#d-status').value;
+      if (st !== p.status) p.statusChanged = Date.now();
+      Object.assign(p, { title, description: desc, status: st, priority: $('#d-priority').value, comment: $('#d-comment').value.trim() });
+      save(); ui.admin.drawer = null; render(); toast('Сохранено');
+    }
+  });
+
+  // drag-and-drop: screenshots into the widget, kanban cards between status columns
+  let dragId = null;
+  document.addEventListener('dragstart', e => {
+    const c = e.target.closest?.('[data-drag]');
+    if (!c) return;
+    dragId = +c.dataset.drag; c.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(dragId));
+  });
+  document.addEventListener('dragend', () => { dragId = null; document.querySelectorAll('.dragging, .col.over').forEach(x => x.classList.remove('dragging', 'over')); });
+  document.addEventListener('dragover', e => {
+    const d = e.target.closest('#fb-drop'); if (d) { e.preventDefault(); d.classList.add('over'); return; }
+    const col = dragId && e.target.closest('.col[data-col]');
+    if (col) { e.preventDefault(); document.querySelectorAll('.col.over').forEach(x => x !== col && x.classList.remove('over')); col.classList.add('over'); }
+  });
+  document.addEventListener('dragleave', e => { const d = e.target.closest('#fb-drop'); if (d) d.classList.remove('over'); });
+  document.addEventListener('drop', e => {
+    const d = e.target.closest('#fb-drop'); if (d) { e.preventDefault(); addFiles(e.dataTransfer.files); return; }
+    const col = dragId && e.target.closest('.col[data-col]');
+    if (!col) return;
+    e.preventDefault();
+    const p = byId(dragId), s = col.dataset.col;
+    dragId = null;
+    if (p && p.status !== s) { p.status = s; p.statusChanged = Date.now(); save(); toast(`Статус: ${STATUS[s]}. Уже на доске`); }
+    render();
+  });
+  document.addEventListener('paste', e => {
+    if (ui.view !== 'host' || !ui.widget.open || ui.widget.tab !== 'send' || ui.widget.sentId) return;
+    const files = [...(e.clipboardData?.files || [])];
+    if (files.length) { e.preventDefault(); addFiles(files); toast('Скриншот вставлен'); }
+  });
+
+  $('#reset').addEventListener('click', () => {
+    db = seed(); save();
+    Object.assign(ui.widget, { open: false, tab: 'send', type: '', title: '', description: '', files: [], errors: {}, sentId: null });
+    ui.board.postId = null; ui.admin.drawer = null;
+    render(); toast('Демо-данные восстановлены');
+  });
+
+  render();
+})();
+</script>
