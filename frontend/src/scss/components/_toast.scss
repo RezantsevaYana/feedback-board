@@ -1,0 +1,21 @@
+@use '../utils' as *;
+
+// App.vue, store/modals/useNotificationStore.ts
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: 60;
+    background: var(--fg);
+    color: var(--bg);
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    max-width: calc(100vw - 32px);
+
+    &.error {
+        background: var(--bug);
+        color: #fff;
+    }
+}

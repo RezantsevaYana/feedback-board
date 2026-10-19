@@ -1,0 +1,96 @@
+@use '../utils' as *;
+
+.field {
+    display: grid;
+    gap: 6px;
+
+    > span {
+        font-size: 13px;
+        font-weight: 500;
+    }
+    small {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 400;
+    }
+}
+.input {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--fg);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font: inherit;
+
+    &:focus {
+        border-color: var(--brand);
+        outline: none;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
+    }
+    &.invalid {
+        border-color: var(--bug);
+    }
+}
+textarea.input {
+    resize: vertical;
+    min-height: 96px;
+}
+select.input {
+    width: auto;
+    padding: 6px 10px;
+}
+.check {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 14px;
+}
+.err {
+    color: var(--bug);
+    font-size: 12px;
+}
+.note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+.alert {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    background: color-mix(in srgb, var(--bug) 10%, var(--surface));
+    color: var(--bug);
+}
+
+// two big toggle buttons (bug / idea)
+.seg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    button {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--fg);
+        border-radius: 10px;
+        padding: 10px;
+        text-align: left;
+        display: grid;
+        gap: 2px;
+        font: inherit;
+        cursor: pointer;
+
+        b {
+            font-weight: 600;
+        }
+        small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        &[aria-pressed='true'] {
+            border-color: var(--brand);
+            background: var(--brand-soft);
+        }
+    }
+}

@@ -1,0 +1,31 @@
+@use '../utils' as *;
+
+// CategoriesModal.vue
+.cat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+
+    > li > .cat-row:not(form) {
+        padding: 6px 8px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+    }
+}
+.cat-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    // InputComponent's wrapper takes the free space in the row
+    .field {
+        flex: 1;
+        min-width: 160px;
+    }
+}
+.cat-err {
+    flex-basis: 100%;
+}

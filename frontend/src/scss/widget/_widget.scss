@@ -1,0 +1,87 @@
+@use '../utils' as *;
+
+// WidgetApp.vue, inside the Shadow DOM.
+// The host element itself still matches the site's selectors (e.g. `* { font-family: … }`),
+// so typography is set on our own root instead of being inherited from :host.
+:host {
+    all: initial;
+}
+* {
+    box-sizing: border-box;
+}
+h3 {
+    margin: 0;
+}
+
+.fbw {
+    position: fixed;
+    bottom: 20px;
+    z-index: 2147483000;
+    display: grid;
+    gap: 12px;
+    justify-items: end;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--fg);
+
+    &.right {
+        right: 20px;
+    }
+    &.left {
+        left: 20px;
+        justify-items: start;
+    }
+}
+.fbw-launcher {
+    border: 0;
+    padding: 11px 18px 11px 22px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font: inherit;
+    font-weight: 600;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
+}
+.fbw-panel {
+    width: 370px;
+    max-height: min(640px, calc(100vh - 100px));
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    @include rise(0.18s);
+
+    @media screen and (max-width: $mobile-mini) {
+        position: fixed;
+        inset: 0;
+        width: auto;
+        max-height: none;
+        border-radius: 0;
+        border: 0;
+    }
+}
+.fbw-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px 10px 16px;
+    border-bottom: 1px solid var(--line);
+
+    h3 {
+        font-size: 15px;
+        font-weight: 600;
+    }
+}
+.fbw-body {
+    overflow-y: auto;
+    padding: 14px 16px 16px;
+}
+.fbw-actions {
+    justify-content: center;
+}

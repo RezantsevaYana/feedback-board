@@ -1,0 +1,78 @@
+@use '../utils' as *;
+
+.chip {
+    font-weight: 500;
+    font-size: 12px;
+    padding: 1px 8px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+// status
+.pill {
+    --c: var(--s-new);
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 6px;
+    color: var(--c);
+    background: color-mix(in srgb, var(--c) 12%, transparent);
+
+    &[data-s='done'] {
+        --c: var(--s-done);
+    }
+    &[data-s='rejected'] {
+        --c: var(--s-rejected);
+    }
+}
+
+// category tag: colour by the category's position in the project
+$type-tones: (
+    0: var(--bug),
+    1: var(--feature),
+    2: var(--s-planned),
+    3: var(--s-progress),
+    4: var(--accent-ink),
+    5: #b2457e,
+);
+.type {
+    --c: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 1px 10px 1px 14px;
+    color: var(--c);
+    background: color-mix(in srgb, var(--c) 12%, transparent);
+
+    @each $tone, $color in $type-tones {
+        &[data-tone='#{$tone}'] {
+            --c: #{$color};
+        }
+    }
+}
+
+.prio-tag {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--muted);
+
+    &[data-p='high'],
+    &[data-p='critical'] {
+        color: var(--bug);
+        background: color-mix(in srgb, var(--bug) 12%, transparent);
+    }
+}
+
+// PostTags.vue: category, status and priority in one row
+.post-tags {
+    gap: 6px;
+}

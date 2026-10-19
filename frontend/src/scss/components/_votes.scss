@@ -1,0 +1,67 @@
+@use '../utils' as *;
+
+// 👍 / 💩 pair
+.votes {
+    display: inline-flex;
+    gap: 6px;
+
+    &.stacked {
+        flex-direction: column;
+    }
+    &.sm .vote {
+        min-width: 0;
+        padding: 2px 8px;
+        font-size: 12px;
+        border-radius: 8px;
+
+        .emo {
+            font-size: 13px;
+        }
+    }
+}
+.vote {
+    min-width: 56px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 5px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+
+    .emo {
+        font-size: 15px;
+        line-height: 1;
+        filter: grayscale(0.6);
+    }
+    @include hover {
+        border-color: var(--accent);
+
+        .emo {
+            filter: none;
+        }
+    }
+    &[aria-pressed='true'] {
+        background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+        border-color: var(--accent);
+        color: var(--accent-ink);
+
+        .emo {
+            filter: none;
+        }
+    }
+
+    &.dislike {
+        @include hover {
+            border-color: var(--dislike);
+        }
+        &[aria-pressed='true'] {
+            background: color-mix(in srgb, var(--dislike) 16%, var(--surface));
+            border-color: var(--dislike);
+            color: var(--fg);
+        }
+    }
+}

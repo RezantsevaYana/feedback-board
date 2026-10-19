@@ -1,0 +1,206 @@
+@use '../utils' as *;
+
+// BoardPage.vue: section nav on the side, toolbar above content
+.board-layout {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 24px;
+    align-items: start;
+
+    @media screen and (max-width: $mobile) {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+.board-nav {
+    position: sticky;
+    top: 24px;
+    display: grid;
+    gap: 2px;
+
+    .proj {
+        @include displayFont;
+        font-size: 15px;
+        justify-self: start;
+        background: var(--accent);
+        color: var(--accent-fg);
+        padding: 4px 14px 5px 16px;
+        margin: 2px 0 14px;
+        text-decoration: none;
+    }
+    .btn {
+        margin-top: 14px;
+    }
+
+    @media screen and (max-width: $mobile) {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+
+        .proj {
+            margin: 0 8px 0 0;
+        }
+        .btn {
+            margin: 0 0 0 auto;
+        }
+    }
+}
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    border: 0;
+    background: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted);
+
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
+    &[aria-current='page'] {
+        background: var(--brand-soft);
+        color: var(--brand-ink);
+    }
+    .count {
+        margin-left: auto;
+        font-size: 13px;
+        opacity: 0.7;
+    }
+
+    @media screen and (max-width: $mobile) {
+        width: auto;
+        white-space: nowrap;
+    }
+}
+
+.team-login {
+    justify-self: start;
+    margin-top: 18px;
+
+    @media screen and (max-width: $mobile) {
+        margin-top: 0;
+    }
+}
+.team-box {
+    margin-top: 18px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+    font-size: 13px;
+
+    .chip {
+        background: var(--accent);
+        color: var(--accent-fg);
+    }
+    .who-mail {
+        word-break: break-all;
+    }
+    .link-btn {
+        padding: 0;
+    }
+
+    @media screen and (max-width: $mobile) {
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+    }
+}
+
+.board-main {
+    min-width: 0;
+}
+.board-head {
+    margin-bottom: 18px;
+
+    h1 {
+        @include displayFont;
+        font-size: clamp(22px, 3.4vw, 28px);
+        letter-spacing: -0.01em;
+    }
+    p {
+        margin: 4px 0 0;
+        color: var(--muted);
+    }
+}
+
+// toolbar: view switch, category chips, filters, sort
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+.chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+
+    button {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        color: var(--muted);
+
+        @include hover {
+            color: var(--fg);
+        }
+        &[aria-pressed='true'] {
+            background: var(--brand-soft);
+            color: var(--brand-ink);
+            border-color: transparent;
+            font-weight: 500;
+        }
+    }
+}
+.seg-icons {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--surface-2);
+
+    button {
+        border: 0;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted);
+
+        &[aria-pressed='true'] {
+            background: var(--surface);
+            color: var(--fg);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+    }
+}
+.toolbar-sep {
+    width: 1px;
+    height: 22px;
+    background: var(--line);
+
+    @media screen and (max-width: $mobile) {
+        display: none;
+    }
+}

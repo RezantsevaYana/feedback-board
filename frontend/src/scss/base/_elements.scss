@@ -1,0 +1,116 @@
+@use '../utils' as *;
+
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    min-width: 320px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+}
+body.locked {
+    overflow: hidden;
+}
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+button {
+    cursor: pointer;
+}
+:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+h1,
+h2,
+h3,
+h4 {
+    margin: 0;
+    text-wrap: balance;
+}
+a {
+    color: var(--accent-ink);
+}
+
+// Same container as in other company projects: fixed side gutters per breakpoint, capped at 1712px
+.container {
+    max-width: 1712px;
+    width: calc(100% - 208px);
+    margin: 0 auto;
+
+    @media screen and (max-width: $desktop) {
+        width: calc(100% - 112px);
+    }
+    @media screen and (max-width: $medium) {
+        width: calc(100% - 80px);
+    }
+    @media screen and (max-width: $tablet) {
+        width: calc(100% - 48px);
+    }
+    @media screen and (max-width: $mobile) {
+        width: calc(100% - 32px);
+    }
+}
+.base-page {
+    padding: 24px 0 48px;
+
+    @media screen and (max-width: $mobile) {
+        padding: 16px 0 32px;
+    }
+}
+.center-page {
+    min-height: 70vh;
+    display: grid;
+    place-items: center;
+    gap: 8px;
+    text-align: center;
+}
+.empty {
+    padding: 24px 8px;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+}
+.ico {
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+}
+.mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+}
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.spacer {
+    flex: 1;
+}
+@mixin formGrid($columns) {
+    display: grid;
+    grid-template-columns: repeat($columns, 1fr);
+    gap: 10px;
+
+    @media screen and (max-width: $mobile) {
+        grid-template-columns: 1fr;
+    }
+}
+.grid2 {
+    @include formGrid(2);
+}
+.grid3 {
+    @include formGrid(3);
+}

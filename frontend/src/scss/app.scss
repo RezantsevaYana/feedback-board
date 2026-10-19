@@ -1,0 +1,22 @@
+// Board styles. Imported once in main.ts; components carry no <style> blocks.
+
+// базовые стили
+@use 'base/tokens';
+@use 'base/elements';
+
+// layout
+@use 'layout/board';
+
+// компоненты
+@use 'components/buttons';
+@use 'components/forms';
+@use 'components/submit-form';
+@use 'components/tags';
+@use 'components/votes';
+@use 'components/cards';
+@use 'components/kanban';
+@use 'components/top-posts';
+@use 'components/modal';
+@use 'components/post-modal';
+@use 'components/categories-modal';
+@use 'components/toast';

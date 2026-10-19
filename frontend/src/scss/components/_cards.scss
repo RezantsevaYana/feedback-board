@@ -1,0 +1,65 @@
+@use '../utils' as *;
+
+// shared by list cards, kanban cards and top rows
+.card-body {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    cursor: pointer;
+}
+.meta {
+    color: var(--muted);
+    font-size: 13px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+}
+.excerpt {
+    color: var(--muted);
+    font-size: 14px;
+    @include lineClamp(2);
+}
+.is-hidden {
+    opacity: 0.55;
+}
+
+// PostList.vue
+.list {
+    display: grid;
+    gap: 10px;
+}
+.card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+
+    @include hover {
+        border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+    }
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    @media screen and (max-width: $mobile-mini) {
+        grid-template-columns: 1fr;
+
+        > .votes {
+            order: 3;
+            flex-direction: row;
+        }
+        > .pill {
+            justify-self: start;
+        }
+    }
+}
+.more {
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
+}

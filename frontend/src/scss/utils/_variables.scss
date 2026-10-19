@@ -1,0 +1,8 @@
+// Breakpoints: desktop-first, `@media screen and (max-width: $tablet)`. Same set as in other company projects.
+$desktop: 1919px;
+$medium: 1439px;
+$tablet: 1023px;
+$mobile: 767px;
+$mobile-mini: 479px;
+
+// Colors are CSS custom properties in base/_tokens.scss (dark theme and the widget's :host need them at runtime).

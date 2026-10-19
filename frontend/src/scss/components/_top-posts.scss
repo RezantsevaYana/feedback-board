@@ -1,0 +1,51 @@
+@use '../utils' as *;
+
+// TopPosts.vue
+.rank {
+    display: grid;
+    gap: 8px;
+    max-width: 860px;
+}
+.rank-row {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+
+    @include hover {
+        border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+    }
+    .card-body {
+        gap: 6px;
+    }
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+    &.top .rank-n {
+        color: var(--brand-ink);
+    }
+
+    @media screen and (max-width: $mobile-mini) {
+        grid-template-columns: 30px 1fr;
+        gap: 10px;
+
+        > .votes {
+            grid-column: 2;
+        }
+    }
+}
+.rank-n {
+    @include displayFont;
+    font-size: 20px;
+    color: var(--muted);
+    text-align: center;
+
+    @media screen and (max-width: $mobile-mini) {
+        font-size: 16px;
+    }
+}

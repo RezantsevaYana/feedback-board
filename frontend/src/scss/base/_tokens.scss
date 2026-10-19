@@ -1,0 +1,66 @@
+// Design tokens. Muted take on the company palette: green #27AD5A for actions, lavender #d1daff /
+// purple #8179f4 for selection. `:host` gives the same tokens to the widget's Shadow DOM; the widget
+// stays light (host sites rarely switch with the OS), so dark overrides target only :root.
+:root,
+:host {
+    --bg: #f3f4fa;
+    --surface: #ffffff;
+    --surface-2: #eceefa;
+    --line: #dcdfee;
+    --fg: #102528;
+    --muted: #5c6b72;
+    --accent: #27ad5a;
+    --accent-ink: #1b7f41;
+    --accent-fg: #ffffff;
+    --brand: #8179f4;
+    --brand-ink: #4b42c4;
+    --brand-soft: #dde3ff;
+    --bug: #c2453b;
+    --feature: #5b52d6;
+    --dislike: #a0785a;
+    --s-new: #6b7487;
+    --s-review: #6a61e0;
+    --s-planned: #00737a;
+    --s-progress: #a8690f;
+    --s-done: #1f9150;
+    --s-rejected: #c2453b;
+    --overlay: rgba(8, 24, 26, 0.55);
+    --shadow: 0 10px 28px rgba(16, 37, 40, 0.12);
+    --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+    --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --radius: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0c1718;
+        --surface: #122123;
+        --surface-2: #182b2e;
+        --line: #243a3d;
+        --fg: #e5eeee;
+        --muted: #94a8aa;
+        --accent-ink: #4fcf85;
+        --brand: #9a93f7;
+        --brand-ink: #c3c4ff;
+        --brand-soft: #262c58;
+        --bug: #f07a6f;
+        --feature: #a29bf8;
+        --s-new: #9aa5b4;
+        --s-review: #a29bf8;
+        --s-planned: #4fc2c8;
+        --s-progress: #e6a64a;
+        --s-done: #4fcf85;
+        --s-rejected: #f07a6f;
+        --overlay: rgba(0, 0, 0, 0.7);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        color-scheme: dark;
+    }
+}
+
+@keyframes rise {
+    from {
+        transform: translateY(8px);
+        opacity: 0.4;
+    }
+}

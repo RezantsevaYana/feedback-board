@@ -1,0 +1,10 @@
+// Widget styles, injected into its Shadow DOM by widget/main.ts (`?inline`).
+// Only what the widget renders: the panel and the shared SubmitForm.
+
+@use 'base/tokens';
+
+@use 'components/buttons';
+@use 'components/forms';
+@use 'components/submit-form';
+
+@use 'widget/widget';

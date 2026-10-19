@@ -1,5 +1,5 @@
-import { voterToken } from '@/lib/voter'
-import { TEXT } from '@/lib/dict'
+import { voterToken } from '@/shared/utils/voter'
+import { TEXT } from '@/shared/constants/dict'
 
 export class ApiError extends Error {
   constructor(
@@ -16,7 +16,12 @@ export class ApiError extends Error {
   }
 }
 
-interface Options {
+/** Text to show the user for any error thrown by a request. */
+export function errorMessage(e: unknown): string {
+  return e instanceof ApiError ? e.message : String(e)
+}
+
+export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   body?: unknown
   query?: Record<string, string | number | boolean | null | undefined>
@@ -39,7 +44,8 @@ function ensureCsrf(): Promise<void> {
   return csrf
 }
 
-export async function api<T>(path: string, opts: Options = {}): Promise<T> {
+// HTTP core for the modules in api/*: components and stores call those modules, not this function.
+export async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const method = opts.method ?? 'GET'
   const sameOrigin = !opts.origin
   const url = new URL(`/api${path}`, opts.origin ?? location.origin)

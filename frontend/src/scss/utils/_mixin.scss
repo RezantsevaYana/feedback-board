@@ -1,0 +1,31 @@
+@use 'variables' as *;
+
+// hover only on devices with a real pointer, so taps don't leave a stuck hover state
+@mixin hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+            @content;
+        }
+    }
+}
+
+// text cut to $lines lines with an ellipsis
+@mixin lineClamp($lines) {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+}
+
+// headings in Unbounded
+@mixin displayFont {
+    font-family: var(--font-display);
+    font-weight: 500;
+}
+
+// panel appears with a short rise; off for users who asked for less motion
+@mixin rise($duration: 0.16s) {
+    @media (prefers-reduced-motion: no-preference) {
+        animation: rise $duration ease-out;
+    }
+}

@@ -4,10 +4,10 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // Embeddable widget: one self-contained IIFE file, public/widget.js, served next to the board.
-// Every SFC is compiled in custom-element mode so its styles land inside the widget's Shadow DOM
-// and never leak into (or inherit from) the host site.
+// Styles come from src/scss/widget.scss (imported `?inline` in widget/main.ts) and are put inside
+// the widget's Shadow DOM, so they never leak into (or inherit from) the host site.
 export default defineConfig({
-  plugins: [vue({ features: { customElement: true } })],
+  plugins: [vue()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

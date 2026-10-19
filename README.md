@@ -67,7 +67,8 @@ docker compose exec frontend npm run lint
   API: `routes/api.php`, публичная часть — `/api/public/*`, режим команды — `/api/admin/*`.
 - `frontend/` — Vue 3 + TypeScript + Vite: доска с режимом команды (отдельной админки нет).
   - `src/widget/` — виджет: собирается отдельно в один файл `public/widget.js`, рендерится в Shadow DOM.
-  - `src/components/SubmitForm.vue` — форма отправки, общая для виджета и доски.
+  - `src/shared/components/SubmitForm.vue` — форма отправки, общая для виджета и доски.
+  - Структура и правила фронтенда — в `frontend/CLAUDE.md`.
   - `demo/` — страница «чужого сайта» для проверки виджета.
 - Docker Compose поднимает Postgres, бэкенд, фронтенд и демо-сайт.
 

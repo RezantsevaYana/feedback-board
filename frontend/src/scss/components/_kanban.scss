@@ -1,0 +1,78 @@
+@use '../utils' as *;
+
+// KanbanBoard.vue
+.kanban {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(190px, 1fr);
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    align-items: start;
+}
+.col {
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-height: 240px;
+    border: 2px solid transparent;
+
+    &.over {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+    }
+}
+.col-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 2px 4px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.col-empty {
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 16px 4px;
+}
+.kcard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    display: grid;
+    gap: 6px;
+
+    @include hover {
+        border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+    }
+    &[draggable='true'] {
+        cursor: grab;
+    }
+    &.dragging {
+        opacity: 0.4;
+    }
+    h4 {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+    .card-body {
+        gap: 6px;
+    }
+    .meta {
+        font-size: 12px;
+    }
+}
+.kcard-reply {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+    border-left: 2px solid var(--line);
+    padding-left: 8px;
+    @include lineClamp(2);
+}
