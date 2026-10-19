@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Project;
+use App\Models\User;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +25,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::define('manage-project', fn (User $user, Project $project) => $user->managesProject($project));
+
+        $tooMany = fn (string $message) => fn () => response()->json(['message' => $message], 429);
+
+        RateLimiter::for('posts', fn (Request $request) => Limit::perHour(10)->by($request->ip())
+            ->response($tooMany('Слишком много предложений за час. Попробуйте позже.')));
+        RateLimiter::for('votes', fn (Request $request) => Limit::perMinute(60)->by($request->ip())
+            ->response($tooMany('Слишком много голосов подряд. Подождите минуту.')));
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by($request->ip())
+            ->response($tooMany('Слишком много попыток входа. Подождите минуту.')));
     }
 }

@@ -2,106 +2,121 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&family=JetBrains+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
 <style>
-/* Layout: sticky top bar with screen switcher; each screen is a working mock (host site + widget, public board, admin) */
+/* Layout: sticky top bar with screen switcher; each screen is a working mock (host site + widget, board, how it works).
+   Brand: muted take on the company palette — dark green #00474c for actions, lavender #d1daff / purple #8179f4 for selection,
+   green #27ad5a for "done"; signature shape is a tag with a slanted left edge (.slant). Free fonts: Unbounded + Onest. */
 :root {
-  --bg: #f2f4f6;
+  --bg: #f3f4fa;
   --surface: #ffffff;
-  --surface-2: #e9edf1;
-  --line: #d6dce2;
-  --fg: #15202a;
-  --muted: #5b6977;
-  --accent: #0b7a6b;
+  --surface-2: #eceefa;
+  --line: #dcdfee;
+  --fg: #102528;
+  --muted: #5c6b72;
+  --accent: #27ad5a;
+  --accent-ink: #1b7f41;
   --accent-fg: #ffffff;
-  --accent-soft: #dcf0eb;
-  --bug: #c0392f;
-  --feature: #2560c4;
-  --s-new: #66727f;
-  --s-review: #7748cc;
-  --s-planned: #2560c4;
-  --s-progress: #a86300;
-  --s-done: #1d8547;
-  --s-rejected: #c0392f;
-  --host-side: #1d2a35;
-  --host-side-fg: #c9d3dc;
-  --overlay: rgba(10, 16, 22, .6);
-  --shadow: 0 10px 30px rgba(15, 30, 45, .16);
-  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
-  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
-  --radius: 10px;
+  --accent-soft: #e6e9ff;
+  --brand: #8179f4;
+  --brand-ink: #4b42c4;
+  --brand-soft: #dde3ff;
+  --bug: #c2453b;
+  --feature: #5b52d6;
+  --s-new: #6b7487;
+  --s-review: #6a61e0;
+  --s-planned: #00737a;
+  --s-progress: #a8690f;
+  --s-done: #1f9150;
+  --s-rejected: #c2453b;
+  --host-side: #262b33;
+  --host-side-fg: #c9ced6;
+  --overlay: rgba(8, 24, 26, .55);
+  --shadow: 0 10px 28px rgba(16, 37, 40, .12);
+  --font-display: "Unbounded", "Onest", system-ui, sans-serif;
+  --font-body: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 12px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1317; --surface: #161d23; --surface-2: #1e272f; --line: #2b3640; --fg: #e4eaef; --muted: #93a0ac;
-    --accent: #3cc2aa; --accent-fg: #052520; --accent-soft: #123530;
-    --bug: #f07468; --feature: #6fa3f5;
-    --s-new: #9aa6b2; --s-review: #b393f2; --s-planned: #6fa3f5; --s-progress: #f0a845; --s-done: #4fcf85; --s-rejected: #f07468;
-    --host-side: #0a1014; --host-side-fg: #a9b6c1; --overlay: rgba(0, 0, 0, .7); --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    --bg: #0c1718; --surface: #122123; --surface-2: #182b2e; --line: #243a3d; --fg: #e5eeee; --muted: #94a8aa;
+    --accent: #27ad5a; --accent-ink: #4fcf85; --accent-fg: #ffffff; --accent-soft: #1d2447;
+    --brand: #9a93f7; --brand-ink: #c3c4ff; --brand-soft: #262c58;
+    --bug: #f07a6f; --feature: #a29bf8;
+    --s-new: #9aa5b4; --s-review: #a29bf8; --s-planned: #4fc2c8; --s-progress: #e6a64a; --s-done: #4fcf85; --s-rejected: #f07a6f;
+    --host-side: #071113; --host-side-fg: #a9bcbd; --overlay: rgba(0, 0, 0, .7); --shadow: 0 10px 30px rgba(0, 0, 0, .5);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1317; --surface: #161d23; --surface-2: #1e272f; --line: #2b3640; --fg: #e4eaef; --muted: #93a0ac;
-  --accent: #3cc2aa; --accent-fg: #052520; --accent-soft: #123530;
-  --bug: #f07468; --feature: #6fa3f5;
-  --s-new: #9aa6b2; --s-review: #b393f2; --s-planned: #6fa3f5; --s-progress: #f0a845; --s-done: #4fcf85; --s-rejected: #f07468;
-  --host-side: #0a1014; --host-side-fg: #a9b6c1; --overlay: rgba(0, 0, 0, .7); --shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  --bg: #0c1718; --surface: #122123; --surface-2: #182b2e; --line: #243a3d; --fg: #e5eeee; --muted: #94a8aa;
+  --accent: #27ad5a; --accent-ink: #4fcf85; --accent-fg: #ffffff; --accent-soft: #1d2447;
+  --brand: #9a93f7; --brand-ink: #c3c4ff; --brand-soft: #262c58;
+  --bug: #f07a6f; --feature: #a29bf8;
+  --s-new: #9aa5b4; --s-review: #a29bf8; --s-planned: #4fc2c8; --s-progress: #e6a64a; --s-done: #4fcf85; --s-rejected: #f07a6f;
+  --host-side: #071113; --host-side-fg: #a9bcbd; --overlay: rgba(0, 0, 0, .7); --shadow: 0 10px 30px rgba(0, 0, 0, .5);
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; font-variant-numeric: tabular-nums; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 h1, h2, h3 { text-wrap: balance; margin: 0; }
-a { color: var(--accent); }
+a { color: var(--accent-ink); }
 
-.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+/* brand shape: slanted left edge, rounded right */
+.slant { clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%); border-radius: 4px 10px 10px 4px; padding-left: 16px !important; }
+
+.wrap { max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
 .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
 .topbar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding-block: 12px; }
-.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
-.brand-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; color: var(--accent-fg); }
-.chip { font-family: var(--font-body); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
-.tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; flex-wrap: wrap; }
-.tab { border: 0; background: transparent; padding: 6px 12px; border-radius: 7px; font-weight: 500; color: var(--muted); }
-.tab[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-.tab .n { font-family: var(--font-mono); font-size: 12px; opacity: .7; margin-right: 4px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-tag { font-family: var(--font-display); font-weight: 500; font-size: 14px; letter-spacing: .01em; background: var(--accent); color: var(--accent-fg); padding: 5px 14px 6px; }
+.brand-note { color: var(--muted); font-size: 13px; }
+.chip { font-weight: 500; font-size: 12px; padding: 1px 8px; border-radius: 6px; background: var(--surface-2); color: var(--muted); white-space: nowrap; }
+.tabs { display: flex; gap: 2px; flex-wrap: wrap; }
+.tab { border: 0; background: transparent; padding: 7px 12px; border-radius: 8px; font-weight: 500; color: var(--muted); }
+.tab:hover { color: var(--fg); background: var(--surface-2); }
+.tab[aria-selected="true"] { background: var(--brand-soft); color: var(--brand-ink); }
+.tab .n { opacity: .6; margin-right: 6px; }
 .spacer { flex: 1; }
-.link-btn { border: 0; background: none; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; padding: 4px; font-size: 13px; }
+.link-btn { border: 0; background: none; color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; padding: 4px; font-size: 13px; }
+.link-btn:hover { color: var(--fg); text-decoration-color: currentColor; }
 
-.hint { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; margin-block: 16px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 14px; }
-.hint b { color: var(--fg); font-weight: 600; }
+.hint { padding: 12px 16px; margin-block: 16px; border-radius: var(--radius); background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); color: var(--fg); font-size: 14px; max-width: 110ch; }
+.hint b { font-weight: 600; }
 
 main { padding-bottom: 48px; }
 
 /* ---------- buttons, fields, pills ---------- */
-.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
-.btn:hover { background: var(--surface-2); }
-.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.btn-primary:hover { background: var(--accent); filter: brightness(1.08); }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 16px; border-radius: 10px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, var(--fg)); border-color: transparent; }
 .btn-danger { color: var(--bug); }
 .field { display: grid; gap: 6px; }
 .field > span { font-size: 13px; font-weight: 500; }
-.field small { color: var(--muted); font-size: 12px; }
-.input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; }
+.field small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 12px; }
+.input:focus { border-color: var(--brand); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
 textarea.input { resize: vertical; min-height: 96px; }
 .input.invalid { border-color: var(--bug); }
 .err { color: var(--bug); font-size: 12px; }
 
-.pill { --c: var(--s-new); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 99px; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); }
-.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.pill { --c: var(--s-new); display: inline-flex; align-items: center; white-space: nowrap; font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); }
 .pill[data-s="under_review"] { --c: var(--s-review); }
 .pill[data-s="planned"] { --c: var(--s-planned); }
 .pill[data-s="in_progress"] { --c: var(--s-progress); }
 .pill[data-s="done"] { --c: var(--s-done); }
 .pill[data-s="rejected"] { --c: var(--s-rejected); }
-.type { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--feature); }
-.type[data-t="bug"] { color: var(--bug); }
+.type { --c: var(--feature); display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 1px 10px 1px 14px !important; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); }
+.type[data-t="bug"] { --c: var(--bug); }
+.ico { width: 14px; height: 14px; vertical-align: -2px; }
 
 /* ---------- screen 1: host site + widget ---------- */
 .browser { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
@@ -121,24 +136,21 @@ textarea.input { resize: vertical; min-height: 96px; }
 .msg b { font-weight: 600; } .msg time { color: var(--muted); font-size: 12px; margin-left: 6px; }
 .msg p { margin: 2px 0 0; }
 
-.fb-launcher { position: absolute; right: 20px; bottom: 20px; z-index: 3; border: 0; border-radius: 99px; padding: 11px 18px; background: var(--accent); color: var(--accent-fg); font-weight: 600; box-shadow: var(--shadow); display: flex; gap: 8px; align-items: center; }
-.fb-panel { position: absolute; right: 20px; bottom: 76px; z-index: 4; width: 370px; max-height: calc(100% - 96px); display: grid; grid-template-rows: auto auto 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
-.fb-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
-.fb-head h3 { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+.fb-launcher { position: absolute; right: 20px; bottom: 20px; z-index: 3; border: 0; padding: 11px 18px; background: var(--accent); color: var(--accent-fg); font-weight: 600; box-shadow: var(--shadow); display: flex; gap: 8px; align-items: center; }
+.fb-panel { position: absolute; right: 20px; bottom: 76px; z-index: 4; width: 370px; max-height: calc(100% - 96px); display: grid; grid-template-rows: auto 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+.fb-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 10px 16px; border-bottom: 1px solid var(--line); }
+.fb-head h3 { font-family: var(--font-display); font-size: 15px; font-weight: 500; }
 .icon-btn { border: 0; background: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
 .icon-btn:hover { background: var(--surface-2); }
-.fb-tabs { display: flex; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--line); }
-.fb-tab { border: 0; background: none; padding: 8px 0; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.fb-tab[aria-selected="true"] { color: var(--fg); border-color: var(--accent); }
 .fb-body { overflow-y: auto; padding: 14px 16px 16px; display: grid; gap: 14px; align-content: start; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.seg button { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 10px; text-align: left; display: grid; gap: 2px; }
+.seg button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px; text-align: left; display: grid; gap: 2px; }
 .seg button b { font-weight: 600; }
 .seg button small { color: var(--muted); font-size: 12px; }
-.seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
-.drop { border: 1px dashed var(--line); border-radius: 9px; padding: 12px; text-align: center; color: var(--muted); font-size: 13px; }
-.drop.over { border-color: var(--accent); background: var(--accent-soft); }
-.drop label { color: var(--accent); text-decoration: underline; cursor: pointer; }
+.seg button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); }
+.drop { border: 1px dashed color-mix(in srgb, var(--brand) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--brand-soft) 30%, var(--surface)); padding: 12px; text-align: center; color: var(--muted); font-size: 13px; }
+.drop.over { border-color: var(--brand); background: var(--brand-soft); }
+.drop label { color: var(--brand-ink); text-decoration: underline; cursor: pointer; }
 .thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
 .thumb { position: relative; width: 64px; height: 48px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: var(--surface-2); }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -146,39 +158,40 @@ textarea.input { resize: vertical; min-height: 96px; }
 .note { font-size: 12px; color: var(--muted); }
 .fb-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .done-box { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 20px 0; }
-.done-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
-.mine { display: grid; gap: 2px; }
-.mine button { border: 0; background: none; text-align: left; padding: 10px 8px; border-radius: 8px; display: grid; gap: 4px; }
-.mine button:hover { background: var(--surface-2); }
+.done-icon { width: 48px; height: 48px; border-radius: 50%; background: color-mix(in srgb, var(--s-done) 14%, transparent); color: var(--s-done); display: grid; place-items: center; }
+.post-link { display: flex; align-items: center; gap: 6px; width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 4px 4px 4px 10px; background: var(--surface-2); }
+.post-link .mono { flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.post-link .btn { padding: 4px 10px; font-size: 13px; }
 .empty { color: var(--muted); text-align: center; padding: 24px 8px; font-size: 14px; }
 
 /* ---------- screen 2: board ---------- */
 .board-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.board-head h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(22px, 4vw, 30px); }
+.board-head h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(22px, 3.4vw, 28px); letter-spacing: -.01em; }
 .board-head p { margin: 4px 0 0; color: var(--muted); }
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chips button { border: 1px solid var(--line); background: var(--surface); padding: 5px 12px; border-radius: 99px; font-size: 14px; }
-.chips button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chips button { border: 1px solid var(--line); background: var(--surface); padding: 5px 12px; border-radius: 8px; font-size: 14px; color: var(--muted); }
+.chips button:hover { color: var(--fg); }
+.chips button[aria-pressed="true"] { background: var(--brand-soft); color: var(--brand-ink); border-color: transparent; font-weight: 500; }
 select.input { width: auto; padding: 6px 10px; }
 .list { display: grid; gap: 10px; }
 .card { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
-.card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.card:hover { border-color: color-mix(in srgb, var(--brand) 50%, var(--line)); }
 .card-body { min-width: 0; display: grid; gap: 4px; cursor: pointer; }
 .card-body h3 { font-size: 16px; font-weight: 600; }
 .excerpt { color: var(--muted); font-size: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
-.vote { width: 56px; border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 7px 0 5px; display: grid; justify-items: center; gap: 2px; font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
-.vote:hover { border-color: var(--accent); }
+.vote { width: 56px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 0 5px; display: grid; justify-items: center; gap: 2px; font-size: 14px; font-weight: 600; }
+.vote:hover { border-color: var(--accent); color: var(--accent-ink); }
 .vote[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 .post { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(16px, 3vw, 28px); display: grid; gap: 16px; max-width: 780px; }
-.post h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 3.4vw, 26px); line-height: 1.25; }
+.post h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(20px, 3.4vw, 26px); line-height: 1.25; }
 .post .desc { white-space: pre-wrap; max-width: 65ch; margin: 0; }
 .shots { display: flex; flex-wrap: wrap; gap: 10px; }
-.shots button { border: 1px solid var(--line); padding: 0; border-radius: 8px; overflow: hidden; width: 160px; height: 110px; background: var(--surface-2); }
+.shots button { border: 1px solid var(--line); padding: 0; border-radius: 10px; overflow: hidden; width: 160px; height: 110px; background: var(--surface-2); }
 .shots img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.answer { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; }
-.answer b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.answer { background: color-mix(in srgb, var(--brand-soft) 60%, var(--surface)); padding: 12px 16px; border-radius: var(--radius); }
+.answer b { display: block; font-size: 13px; font-weight: 600; color: var(--brand-ink); margin-bottom: 4px; }
 .answer p { margin: 0; white-space: pre-wrap; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .back { border: 0; background: none; color: var(--muted); padding: 0; margin-bottom: 14px; }
@@ -186,11 +199,11 @@ select.input { width: auto; padding: 6px 10px; }
 /* ---------- kanban (board + admin) ---------- */
 .kanban { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(210px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: start; }
 .col { background: var(--surface-2); border-radius: var(--radius); padding: 10px; display: grid; gap: 8px; align-content: start; min-height: 240px; border: 2px solid transparent; }
-.col.over { border-color: var(--accent); background: var(--accent-soft); }
+.col.over { border-color: var(--brand); background: var(--brand-soft); }
 .col-head { display: flex; justify-content: space-between; align-items: center; padding: 2px 2px 4px; }
 .col-head .mono { font-variant-numeric: tabular-nums; }
-.kcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 6px; }
-.kcard:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.kcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 6px; }
+.kcard:hover { border-color: color-mix(in srgb, var(--brand) 50%, var(--line)); }
 .kcard[draggable="true"] { cursor: grab; }
 .kcard.dragging { opacity: .4; }
 .kcard.is-hidden { opacity: .55; }
@@ -198,47 +211,100 @@ select.input { width: auto; padding: 6px 10px; }
 .kcard .card-body { gap: 6px; }
 .kcard-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
 .kcard .meta { font-size: 12px; }
-.vote.sm { width: auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 12px; border-radius: 99px; }
+.vote.sm { width: auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 12px; border-radius: 8px; }
 .vote.sm svg { width: 13px; height: 13px; }
-.prio-tag { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+.prio-tag { font-size: 12px; font-weight: 500; padding: 1px 7px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
 .prio-tag[data-p="high"], .prio-tag[data-p="critical"] { color: var(--bug); background: color-mix(in srgb, var(--bug) 12%, transparent); }
 .col-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 16px 4px; }
+
+/* ---------- board layout: section nav on the side, toolbar above content ---------- */
+.board-layout { display: grid; grid-template-columns: 190px 1fr; gap: 24px; align-items: start; }
+.board-nav { position: sticky; top: 76px; display: grid; gap: 2px; }
+.board-nav .proj { font-family: var(--font-display); font-weight: 500; font-size: 15px; justify-self: start; background: var(--accent); color: var(--accent-fg); padding: 4px 14px 5px; margin: 2px 0 14px; }
+.nav-item { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; padding: 8px 10px; border-radius: 8px; text-align: left; font-weight: 500; color: var(--muted); }
+.nav-item:hover { background: var(--surface-2); color: var(--fg); }
+.nav-item[aria-current="page"] { background: var(--brand-soft); color: var(--brand-ink); }
+.nav-item .count { margin-left: auto; font-size: 13px; color: inherit; opacity: .7; }
+.board-nav .btn { margin-top: 14px; justify-content: center; }
+.board-main { min-width: 0; }
+.team-login { justify-self: start; margin-top: 18px; }
+.team-box { margin-top: 18px; padding: 10px 12px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); display: grid; gap: 4px; justify-items: start; font-size: 13px; }
+.team-box .chip { background: var(--accent); color: var(--accent-fg); }
+.team-box .who-mail { color: var(--fg); word-break: break-all; }
+.team-box .link-btn { padding: 0; }
+.card.is-hidden { opacity: .55; }
+.modal.compose { width: min(520px, 100%); }
+.modal.compose h2 { font-family: var(--font-display); font-weight: 500; font-size: 18px; }
+.seg-icons { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+.seg-icons button { border: 0; background: transparent; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); }
+.seg-icons button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.toolbar-sep { width: 1px; height: 22px; background: var(--line); }
+.board-main .kanban { grid-auto-columns: minmax(190px, 1fr); }
+@media (max-width: 720px) {
+  .board-layout { grid-template-columns: 1fr; gap: 12px; }
+  .board-nav { position: static; display: flex; align-items: center; gap: 4px; overflow-x: auto; }
+  .board-nav { flex-wrap: wrap; }
+  .team-login, .team-box { margin-top: 0; }
+  .team-box { display: flex; align-items: center; gap: 8px; padding: 4px 8px; }
+  .board-nav .proj { display: none; }
+  .board-nav .btn { margin: 0 0 0 auto; white-space: nowrap; }
+  .nav-item { width: auto; white-space: nowrap; }
+  .toolbar-sep { display: none; }
+}
 
 /* ---------- feature ranking ---------- */
 .rank { display: grid; gap: 8px; max-width: 860px; }
 .rank-row { display: grid; grid-template-columns: 44px 1fr 56px; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
-.rank-row:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
-.rank-n { font-family: var(--font-display); font-weight: 600; font-size: 20px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
-.rank-row.top .rank-n { color: var(--accent); }
+.rank-row:hover { border-color: color-mix(in srgb, var(--brand) 50%, var(--line)); }
+.rank-n { font-family: var(--font-display); font-weight: 500; font-size: 20px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.rank-row.top .rank-n { color: var(--brand-ink); }
 .rank-row .card-body { gap: 6px; }
 .rank-row h3 { font-size: 16px; font-weight: 600; }
 .rank-note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
 @media (max-width: 480px) { .rank-row { grid-template-columns: 30px 1fr 48px; gap: 10px; } .rank-n { font-size: 16px; } }
 
-/* ---------- screen 3: admin ---------- */
-.login { max-width: 380px; margin: 40px auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 14px; }
-.login h2 { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
-.admin-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
-.admin-head h1 { font-family: var(--font-display); font-weight: 600; font-size: 22px; }
-.who { color: var(--muted); font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
-.stat b { font-family: var(--font-mono); color: var(--fg); margin-left: 4px; font-variant-numeric: tabular-nums; }
-.table-box { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 860px; }
-th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-tr:last-child td { border-bottom: 0; }
-tr.is-hidden td { opacity: .55; }
-td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.title-btn { border: 0; background: none; padding: 0; text-align: left; font-weight: 500; }
-.title-btn:hover { color: var(--accent); text-decoration: underline; }
-td select { font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
-.prio { font-size: 12px; }
+/* ---------- screen 3: how it works ---------- */
+.roles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+.role { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.role.hl { border-color: var(--brand); }
+.role h3 { font-family: var(--font-display); font-weight: 500; font-size: 15px; }
+.role p { margin: 0; }
+.role code { word-break: break-all; }
+.flow-fig { margin: 24px 0 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; }
+.flow-fig h2 { font-family: var(--font-display); font-weight: 500; font-size: 16px; display: flex; gap: 10px; align-items: baseline; }
+.flow-fig figcaption { color: var(--muted); font-size: 14px; max-width: 80ch; }
+.fig-scroll { overflow-x: auto; }
+.fig-scroll svg { display: block; width: 100%; min-width: 720px; height: auto; }
+.fl-node rect, .fl-node polygon { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.fl-dia polygon { fill: var(--surface-2); }
+.fl-node.hl rect { fill: var(--accent-soft); stroke: var(--accent); }
+.fl-node.err rect { fill: color-mix(in srgb, var(--bug) 8%, var(--surface)); stroke: var(--bug); }
+.fl-node.fl-dashed rect { stroke-dasharray: 6 4; }
+.fl-node.st-new rect { stroke: var(--s-new); }
+.fl-node.st-under_review rect { stroke: var(--s-review); }
+.fl-node.st-planned rect { stroke: var(--s-planned); }
+.fl-node.st-in_progress rect { stroke: var(--s-progress); }
+.fl-node.st-done rect { stroke: var(--s-done); }
+.fl-node.st-rejected rect { stroke: var(--s-rejected); }
+.fl-t { font: 600 13px var(--font-body); fill: var(--fg); }
+.fl-s { font: 11.5px var(--font-body); fill: var(--muted); }
+.fl-l { font: 12px var(--font-body); fill: var(--muted); }
+.fl-l-hl { fill: var(--accent-ink); }
+.fl-l-err { fill: var(--bug); }
+.fl-line { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.fl-line.fl-hl { stroke: var(--accent); }
+.fl-line.fl-err { stroke: var(--bug); }
+.fl-line.fl-dash { stroke-dasharray: 5 4; }
+.fl-ah-n { fill: var(--muted); }
+.fl-ah-hl { fill: var(--accent); }
+.fl-ah-err { fill: var(--bug); }
+.fl-zone { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.fl-actor circle { fill: var(--fg); }
+@media (max-width: 720px) { .roles { grid-template-columns: 1fr; } }
 
 /* modal: card details on the board and in the admin */
 .modal-bg { position: fixed; inset: 0; z-index: 20; background: var(--overlay); display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
-.modal { width: min(680px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: clamp(18px, 3vw, 28px); display: grid; gap: 14px; align-content: start; }
+.modal { width: min(680px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: clamp(18px, 3vw, 28px); display: grid; gap: 14px; align-content: start; }
 .modal.post { max-width: none; border: 0; }
 .drawer-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 body.locked { overflow: hidden; }
@@ -251,8 +317,8 @@ body.locked { overflow: hidden; }
 }
 .mono { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; border-radius: 8px; background: color-mix(in srgb, var(--bug) 10%, transparent); }
-.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: 8px; font-size: 14px; }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--bug) 10%, transparent); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-size: 14px; }
 .lightbox { position: fixed; inset: 0; z-index: 50; background: var(--overlay); display: grid; place-items: center; padding: 24px; cursor: zoom-out; }
 .lightbox img { max-height: 90vh; border-radius: 8px; background: var(--surface); }
 
@@ -275,11 +341,11 @@ body.locked { overflow: hidden; }
 
 <header class="topbar">
   <div class="wrap">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 3h12v8H6l-4 3V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>Feedback Board <span class="chip">прототип</span></div>
+    <div class="brand"><span class="brand-tag slant">Feedback Board</span><span class="brand-note">прототип</span></div>
     <nav class="tabs" role="tablist" aria-label="Экраны">
       <button class="tab" role="tab" data-view="host"><span class="n">1</span>Виджет на сайте</button>
-      <button class="tab" role="tab" data-view="board"><span class="n">2</span>Публичная доска</button>
-      <button class="tab" role="tab" data-view="admin"><span class="n">3</span>Админка</button>
+      <button class="tab" role="tab" data-view="board"><span class="n">2</span>Доска</button>
+      <button class="tab" role="tab" data-view="flow"><span class="n">3</span>Как это работает</button>
     </nav>
     <span class="spacer"></span>
     <button class="link-btn" id="reset">Сбросить демо-данные</button>
@@ -301,9 +367,9 @@ body.locked { overflow: hidden; }
   const PRIO_ORDER = { critical: 4, high: 3, medium: 2, low: 1, '': 0 };
   const TYPE = { bug: 'Баг', feature: 'Фича' };
   const HINTS = {
-    host: '<b>Так виджет выглядит на чужом сайте.</b> Нажмите «Обратная связь» в правом нижнем углу и отправьте баг или фичу. Скриншот можно перетащить, выбрать файлом или вставить через Ctrl+V. Вкладка «Мои» показывает статусы ваших предложений.',
-    board: '<b>Публичная доска проекта Kooly.</b> Колонки — это статусы, сразу видно, что в работе и что готово. Голосуйте 👍 (один голос с браузера, повторный клик отменяет). Клик по карточке открывает подробности в модальном окне. Отклонённые на доске не показываются, но открываются по прямой ссылке из «Моих». Можно переключиться на вид «Список» или «Топ фич», где идеи ранжированы по голосам.',
-    admin: '<b>Админка.</b> Пароль заполнен, просто нажмите «Войти». Перетаскивайте карточки между колонками, чтобы сменить статус: изменение сразу видно на доске и в «Моих» виджета. Клик по карточке открывает модальное окно для редактирования. Есть и вид «Таблица».'
+    host: '<b>Так виджет выглядит на чужом сайте.</b> Нажмите «Обратная связь» в правом нижнем углу и отправьте баг или фичу. Скриншот можно перетащить, выбрать файлом или вставить через Ctrl+V. Виджет только принимает предложения, а следить за статусом и голосовать можно на доске.',
+    board: '<b>Публичная доска проекта Demo.</b> Слева разделы: «Предложения» и «Топ фич» (идеи по голосам). Над предложениями — вид (колонки по статусам или список), фильтр «баги / фичи» и сортировка. Голосуйте кнопкой с пальцем вверх (один голос с браузера, повторный клик отменяет). Клик по карточке открывает подробности. «Предложить» открывает ту же форму, что в виджете. <b>Отдельной админки нет:</b> нажмите «Вход для команды» внизу слева — доска перейдёт в режим команды (перетаскивание, колонка «Отклонено», приоритеты, редактирование).',
+    flow: '<b>Как устроен сервис.</b> Две роли и четыре схемы: кто с кем общается, как доска отличает гостя от команды, как сервер проверяет действия команды и как живёт предложение.'
   };
 
   // ---------- placeholder screenshots ----------
@@ -341,7 +407,6 @@ body.locked { overflow: hidden; }
         p(108, 'feature', 'Статус «в отпуске» с датой возвращения', 'Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября, и не ждать ответа.', 'Марина К.', 'new', '', 4, 1)
       ],
       voted: { 101: true },
-      mine: [108, 107],
       name: ''
     };
   }
@@ -354,20 +419,34 @@ body.locked { overflow: hidden; }
 
   const ui = {
     view: 'host',
-    widget: { open: false, tab: 'send', type: '', title: '', description: '', files: [], errors: {}, sentId: null },
-    board: { view: 'kanban', topScope: 'open', type: 'all', status: 'active', sort: 'top', postId: null },
-    admin: { view: 'kanban', logged: false, type: 'all', status: 'all', priority: 'all', showHidden: true, sort: 'new', drawer: null, confirmDelete: false }
+    widget: { open: false, type: '', title: '', description: '', files: [], errors: {}, sentId: null },
+    board: {
+      section: 'posts', layout: 'kanban', topScope: 'open', type: 'all', status: 'active', sort: 'top', postId: null, compose: false,
+      // team mode: what the board shows after «Вход для команды»
+      team: false, login: false, loginError: '', priority: 'all', showHidden: true, drawer: null, confirmDelete: false
+    }
   };
   try { const v = localStorage.getItem(KEY + '-view'); if (v && HINTS[v]) ui.view = v; } catch (e) {}
+  try { ui.board.team = localStorage.getItem(KEY + '-team') === '1'; } catch (e) {}
+  // stands in for the session cookie: survives reloads until «Выйти»
+  function setTeam(on) {
+    ui.board.team = on;
+    if (!on) Object.assign(ui.board, { sort: ui.board.sort === 'priority' ? 'top' : ui.board.sort, status: 'active' });
+    try { localStorage.setItem(KEY + '-team', on ? '1' : ''); } catch (e) {}
+  }
 
   // ---------- helpers ----------
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = t => new Date(t).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   const byId = id => db.posts.find(p => p.id === id);
   const pill = s => `<span class="pill" data-s="${s}">${STATUS[s]}</span>`;
-  const typeTag = t => `<span class="type" data-t="${t}">${t === 'bug' ? '● ' : '◆ '}${TYPE[t]}</span>`;
+  const typeTag = t => `<span class="type slant" data-t="${t}">${TYPE[t]}</span>`;
+  const iconClip = `<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M10.5 4.5 5.4 9.6a1.5 1.5 0 0 0 2.1 2.1l5.3-5.3a3 3 0 0 0-4.2-4.2L3.2 7.6a4.5 4.5 0 0 0 6.4 6.4l3.9-3.9"/></svg>`;
+  const iconReply = `<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/></svg>`;
+  const shotsMeta = p => p.images.length ? `<span title="Скриншоты">${iconClip} ${p.images.length}</span>` : '';
   const thumbIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H3V10h4Zm0 0 4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"/></svg>`;
   const $ = s => document.querySelector(s);
+  const postUrl = id => `feedback.example.com/demo/posts/${id}`;
 
   let toastTimer;
   function toast(text) {
@@ -400,11 +479,11 @@ body.locked { overflow: hidden; }
     ];
     return `
       <div class="browser">
-        <div class="browser-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">https://kooly.example.com/chat/general</span></div>
+        <div class="browser-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">https://app.example.com/chat/general</span></div>
         <div class="host">
           <aside class="host-side" aria-hidden="true">
-            <div class="ws">Kooly</div>
-            <div class="ch on"># общий</div><div class="ch"># разработка</div><div class="ch"># релизы</div><div class="ch"># kooly-feedback</div>
+            <div class="ws">Demo App</div>
+            <div class="ch on"># общий</div><div class="ch"># разработка</div><div class="ch"># релизы</div><div class="ch"># поддержка</div>
           </aside>
           <div class="host-main">
             <div class="host-head"># общий</div>
@@ -413,42 +492,36 @@ body.locked { overflow: hidden; }
             </div>
           </div>
           ${w.open ? renderPanel() : ''}
-          <button class="fb-launcher" data-action="w-toggle" aria-expanded="${w.open}">
+          <button class="fb-launcher slant" data-action="w-toggle" aria-expanded="${w.open}">
             ${w.open ? '<span aria-hidden="true">✕</span> Закрыть' : `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3h12v8H6l-4 3V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg> Обратная связь`}
           </button>
         </div>
       </div>
-      <p class="note" style="margin-top:12px">Подключение на сайте: <code class="mono">&lt;script src="https://feedback.example.com/widget.js" data-project="kooly" defer&gt;&lt;/script&gt;</code></p>`;
+      <p class="note" style="margin-top:12px">Подключение на сайте: <code class="mono">&lt;script src="https://feedback.example.com/widget.js" data-project="demo" defer&gt;&lt;/script&gt;</code></p>`;
   }
 
   function renderPanel() {
     const w = ui.widget;
-    const mineCount = db.mine.filter(byId).length;
-    let body;
-    if (w.tab === 'mine') body = renderMine();
-    else if (w.sentId) body = `
+    const body = w.sentId ? `
       <div class="done-box">
         <span class="done-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg></span>
         <h3>Спасибо! Предложение на доске</h3>
-        <p class="note">Статус можно отслеживать во вкладке «Мои» или на доске.</p>
+        <p class="note">Сохраните ссылку: по ней видно статус и ответ команды.</p>
+        <div class="post-link"><span class="mono">${postUrl(w.sentId)}</span><button type="button" class="btn" data-action="copy-link" data-id="${w.sentId}">Скопировать</button></div>
         <div class="row" style="justify-content:center">
           <button class="btn btn-primary" data-action="open-post" data-id="${w.sentId}">Открыть на доске</button>
           <button class="btn" data-action="w-again">Отправить ещё</button>
         </div>
-      </div>`;
-    else body = renderForm();
+      </div>` : renderForm();
     return `
       <div class="fb-panel" role="dialog" aria-label="Обратная связь">
         <div class="fb-head"><h3>Обратная связь</h3><button class="icon-btn" data-action="w-toggle" aria-label="Закрыть">✕</button></div>
-        <div class="fb-tabs" role="tablist">
-          <button class="fb-tab" role="tab" aria-selected="${w.tab === 'send'}" data-action="w-tab" data-tab="send">Отправить</button>
-          <button class="fb-tab" role="tab" aria-selected="${w.tab === 'mine'}" data-action="w-tab" data-tab="mine">Мои${mineCount ? ` · ${mineCount}` : ''}</button>
-        </div>
         <div class="fb-body">${body}</div>
       </div>`;
   }
 
-  function renderForm() {
+  // one form for both the widget and the board (in the product: a shared Vue component)
+  function renderForm(onBoard) {
     const w = ui.widget, e = w.errors;
     const ph = w.type === 'bug' ? 'Что произошло и как это повторить? Что ожидали увидеть?' : w.type === 'feature' ? 'Что хотите и зачем? Какую задачу это решит?' : 'Сначала выберите тип выше';
     return `
@@ -481,21 +554,10 @@ body.locked { overflow: hidden; }
         </label>
         <p class="note">Предложение и скриншоты будут видны всем на доске.</p>
         <div class="fb-foot">
-          <button type="button" class="link-btn" data-action="go-board">Все предложения →</button>
+          ${onBoard ? '<button type="button" class="btn" data-action="b-compose-close">Отмена</button>' : '<button type="button" class="link-btn" data-action="go-board">Все предложения →</button>'}
           <button type="submit" class="btn btn-primary">Отправить</button>
         </div>
       </form>`;
-  }
-
-  function renderMine() {
-    const items = db.mine.map(byId).filter(p => p && !p.hidden);
-    if (!items.length) return `<div class="empty">Вы ещё ничего не отправляли из этого браузера.</div>`;
-    return `<div class="mine">${items.map(p => `
-      <button data-action="open-post" data-id="${p.id}">
-        <span class="row" style="gap:8px">${typeTag(p.type)}${pill(p.status)}</span>
-        <span>${esc(p.title)}</span>
-      </button>`).join('')}</div>
-      <p class="note">Список хранится в этом браузере. Нажмите на предложение, чтобы открыть его на доске.</p>`;
   }
 
   function validate() {
@@ -527,13 +589,25 @@ body.locked { overflow: hidden; }
   const BOARD_COLS = ['new', 'under_review', 'planned', 'in_progress', 'done'];
   const ADMIN_COLS = [...BOARD_COLS, 'rejected'];
 
+  // guests see public posts only; the team also sees rejected and (optionally) hidden ones
   function boardPosts() {
     const b = ui.board;
-    let list = db.posts.filter(p => !p.hidden && p.status !== 'rejected');
+    let list = b.team
+      ? db.posts.filter(p => b.showHidden || !p.hidden)
+      : db.posts.filter(p => !p.hidden && p.status !== 'rejected');
     if (b.type !== 'all') list = list.filter(p => p.type === b.type);
-    if (b.view === 'list' && b.status !== 'active') list = list.filter(p => p.status === b.status);
-    return list.sort((a, c) => b.sort === 'top' ? c.votes - a.votes || c.created - a.created : c.created - a.created);
+    if (b.layout === 'list' && b.status !== 'active') list = list.filter(p => p.status === b.status);
+    if (b.team && b.priority !== 'all') list = list.filter(p => p.priority === (b.priority === 'none' ? '' : b.priority));
+    const sorts = {
+      top: (a, c) => c.votes - a.votes || c.created - a.created,
+      new: (a, c) => c.created - a.created,
+      priority: (a, c) => PRIO_ORDER[c.priority] - PRIO_ORDER[a.priority] || c.created - a.created
+    };
+    return list.sort(sorts[b.team ? b.sort : b.sort === 'priority' ? 'top' : b.sort]);
   }
+  const teamTags = p => ui.board.team && (p.priority || p.hidden)
+    ? `<span class="row" style="gap:4px">${p.priority ? `<span class="prio-tag" data-p="${p.priority}">${PRIORITY[p.priority]}</span>` : ''}${p.hidden ? '<span class="chip">скрыто</span>' : ''}</span>`
+    : '';
   const voteBtn = (p, sm) => `<button class="vote${sm ? ' sm' : ''}" data-action="vote" data-id="${p.id}" aria-pressed="${!!db.voted[p.id]}" aria-label="${db.voted[p.id] ? 'Отменить голос' : 'Проголосовать'}">${thumbIcon}<span>${p.votes}</span></button>`;
 
   function kanban(cols, list, card, admin) {
@@ -546,29 +620,27 @@ body.locked { overflow: hidden; }
     }).join('')}</div>`;
   }
 
+  // one card for everyone; in team mode it is draggable and shows priority / hidden
   const boardCard = p => `
-    <article class="kcard">
+    <article class="kcard ${p.hidden ? 'is-hidden' : ''}" ${ui.board.team ? `draggable="true" data-drag="${p.id}"` : ''}>
       <div class="kcard-top">${typeTag(p.type)}${voteBtn(p, true)}</div>
+      ${teamTags(p)}
       <div class="card-body" data-action="open-post" data-id="${p.id}" role="link" tabindex="0">
         <h4>${esc(p.title)}</h4>
-        <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${p.images.length ? `<span>📎 ${p.images.length}</span>` : ''}${p.comment ? '<span>💬</span>' : ''}</div>
+        <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${shotsMeta(p)}${p.comment ? `<span title="Есть ответ команды">${iconReply}</span>` : ''}</div>
       </div>
     </article>`;
 
-  const adminCard = p => `
-    <article class="kcard ${p.hidden ? 'is-hidden' : ''}" draggable="true" data-drag="${p.id}">
-      <div class="kcard-top">${typeTag(p.type)}<span class="row" style="gap:4px">${p.priority ? `<span class="prio-tag" data-p="${p.priority}">${PRIORITY[p.priority]}</span>` : ''}${p.hidden ? '<span class="chip">скрыто</span>' : ''}</span></div>
-      <div class="card-body" data-action="a-open" data-id="${p.id}" role="button" tabindex="0">
-        <h4>${esc(p.title)}</h4>
-        <div class="meta"><span>👍 ${p.votes}</span><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${p.images.length ? `<span>📎 ${p.images.length}</span>` : ''}</div>
-      </div>
-    </article>`;
+  const topFeatures = scope => db.posts
+    .filter(p => p.type === 'feature' && !p.hidden && p.status !== 'rejected' && (scope === 'all' || p.status !== 'done'))
+    .sort((x, y) => y.votes - x.votes || x.created - y.created);
+
+  const iconCols = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1.5" y="2" width="3.5" height="12" rx="1"/><rect x="6.25" y="2" width="3.5" height="8" rx="1"/><rect x="11" y="2" width="3.5" height="10" rx="1"/></svg>`;
+  const iconList = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 3.5h12M2 8h12M2 12.5h12"/></svg>`;
+  const iconTop = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2 14V9h3.5v5M6.25 14V4h3.5v10M10.5 14V7H14v7"/></svg>`;
 
   function renderTop(chip) {
-    const b = ui.board;
-    const list = db.posts
-      .filter(p => p.type === 'feature' && !p.hidden && p.status !== 'rejected' && (b.topScope === 'all' || p.status !== 'done'))
-      .sort((x, y) => y.votes - x.votes || x.created - y.created);
+    const list = topFeatures(ui.board.topScope);
     let rank = 0;
     const rows = list.map((p, i) => {
       if (i === 0 || p.votes !== list[i - 1].votes) rank = i + 1;  // равные голоса — одно место
@@ -583,63 +655,80 @@ body.locked { overflow: hidden; }
         </article>`;
     }).join('');
     return `
+      <div class="board-head">
+        <div><h1>Топ фич</h1><p>Идеи по числу голосов: команда видит, что нужно в первую очередь.</p></div>
+      </div>
       <div class="filters">
-        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}${chip('view', 'top', 'Топ фич')}</div>
-        <span class="spacer"></span>
         <div class="chips">${chip('topScope', 'open', 'Ещё не сделаны')}${chip('topScope', 'all', 'Все, включая готовые')}</div>
       </div>
-      <p class="rank-note">Фичи по числу голосов. Голосуйте за то, что нужно вам, чтобы команда видела, что делать в первую очередь.</p>
       <div class="rank">${rows || '<div class="empty">Пока нет фич для рейтинга.</div>'}</div>`;
   }
 
   function renderBoard() {
-    const b = ui.board, list = boardPosts();
+    const b = ui.board;
     const chip = (key, val, label) => `<button data-action="b-filter" data-key="${key}" data-val="${val}" aria-pressed="${b[key] === val}">${label}</button>`;
-    if (b.view === 'top') return `
-      <div class="board-head">
-        <div><h1>Kooly · топ фич</h1><p>Самые востребованные идеи пользователей.</p></div>
-        <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
-      </div>
-      ${renderTop(chip)}`;
-    if (b.view === 'kanban') return `
-      <div class="board-head">
-        <div><h1>Kooly · предложения</h1><p>Баги и идеи от пользователей. Голосуйте за то, что нужно вам.</p></div>
-        <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
-      </div>
-      <div class="filters">
-        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}${chip('view', 'top', 'Топ фич')}</div>
-        <div class="chips">${chip('type', 'all', 'Все')}${chip('type', 'bug', 'Баги')}${chip('type', 'feature', 'Фичи')}</div>
-        <span class="spacer"></span>
-        <div class="chips">${chip('sort', 'top', 'Популярные')}${chip('sort', 'new', 'Новые')}</div>
-      </div>
-      ${kanban(BOARD_COLS, list, boardCard, false)}`;
+    const navItem = (section, icon, label, count) => `<button class="nav-item" data-action="b-filter" data-key="section" data-val="${section}" ${b.section === section ? 'aria-current="page"' : ''}>${icon}<span>${label}</span><span class="count">${count}</span></button>`;
+    const allCount = b.team ? db.posts.length : db.posts.filter(p => !p.hidden && p.status !== 'rejected').length;
     return `
-      <div class="board-head">
-        <div><h1>Kooly · предложения</h1><p>Баги и идеи от пользователей. Голосуйте за то, что нужно вам.</p></div>
-        <button class="btn btn-primary" data-action="go-host">Предложить в виджете</button>
-      </div>
+      <div class="board-layout">
+        <nav class="board-nav" aria-label="Разделы доски">
+          <div class="proj slant">Demo</div>
+          ${navItem('posts', iconCols, 'Предложения', allCount)}
+          ${navItem('top', iconTop, 'Топ фич', topFeatures('open').length)}
+          <button class="btn btn-primary" data-action="b-compose">Предложить</button>
+          ${b.team
+            ? `<div class="team-box"><span class="chip">режим команды</span><span class="who-mail">admin@example.com</span><button class="link-btn" data-action="logout">Выйти</button></div>`
+            : `<button class="link-btn team-login" data-action="b-login">Вход для команды</button>`}
+        </nav>
+        <div class="board-main">${b.section === 'top' ? renderTop(chip) : renderPosts(chip)}</div>
+      </div>`;
+  }
+
+  function renderPosts(chip) {
+    const b = ui.board, list = boardPosts(), cols = b.team ? ADMIN_COLS : BOARD_COLS;
+    const layoutBtn = (val, icon, label) => `<button data-action="b-filter" data-key="layout" data-val="${val}" aria-pressed="${b.layout === val}">${icon}${label}</button>`;
+    const toolbar = `
       <div class="filters">
-        <div class="chips">${chip('view', 'kanban', 'Канбан')}${chip('view', 'list', 'Список')}${chip('view', 'top', 'Топ фич')}</div>
+        <div class="seg-icons" role="group" aria-label="Вид">${layoutBtn('kanban', iconCols, 'Колонки')}${layoutBtn('list', iconList, 'Список')}</div>
+        <span class="toolbar-sep" aria-hidden="true"></span>
         <div class="chips">${chip('type', 'all', 'Все')}${chip('type', 'bug', 'Баги')}${chip('type', 'feature', 'Фичи')}</div>
-        <select class="input" id="b-status" data-action="b-status" aria-label="Статус">
+        ${b.layout === 'list' ? `<select class="input" id="b-status" aria-label="Статус">
           <option value="active">Все статусы</option>
-          ${['new', 'under_review', 'planned', 'in_progress', 'done'].map(s => `<option value="${s}" ${b.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}
-        </select>
+          ${cols.map(s => `<option value="${s}" ${b.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}
+        </select>` : ''}
+        ${b.team ? `
+          <select class="input" id="b-priority" aria-label="Приоритет"><option value="all">Любой приоритет</option><option value="none" ${b.priority === 'none' ? 'selected' : ''}>Без приоритета</option>${['critical', 'high', 'medium', 'low'].map(k => `<option value="${k}" ${b.priority === k ? 'selected' : ''}>${PRIORITY[k]}</option>`).join('')}</select>
+          <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="b-hidden" ${b.showHidden ? 'checked' : ''}> Скрытые</label>` : ''}
         <span class="spacer"></span>
-        <div class="chips">${chip('sort', 'top', 'Популярные')}${chip('sort', 'new', 'Новые')}</div>
-      </div>
+        <div class="chips">${chip('sort', 'top', 'Популярные')}${chip('sort', 'new', 'Новые')}${b.team ? chip('sort', 'priority', 'Приоритет') : ''}</div>
+      </div>`;
+    const head = b.team
+      ? `<div class="board-head"><div><h1>Предложения</h1><p>Режим команды: перетаскивайте карточки, чтобы сменить статус. Клик — редактирование, приоритет, ответ.</p></div></div>`
+      : `<div class="board-head"><div><h1>Предложения</h1><p>Баги и идеи от пользователей. Голосуйте за то, что нужно вам.</p></div></div>`;
+    if (b.layout === 'kanban') return head + toolbar + kanban(cols, list, boardCard, b.team);
+    return head + toolbar + `
       <div class="list">
         ${list.length ? list.map(p => `
-          <article class="card">
+          <article class="card ${p.hidden ? 'is-hidden' : ''}">
             ${voteBtn(p)}
             <div class="card-body" data-action="open-post" data-id="${p.id}" role="link" tabindex="0">
-              ${typeTag(p.type)}
+              <span class="row" style="gap:8px">${typeTag(p.type)}${teamTags(p)}</span>
               <h3>${esc(p.title)}</h3>
               <div class="excerpt">${esc(p.description)}</div>
-              <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${p.images.length ? `<span>📎 ${p.images.length}</span>` : ''}${p.comment ? '<span>💬 ответ команды</span>' : ''}</div>
+              <div class="meta"><span>${esc(p.author || 'Аноним')}</span><span>${fmt(p.created)}</span>${shotsMeta(p)}${p.comment ? `<span>${iconReply} ответ команды</span>` : ''}</div>
             </div>
             ${pill(p.status)}
           </article>`).join('') : `<div class="empty">Под эти фильтры ничего не нашлось.</div>`}
+      </div>`;
+  }
+
+  function renderCompose() {
+    $('#layer').innerHTML = `
+      <div class="modal-bg" data-action="b-compose-close">
+        <div class="modal compose" role="dialog" aria-modal="true" aria-label="Новое предложение">
+          <div class="drawer-top"><h2>Новое предложение</h2><button type="button" class="icon-btn" data-action="b-compose-close" aria-label="Закрыть">✕</button></div>
+          ${renderForm(true)}
+        </div>
       </div>`;
   }
 
@@ -664,76 +753,136 @@ body.locked { overflow: hidden; }
   }
   const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c; };
 
-  // ---------- screen 3: admin ----------
-  function renderAdmin() {
-    const a = ui.admin;
-    if (!a.logged) return `
-      <form class="login" id="login-form">
-        <h2>Вход для команды</h2>
-        <label class="field"><span>Email</span><input class="input" id="login-email" type="email" value="admin@kooly.local"></label>
-        <label class="field"><span>Пароль</span><input class="input" id="login-pass" type="password" value="prototype"></label>
-        <button class="btn btn-primary" type="submit">Войти</button>
-        <p class="note">Админов заводим консольной командой. Регистрации нет.</p>
-      </form>`;
-    let list = db.posts.slice();
-    if (!a.showHidden) list = list.filter(p => !p.hidden);
-    if (a.type !== 'all') list = list.filter(p => p.type === a.type);
-    if (a.view === 'table' && a.status !== 'all') list = list.filter(p => p.status === a.status);
-    if (a.priority !== 'all') list = list.filter(p => p.priority === (a.priority === 'none' ? '' : a.priority));
-    list.sort((x, y) => a.sort === 'top' ? y.votes - x.votes : a.sort === 'priority' ? PRIO_ORDER[y.priority] - PRIO_ORDER[x.priority] || y.created - x.created : y.created - x.created);
-    const count = s => db.posts.filter(p => p.status === s).length;
-    const opt = (cur, map, extra = '') => extra + Object.entries(map).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${v}</option>`).join('');
+  // ---------- team login (modal on the board) ----------
+  function renderLogin() {
+    const b = ui.board;
+    $('#layer').innerHTML = `
+      <div class="modal-bg" data-action="b-login-close">
+        <form class="modal compose" id="login-form" role="dialog" aria-modal="true" aria-label="Вход для команды">
+          <div class="drawer-top"><h2>Вход для команды</h2><button type="button" class="icon-btn" data-action="b-login-close" aria-label="Закрыть">✕</button></div>
+          <label class="field"><span>Email</span><input class="input" id="login-email" type="email" value="admin@example.com" autocomplete="username"></label>
+          <label class="field"><span>Пароль</span><input class="input ${b.loginError ? 'invalid' : ''}" id="login-pass" type="password" value="prototype" autocomplete="current-password">
+            ${b.loginError ? `<span class="err">${b.loginError}</span>` : ''}</label>
+          <button class="btn btn-primary" type="submit">Войти</button>
+          <p class="note">Только для тех, кто разбирает предложения. Аккаунты заводит разработчик, у каждого свой пароль. В прототипе пароль уже введён — сотрите его, чтобы увидеть ошибку.</p>
+        </form>
+      </div>`;
+  }
+
+  // ---------- screen 3: how it works (flow diagrams) ----------
+  // tiny SVG helpers: boxes, decision diamonds, labelled arrows; colours come from page CSS
+  const F = {
+    defs: id => `<defs>${['n', 'hl', 'err'].map(k => `<marker id="${id}-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fl-ah-${k}"/></marker>`).join('')}</defs>`,
+    box: (x, y, w, h, title, sub = '', cls = '') => {
+      const cx = x + w / 2, cy = y + h / 2;
+      return `<g class="fl-node ${cls}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/>
+        <text x="${cx}" y="${sub ? cy - 3 : cy + 5}" text-anchor="middle" class="fl-t">${title}</text>
+        ${sub ? `<text x="${cx}" y="${cy + 15}" text-anchor="middle" class="fl-s">${sub}</text>` : ''}</g>`;
+    },
+    dia: (cx, cy, hw, hh, label) => `<g class="fl-node fl-dia"><polygon points="${cx},${cy - hh} ${cx + hw},${cy} ${cx},${cy + hh} ${cx - hw},${cy}"/><text x="${cx}" y="${cy + 5}" text-anchor="middle" class="fl-t">${label}</text></g>`,
+    arrow: (id, d, kind = 'n', dashed = false) => `<path d="${d}" class="fl-line fl-${kind}${dashed ? ' fl-dash' : ''}" marker-end="url(#${id}-${kind})"/>`,
+    label: (x, y, text, anchor = 'middle', kind = '') => `<text x="${x}" y="${y}" text-anchor="${anchor}" class="fl-l ${kind ? 'fl-l-' + kind : ''}">${text}</text>`,
+    actor: (x, y, name) => `<g class="fl-actor"><text x="${x}" y="${y - 12}" text-anchor="middle" class="fl-t">${name}</text><circle cx="${x}" cy="${y + 10}" r="7"/></g>`
+  };
+  const figure = (n, title, viewBox, label, body, caption) => `
+    <figure class="flow-fig">
+      <h2><span class="mono">${n}</span>${title}</h2>
+      <div class="fig-scroll"><svg viewBox="${viewBox}" role="img" aria-label="${label}">${body}</svg></div>
+      <figcaption>${caption}</figcaption>
+    </figure>`;
+
+  function renderFlow() {
+    // 1. who talks to whom: the widget lives on someone else's domain and only sends
+    const a = 'f1';
+    const map = F.defs(a) + `
+      <rect x="20" y="110" width="230" height="150" rx="12" class="fl-zone"/>
+      ${F.label(36, 250, 'app.example.com', 'start')}
+      <rect x="290" y="110" width="650" height="275" rx="12" class="fl-zone"/>
+      ${F.label(924, 374, 'feedback.example.com · наш сервис', 'end')}
+      ${F.actor(135, 42, 'Пользователь продукта')}
+      ${F.actor(790, 42, 'Админ (команда)')}
+      ${F.box(45, 140, 180, 64, 'Виджет', 'widget.js · только форма')}
+      ${F.box(390, 140, 240, 64, 'Доска /demo', 'гость или режим команды')}
+      ${F.box(390, 290, 240, 60, 'API · Laravel', 'проверяет сессию и права')}
+      ${F.box(710, 290, 200, 60, 'Postgres + файлы', 'предложения, голоса, админы')}
+      ${F.arrow(a, 'M135 59 V140')}${F.label(143, 98, 'пишет', 'start')}
+      ${F.arrow(a, 'M142 52 H450 V140')}${F.label(296, 44, 'смотрит, голосует, предлагает')}
+      ${F.arrow(a, 'M783 52 H570 V140', 'hl')}${F.label(676, 44, 'входит по email и паролю', 'middle', 'hl')}
+      ${F.arrow(a, 'M225 172 H390', 'n', true)}${F.label(338, 164, 'ссылка')}
+      ${F.arrow(a, 'M180 204 V320 H390')}${F.label(285, 312, 'POST предложение')}${F.label(285, 338, 'без входа, CORS')}
+      ${F.arrow(a, 'M450 204 V290')}${F.label(442, 252, 'GET доска, POST голос', 'end')}
+      ${F.arrow(a, 'M570 204 V290', 'hl')}${F.label(578, 252, 'PATCH · cookie сессии', 'start', 'hl')}
+      ${F.arrow(a, 'M630 320 H710')}${F.label(670, 312, 'SQL')}`;
+
+    // 2. how the board decides: guest or team
+    const b = 'f2';
+    const who = F.defs(b) + `
+      ${F.box(20, 40, 170, 56, 'Открыли доску', 'любой посетитель')}
+      ${F.box(240, 40, 190, 56, 'GET /api/admin/me', 'с cookie, если она есть')}
+      ${F.dia(530, 68, 66, 40, 'сессия?')}
+      ${F.box(680, 40, 250, 56, 'Режим команды', '200 · email и проекты', 'hl')}
+      ${F.box(440, 170, 180, 56, 'Гостевая доска', '401 · смотреть, голосовать')}
+      ${F.box(680, 170, 250, 56, 'Форма входа', 'ссылка «Вход для команды»')}
+      ${F.box(680, 256, 250, 50, 'Неверный email или пароль', 'не больше 5 попыток в минуту', 'err')}
+      ${F.arrow(b, 'M190 68 H240')}
+      ${F.arrow(b, 'M430 68 H464')}
+      ${F.arrow(b, 'M596 68 H680', 'hl')}${F.label(638, 60, 'да', 'middle', 'hl')}
+      ${F.arrow(b, 'M530 108 V170')}${F.label(538, 142, 'нет', 'start')}
+      ${F.arrow(b, 'M620 198 H680')}${F.label(650, 190, 'войти')}
+      ${F.arrow(b, 'M805 170 V96', 'hl')}${F.label(813, 138, 'верно → cookie', 'start', 'hl')}
+      ${F.arrow(b, 'M805 226 V256', 'err')}${F.label(813, 245, 'неверно', 'start', 'err')}`;
+
+    // 3. every team action is checked on the server, not by hiding buttons
+    const c = 'f3';
+    const check = F.defs(c) + `
+      ${F.box(20, 40, 190, 56, 'Действие команды', 'PATCH /admin/posts/123')}
+      ${F.dia(340, 68, 70, 40, 'сессия?')}
+      ${F.dia(560, 68, 80, 40, 'ведёт проект?')}
+      ${F.box(720, 40, 220, 56, 'Сохранено', 'сразу видно на доске', 'hl')}
+      ${F.box(275, 160, 130, 46, '401', 'нужно войти', 'err')}
+      ${F.box(495, 160, 130, 46, '403', 'чужой проект', 'err')}
+      ${F.arrow(c, 'M210 68 H270')}
+      ${F.arrow(c, 'M410 68 H480')}${F.label(445, 60, 'да')}
+      ${F.arrow(c, 'M640 68 H720', 'hl')}${F.label(680, 60, 'да', 'middle', 'hl')}
+      ${F.arrow(c, 'M340 108 V160', 'err')}${F.label(348, 138, 'нет', 'start', 'err')}
+      ${F.arrow(c, 'M560 108 V160', 'err')}${F.label(568, 138, 'нет', 'start', 'err')}`;
+
+    // 4. life of a post
+    const d = 'f4';
+    const states = [['new', 190, 120], ['under_review', 340, 150], ['planned', 520, 130], ['in_progress', 680, 110], ['done', 820, 110]];
+    const life = F.defs(d) + `
+      ${F.box(20, 40, 140, 56, 'Отправка', 'виджет или доска')}
+      ${states.map(([s, x, w]) => F.box(x, 40, w, 56, STATUS[s], '', 'st-' + s)).join('')}
+      ${F.arrow(d, 'M160 68 H190')}
+      ${states.slice(0, -1).map(([, x, w], i) => F.arrow(d, `M${x + w} 68 H${states[i + 1][1]}`)).join('')}
+      <path d="M190 106 V118 H930 V106" class="fl-line"/>
+      ${F.label(560, 136, 'видны всем на доске · команда ставит любой статус в любом порядке')}
+      ${F.arrow(d, 'M585 146 V170')}
+      ${F.box(520, 170, 130, 50, STATUS.rejected, 'только по ссылке', 'st-rejected fl-dashed')}`;
+
     return `
-      <div class="admin-head">
-        <h1>Предложения</h1>
-        <div class="who">
-          <select class="input" id="a-project" aria-label="Проект"><option>Kooly</option></select>
-          <span>admin@kooly.local</span><button class="link-btn" data-action="logout">Выйти</button>
-        </div>
+      <div class="roles">
+        <div class="role"><h3>Пользователь</h3><p>Любой, кто открыл виджет или доску. Аккаунта нет, ничего не вводит.</p><p class="note">Отправляет предложения · смотрит доску · голосует (один голос с браузера)</p></div>
+        <div class="role hl"><h3>Команда</h3><p>2–5 человек. Аккаунт в нашем сервисе заводит разработчик: <code class="mono">php artisan admin:create anna@example.com --project=demo</code></p><p class="note">Всё то же + статусы, приоритет, ответ команды, скрытие, удаление</p></div>
       </div>
-      <div class="stats">
-        <span class="stat">Новые<b>${count('new')}</b></span><span class="stat">На рассмотрении<b>${count('under_review')}</b></span>
-        <span class="stat">Запланировано<b>${count('planned')}</b></span><span class="stat">В работе<b>${count('in_progress')}</b></span>
-        <span class="stat">Готово<b>${count('done')}</b></span><span class="stat">Отклонено<b>${count('rejected')}</b></span>
-      </div>
-      <div class="filters">
-        <div class="chips"><button data-action="a-view" data-val="kanban" aria-pressed="${a.view === 'kanban'}">Канбан</button><button data-action="a-view" data-val="table" aria-pressed="${a.view === 'table'}">Таблица</button></div>
-        <select class="input" id="a-type" data-afilter="type" aria-label="Тип">${opt(a.type, TYPE, `<option value="all">Все типы</option>`)}</select>
-        ${a.view === 'table' ? `<select class="input" id="a-status" data-afilter="status" aria-label="Статус">${opt(a.status, STATUS, `<option value="all">Все статусы</option>`)}</select>` : ''}
-        <select class="input" id="a-priority" data-afilter="priority" aria-label="Приоритет"><option value="all">Любой приоритет</option><option value="none" ${a.priority === 'none' ? 'selected' : ''}>Без приоритета</option>${['critical', 'high', 'medium', 'low'].map(k => `<option value="${k}" ${a.priority === k ? 'selected' : ''}>${PRIORITY[k]}</option>`).join('')}</select>
-        <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="a-hidden" data-afilter="showHidden" ${a.showHidden ? 'checked' : ''}> Показывать скрытые</label>
-        <span class="spacer"></span>
-        <select class="input" id="a-sort" data-afilter="sort" aria-label="Сортировка">${opt(a.sort, { new: 'Сначала новые', top: 'По голосам', priority: 'По приоритету' })}</select>
-      </div>
-      ${a.view === 'kanban' ? kanban(ADMIN_COLS, list, adminCard, true) : `
-      <div class="table-box">
-        <table>
-          <thead><tr><th>Тип</th><th>Заголовок</th><th>Статус</th><th>Приоритет</th><th>👍</th><th>Автор</th><th>Дата</th><th></th></tr></thead>
-          <tbody>
-            ${list.length ? list.map(p => `
-              <tr class="${p.hidden ? 'is-hidden' : ''}">
-                <td>${typeTag(p.type)}</td>
-                <td><button class="title-btn" data-action="a-open" data-id="${p.id}">${esc(p.title)}</button>${p.images.length ? ` <span class="note">📎${p.images.length}</span>` : ''}</td>
-                <td><select id="st-${p.id}" data-field="status" data-id="${p.id}" aria-label="Статус">${opt(p.status, STATUS)}</select></td>
-                <td><select id="pr-${p.id}" data-field="priority" data-id="${p.id}" aria-label="Приоритет" class="prio">${opt(p.priority, PRIORITY)}</select></td>
-                <td class="num">${p.votes}</td>
-                <td>${esc(p.author || 'Аноним')}</td>
-                <td class="num">${fmt(p.created)}</td>
-                <td>${p.hidden ? '<span class="chip">скрыто</span>' : ''}</td>
-              </tr>`).join('') : `<tr><td colspan="8"><div class="empty">Ничего не найдено.</div></td></tr>`}
-          </tbody>
-        </table>
-      </div>`}`;
+      ${figure(1, 'Кто с кем общается', '0 0 960 400', 'Виджет на сайте продукта отправляет предложение в API; доска и API живут на нашем домене; админ входит на доске', map,
+        'Виджет живёт на чужом домене и умеет только отправлять форму — про роли он ничего не знает. Доска, API и база — наш сервис. Действия команды (зелёные стрелки) идут с cookie сессии, которую ставит наш домен.')}
+      ${figure(2, 'Как доска понимает, кто её открыл', '0 0 960 320', 'Доска спрашивает API о сессии: нет сессии — гостевая доска, есть — режим команды; вход по email и паролю ставит сессию', who,
+        'Формы входа обычный пользователь не видит — только неприметную ссылку «Вход для команды». Админ входит один раз, сессия живёт около двух недель.')}
+      ${figure(3, 'Проверка каждого действия команды', '0 0 960 220', 'Каждое действие команды API проверяет дважды: есть ли сессия и ведёт ли админ этот проект', check,
+        'Безопасность держится на сервере, а не на спрятанных кнопках: без сессии — 401, с сессией, но не своего проекта — 403.')}
+      ${figure(4, 'Жизнь предложения', '0 0 960 230', 'Новое предложение проходит статусы от Нового до Готово; Отклонено можно поставить из любого статуса', life,
+        'Новое предложение сразу на доске. Порядок статусов — типичный, но команда может поставить любой. «Отклонено» с доски пропадает, по ссылке остаётся с ответом команды. «Скрыто» — отдельный флажок для спама: такую карточку не видно ни на доске, ни по ссылке.')}`;
   }
 
   function renderDrawer() {
-    const a = ui.admin, p = a.drawer && byId(a.drawer);
+    const a = ui.board, p = a.drawer && byId(a.drawer);
     if (!p) { $('#layer').innerHTML = ''; return; }
     const opt = (cur, map) => Object.entries(map).map(([k, v]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${v}</option>`).join('');
     $('#layer').innerHTML = `
       <div class="modal-bg" data-action="a-close">
         <form class="modal" id="drawer-form" role="dialog" aria-modal="true" aria-label="Карточка предложения">
-          <div class="drawer-top"><span class="row">${typeTag(p.type)}<span class="mono">#${p.id} · ${fmt(p.created)} · ${esc(p.author || 'Аноним')} · 👍 ${p.votes}</span></span><button type="button" class="icon-btn" data-action="a-close" aria-label="Закрыть">✕</button></div>
+          <div class="drawer-top"><span class="row">${typeTag(p.type)}<span class="mono">#${p.id} · ${fmt(p.created)} · ${esc(p.author || 'Аноним')} · ${p.votes} ${plural(p.votes, 'голос', 'голоса', 'голосов')}</span></span><button type="button" class="icon-btn" data-action="a-close" aria-label="Закрыть">✕</button></div>
           <label class="field"><span>Заголовок</span><input class="input" id="d-title" value="${esc(p.title)}" maxlength="120"></label>
           <label class="field"><span>Описание</span><textarea class="input" id="d-desc" rows="6" maxlength="5000">${esc(p.description)}</textarea></label>
           ${p.images.length ? `<div class="field"><span>Скриншоты</span><div class="shots">${p.images.map(src => `<button type="button" data-action="zoom" data-src="${esc(src)}" aria-label="Открыть скриншот"><img src="${src}" alt="Скриншот"></button>`).join('')}</div></div>` : ''}
@@ -758,14 +907,19 @@ body.locked { overflow: hidden; }
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.view === ui.view));
     $('#hint').innerHTML = HINTS[ui.view];
     const scr = $('#screen');
-    scr.innerHTML = ui.view === 'host' ? renderHost() : ui.view === 'board' ? renderBoard() : renderAdmin();
+    scr.innerHTML = ui.view === 'host' ? renderHost() : ui.view === 'board' ? renderBoard() : renderFlow();
     renderLayer();
   }
 
-  // modal layer above the screen: admin card, board card, or nothing
+  // modal layer above the board: editable card (team), public card, form, login, or nothing
   function renderLayer() {
-    if (ui.view === 'admin' && ui.admin.drawer) renderDrawer();
-    else if (ui.view === 'board' && ui.board.postId) renderPostModal();
+    const b = ui.board;
+    if (b.team && b.postId) { b.drawer = b.postId; b.postId = null; }  // a direct link opens the editable card for the team
+    if (ui.view !== 'board') $('#layer').innerHTML = '';
+    else if (b.drawer) renderDrawer();
+    else if (b.postId) renderPostModal();
+    else if (b.compose) renderCompose();
+    else if (b.login) renderLogin();
     else $('#layer').innerHTML = '';
     document.body.classList.toggle('locked', !!$('#layer').innerHTML);
   }
@@ -778,17 +932,21 @@ body.locked { overflow: hidden; }
     const act = el.dataset.action, id = +el.dataset.id, w = ui.widget;
     switch (act) {
       case 'w-toggle': w.open = !w.open; render(); break;
-      case 'w-tab': w.tab = el.dataset.tab; render(); break;
+      case 'copy-link': navigator.clipboard?.writeText('https://' + postUrl(id)).catch(() => {}); toast('Ссылка скопирована'); break;
       case 'w-type': w.type = el.dataset.type; delete w.errors.type; render(); break;
       case 'w-unfile': w.files.splice(+el.dataset.i, 1); w.errors.files = ''; render(); break;
       case 'w-again': Object.assign(w, { sentId: null, type: '', title: '', description: '', files: [], errors: {} }); render(); break;
       case 'go-board': go('board'); break;
-      case 'go-host': ui.widget.open = true; ui.widget.tab = 'send'; go('host'); break;
+      case 'go-host': ui.widget.open = true; go('host'); break;
       case 'open-post':
-        if (ui.view === 'board') { ui.board.postId = id; renderLayer(); }
+        if (ui.view === 'board') { ui.board.postId = id; ui.board.confirmDelete = false; renderLayer(); }
         else go('board', { postId: id });
         break;
+      case 'b-login': ui.board.login = true; ui.board.loginError = ''; renderLayer(); break;
+      case 'b-login-close': if (e.target === el || el.tagName === 'BUTTON') { ui.board.login = false; renderLayer(); } break;
       case 'b-filter': ui.board[el.dataset.key] = el.dataset.val; render(); break;
+      case 'b-compose': ui.board.compose = true; w.errors = {}; renderLayer(); $('#fb-title')?.focus(); break;
+      case 'b-compose-close': if (e.target === el || el.tagName === 'BUTTON') { ui.board.compose = false; renderLayer(); } break;
       case 'vote': {
         const p = byId(id); if (!p) break;
         if (db.voted[id]) { delete db.voted[id]; p.votes--; } else { db.voted[id] = true; p.votes++; }
@@ -797,22 +955,22 @@ body.locked { overflow: hidden; }
       case 'zoom': e.stopPropagation(); lightbox(el.dataset.src); break;
       case 'close-lightbox': renderLayer(); break;
       case 'b-close': if (e.target === el || el.tagName === 'BUTTON') { ui.board.postId = null; renderLayer(); } break;
-      case 'logout': ui.admin.logged = false; render(); break;
-      case 'a-view': ui.admin.view = el.dataset.val; render(); break;
-      case 'a-open': ui.admin.drawer = id; ui.admin.confirmDelete = false; renderLayer(); break;
-      case 'a-close': if (e.target === el || el.tagName === 'BUTTON') { ui.admin.drawer = null; renderLayer(); } break;
-      case 'a-hide': { const p = byId(ui.admin.drawer); p.hidden = !p.hidden; save(); render(); toast(p.hidden ? 'Скрыто с доски' : 'Снова на доске'); break; }
-      case 'a-delete': ui.admin.confirmDelete = true; renderDrawer(); break;
-      case 'a-delete-no': ui.admin.confirmDelete = false; renderDrawer(); break;
-      case 'a-delete-yes': db.posts = db.posts.filter(p => p.id !== ui.admin.drawer); ui.admin.drawer = null; save(); render(); toast('Предложение удалено'); break;
+      case 'logout': setTeam(false); ui.board.drawer = null; render(); toast('Вы вышли — доска как у всех'); break;
+      case 'a-close': if (e.target === el || el.tagName === 'BUTTON') { ui.board.drawer = null; renderLayer(); } break;
+      case 'a-hide': { const p = byId(ui.board.drawer); p.hidden = !p.hidden; save(); render(); toast(p.hidden ? 'Скрыто с доски' : 'Снова на доске'); break; }
+      case 'a-delete': ui.board.confirmDelete = true; renderDrawer(); break;
+      case 'a-delete-no': ui.board.confirmDelete = false; renderDrawer(); break;
+      case 'a-delete-yes': db.posts = db.posts.filter(p => p.id !== ui.board.drawer); ui.board.drawer = null; save(); render(); toast('Предложение удалено'); break;
     }
   });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       if ($('#layer .lightbox')) renderLayer();
-      else if (ui.view === 'admin' && ui.admin.drawer) { ui.admin.drawer = null; renderLayer(); }
+      else if (ui.view === 'board' && ui.board.drawer) { ui.board.drawer = null; renderLayer(); }
       else if (ui.view === 'board' && ui.board.postId) { ui.board.postId = null; renderLayer(); }
+      else if (ui.view === 'board' && ui.board.compose) { ui.board.compose = false; renderLayer(); }
+      else if (ui.view === 'board' && ui.board.login) { ui.board.login = false; renderLayer(); }
       else if (ui.widget.open) { ui.widget.open = false; render(); }
     }
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.card-body')) { e.preventDefault(); e.target.click(); }
@@ -829,13 +987,8 @@ body.locked { overflow: hidden; }
     const t = e.target;
     if (t.id === 'fb-file') { addFiles(t.files); t.value = ''; return; }
     if (t.id === 'b-status') { ui.board.status = t.value; render(); return; }
-    if (t.dataset.afilter) { ui.admin[t.dataset.afilter] = t.type === 'checkbox' ? t.checked : t.value; render(); return; }
-    if (t.dataset.field && t.closest('table')) {
-      const p = byId(+t.dataset.id);
-      if (t.dataset.field === 'status' && p.status !== t.value) { p.status = t.value; p.statusChanged = Date.now(); toast(`Статус: ${STATUS[t.value]}. Уже на доске`); }
-      if (t.dataset.field === 'priority') { p.priority = t.value; toast(`Приоритет: ${PRIORITY[t.value]}`); }
-      save(); render();
-    }
+    if (t.id === 'b-priority') { ui.board.priority = t.value; render(); return; }
+    if (t.id === 'b-hidden') { ui.board.showHidden = t.checked; render(); return; }
   });
 
   document.addEventListener('submit', e => {
@@ -846,19 +999,27 @@ body.locked { overflow: hidden; }
       w.errors = validate();
       if (Object.keys(w.errors).length) { render(); return; }
       const p = { id: db.nextId++, type: w.type, title: w.title.trim(), description: w.description.trim(), author: db.name.trim(), status: 'new', priority: '', votes: 0, comment: '', hidden: false, images: w.files.slice(), created: Date.now(), statusChanged: Date.now() };
-      db.posts.unshift(p); db.mine.unshift(p.id);
+      db.posts.unshift(p);
       save();
-      w.sentId = p.id; render();
+      if (ui.view === 'board') {
+        // on the board: close the form and open the new card right away
+        Object.assign(w, { type: '', title: '', description: '', files: [], errors: {} });
+        ui.board.compose = false; ui.board.postId = p.id;
+        render(); toast('Предложение опубликовано');
+      } else { w.sentId = p.id; render(); }
     } else if (f.id === 'login-form') {
-      ui.admin.logged = true; render();
+      // the prototype accepts one demo account; the real check is bcrypt on the server
+      const ok = $('#login-email').value.trim() && $('#login-pass').value === 'prototype';
+      if (!ok) { ui.board.loginError = 'Неверный email или пароль.'; renderLayer(); return; }
+      ui.board.login = false; setTeam(true); render(); toast('Вы вошли — режим команды');
     } else if (f.id === 'drawer-form') {
-      const p = byId(ui.admin.drawer);
+      const p = byId(ui.board.drawer);
       const title = $('#d-title').value.trim(), desc = $('#d-desc').value.trim();
       if (title.length < 3 || desc.length < 10) { toast('Заголовок от 3 символов, описание от 10'); return; }
       const st = $('#d-status').value;
       if (st !== p.status) p.statusChanged = Date.now();
       Object.assign(p, { title, description: desc, status: st, priority: $('#d-priority').value, comment: $('#d-comment').value.trim() });
-      save(); ui.admin.drawer = null; render(); toast('Сохранено');
+      save(); ui.board.drawer = null; render(); toast('Сохранено');
     }
   });
 
@@ -888,15 +1049,16 @@ body.locked { overflow: hidden; }
     render();
   });
   document.addEventListener('paste', e => {
-    if (ui.view !== 'host' || !ui.widget.open || ui.widget.tab !== 'send' || ui.widget.sentId) return;
+    const formOpen = ui.view === 'host' ? ui.widget.open && !ui.widget.sentId : ui.view === 'board' && ui.board.compose;
+    if (!formOpen) return;
     const files = [...(e.clipboardData?.files || [])];
     if (files.length) { e.preventDefault(); addFiles(files); toast('Скриншот вставлен'); }
   });
 
   $('#reset').addEventListener('click', () => {
     db = seed(); save();
-    Object.assign(ui.widget, { open: false, tab: 'send', type: '', title: '', description: '', files: [], errors: {}, sentId: null });
-    ui.board.postId = null; ui.admin.drawer = null;
+    Object.assign(ui.widget, { open: false, type: '', title: '', description: '', files: [], errors: {}, sentId: null });
+    Object.assign(ui.board, { postId: null, compose: false, login: false, drawer: null });
     render(); toast('Демо-данные восстановлены');
   });
 

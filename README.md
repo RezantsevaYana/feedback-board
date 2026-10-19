@@ -4,7 +4,7 @@
 
 ## Идея
 
-Сейчас баги и идеи пишут куда придётся: в чат разработки, в чат Kooly, в треды, в общий чат. Они теряются, а автор не знает, что с его предложением.
+Сейчас баги и идеи пишут куда придётся: в чат разработки, в чат продукта, в треды, в общий чат. Они теряются, а автор не знает, что с его предложением.
 
 Feedback Board решает это так:
 
@@ -13,17 +13,67 @@ Feedback Board решает это так:
 - **Прозрачность для автора** — автор видит на доске, в каком статусе его предложение, и получает уведомление, когда оно выполнено.
 - **Голосование** — за идеи можно голосовать, чтобы выделить самые нужные.
 
-Проект самостоятельный: без жёсткой привязки к Kooly, с расчётом на встраивание в другие системы.
+Проект самостоятельный и общий для любых продуктов: каждый продукт подключает виджет одним скриптом и получает свою доску.
 
-## Стек (предварительно, обсуждается)
+## Запуск локально
 
-- `backend/` — Laravel (PHP 8.5), REST API, Postgres
-- `frontend/` — Vue 3 + TypeScript + Vite: доска и админка
-- `widget/` — встраиваемая форма (Vue + TS)
-- Docker Compose для локального запуска
+Нужен только Docker.
 
-Почему так: пишет фронтенд-разработчик, поддерживать, возможно, будут PHP-разработчики. Laravel понятен любому PHP-разработчику, а TS-типы на фронте генерируются из OpenAPI бэка.
+```bash
+docker compose up
+```
+
+Первый старт занимает пару минут: ставятся зависимости, создаётся база и демо-проект. Дальше:
+
+| Адрес | Что это |
+|---|---|
+| http://localhost:5173/demo | Доска демо-проекта |
+| http://localhost:5174 | «Чужой сайт» с подключённым виджетом |
+| http://localhost:8000/api/… | API (на доске доступно через тот же адрес :5173) |
+
+**Режим команды:** на доске нажмите «Вход для команды» и войдите как `admin@example.com` / `password` (только для локальной разработки).
+
+Демо-данные создаются один раз. Чтобы сбросить их:
+
+```bash
+docker compose exec backend php artisan migrate:fresh --seed
+```
+
+### Проекты и админы
+
+```bash
+docker compose exec backend php artisan project:create "My Product" --slug=my-product --origin=https://app.example.com
+docker compose exec backend php artisan admin:create anna@example.com --project=my-product   # выведет пароль один раз
+docker compose exec backend php artisan admin:password anna@example.com                     # новый пароль
+```
+
+Виджет на сайте продукта подключается одной строкой:
+
+```html
+<script src="https://<сервис>/widget.js" data-project="my-product" defer></script>
+```
+
+### Проверки
+
+```bash
+docker compose exec backend php artisan test        # тесты API
+docker compose exec frontend npm run type-check     # типы фронтенда
+docker compose exec frontend npm run lint
+```
+
+## Устройство
+
+- `backend/` — Laravel 13 (PHP 8.5), REST API, Postgres, вход команды через Sanctum (сессия).
+  API: `routes/api.php`, публичная часть — `/api/public/*`, режим команды — `/api/admin/*`.
+- `frontend/` — Vue 3 + TypeScript + Vite: доска с режимом команды (отдельной админки нет).
+  - `src/widget/` — виджет: собирается отдельно в один файл `public/widget.js`, рендерится в Shadow DOM.
+  - `src/components/SubmitForm.vue` — форма отправки, общая для виджета и доски.
+  - `demo/` — страница «чужого сайта» для проверки виджета.
+- Docker Compose поднимает Postgres, бэкенд, фронтенд и демо-сайт.
+
+Почему так: пишет фронтенд-разработчик, поддерживать, возможно, будут PHP-разработчики. Laravel понятен любому PHP-разработчику.
 
 ## Документы
 
-- `docs/` — ТЗ, требования, прототип (в работе)
+- `docs/TZ.md` — техническое задание на MVP
+- `docs/prototype.html` — кликабельный прототип и схемы работы сервиса

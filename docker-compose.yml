@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: feedback_board
+      POSTGRES_USER: feedback_board
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "54321:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feedback_board -d feedback_board"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    # migrations and the demo project (/demo, admin@example.com / password) on every start; the seeder skips if it exists
+    # settings live in backend/.env (artisan serve reads only that file); on first start it is copied from .env.example
+    command: >
+      sh -c "composer install
+      && ([ -f .env ] || (cp .env.example .env && php artisan key:generate))
+      && php artisan migrate --force && php artisan db:seed --force
+      && php artisan serve --host=0.0.0.0 --port=8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Board (Vue) + /api proxy to Laravel + widget.js rebuilt on change. http://localhost:5173/demo
+  frontend:
+    image: node:24
+    working_dir: /app
+    command: >
+      sh -c "npm install --no-audit --no-fund
+      && (npm run widget:watch -- --logLevel warn &)
+      && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      API_PROXY_TARGET: http://backend:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # Linux node_modules inside the container, separate from the macOS ones on the host
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      - backend
+
+  # Someone else's site with the widget installed, on another origin: http://localhost:5174
+  demo-host:
+    image: nginx:1.27-alpine
+    ports:
+      - "5174:80"
+    volumes:
+      - ./frontend/demo:/usr/share/nginx/html:ro
+
+volumes:
+  db-data:
+  frontend-node-modules:
