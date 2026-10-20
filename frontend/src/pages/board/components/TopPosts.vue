@@ -28,7 +28,7 @@
         <h3>{{ post.title }}</h3>
         <div class="meta">
           <CategoryTag :category="post.category" />
-          <span class="pill" :data-s="post.status">{{ STATUS[post.status] }}</span>
+          <span class="pill" :data-s="post.status.slug">{{ post.status.name }}</span>
           <span>{{ post.author_name || TEXT.anonymous }}</span>
           <span>{{ fmtDate(post.created_at) }}</span>
         </div>
@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import type { Post } from '@/api/types'
-import { STATUS, TEXT } from '@/shared/constants/dict'
+import { TEXT } from '@/shared/constants/dict'
 import { fmtDate } from '@/shared/utils/format'
 import { score, useBoardStore } from '@/store/board/useBoardStore'
 import { useCardOpen } from '../composables/useCardOpen'

@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { computed, inject, ref } from 'vue'
 import { ApiError } from '@/api/client'
-import type { Post, PostStatus } from '@/api/types'
+import type { Post, Status, SystemStatusSlug } from '@/api/types'
 import { STATUS_REPLY } from '@/shared/constants/dict'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
@@ -33,10 +33,10 @@ import BaseModal from '@/shared/ui/BaseModal.vue'
 import TextAreaComponent from '@/shared/ui/TextAreaComponent.vue'
 
 // Asked when a card is dragged to «Готово» (what exactly is done — optional) or «Отклонено» (why — required).
-// The answer becomes the public «Ответ команды».
+// The answer becomes the public «Ответ команды». Срабатывает только для системных столбцов.
 const props = defineProps<{
   post: Post
-  status: PostStatus
+  status: Status
 }>()
 const emit = defineEmits<{
   close: []
@@ -45,7 +45,7 @@ const board = useBoardStore()
 const notification = useNotificationStore()
 const close = inject<() => void>('baseModal:close', () => emit('close'))
 
-const ask = computed(() => STATUS_REPLY[props.status]!)
+const ask = computed(() => STATUS_REPLY[props.status.slug as SystemStatusSlug]!)
 const reply = ref(props.post.team_comment ?? '')
 const error = ref('')
 const saving = ref(false)
@@ -58,8 +58,8 @@ async function save() {
   }
   saving.value = true
   try {
-    await board.updatePost(props.post.id, { status: props.status, team_comment: reply.value.trim() || null })
-    notification.success(props.status === 'done' ? 'Готово — видно на доске' : 'Отклонено — причина видна на доске')
+    await board.updatePost(props.post.id, { status_id: props.status.id, team_comment: reply.value.trim() || null })
+    notification.success(props.status.slug === 'done' ? 'Готово — видно на доске' : 'Отклонено — причина видна на доске')
     close()
   } catch (e) {
     error.value = e instanceof ApiError ? (e.field('team_comment') ?? e.message) : String(e)

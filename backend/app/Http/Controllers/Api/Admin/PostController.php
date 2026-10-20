@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Enums\PostPriority;
-use App\Enums\PostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\AdminPostResource;
@@ -28,7 +27,7 @@ class PostController extends Controller
 
         $filters = $request->validate([
             'category' => ['nullable', 'regex:/^(\d+|none)$/'],
-            'status' => ['nullable', Rule::enum(PostStatus::class)],
+            'status_id' => ['nullable', 'integer', Rule::exists('statuses', 'id')->where('project_id', $project->id)],
             'priority' => ['nullable', Rule::in([...array_column(PostPriority::cases(), 'value'), 'none'])],
             'hidden' => ['nullable', Rule::in(['include', 'exclude'])],
             'sort' => ['nullable', Rule::in(['top', 'new', 'priority'])],
@@ -38,11 +37,11 @@ class PostController extends Controller
         $posts = $project->posts()
             ->when(($filters['hidden'] ?? 'include') === 'exclude', fn ($q) => $q->where('is_hidden', false))
             ->inCategory($filters['category'] ?? null)
-            ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
+            ->when($filters['status_id'] ?? null, fn ($q, $statusId) => $q->where('status_id', $statusId))
             ->when($filters['priority'] ?? null, fn ($q, $priority) => $priority === 'none'
                 ? $q->whereNull('priority')
                 : $q->where('priority', $priority))
-            ->with('category')
+            ->with(['category', 'status'])
             ->withCount('attachments')
             ->sorted($filters['sort'] ?? 'new')
             ->paginate($filters['per_page'] ?? 20);
@@ -58,7 +57,7 @@ class PostController extends Controller
 
         VoterToken::markVoted($request, collect([$post]));
 
-        return AdminPostResource::make($post->load('attachments', 'category'));
+        return AdminPostResource::make($post->load('attachments', 'category', 'status'));
     }
 
     public function update(UpdatePostRequest $request, Post $post): AdminPostResource
@@ -67,7 +66,7 @@ class PostController extends Controller
 
         $post->fill($request->validated())->save();
 
-        return AdminPostResource::make($post->load('attachments', 'category'));
+        return AdminPostResource::make($post->load('attachments', 'category', 'status'));
     }
 
     public function destroy(Post $post): Response

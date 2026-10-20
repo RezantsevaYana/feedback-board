@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\PostPriority;
-use App\Enums\PostStatus;
 use App\Models\Post;
 use App\Models\Project;
 use App\Models\User;
@@ -26,6 +25,11 @@ class TeamModeTest extends TestCase
         $this->project = Project::factory()->create(['slug' => 'demo']);
         $this->admin = User::factory()->create(['email' => 'anna@example.com', 'password' => 'secret-pass']);
         $this->admin->projects()->attach($this->project);
+    }
+
+    private function statusId(string $slug): int
+    {
+        return $this->project->statuses()->where('slug', $slug)->value('id');
     }
 
     /** Requests from the board's origin get a Sanctum session, like in the browser. */
@@ -71,8 +75,9 @@ class TeamModeTest extends TestCase
 
     public function test_team_sees_hidden_and_rejected_with_priority(): void
     {
+        $rejectedStatusId = $this->statusId('rejected');
         Post::factory()->for($this->project)->hidden()->create();
-        Post::factory()->for($this->project)->status(PostStatus::Rejected)->create(['priority' => PostPriority::Low, 'team_comment' => 'Нет']);
+        Post::factory()->for($this->project)->status('rejected')->create(['priority' => PostPriority::Low, 'team_comment' => 'Нет']);
         Post::factory()->for($this->project)->create();
 
         $response = $this->actingAs($this->admin)->getJson('/api/admin/projects/demo/posts')->assertOk()->assertJsonCount(3, 'data');
@@ -82,18 +87,21 @@ class TeamModeTest extends TestCase
         $this->getJson('/api/admin/projects/demo/posts?hidden=exclude')->assertJsonCount(2, 'data');
         $this->getJson('/api/admin/projects/demo/posts?priority=low')->assertJsonCount(1, 'data');
         $this->getJson('/api/admin/projects/demo/posts?priority=none')->assertJsonCount(2, 'data');
-        $this->getJson('/api/admin/projects/demo/posts?status=rejected')->assertJsonCount(1, 'data');
+        $this->getJson("/api/admin/projects/demo/posts?status_id={$rejectedStatusId}")->assertJsonCount(1, 'data');
     }
 
     public function test_team_updates_status_priority_and_reply(): void
     {
         $post = Post::factory()->for($this->project)->create();
+        $doneId = $this->statusId('done');
         $this->travel(1)->hours();
 
         $this->actingAs($this->admin)->patchJson("/api/admin/posts/{$post->id}", [
-            'status' => 'done',
+            'status_id' => $doneId,
             'priority' => 'high',
-        ])->assertOk()->assertJsonPath('data.status', 'done')->assertJsonPath('data.priority', 'high');
+        ])->assertOk()
+            ->assertJsonPath('data.status.slug', 'done')
+            ->assertJsonPath('data.priority', 'high');
 
         $post->refresh();
         $this->assertTrue($post->status_changed_at->gt($post->created_at));
@@ -104,25 +112,27 @@ class TeamModeTest extends TestCase
         $this->patchJson("/api/admin/posts/{$post->id}", ['title' => 'Новый заголовок'])->assertOk();
         $this->assertTrue($post->refresh()->status_changed_at->eq($changedAt));
 
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status' => 'wat', 'title' => 'x'])
-            ->assertJsonValidationErrors(['status', 'title']);
+        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => 999999, 'title' => 'x'])
+            ->assertJsonValidationErrors(['status_id', 'title']);
     }
 
     public function test_rejecting_requires_a_reason(): void
     {
         $post = Post::factory()->for($this->project)->create();
+        $rejectedId = $this->statusId('rejected');
+        $newId = $this->statusId('new');
         $this->actingAs($this->admin);
 
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status' => 'rejected'])
+        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $rejectedId])
             ->assertJsonValidationErrors(['team_comment' => 'Напишите, почему отклонено, — это увидят все.']);
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status' => 'rejected', 'team_comment' => '  '])
+        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $rejectedId, 'team_comment' => '  '])
             ->assertJsonValidationErrors('team_comment');
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status' => 'rejected', 'team_comment' => 'Уже есть в настройках'])
-            ->assertOk()->assertJsonPath('data.status', 'rejected');
+        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $rejectedId, 'team_comment' => 'Уже есть в настройках'])
+            ->assertOk()->assertJsonPath('data.status.slug', 'rejected');
 
         // the reason cannot be wiped while the post stays rejected
         $this->patchJson("/api/admin/posts/{$post->id}", ['team_comment' => null])->assertJsonValidationErrors('team_comment');
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status' => 'new', 'team_comment' => null])->assertOk();
+        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $newId, 'team_comment' => null])->assertOk();
     }
 
     public function test_team_moves_post_to_another_category_of_the_same_project_only(): void
@@ -141,14 +151,15 @@ class TeamModeTest extends TestCase
 
     public function test_admin_of_another_project_is_forbidden(): void
     {
-        $foreignPost = Post::factory()->create();
-        $foreignSlug = $foreignPost->project->slug;
+        $foreignProject = Project::factory()->create();
+        $foreignPost = Post::factory()->for($foreignProject)->create();
+        $foreignDoneId = $foreignProject->statuses()->where('slug', 'done')->value('id');
 
-        $this->actingAs($this->admin)->getJson("/api/admin/projects/{$foreignSlug}/posts")->assertForbidden();
+        $this->actingAs($this->admin)->getJson("/api/admin/projects/{$foreignProject->slug}/posts")->assertForbidden();
         $this->getJson("/api/admin/posts/{$foreignPost->id}")->assertForbidden();
-        $this->patchJson("/api/admin/posts/{$foreignPost->id}", ['status' => 'done'])->assertForbidden();
+        $this->patchJson("/api/admin/posts/{$foreignPost->id}", ['status_id' => $foreignDoneId])->assertForbidden();
         $this->deleteJson("/api/admin/posts/{$foreignPost->id}")->assertForbidden();
-        $this->assertSame('new', $foreignPost->refresh()->status->value);
+        $this->assertSame('new', $foreignPost->refresh()->status->slug);
     }
 
     public function test_delete_removes_post_and_files_and_team_can_open_files_of_hidden_posts(): void

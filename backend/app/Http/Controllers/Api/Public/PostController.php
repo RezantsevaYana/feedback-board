@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Public;
 
-use App\Enums\PostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Resources\PostResource;
@@ -25,7 +24,7 @@ class PostController extends Controller
     {
         $filters = $request->validate([
             'category' => ['nullable', 'regex:/^(\d+|none)$/'],
-            'status' => ['nullable', Rule::enum(PostStatus::class)],
+            'status_id' => ['nullable', 'integer', Rule::exists('statuses', 'id')->where('project_id', $project->id)],
             'sort' => ['nullable', Rule::in(['top', 'new'])],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
@@ -33,8 +32,8 @@ class PostController extends Controller
         $posts = $project->posts()
             ->listedOnBoard()
             ->inCategory($filters['category'] ?? null)
-            ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
-            ->with('category')
+            ->when($filters['status_id'] ?? null, fn ($q, $statusId) => $q->where('status_id', $statusId))
+            ->with(['category', 'status'])
             ->withCount('attachments')
             ->sorted($filters['sort'] ?? 'top')
             ->paginate($filters['per_page'] ?? 20);
@@ -62,7 +61,7 @@ class PostController extends Controller
             return $post;
         });
 
-        return PostResource::make($post->load('attachments', 'category'))->response()->setStatusCode(201);
+        return PostResource::make($post->load('attachments', 'category', 'status'))->response()->setStatusCode(201);
     }
 
     /**
@@ -74,6 +73,6 @@ class PostController extends Controller
 
         VoterToken::markVoted($request, collect([$post]));
 
-        return PostResource::make($post->load('attachments', 'category'));
+        return PostResource::make($post->load('attachments', 'category', 'status'));
     }
 }

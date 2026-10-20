@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Http\Controllers\Api\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Project;
+use App\Models\Status;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Кастомные столбцы канбана: команда может добавлять/переименовывать/удалять
+ * свои между системными «Новое» и «Готово/Отклонено». Системные статусы
+ * (slug в Status::SYSTEM_SLUGS) защищены от удаления.
+ */
+class StatusController extends Controller
+{
+    public function store(Request $request, Project $project): JsonResponse
+    {
+        Gate::authorize('manage-project', $project);
+
+        if ($project->statuses()->count() >= Status::MAX_PER_PROJECT) {
+            throw ValidationException::withMessages(['name' => 'Не больше '.Status::MAX_PER_PROJECT.' столбцов в проекте.']);
+        }
+
+        $data = $this->validateName($request, $project);
+
+        // Новые кастомные статусы встают между «Новое» (pos ≈ 100) и «Готово» (pos ≈ 9000):
+        // позиция = max(позиций кастомных) + 100, но строго меньше позиции «Готово».
+        $maxCustom = (int) $project->statuses()->where('is_system', false)->max('position');
+        $position = $maxCustom === 0 ? 200 : $maxCustom + 100;
+
+        $status = $project->statuses()->create([
+            'slug' => $this->uniqueSlug($project, $data['name']),
+            'name' => $data['name'],
+            'position' => $position,
+            'is_system' => false,
+        ]);
+
+        return response()->json(['data' => $this->present($status)], 201);
+    }
+
+    public function update(Request $request, Status $status): JsonResponse
+    {
+        Gate::authorize('manage-project', $status->project);
+
+        $status->update($this->validateName($request, $status->project, $status));
+
+        return response()->json(['data' => $this->present($status->fresh())]);
+    }
+
+    /**
+     * Системные нельзя удалить; посты удалённого кастомного столбца переносятся
+     * в дефолтный (slug='new').
+     */
+    public function destroy(Status $status): Response
+    {
+        Gate::authorize('manage-project', $status->project);
+
+        if ($status->is_system) {
+            throw ValidationException::withMessages(['status' => 'Этот столбец нельзя удалить.']);
+        }
+
+        $fallback = $status->project->defaultStatus();
+        abort_unless($fallback, 500, 'default status missing');
+
+        DB::transaction(function () use ($status, $fallback) {
+            $status->posts()->update(['status_id' => $fallback->id]);
+            $status->delete();
+        });
+
+        return response()->noContent();
+    }
+
+    /**
+     * @return array{name: string}
+     */
+    private function validateName(Request $request, Project $project, ?Status $ignore = null): array
+    {
+        $request->merge(['name' => is_string($request->name) ? trim($request->name) : $request->name]);
+
+        return $request->validate([
+            'name' => [
+                'required', 'string', 'max:40',
+                Rule::unique('statuses', 'name')->where('project_id', $project->id)->ignore($ignore),
+            ],
+        ], [
+            'name.required' => 'Назовите столбец.',
+            'name.max' => 'Название — не длиннее 40 символов.',
+            'name.unique' => 'Такой столбец уже есть.',
+        ]);
+    }
+
+    /**
+     * Уникальный slug в рамках проекта. Транслитерация у Str::slug съедает кириллицу
+     * в пустоту — в этом случае используем фоллбек по id (создаст slug=custom-5).
+     */
+    private function uniqueSlug(Project $project, string $name): string
+    {
+        $base = Str::slug($name) ?: 'col';
+        $slug = $base;
+        $suffix = 1;
+        while ($project->statuses()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.(++$suffix);
+        }
+
+        return $slug;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function present(Status $status): array
+    {
+        return [
+            'id' => $status->id,
+            'slug' => $status->slug,
+            'name' => $status->name,
+            'position' => $status->position,
+            'is_system' => $status->is_system,
+        ];
+    }
+}

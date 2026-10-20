@@ -1,6 +1,8 @@
 // Shapes of the Laravel API (backend/app/Http/Resources).
 
-export type PostStatus = 'new' | 'done' | 'rejected'
+/** slug системных статусов — для веток «попросить ответ команды» и «запретить удаление». */
+export type SystemStatusSlug = 'new' | 'done' | 'rejected'
+
 export type PostPriority = 'low' | 'medium' | 'high' | 'critical'
 export type VoteValue = 'like' | 'dislike'
 
@@ -8,6 +10,15 @@ export type VoteValue = 'like' | 'dislike'
 export interface Category {
   id: number
   name: string
+}
+
+/** Колонка канбана. Три системных создаются вместе с проектом, остальные — команда сама. */
+export interface Status {
+  id: number
+  slug: string
+  name: string
+  position: number
+  is_system: boolean
 }
 
 export interface Attachment {
@@ -22,7 +33,7 @@ export interface Post {
   title: string
   description: string
   author_name: string | null
-  status: PostStatus
+  status: Status
   likes_count: number
   dislikes_count: number
   my_vote: VoteValue | null
@@ -40,6 +51,7 @@ export interface Project {
   name: string
   slug: string
   categories: Category[]
+  statuses: Status[]
 }
 
 export interface Me {

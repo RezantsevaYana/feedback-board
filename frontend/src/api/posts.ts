@@ -9,8 +9,9 @@ const projectPath = (slug: string) => `projects/${encodeURIComponent(slug)}/post
 export type PostsQuery = RequestOptions['query']
 
 /** Fields the team can change on a post. */
-export type PostPatch = Partial<Pick<Post, 'title' | 'description' | 'status' | 'priority' | 'team_comment' | 'is_hidden'>> & {
+export type PostPatch = Partial<Pick<Post, 'title' | 'description' | 'priority' | 'team_comment' | 'is_hidden'>> & {
   category_id?: number | null
+  status_id?: number
 }
 
 export const PostsApi = {

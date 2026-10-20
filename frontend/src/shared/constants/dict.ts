@@ -1,15 +1,11 @@
 // All interface texts in one place (TZ 8: ready for localization later).
-import type { PostPriority, PostStatus } from '@/api/types'
+import type { PostPriority, SystemStatusSlug } from '@/api/types'
 
-export const STATUS: Record<PostStatus, string> = {
-  new: 'Новое',
-  done: 'Готово',
-  rejected: 'Отклонено',
-}
-export const STATUSES: PostStatus[] = ['new', 'done', 'rejected']
-
-/** What the team is asked when a card moves to «Готово» / «Отклонено». */
-export const STATUS_REPLY: Partial<Record<PostStatus, { title: string; label: string; placeholder: string; required: boolean }>> = {
+/**
+ * Что спрашивает доска при переносе карточки в системный столбец.
+ * Привязано к slug — для кастомных столбцов (В работе / Ревью) ничего не спрашиваем.
+ */
+export const STATUS_REPLY: Partial<Record<SystemStatusSlug, { title: string; label: string; placeholder: string; required: boolean }>> = {
   done: {
     title: 'Готово',
     label: 'Что именно сделано',

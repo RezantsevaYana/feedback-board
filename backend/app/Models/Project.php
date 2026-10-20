@@ -45,6 +45,16 @@ class Project extends Model
     }
 
     /**
+     * Колонки канбана этого проекта: 3 системных + добавленные командой, в порядке позиций.
+     *
+     * @return HasMany<Status, $this>
+     */
+    public function statuses(): HasMany
+    {
+        return $this->hasMany(Status::class)->orderBy('position')->orderBy('id');
+    }
+
+    /**
      * New projects start with "Баг" and "Идея"; the team renames or replaces them on the board.
      */
     public function createDefaultCategories(): void
@@ -52,6 +62,30 @@ class Project extends Model
         foreach (Category::DEFAULTS as $position => $name) {
             $this->categories()->create(['name' => $name, 'position' => $position]);
         }
+    }
+
+    /**
+     * Три системных статуса на канбане: Новое → …кастомные команды… → Готово / Отклонено.
+     * Между 100 и 9000 есть «воздух» для кастомных позиций.
+     */
+    public function createDefaultStatuses(): void
+    {
+        $defaults = [
+            ['slug' => 'new', 'name' => 'Новое', 'position' => 100],
+            ['slug' => 'done', 'name' => 'Готово', 'position' => 9000],
+            ['slug' => 'rejected', 'name' => 'Отклонено', 'position' => 9100],
+        ];
+        foreach ($defaults as $s) {
+            $this->statuses()->create([...$s, 'is_system' => true]);
+        }
+    }
+
+    /**
+     * Куда класть новые посты по умолчанию и куда возвращаются посты при удалении кастомного столбца.
+     */
+    public function defaultStatus(): ?Status
+    {
+        return $this->statuses()->where('slug', Status::FALLBACK_SLUG)->first();
     }
 
     /**

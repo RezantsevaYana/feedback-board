@@ -2,16 +2,16 @@
   <div class="kanban">
     <section
       v-for="col in columns"
-      :key="col.status"
+      :key="col.status.id"
       class="col"
-      :class="{ over: overColumn === col.status }"
-      :aria-label="STATUS[col.status]"
-      @dragover="dragId !== null && ($event.preventDefault(), (overColumn = col.status))"
-      @dragleave="overColumn === col.status && (overColumn = null)"
+      :class="{ over: overColumn === col.status.id }"
+      :aria-label="col.status.name"
+      @dragover="dragId !== null && ($event.preventDefault(), (overColumn = col.status.id))"
+      @dragleave="overColumn === col.status.id && (overColumn = null)"
       @drop.prevent="onDrop(col.status)"
     >
       <div class="col-head">
-        <span class="pill" :data-s="col.status">{{ STATUS[col.status] }}</span>
+        <span class="pill" :data-s="col.status.slug">{{ col.status.name }}</span>
         <span>{{ col.posts.length }}</span>
       </div>
       <article
@@ -34,7 +34,7 @@
         </div>
         <div class="card-body">
           <h4>{{ post.title }}</h4>
-          <p v-if="post.status !== 'new' && post.team_comment" class="kcard-reply">{{ post.team_comment }}</p>
+          <p v-if="post.status.slug !== 'new' && post.team_comment" class="kcard-reply">{{ post.team_comment }}</p>
           <PostMeta :post="post" />
         </div>
         <VoteButtons :post="post" small />
@@ -48,8 +48,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { errorMessage } from '@/api/client'
-import type { Post, PostStatus } from '@/api/types'
-import { STATUS, STATUS_REPLY, STATUSES } from '@/shared/constants/dict'
+import type { Post, Status, SystemStatusSlug } from '@/api/types'
+import { STATUS_REPLY } from '@/shared/constants/dict'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import { useCardOpen } from '../composables/useCardOpen'
@@ -59,8 +59,8 @@ import PostTags from './PostTags.vue'
 import StatusReplyModal from './StatusReplyModal.vue'
 import VoteButtons from './VoteButtons.vue'
 
-// Columns «Новое → Готово / Отклонено». In team mode cards are dragged between columns;
-// «Готово» and «Отклонено» first ask for the team's reply.
+// Columns come from the project's statuses (3 системных + добавленные командой).
+// Перенос в «Готово» / «Отклонено» сперва просит ответ команды — остальные столбцы не трогают диалог.
 const emit = defineEmits<{
   open: [post: Post]
 }>()
@@ -68,11 +68,16 @@ const board = useBoardStore()
 const notification = useNotificationStore()
 const { onCardClick, onCardEnter } = useCardOpen(emit)
 
-const columns = computed(() => STATUSES.map((status) => ({ status, posts: board.posts.filter((p) => p.status === status) })))
+const columns = computed(() =>
+  board.statuses.map((status) => ({
+    status,
+    posts: board.posts.filter((p) => p.status.id === status.id),
+  })),
+)
 
 const dragId = ref<number | null>(null)
-const overColumn = ref<PostStatus | null>(null)
-const asking = ref<{ post: Post; status: PostStatus } | null>(null)
+const overColumn = ref<number | null>(null)
+const asking = ref<{ post: Post; status: Status } | null>(null)
 
 function onDragStart(e: DragEvent, post: Post) {
   dragId.value = post.id
@@ -80,17 +85,17 @@ function onDragStart(e: DragEvent, post: Post) {
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
 }
 
-async function onDrop(status: PostStatus) {
+async function onDrop(status: Status) {
   const post = board.posts.find((p) => p.id === dragId.value)
   dragId.value = null
   overColumn.value = null
-  if (!post || post.status === status) return
-  if (STATUS_REPLY[status]) {
+  if (!post || post.status.id === status.id) return
+  if (STATUS_REPLY[status.slug as SystemStatusSlug]) {
     asking.value = { post, status }
     return
   }
   try {
-    await board.updatePost(post.id, { status })
+    await board.updatePost(post.id, { status_id: status.id })
   } catch (e) {
     notification.error(errorMessage(e))
   }

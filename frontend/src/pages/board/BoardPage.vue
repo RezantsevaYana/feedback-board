@@ -27,6 +27,7 @@
           <span class="chip">режим команды</span>
           <span class="who-mail">{{ board.me?.email }}</span>
           <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
+          <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
           <span class="team-box-sep" aria-hidden="true" />
           <button type="button" class="link-btn link-btn-danger" @click="askLogout">Выйти</button>
         </div>
@@ -74,6 +75,7 @@
     <SubmitModal v-if="composing && board.project" :project="board.project.slug" :categories="board.categories" @close="composing = false" @sent="onSent" />
     <LoginModal v-if="loggingIn" @close="loggingIn = false" />
     <CategoriesModal v-if="editingCategories && board.team" @close="editingCategories = false" />
+    <StatusesModal v-if="editingStatuses && board.team" @close="editingStatuses = false" />
   </main>
 </template>
 
@@ -81,7 +83,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/api/types'
-import { PRIORITIES, PRIORITY, STATUS, STATUSES } from '@/shared/constants/dict'
+import { PRIORITIES, PRIORITY } from '@/shared/constants/dict'
 import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
@@ -94,6 +96,7 @@ import KanbanBoard from './components/KanbanBoard.vue'
 import LoginModal from './components/LoginModal.vue'
 import PostList from './components/PostList.vue'
 import PostModal from './components/PostModal.vue'
+import StatusesModal from './components/StatusesModal.vue'
 import SubmitModal from './components/SubmitModal.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 import TopPosts from './components/TopPosts.vue'
@@ -110,11 +113,12 @@ const postId = computed(() => (route.params.id ? Number(route.params.id) : null)
 const composing = ref(false)
 const loggingIn = ref(false)
 const editingCategories = ref(false)
+const editingStatuses = ref(false)
 
-const statusOptions = [
+const statusOptions = computed(() => [
   { value: '' as const, label: 'Все статусы' },
-  ...STATUSES.map((s) => ({ value: s, label: STATUS[s] })),
-]
+  ...board.statuses.map((s) => ({ value: s.id, label: s.name })),
+])
 const priorityOptions = [
   { value: '' as const, label: 'Любой приоритет' },
   { value: 'none' as const, label: 'Без приоритета' },

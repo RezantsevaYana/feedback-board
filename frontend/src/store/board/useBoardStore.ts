@@ -5,7 +5,8 @@ import { CategoriesApi } from '@/api/categories'
 import { ApiError, errorMessage } from '@/api/client'
 import { type PostPatch, PostsApi } from '@/api/posts'
 import { ProjectsApi } from '@/api/projects'
-import type { Category, Me, Post, PostPriority, PostStatus, Project, VoteState, VoteValue } from '@/api/types'
+import { StatusesApi } from '@/api/statuses'
+import type { Category, Me, Post, PostPriority, Project, Status, VoteState, VoteValue } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 
 export type Section = 'posts' | 'top'
@@ -28,6 +29,8 @@ export const useBoardStore = defineStore('board', () => {
   /** Team mode: logged in and managing this project (the API checks it again on every call). */
   const team = computed(() => !!me.value && !!project.value && me.value.projects.some((p) => p.slug === project.value?.slug))
   const categories = computed<Category[]>(() => project.value?.categories ?? [])
+  const statuses = computed<Status[]>(() => project.value?.statuses ?? [])
+  const defaultStatus = computed<Status | undefined>(() => statuses.value.find((s) => s.slug === 'new'))
 
   // На мобиле (≤767) по умолчанию — список: канбан-колонки съедают весь экран.
   const defaultLayout: Layout =
@@ -37,7 +40,7 @@ export const useBoardStore = defineStore('board', () => {
     section: 'posts' as Section,
     layout: defaultLayout,
     category: '' as '' | number | 'none',
-    status: '' as '' | PostStatus,
+    status: '' as '' | number,
     sort: 'new' as Sort,
     topScope: 'open' as 'open' | 'all',
     // team only
@@ -80,7 +83,7 @@ export const useBoardStore = defineStore('board', () => {
     try {
       const query = {
         category: view.category,
-        status: view.layout === 'list' ? view.status : '',
+        status_id: view.layout === 'list' ? view.status : '',
         sort: !team.value && view.sort === 'priority' ? 'top' : view.sort,
         page: nextPage,
         per_page: view.layout === 'kanban' ? KANBAN_LIMIT : LIST_PAGE,
@@ -115,7 +118,7 @@ export const useBoardStore = defineStore('board', () => {
   /** Ranking by likes minus dislikes; equal score shares a place, the earlier post goes first. Rejected ones do not compete. */
   const ranking = computed(() => {
     const list = topPosts.value
-      .filter((p) => p.status !== 'rejected' && (view.topScope === 'all' || p.status !== 'done'))
+      .filter((p) => p.status.slug !== 'rejected' && (view.topScope === 'all' || p.status.slug !== 'done'))
       .sort((a, b) => score(b) - score(a) || a.created_at.localeCompare(b.created_at))
     let place = 0
     return list.map((post, i) => {
@@ -191,6 +194,35 @@ export const useBoardStore = defineStore('board', () => {
     for (const post of [...posts.value, ...topPosts.value]) if (post.category?.id === id) post.category = null
   }
 
+  async function addStatus(name: string) {
+    const res = await StatusesApi.create(currentSlug(), name)
+    project.value?.statuses.push(res.data)
+    project.value?.statuses.sort((a, b) => a.position - b.position || a.id - b.id)
+  }
+
+  async function renameStatus(id: number, name: string) {
+    const res = await StatusesApi.rename(id, name)
+    const status = project.value?.statuses.find((s) => s.id === id)
+    if (status) Object.assign(status, res.data)
+    // в карточках статус хранится объектом — обновим имя там тоже
+    for (const post of [...posts.value, ...topPosts.value]) {
+      if (post.status.id === id) Object.assign(post.status, res.data)
+    }
+  }
+
+  /** Удаление кастомного столбца: сервер переносит посты в «Новое», локально делаем то же. */
+  async function deleteStatus(id: number) {
+    await StatusesApi.remove(id)
+    const fallback = defaultStatus.value
+    if (project.value) project.value.statuses = project.value.statuses.filter((s) => s.id !== id)
+    if (view.status === id) view.status = ''
+    if (fallback) {
+      for (const post of [...posts.value, ...topPosts.value]) {
+        if (post.status.id === id) post.status = { ...fallback }
+      }
+    }
+  }
+
   async function login(email: string, password: string) {
     const res = await AuthApi.login(email, password)
     // the board reloads itself when team mode switches (watcher in BoardView)
@@ -204,7 +236,10 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, me, team, categories, view, posts, page, lastPage, loading, loadError, ranking,
-    open, refresh, loadPosts, vote, updatePost, deletePost, addCategory, renameCategory, deleteCategory, login, logout,
+    project, notFound, me, team, categories, statuses, defaultStatus, view, posts, page, lastPage, loading, loadError, ranking,
+    open, refresh, loadPosts, vote, updatePost, deletePost,
+    addCategory, renameCategory, deleteCategory,
+    addStatus, renameStatus, deleteStatus,
+    login, logout,
   }
 })

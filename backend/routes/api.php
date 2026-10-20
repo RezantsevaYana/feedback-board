@@ -38,5 +38,9 @@ Route::prefix('admin')->group(function () {
         Route::post('projects/{project:slug}/categories', [Admin\CategoryController::class, 'store']);
         Route::patch('categories/{category}', [Admin\CategoryController::class, 'update']);
         Route::delete('categories/{category}', [Admin\CategoryController::class, 'destroy']);
+
+        Route::post('projects/{project:slug}/statuses', [Admin\StatusController::class, 'store']);
+        Route::patch('statuses/{status}', [Admin\StatusController::class, 'update']);
+        Route::delete('statuses/{status}', [Admin\StatusController::class, 'destroy']);
     });
 });

@@ -19,7 +19,7 @@
         <PostMeta :post="post" reply-label />
       </div>
       <div class="card-side">
-        <span class="pill" :data-s="post.status">{{ STATUS[post.status] }}</span>
+        <span class="pill" :data-s="post.status.slug">{{ post.status.name }}</span>
         <CopyLink :post-id="post.id" />
       </div>
     </article>
@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
 import type { Post } from '@/api/types'
-import { STATUS } from '@/shared/constants/dict'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import { useCardOpen } from '../composables/useCardOpen'
 import CopyLink from './CopyLink.vue'

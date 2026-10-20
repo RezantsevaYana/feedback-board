@@ -26,4 +26,15 @@ class ProjectFactory extends Factory
             'allowed_origins' => ['https://app.example.com'],
         ];
     }
+
+    /**
+     * У каждого проекта всегда есть системные столбцы — без них Post::creating
+     * не может подобрать дефолт.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Project $project) {
+            $project->createDefaultStatuses();
+        });
+    }
 }

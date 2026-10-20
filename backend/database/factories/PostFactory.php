@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\PostStatus;
 use App\Models\Post;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -24,13 +23,18 @@ class PostFactory extends Factory
             'title' => fake()->sentence(4),
             'description' => fake()->paragraph(),
             'author_name' => fake()->optional()->firstName(),
-            'status' => PostStatus::New,
+            // status_id проставит Post::creating из project->defaultStatus()
         ];
     }
 
-    public function status(PostStatus $status): static
+    /**
+     * Явно положить пост в столбец по slug (например, 'done' или 'rejected').
+     */
+    public function status(string $slug): static
     {
-        return $this->state(['status' => $status]);
+        return $this->afterMaking(function (Post $post) use ($slug) {
+            $post->status_id = $post->project->statuses()->where('slug', $slug)->value('id');
+        });
     }
 
     public function hidden(): static

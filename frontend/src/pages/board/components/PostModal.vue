@@ -33,17 +33,17 @@
       </div>
       <div class="grid3">
         <SelectComponent v-model="edit.category_id" label="Категория" :options="categoryOptions" />
-        <SelectComponent v-model="edit.status" label="Статус" :options="statusOptions" />
+        <SelectComponent v-model="edit.status_id" label="Столбец" :options="statusOptions" />
         <SelectComponent v-model="edit.priority" label="Приоритет" hint="только команде" :options="priorityOptions" />
       </div>
       <TextAreaComponent
         v-model="edit.team_comment"
-        :label="STATUS_REPLY[edit.status]?.label ?? 'Ответ команды'"
-        :hint="`${STATUS_REPLY[edit.status]?.required ? 'обязательно, ' : ''}виден всем на доске`"
+        :label="currentReply?.label ?? 'Ответ команды'"
+        :hint="`${currentReply?.required ? 'обязательно, ' : ''}виден всем на доске`"
         :error="errors.team_comment"
         rows="3"
         maxlength="2000"
-        :placeholder="STATUS_REPLY[edit.status]?.placeholder ?? 'Например, когда планируем'"
+        :placeholder="currentReply?.placeholder ?? 'Например, когда планируем'"
       />
       <div class="row">
         <button class="btn btn-primary" type="submit" :disabled="saving">Сохранить</button>
@@ -69,13 +69,13 @@
       <div class="meta">
         <span>{{ post.author_name || TEXT.anonymous }}</span>
         <span>Создано {{ fmtDate(post.created_at) }}</span>
-        <span v-if="post.status !== 'new'">{{ STATUS[post.status] }} {{ fmtDate(post.status_changed_at) }}</span>
+        <span v-if="post.status.slug !== 'new'">{{ post.status.name }} {{ fmtDate(post.status_changed_at) }}</span>
         <span class="mono">#{{ post.id }}</span>
       </div>
       <p class="desc">{{ post.description }}</p>
       <AttachmentShots v-if="post.attachments" :attachments="post.attachments" />
-      <div v-if="post.team_comment" class="answer" :data-s="post.status">
-        <b>{{ post.status === 'done' ? 'Что сделано' : post.status === 'rejected' ? 'Почему отклонено' : 'Ответ команды' }}</b>
+      <div v-if="post.team_comment" class="answer" :data-s="post.status.slug">
+        <b>{{ post.status.slug === 'done' ? 'Что сделано' : post.status.slug === 'rejected' ? 'Почему отклонено' : 'Ответ команды' }}</b>
         <p>{{ post.team_comment }}</p>
       </div>
       <VoteButtons :post="post" />
@@ -87,8 +87,8 @@
 import { computed, inject, reactive, ref, watch } from 'vue'
 import { ApiError, errorMessage } from '@/api/client'
 import { PostsApi } from '@/api/posts'
-import type { Post, PostPriority, PostStatus } from '@/api/types'
-import { NO_CATEGORY, PRIORITIES, PRIORITY, STATUS, STATUS_REPLY, STATUSES, TEXT } from '@/shared/constants/dict'
+import type { Post, PostPriority, SystemStatusSlug } from '@/api/types'
+import { NO_CATEGORY, PRIORITIES, PRIORITY, STATUS_REPLY, TEXT } from '@/shared/constants/dict'
 import { fmtDate } from '@/shared/utils/format'
 import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
@@ -123,7 +123,7 @@ const edit = reactive({
   title: '',
   description: '',
   category_id: null as number | null,
-  status: 'new' as PostStatus,
+  status_id: 0,
   priority: '' as '' | PostPriority,
   team_comment: '',
 })
@@ -132,11 +132,17 @@ const categoryOptions = computed(() => [
   { value: null, label: NO_CATEGORY },
   ...board.categories.map((c) => ({ value: c.id, label: c.name })),
 ])
-const statusOptions = STATUSES.map((s) => ({ value: s, label: STATUS[s] }))
+const statusOptions = computed(() => board.statuses.map((s) => ({ value: s.id, label: s.name })))
 const priorityOptions = [
   { value: '' as const, label: '—' },
   ...PRIORITIES.map((p) => ({ value: p, label: PRIORITY[p] })),
 ]
+
+// Выбранный в селекте статус — для подсказки «Ответ команды» (для кастомных ничего не меняется)
+const currentReply = computed(() => {
+  const slug = board.statuses.find((s) => s.id === edit.status_id)?.slug
+  return slug ? STATUS_REPLY[slug as SystemStatusSlug] : undefined
+})
 
 async function load() {
   missing.value = false
@@ -149,7 +155,7 @@ async function load() {
       title: res.data.title,
       description: res.data.description,
       category_id: res.data.category?.id ?? null,
-      status: res.data.status,
+      status_id: res.data.status.id,
       priority: res.data.priority ?? '',
       team_comment: res.data.team_comment ?? '',
     })

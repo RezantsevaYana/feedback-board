@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\PostPriority;
-use App\Enums\PostStatus;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,14 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['category_id', 'title', 'description', 'author_name', 'status', 'priority', 'team_comment', 'is_hidden'])]
+#[Fillable(['category_id', 'title', 'description', 'author_name', 'status_id', 'priority', 'team_comment', 'is_hidden'])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
     use HasFactory;
 
     protected $attributes = [
-        'status' => 'new',
         'is_hidden' => false,
         'likes_count' => 0,
         'dislikes_count' => 0,
@@ -33,7 +31,6 @@ class Post extends Model
     protected function casts(): array
     {
         return [
-            'status' => PostStatus::class,
             'priority' => PostPriority::class,
             'is_hidden' => 'boolean',
             'likes_count' => 'integer',
@@ -44,9 +41,15 @@ class Post extends Model
 
     protected static function booted(): void
     {
+        // новый пост без явного статуса — в дефолтный столбец проекта
+        static::creating(function (Post $post) {
+            if (! $post->status_id && $post->project) {
+                $post->status_id = $post->project->defaultStatus()?->id;
+            }
+        });
+        // переезд в другой столбец штампуется временем смены
         static::saving(function (Post $post) {
-            // the default status is not "dirty" on create, so new posts are stamped explicitly
-            if (! $post->exists || $post->isDirty('status')) {
+            if (! $post->exists || $post->isDirty('status_id')) {
                 $post->status_changed_at = now();
             }
         });
@@ -66,6 +69,14 @@ class Post extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * @return BelongsTo<Status, $this>
+     */
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
     }
 
     /**

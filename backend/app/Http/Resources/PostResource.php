@@ -28,7 +28,13 @@ class PostResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'author_name' => $this->author_name,
-            'status' => $this->status,
+            'status' => $this->status ? [
+                'id' => $this->status->id,
+                'slug' => $this->status->slug,
+                'name' => $this->status->name,
+                'position' => $this->status->position,
+                'is_system' => $this->status->is_system,
+            ] : null,
             'likes_count' => $this->likes_count,
             'dislikes_count' => $this->dislikes_count,
             'my_vote' => match ($request->attributes->get('my_votes', [])[$this->id] ?? null) {

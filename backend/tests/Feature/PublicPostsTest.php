@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\PostPriority;
-use App\Enums\PostStatus;
 use App\Models\Post;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,7 +37,7 @@ class PublicPostsTest extends TestCase
     public function test_board_lists_all_but_hidden_posts_and_hides_team_fields(): void
     {
         $visible = Post::factory()->for($this->project)->create(['priority' => PostPriority::High, 'likes_count' => 5]);
-        $rejected = Post::factory()->for($this->project)->status(PostStatus::Rejected)->create(['team_comment' => 'Уже есть']);
+        $rejected = Post::factory()->for($this->project)->status('rejected')->create(['team_comment' => 'Уже есть']);
         Post::factory()->for($this->project)->hidden()->create();
         Post::factory()->create(); // another project
 
@@ -52,9 +51,10 @@ class PublicPostsTest extends TestCase
     public function test_board_filters_and_sorts_by_likes_minus_dislikes(): void
     {
         [$bug, $idea] = $this->project->categories()->get()->all();
+        $done = $this->project->statuses()->where('slug', 'done')->firstOrFail();
         $liked = Post::factory()->for($this->project)->create(['category_id' => $idea->id, 'likes_count' => 10, 'dislikes_count' => 8]);
         $loved = Post::factory()->for($this->project)->create(['category_id' => $idea->id, 'likes_count' => 5, 'dislikes_count' => 0]);
-        Post::factory()->for($this->project)->create(['category_id' => $bug->id, 'status' => PostStatus::Done]);
+        Post::factory()->for($this->project)->status('done')->create(['category_id' => $bug->id]);
         $loose = Post::factory()->for($this->project)->create(['category_id' => null]);
 
         $this->getJson("/api/public/projects/demo/posts?category={$idea->id}")
@@ -63,8 +63,8 @@ class PublicPostsTest extends TestCase
         $this->getJson("/api/public/projects/demo/posts?category={$idea->id}&sort=new")
             ->assertJsonPath('data.*.id', [$loved->id, $liked->id]);
         $this->getJson('/api/public/projects/demo/posts?category=none')->assertJsonPath('data.*.id', [$loose->id]);
-        $this->getJson('/api/public/projects/demo/posts?status=done')->assertJsonCount(1, 'data');
-        $this->getJson('/api/public/projects/demo/posts?status=planned')->assertUnprocessable();
+        $this->getJson("/api/public/projects/demo/posts?status_id={$done->id}")->assertJsonCount(1, 'data');
+        $this->getJson('/api/public/projects/demo/posts?status_id=999999')->assertUnprocessable();
     }
 
     public function test_creates_post_with_screenshots(): void
@@ -75,7 +75,7 @@ class PublicPostsTest extends TestCase
         ]), ['Origin' => 'https://app.example.com', 'Accept' => 'application/json']);
 
         $response->assertCreated()
-            ->assertJsonPath('data.status', 'new')
+            ->assertJsonPath('data.status.slug', 'new')
             ->assertJsonPath('data.category.name', 'Баг')
             ->assertJsonPath('data.author_name', 'Лена')
             ->assertJsonCount(2, 'data.attachments')
@@ -160,7 +160,7 @@ class PublicPostsTest extends TestCase
 
     public function test_post_by_direct_link(): void
     {
-        $rejected = Post::factory()->for($this->project)->status(PostStatus::Rejected)->create(['team_comment' => 'Уже есть']);
+        $rejected = Post::factory()->for($this->project)->status('rejected')->create(['team_comment' => 'Уже есть']);
         $hidden = Post::factory()->for($this->project)->hidden()->create();
         $foreign = Post::factory()->create();
 
