@@ -2,23 +2,31 @@ services:
   db:
     image: postgres:17
     environment:
-      POSTGRES_DB: feedback_board
-      POSTGRES_USER: feedback_board
-      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "54321:5432"
+      - "${DB_PORT_HOST}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U feedback_board -d feedback_board"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   backend:
     build: ./backend
-    # migrations and the demo project (/demo, admin@example.com / password) on every start; the seeder skips if it exists
-    # settings live in backend/.env (artisan serve reads only that file); on first start it is copied from .env.example
+    # DB_* берутся из корневого .env (docker-compose подставляет их сюда и в контейнер БД),
+    # поэтому менять креды нужно только в корне. Остальные настройки Laravel (APP_KEY,
+    # SESSION_*) живут в backend/.env, который копируется из .env.example при первом старте.
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
     command: >
       sh -c "composer install
       && ([ -f .env ] || (cp .env.example .env && php artisan key:generate))

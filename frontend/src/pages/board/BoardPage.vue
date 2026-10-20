@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/api/types'
 import { PRIORITIES, PRIORITY } from '@/shared/constants/dict'
@@ -126,6 +126,20 @@ const priorityOptions = [
 ]
 
 watch(slug, (s) => board.open(s), { immediate: true })
+
+// Пулинг новых идей и голосов — пока вкладка открыта. Возврат из фона
+// сразу тянет свежие данные, чтобы не ждать следующего тика.
+function onVisibility() {
+  if (!document.hidden) board.refresh(true)
+}
+onMounted(() => {
+  board.startPolling()
+  document.addEventListener('visibilitychange', onVisibility)
+})
+onBeforeUnmount(() => {
+  board.stopPolling()
+  document.removeEventListener('visibilitychange', onVisibility)
+})
 watch(
   () => board.project?.name,
   (name) => (document.title = name ? `${name} · предложения` : 'Feedback Board'),

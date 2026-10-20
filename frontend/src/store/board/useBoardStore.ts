@@ -75,11 +75,13 @@ export const useBoardStore = defineStore('board', () => {
 
   const currentSlug = () => project.value?.slug ?? ''
 
-  async function loadPosts(append = false) {
+  async function loadPosts(append = false, silent = false) {
     if (!project.value) return
     const nextPage = append ? page.value + 1 : 1
-    loading.value = true
-    loadError.value = ''
+    if (!silent) {
+      loading.value = true
+      loadError.value = ''
+    }
     try {
       const query = {
         category: view.category,
@@ -95,23 +97,25 @@ export const useBoardStore = defineStore('board', () => {
       page.value = res.meta.current_page
       lastPage.value = res.meta.last_page
     } catch (e) {
-      loadError.value = errorMessage(e)
+      if (!silent) loadError.value = errorMessage(e)
     } finally {
-      loading.value = false
+      if (!silent) loading.value = false
     }
   }
 
-  async function loadTop() {
+  async function loadTop(silent = false) {
     if (!project.value) return
-    loading.value = true
-    loadError.value = ''
+    if (!silent) {
+      loading.value = true
+      loadError.value = ''
+    }
     try {
       const res = await PostsApi.list(currentSlug(), { category: view.category, sort: 'top', per_page: KANBAN_LIMIT })
       topPosts.value = res.data
     } catch (e) {
-      loadError.value = errorMessage(e)
+      if (!silent) loadError.value = errorMessage(e)
     } finally {
-      loading.value = false
+      if (!silent) loading.value = false
     }
   }
 
@@ -128,8 +132,30 @@ export const useBoardStore = defineStore('board', () => {
     })
   })
 
-  function refresh() {
-    return view.section === 'top' ? loadTop() : loadPosts()
+  function refresh(silent = false) {
+    return view.section === 'top' ? loadTop(silent) : loadPosts(false, silent)
+  }
+
+  // Пулинг: каждые POLL_INTERVAL мс тихо тянем первую страницу текущего вида,
+  // чтобы новые идеи и свежие голоса появлялись без перезагрузки. Останавливаемся,
+  // если вкладка в фоне, запрос уже идёт, или пользователь листанул дальше первой
+  // страницы — иначе список скакал бы ему обратно наверх.
+  const POLL_INTERVAL = 15000
+  let pollTimer: ReturnType<typeof setInterval> | null = null
+  function poll() {
+    if (!project.value || document.hidden || loading.value) return
+    if (view.section === 'posts' && page.value > 1) return
+    refresh(true)
+  }
+  function startPolling(intervalMs = POLL_INTERVAL) {
+    stopPolling()
+    pollTimer = setInterval(poll, intervalMs)
+  }
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer)
+      pollTimer = null
+    }
   }
 
   /** The same post can sit in the board list, the ranking and an open card: keep every copy in sync. */
@@ -241,5 +267,6 @@ export const useBoardStore = defineStore('board', () => {
     addCategory, renameCategory, deleteCategory,
     addStatus, renameStatus, deleteStatus,
     login, logout,
+    startPolling, stopPolling,
   }
 })

@@ -16,7 +16,7 @@
 .excerpt {
     color: var(--muted);
     font-size: 14px;
-    @include lineClamp(2);
+    @include lineClamp(3);
 }
 .is-hidden {
     opacity: 0.55;

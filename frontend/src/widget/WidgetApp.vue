@@ -3,7 +3,10 @@
     <Transition name="fbw-panel">
       <div v-if="open" class="fbw-panel" role="dialog" aria-label="Обратная связь">
         <div class="fbw-head">
-          <h3>Обратная связь</h3>
+          <div class="fbw-title">
+            <h3>Обратная связь</h3>
+            <span v-if="projectName" class="fbw-project">{{ projectName }}</span>
+          </div>
           <button type="button" class="icon-btn" aria-label="Закрыть" @click="toggle"><AppIcon name="close" /></button>
         </div>
         <div class="fbw-body">
@@ -64,6 +67,7 @@ const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 // categories come from the service on first open (cross-origin GET, allowed for the project's sites)
 const categories = ref<Category[] | null>(null)
+const projectName = ref('')
 const loadError = ref('')
 const sent = ref<Post | null>(null)
 const copied = ref(false)
@@ -76,6 +80,7 @@ async function loadCategories() {
   try {
     const res = await ProjectsApi.get(props.project, props.origin)
     categories.value = res.data.categories
+    projectName.value = res.data.name
   } catch (e) {
     loadError.value = errorMessage(e)
   }

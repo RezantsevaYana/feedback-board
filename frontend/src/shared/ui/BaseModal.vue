@@ -1,7 +1,12 @@
 <template>
   <Teleport to="body">
     <Transition name="modal" appear @after-leave="emit('close')">
-      <div v-if="show" class="modal-bg" @click.self="requestClose">
+      <div
+        v-if="show"
+        class="modal-bg"
+        @mousedown="onBgMouseDown"
+        @mouseup.self="onBgMouseUp"
+      >
         <component
           :is="props.tag ?? 'div'"
           ref="modalEl"
@@ -49,6 +54,18 @@ const modalEl = ref<HTMLElement | null>(null)
 
 function requestClose() {
   show.value = false
+}
+
+// Закрытие по клику на фон — только если и mousedown, и mouseup
+// случились на самом фоне. Иначе выделение текста внутри модалки,
+// отпущенное за её пределами, закрывает окно.
+let bgPressed = false
+function onBgMouseDown(e: MouseEvent) {
+  bgPressed = e.target === e.currentTarget
+}
+function onBgMouseUp() {
+  if (bgPressed) requestClose()
+  bgPressed = false
 }
 
 // отдаём внутренним компонентам, чтобы они закрывали модалку через анимацию

@@ -34,6 +34,7 @@
         </div>
         <div class="card-body">
           <h4>{{ post.title }}</h4>
+          <div v-if="post.description" class="excerpt">{{ post.description }}</div>
           <p v-if="post.status.slug !== 'new' && post.team_comment" class="kcard-reply">{{ post.team_comment }}</p>
           <PostMeta :post="post" />
         </div>

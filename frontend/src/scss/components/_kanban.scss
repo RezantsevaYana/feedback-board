@@ -79,6 +79,10 @@
     .card-body {
         gap: 6px;
     }
+    .excerpt {
+        font-size: 12px;
+        @include lineClamp(3);
+    }
     .meta {
         font-size: 12px;
     }
