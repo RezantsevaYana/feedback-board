@@ -1,3 +1,5 @@
+import 'lightgallery/css/lightgallery.css'
+import 'lightgallery/css/lg-zoom.css'
 import './scss/app.scss'
 
 import { createApp } from 'vue'

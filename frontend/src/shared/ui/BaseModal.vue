@@ -54,8 +54,8 @@ function requestClose() {
 // отдаём внутренним компонентам, чтобы они закрывали модалку через анимацию
 provide<() => void>('baseModal:close', requestClose)
 
-// пока лайтбокс открыт, Esc берёт он
-useEscapeKey(() => !document.querySelector('.lightbox') && requestClose())
+// пока галерея скриншотов открыта (lightgallery), Esc берёт она
+useEscapeKey(() => !document.querySelector('.lg-outer.lg-visible') && requestClose())
 onMounted(() => document.body.classList.add('locked'))
 onBeforeUnmount(() => document.body.classList.remove('locked'))
 

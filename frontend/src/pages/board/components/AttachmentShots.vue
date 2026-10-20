@@ -1,22 +1,51 @@
 <template>
-  <div v-if="attachments.length" class="shots">
-    <button v-for="a in attachments" :key="a.id" type="button" :aria-label="`Открыть ${a.original_name}`" @click="zoomed = a.url">
+  <div v-if="attachments.length" ref="galleryRef" class="shots">
+    <a
+      v-for="a in attachments"
+      :key="a.id"
+      :href="a.url"
+      :data-src="a.url"
+      :data-sub-html="a.original_name"
+      :aria-label="`Открыть ${a.original_name}`"
+    >
       <img :src="a.url" :alt="a.original_name" loading="lazy" />
-    </button>
+    </a>
   </div>
-  <Teleport to="body">
-    <div v-if="zoomed" class="lightbox" @click="zoomed = null" @keydown.esc="zoomed = null">
-      <img :src="zoomed" alt="Скриншот" />
-    </div>
-  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import lightGallery, { type LightGallery } from 'lightgallery'
+import lgZoom from 'lightgallery/plugins/zoom'
 import type { Attachment } from '@/api/types'
 
-defineProps<{
+const props = defineProps<{
   attachments: Attachment[]
 }>()
-const zoomed = ref<string | null>(null)
+
+const galleryRef = ref<HTMLElement | null>(null)
+let gallery: LightGallery | null = null
+
+onMounted(() => {
+  if (!galleryRef.value) return
+  gallery = lightGallery(galleryRef.value, {
+    plugins: [lgZoom],
+    licenseKey: '0000-0000-000-0000',   // GPL-режим — скрыть предупреждение
+    speed: 250,
+    download: false,
+    mousewheel: true,
+    counter: props.attachments.length > 1,
+    hideScrollbar: true,
+  })
+})
+
+watch(
+  () => props.attachments.map((a) => a.id).join(','),
+  () => gallery?.refresh(),
+)
+
+onBeforeUnmount(() => {
+  gallery?.destroy()
+  gallery = null
+})
 </script>
