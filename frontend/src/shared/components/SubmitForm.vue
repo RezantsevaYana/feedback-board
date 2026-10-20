@@ -69,6 +69,7 @@ import type { Category, Post } from '@/api/types'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 import TextAreaComponent from '@/shared/ui/TextAreaComponent.vue'
+import { voterToken } from '@/shared/utils/voter'
 
 // The one submission form (TZ 5.1), shared by the widget (Shadow DOM, cross-origin) and the board.
 const props = defineProps<{
@@ -172,6 +173,9 @@ async function submit() {
   body.append('title', form.title.trim())
   body.append('description', form.description.trim())
   if (form.name.trim()) body.append('author_name', form.name.trim())
+  // Токен автора — через тело, а не через X-Voter-Token: кастомный заголовок
+  // форсит CORS-preflight у виджета (cross-origin), а поле формы — нет.
+  body.append('voter_token', voterToken())
   files.value.forEach((f) => body.append('files[]', f.file))
   saveName()
 

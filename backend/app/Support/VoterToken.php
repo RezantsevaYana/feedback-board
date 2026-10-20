@@ -16,9 +16,14 @@ class VoterToken
 {
     public const HEADER = 'X-Voter-Token';
 
+    /**
+     * С доски прилетает в заголовке X-Voter-Token. Виджет (cross-origin) заголовок
+     * не шлёт, чтобы не инициировать CORS-preflight — там же мультипарт-форма,
+     * поэтому пробрасываем токен полем `voter_token` в теле запроса.
+     */
     public static function from(Request $request): ?string
     {
-        $token = $request->header(self::HEADER);
+        $token = $request->header(self::HEADER) ?? $request->input('voter_token');
 
         return is_string($token) && Str::isUuid($token) ? strtolower($token) : null;
     }

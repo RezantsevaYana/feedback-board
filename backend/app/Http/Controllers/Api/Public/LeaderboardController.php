@@ -48,6 +48,7 @@ class LeaderboardController extends Controller
         return response()->json([
             'data' => $rows->values()->map(fn ($row, $i) => [
                 'place' => $i + 1,
+                'token' => $row->token,
                 'name' => $row->name,
                 'value' => (int) $row->value,
             ]),

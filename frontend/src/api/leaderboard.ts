@@ -7,6 +7,7 @@ export type LeaderboardMetric = 'posts' | 'support'
 
 export interface LeaderboardEntry {
   place: number
+  token: string
   name: string
   value: number
 }
