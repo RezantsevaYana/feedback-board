@@ -20,11 +20,19 @@
         class="kcard"
         :class="{ 'is-hidden': post.is_hidden, dragging: dragId === post.id }"
         :draggable="board.team"
+        tabindex="0"
+        role="link"
+        :aria-label="post.title"
+        @click="onCardClick($event, post)"
+        @keydown.enter.prevent="onCardEnter(post)"
         @dragstart="onDragStart($event, post)"
         @dragend="(dragId = null), (overColumn = null)"
       >
-        <PostTags :post="post" :team="board.team" />
-        <div class="card-body" role="link" tabindex="0" @click="emit('open', post)" @keydown.enter="emit('open', post)">
+        <div class="kcard-top">
+          <PostTags :post="post" :team="board.team" />
+          <CopyLink :post-id="post.id" />
+        </div>
+        <div class="card-body">
           <h4>{{ post.title }}</h4>
           <p v-if="post.status !== 'new' && post.team_comment" class="kcard-reply">{{ post.team_comment }}</p>
           <PostMeta :post="post" />
@@ -44,6 +52,8 @@ import type { Post, PostStatus } from '@/api/types'
 import { STATUS, STATUS_REPLY, STATUSES } from '@/shared/constants/dict'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
+import { useCardOpen } from '../composables/useCardOpen'
+import CopyLink from './CopyLink.vue'
 import PostMeta from './PostMeta.vue'
 import PostTags from './PostTags.vue'
 import StatusReplyModal from './StatusReplyModal.vue'
@@ -56,6 +66,7 @@ const emit = defineEmits<{
 }>()
 const board = useBoardStore()
 const notification = useNotificationStore()
+const { onCardClick, onCardEnter } = useCardOpen(emit)
 
 const columns = computed(() => STATUSES.map((status) => ({ status, posts: board.posts.filter((p) => p.status === status) })))
 

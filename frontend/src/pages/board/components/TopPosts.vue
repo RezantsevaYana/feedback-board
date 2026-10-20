@@ -12,9 +12,19 @@
     </div>
   </div>
   <div class="rank">
-    <article v-for="{ post, place } in board.ranking" :key="post.id" class="rank-row" :class="{ top: place <= 3 && score(post) > 0 }">
+    <article
+      v-for="{ post, place } in board.ranking"
+      :key="post.id"
+      class="rank-row"
+      :class="{ top: place <= 3 && score(post) > 0 }"
+      tabindex="0"
+      role="link"
+      :aria-label="post.title"
+      @click="onCardClick($event, post)"
+      @keydown.enter.prevent="onCardEnter(post)"
+    >
       <span class="rank-n" :aria-label="`Место ${place}`">{{ place }}</span>
-      <div class="card-body" role="link" tabindex="0" @click="emit('open', post)" @keydown.enter="emit('open', post)">
+      <div class="card-body">
         <h3>{{ post.title }}</h3>
         <div class="meta">
           <CategoryTag :category="post.category" />
@@ -23,7 +33,10 @@
           <span>{{ fmtDate(post.created_at) }}</span>
         </div>
       </div>
-      <VoteButtons :post="post" small />
+      <div class="rank-actions">
+        <CopyLink :post-id="post.id" />
+        <VoteButtons :post="post" small />
+      </div>
     </article>
     <div v-if="!board.ranking.length && !board.loading" class="empty">Пока нечего ранжировать.</div>
   </div>
@@ -34,8 +47,10 @@ import type { Post } from '@/api/types'
 import { STATUS, TEXT } from '@/shared/constants/dict'
 import { fmtDate } from '@/shared/utils/format'
 import { score, useBoardStore } from '@/store/board/useBoardStore'
+import { useCardOpen } from '../composables/useCardOpen'
 import CategoryChips from './CategoryChips.vue'
 import CategoryTag from './CategoryTag.vue'
+import CopyLink from './CopyLink.vue'
 import VoteButtons from './VoteButtons.vue'
 
 // Ranking of everything not rejected by likes minus dislikes, optionally within one category.
@@ -43,4 +58,5 @@ const emit = defineEmits<{
   open: [post: Post]
 }>()
 const board = useBoardStore()
+const { onCardClick, onCardEnter } = useCardOpen(emit)
 </script>

@@ -15,9 +15,11 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.12s;
 
     @include hover {
-        border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+        border-color: color-mix(in srgb, var(--fg) 22%, var(--line));
     }
     .card-body {
         gap: 6px;
@@ -27,17 +29,24 @@
         font-weight: 600;
     }
     &.top .rank-n {
-        color: var(--brand-ink);
+        color: var(--fg);
+        font-weight: 600;
     }
 
     @media screen and (max-width: $mobile-mini) {
         grid-template-columns: 30px 1fr;
         gap: 10px;
 
-        > .votes {
+        > .rank-actions {
             grid-column: 2;
+            justify-content: flex-start;
         }
     }
+}
+.rank-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .rank-n {
     @include displayFont;

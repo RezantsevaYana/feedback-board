@@ -12,6 +12,10 @@
 
     @media screen and (max-width: $mobile-mini) {
         padding: 0;
+        align-items: end;                 // панель прижата к низу
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        background: color-mix(in srgb, var(--overlay) 55%, transparent);
     }
 }
 .modal {
@@ -20,12 +24,13 @@
     overflow-y: auto;
     background: var(--surface);
     border-radius: 16px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow); // taste-skill-ignore floating dialog
     padding: clamp(18px, 3vw, 28px);
     display: grid;
-    gap: 14px;
+    gap: 6px;
     align-content: start;
-    @include rise;
+
+    @include thin-scrollbar;
 
     &.narrow {
         width: min(520px, 100%);
@@ -42,14 +47,117 @@
 
     @media screen and (max-width: $mobile-mini) {
         width: 100%;
-        height: 100%;
-        max-height: none;
-        border-radius: 0;
+        max-height: 92vh;
+        border-radius: 18px 18px 0 0;
+        padding: 18px 16px 24px;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+
+        // кнопки действий в модалке — вертикальный стек на всю ширину
+        .row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+
+            > .btn,
+            > a.btn {
+                width: 100%;
+                justify-content: center;
+            }
+            > .spacer {
+                display: none;
+            }
+        }
     }
 }
+
+// handle-полоска для свайпа; видна только когда модалка — bottom sheet
+.modal-grip {
+    display: none;
+
+    @media screen and (max-width: $mobile-mini) {
+        display: block;
+        width: 40px;
+        height: 4px;
+        margin: -2px auto 8px;
+        border-radius: 2px;
+        background: var(--line);
+        pointer-events: none;
+    }
+}
+
+// пока активно свайпание — выключаем transition у .modal, иначе дёргает за палец
+.modal.dragging {
+    user-select: none;
+}
+
 .drawer-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
+}
+.drawer-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+.confirm-actions {
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+.copy-link {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    color: var(--muted);
+
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
+    .ico {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+// --- Transition у <Transition name="modal"> в BaseModal ---------------------
+.modal-enter-active,
+.modal-leave-active {
+    transition: opacity 0.2s ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+    opacity: 0;
+}
+.modal-enter-active .modal,
+.modal-leave-active .modal {
+    transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.22s ease;
+}
+.modal-enter-from .modal,
+.modal-leave-to .modal {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+}
+
+@media screen and (max-width: $mobile-mini) {
+    // на мобиле — выезд снизу: opacity остаётся 1, двигаем на 100%
+    .modal-enter-active .modal,
+    .modal-leave-active .modal {
+        transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .modal-enter-from .modal,
+    .modal-leave-to .modal {
+        opacity: 1;
+        transform: translateY(100%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-enter-active,
+    .modal-leave-active,
+    .modal-enter-active .modal,
+    .modal-leave-active .modal {
+        transition: none;
+    }
 }

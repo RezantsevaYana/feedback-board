@@ -1,19 +1,39 @@
 <template>
   <Teleport to="body">
-    <div class="modal-bg" @click.self="emit('close')">
-      <component :is="props.tag ?? 'div'" class="modal" :class="{ narrow }" role="dialog" aria-modal="true" :aria-label="label" v-bind="$attrs">
-        <slot />
-      </component>
-    </div>
+    <Transition name="modal" appear @after-leave="emit('close')">
+      <div v-if="show" class="modal-bg" @click.self="requestClose">
+        <component
+          :is="props.tag ?? 'div'"
+          ref="modalEl"
+          class="modal"
+          :class="{ narrow, dragging, dismissing: swipeOffset > 0 }"
+          :style="swipeStyle"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="label"
+          v-bind="$attrs"
+          @touchstart.passive="onTouchStart"
+          @touchmove="onTouchMove"
+          @touchend="onTouchEnd"
+          @touchcancel="onTouchEnd"
+        >
+          <span class="modal-grip" aria-hidden="true" />
+          <slot />
+        </component>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { useEscapeKey } from '@/shared/composables/useEscapeKey'
 
-// Closes on the ✕ (slot), a click on the backdrop and Esc; locks page scroll while open.
-// Extra listeners/attrs (e.g. @submit.prevent when tag="form") go to the dialog element, not the Teleport.
+// Закрывается на крестик (slot), клик по фону, Esc, и свайп вниз на мобиле (≤479).
+// Анимация симметричная: открытие и закрытие проходят Transition. Чтобы leave успел
+// отыграть, внутренние компоненты (×-кнопки, «Отмена», успех после save) закрывают
+// модалку через inject('baseModal:close'), а не прямым emit('close') наверх —
+// иначе родитель мгновенно размонтирует BaseModal.
 defineOptions({ inheritAttrs: false })
 const props = defineProps<{
   label: string
@@ -24,8 +44,78 @@ const emit = defineEmits<{
   close: []
 }>()
 
-// an open screenshot lightbox takes Esc first
-useEscapeKey(() => !document.querySelector('.lightbox') && emit('close'))
+const show = ref(true)
+const modalEl = ref<HTMLElement | null>(null)
+
+function requestClose() {
+  show.value = false
+}
+
+// отдаём внутренним компонентам, чтобы они закрывали модалку через анимацию
+provide<() => void>('baseModal:close', requestClose)
+
+// пока лайтбокс открыт, Esc берёт он
+useEscapeKey(() => !document.querySelector('.lightbox') && requestClose())
 onMounted(() => document.body.classList.add('locked'))
 onBeforeUnmount(() => document.body.classList.remove('locked'))
+
+// --- Свайп вниз на мобильном bottom-sheet -----------------------------------
+const DISMISS_THRESHOLD = 110 // px свайпа — закрываем
+const dragging = ref(false)
+const swipeOffset = ref(0)
+let startY = 0
+let lastY = 0
+let lastT = 0
+let velocity = 0
+
+function isBottomSheet() {
+  return window.matchMedia('(max-width: 479px)').matches
+}
+function onTouchStart(e: TouchEvent) {
+  if (!isBottomSheet() || !modalEl.value) return
+  // не перехватываем жесты внутри прокручиваемого контента, пока он не прокручен в самый верх
+  if (modalEl.value.scrollTop > 0) return
+  const t = e.touches[0]
+  if (!t) return
+  startY = lastY = t.clientY
+  lastT = e.timeStamp
+  dragging.value = true
+  velocity = 0
+}
+function onTouchMove(e: TouchEvent) {
+  if (!dragging.value) return
+  const t = e.touches[0]
+  if (!t) return
+  const dy = t.clientY - startY
+  if (dy < 0) {
+    swipeOffset.value = 0
+    return
+  }
+  // блокируем нативный скролл только пока тянем вниз от самого верха
+  if (e.cancelable) e.preventDefault()
+  swipeOffset.value = dy
+  const dt = e.timeStamp - lastT || 1
+  velocity = (t.clientY - lastY) / dt
+  lastY = t.clientY
+  lastT = e.timeStamp
+}
+function onTouchEnd() {
+  if (!dragging.value) return
+  const shouldClose = swipeOffset.value > DISMISS_THRESHOLD || velocity > 0.6
+  dragging.value = false
+  if (shouldClose) {
+    // отпустим пружиной: сначала доведём до низа через transition, потом закроем
+    swipeOffset.value = window.innerHeight
+    setTimeout(requestClose, 160)
+  } else {
+    swipeOffset.value = 0
+  }
+}
+const swipeStyle = computed(() => {
+  if (!swipeOffset.value) return null
+  return {
+    transform: `translateY(${swipeOffset.value}px)`,
+    transition: dragging.value ? 'none' : 'transform 0.18s ease-out',
+  }
+})
 </script>

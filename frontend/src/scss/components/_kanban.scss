@@ -9,6 +9,18 @@
     overflow-x: auto;
     padding-bottom: 8px;
     align-items: start;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 4px;
+    @include thin-scrollbar;
+
+    @media screen and (max-width: $mobile-mini) {
+        // одна колонка на экран, со «подсматривающей» следующей — пальцем листаем по статусам
+        grid-auto-columns: calc(100vw - 56px);
+        gap: 8px;
+        margin: 0 -16px;
+        padding: 0 16px 8px;
+        scroll-snap-type: x mandatory;
+    }
 }
 .col {
     background: var(--surface-2);
@@ -19,10 +31,11 @@
     align-content: start;
     min-height: 240px;
     border: 2px solid transparent;
+    scroll-snap-align: start;
 
     &.over {
-        border-color: var(--brand);
-        background: var(--brand-soft);
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
     }
 }
 .col-head {
@@ -46,9 +59,11 @@
     padding: 10px;
     display: grid;
     gap: 6px;
+    cursor: pointer;
+    transition: border-color 0.12s;
 
     @include hover {
-        border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+        border-color: color-mix(in srgb, var(--fg) 22%, var(--line));
     }
     &[draggable='true'] {
         cursor: grab;
@@ -67,6 +82,12 @@
     .meta {
         font-size: 12px;
     }
+}
+.kcard-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 .kcard-reply {
     margin: 0;

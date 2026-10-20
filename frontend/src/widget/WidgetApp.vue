@@ -3,7 +3,7 @@
     <div v-if="open" class="fbw-panel" role="dialog" aria-label="Обратная связь">
       <div class="fbw-head">
         <h3>Обратная связь</h3>
-        <button type="button" class="icon-btn" aria-label="Закрыть" @click="toggle">✕</button>
+        <button type="button" class="icon-btn" aria-label="Закрыть" @click="toggle"><AppIcon name="close" /></button>
       </div>
       <div class="fbw-body">
         <div v-if="sent" class="done-box">
@@ -35,8 +35,7 @@
     </div>
 
     <button type="button" class="fbw-launcher slant" :aria-expanded="open" @click="toggle">
-      <svg v-if="!open" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3h12v8H6l-4 3V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
-      <span v-else aria-hidden="true">✕</span>
+      <AppIcon :name="open ? 'close' : 'chat'" />
       {{ open ? 'Закрыть' : 'Обратная связь' }}
     </button>
   </div>
@@ -47,6 +46,7 @@ import { computed, ref } from 'vue'
 import { errorMessage } from '@/api/client'
 import { ProjectsApi } from '@/api/projects'
 import type { Category, Post } from '@/api/types'
+import AppIcon from '@/shared/ui/AppIcon.vue'
 import SubmitForm from '@/shared/components/SubmitForm.vue'
 import { useEscapeKey } from '@/shared/composables/useEscapeKey'
 

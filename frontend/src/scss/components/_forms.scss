@@ -1,8 +1,11 @@
 @use '../utils' as *;
 
 .field {
+    position: relative;
     display: grid;
-    gap: 6px;
+    gap: 4px;
+    // резерв под ошибку — чтобы её появление не раздвигало форму
+    padding-bottom: 20px;
 
     > span {
         font-size: 13px;
@@ -12,6 +15,17 @@
         color: var(--muted);
         font-size: 12px;
         font-weight: 400;
+    }
+    > .err {
+        position: absolute;
+        bottom: 0;
+        left: 2px;
+        right: 2px;
+        margin: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 .input {
@@ -23,10 +37,10 @@
     padding: 9px 12px;
     font: inherit;
 
-    &:focus {
+    &:focus-visible {
         border-color: var(--brand);
-        outline: none;
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
     }
     &.invalid {
         border-color: var(--bug);
@@ -36,15 +50,129 @@ textarea.input {
     resize: vertical;
     min-height: 96px;
 }
-select.input {
-    width: auto;
-    padding: 6px 10px;
+// SelectComponent.vue — custom dropdown (no native <select>)
+.select {
+    position: relative;
+    display: inline-block;
 }
+.select-trigger {
+    position: relative;
+    width: auto;
+    padding: 6px 32px 6px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+
+    .ico {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        transition: transform 0.15s;
+        pointer-events: none;
+    }
+}
+.select.open {
+    .select-trigger .ico {
+        transform: translateY(-50%) rotate(180deg);
+    }
+}
+.select-value {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.placeholder {
+        color: var(--muted);
+    }
+}
+.select-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 30;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    min-width: 100%;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgb(0 0 0 / 12%); // taste-skill-ignore floating menu
+    @include thin-scrollbar;
+}
+.select-option {
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &.active {
+        background: var(--surface-2);
+    }
+    &.selected {
+        color: var(--fg);
+        font-weight: 500;
+    }
+}
+// CheckboxComponent.vue — нативный input спрятан под appearance:none,
+// визуально нарисован квадрат с бренд-зелёной галочкой. Фокус-ring, hover,
+// disabled и клавиатура остаются от нативного элемента, доступность не ломается.
 .check {
     display: inline-flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
     font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+
+    input[type='checkbox'] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        border: 1.5px solid var(--line);
+        background: var(--surface);
+        border-radius: 5px;
+        cursor: pointer;
+        flex: none;
+        transition: background 0.12s, border-color 0.12s;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 12px 12px;
+
+        &:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            // галочка — SVG, чтобы форма была чистая и не плыла при scale
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.2 8.3l3.4 3.3 6.2-7' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 1px;
+        }
+
+        @include hover {
+            &:not(:checked) {
+                border-color: color-mix(in srgb, var(--fg) 25%, var(--line));
+            }
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
 }
 .err {
     color: var(--bug);
@@ -89,8 +217,13 @@ select.input {
             font-size: 12px;
         }
         &[aria-pressed='true'] {
-            border-color: var(--brand);
-            background: var(--brand-soft);
+            border-color: var(--accent-dark);
+            background: var(--accent-dark);
+            color: var(--surface);
+
+            small {
+                color: color-mix(in srgb, var(--surface) 72%, transparent);
+            }
         }
     }
 }

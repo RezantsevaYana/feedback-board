@@ -2,7 +2,7 @@
   <BaseModal label="Категории" narrow @close="emit('close')">
     <div class="drawer-top">
       <h2>Категории</h2>
-      <button type="button" class="icon-btn" aria-label="Закрыть" @click="emit('close')"><AppIcon name="close" /></button>
+      <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
     </div>
     <p class="note">О чём бывают предложения в этом проекте. Пользователь выбирает категорию в форме, на доске по ним можно фильтровать.</p>
 
@@ -14,17 +14,11 @@
           <button class="btn" type="button" @click="editingId = null">Отмена</button>
           <span v-if="editError" class="err cat-err">{{ editError }}</span>
         </form>
-        <div v-else-if="deletingId === c.id" class="confirm">
-          <span>Удалить «{{ c.name }}»? Предложения останутся, но без категории.</span>
-          <span class="spacer" />
-          <button class="btn btn-danger" type="button" @click="remove(c.id)">Удалить</button>
-          <button class="btn" type="button" @click="deletingId = null">Отмена</button>
-        </div>
         <div v-else class="cat-row">
           <CategoryTag :category="c" />
           <span class="spacer" />
           <button class="link-btn" type="button" @click="startEdit(c.id, c.name)">Переименовать</button>
-          <button class="link-btn" type="button" @click="(deletingId = c.id), (editingId = null)">Удалить</button>
+          <button class="link-btn" type="button" @click="askRemove(c)">Удалить</button>
         </div>
       </li>
       <li v-if="!board.categories.length" class="note">Категорий нет — форма отправки будет без выбора.</li>
@@ -39,8 +33,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { inject, ref } from 'vue'
 import { ApiError } from '@/api/client'
+import type { Category } from '@/api/types'
+import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
@@ -54,13 +50,14 @@ const emit = defineEmits<{
 }>()
 const board = useBoardStore()
 const notification = useNotificationStore()
+const confirm = useConfirmStore()
+const close = inject<() => void>('baseModal:close', () => emit('close'))
 
 const newName = ref('')
 const addError = ref('')
 const editingId = ref<number | null>(null)
 const editName = ref('')
 const editError = ref('')
-const deletingId = ref<number | null>(null)
 
 const message = (e: unknown) => (e instanceof ApiError ? (e.field('name') ?? e.message) : String(e))
 
@@ -79,7 +76,6 @@ function startEdit(id: number, name: string) {
   editingId.value = id
   editName.value = name
   editError.value = ''
-  deletingId.value = null
 }
 
 async function saveEdit() {
@@ -92,10 +88,16 @@ async function saveEdit() {
   }
 }
 
-async function remove(id: number) {
+async function askRemove(c: Category) {
+  const ok = await confirm.ask({
+    title: 'Удалить категорию?',
+    message: `Удалить «${c.name}»? Предложения останутся, но без категории.`,
+    confirmText: 'Удалить',
+    danger: true,
+  })
+  if (!ok) return
   try {
-    await board.deleteCategory(id)
-    deletingId.value = null
+    await board.deleteCategory(c.id)
     notification.success('Категория удалена, её предложения остались без категории')
   } catch (e) {
     notification.error(message(e))

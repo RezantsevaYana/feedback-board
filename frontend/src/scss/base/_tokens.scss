@@ -9,10 +9,11 @@
     --line: #dcdfee;
     --fg: #102528;
     --muted: #5c6b72;
-    --accent: #27ad5a;
+    --accent: #27ad5a;        // Rocont Green — акцент, действия
     --accent-ink: #1b7f41;
+    --accent-dark: #00474c;   // Rocont Green Dark — тёмный акцент для выделенных табов
     --accent-fg: #ffffff;
-    --brand: #8179f4;
+    --brand: #8179f4;         // Rocont Purple — для контраста (focus, team-mode)
     --brand-ink: #4b42c4;
     --brand-soft: #dde3ff;
     --bug: #c2453b;
@@ -28,33 +29,43 @@
     --shadow: 0 10px 28px rgba(16, 37, 40, 0.12);
     --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
     --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    --radius: 12px;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; // taste-skill-ignore ids/urls only
+    --radius: 10px;
 }
 
+// Dark theme — применяется, когда пользователь явно выбрал её переключателем
+// (`<html data-theme="dark">`) ИЛИ когда выбрана системная тема и ОС в dark.
+@mixin dark-tokens {
+    --bg: #0c1718;
+    --surface: #122123;
+    --surface-2: #182b2e;
+    --line: #243a3d;
+    --fg: #e5eeee;
+    --muted: #94a8aa;
+    --accent-ink: #4fcf85;
+    --accent-dark: #bfeed1;   // в тёмной теме инвертируем: светло-зелёная пилюля на тёмном фоне
+    --brand: #9a93f7;
+    --brand-ink: #c3c4ff;
+    --brand-soft: #262c58;
+    --bug: #f07a6f;
+    --feature: #a29bf8;
+    --s-new: #9aa5b4;
+    --s-review: #a29bf8;
+    --s-planned: #4fc2c8;
+    --s-progress: #e6a64a;
+    --s-done: #4fcf85;
+    --s-rejected: #f07a6f;
+    --overlay: rgba(0, 0, 0, 0.7);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+}
+
+:root[data-theme='dark'] {
+    @include dark-tokens;
+}
 @media (prefers-color-scheme: dark) {
-    :root {
-        --bg: #0c1718;
-        --surface: #122123;
-        --surface-2: #182b2e;
-        --line: #243a3d;
-        --fg: #e5eeee;
-        --muted: #94a8aa;
-        --accent-ink: #4fcf85;
-        --brand: #9a93f7;
-        --brand-ink: #c3c4ff;
-        --brand-soft: #262c58;
-        --bug: #f07a6f;
-        --feature: #a29bf8;
-        --s-new: #9aa5b4;
-        --s-review: #a29bf8;
-        --s-planned: #4fc2c8;
-        --s-progress: #e6a64a;
-        --s-done: #4fcf85;
-        --s-rejected: #f07a6f;
-        --overlay: rgba(0, 0, 0, 0.7);
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        color-scheme: dark;
+    :root:not([data-theme='light']):not([data-theme='dark']) {
+        @include dark-tokens;
     }
 }
 

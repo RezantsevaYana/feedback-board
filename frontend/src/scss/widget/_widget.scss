@@ -53,7 +53,7 @@ h3 {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 16px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow); // taste-skill-ignore floating overlay on host page
     overflow: hidden;
     @include rise(0.18s);
 

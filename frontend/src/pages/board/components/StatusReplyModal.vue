@@ -2,7 +2,7 @@
   <BaseModal :label="ask.title" narrow tag="form" @close="emit('close')" @submit.prevent="save">
     <div class="drawer-top">
       <h2>{{ ask.title }}: «{{ post.title }}»</h2>
-      <button type="button" class="icon-btn" aria-label="Отмена" @click="emit('close')"><AppIcon name="close" /></button>
+      <button type="button" class="icon-btn" aria-label="Отмена" @click="close()"><AppIcon name="close" /></button>
     </div>
     <TextAreaComponent
       v-model="reply"
@@ -16,13 +16,13 @@
     />
     <div class="row">
       <button class="btn btn-primary" type="submit" :disabled="saving">{{ ask.title }}</button>
-      <button class="btn" type="button" @click="emit('close')">Отмена</button>
+      <button class="btn" type="button" @click="close()">Отмена</button>
     </div>
   </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { ApiError } from '@/api/client'
 import type { Post, PostStatus } from '@/api/types'
 import { STATUS_REPLY } from '@/shared/constants/dict'
@@ -43,6 +43,7 @@ const emit = defineEmits<{
 }>()
 const board = useBoardStore()
 const notification = useNotificationStore()
+const close = inject<() => void>('baseModal:close', () => emit('close'))
 
 const ask = computed(() => STATUS_REPLY[props.status]!)
 const reply = ref(props.post.team_comment ?? '')
@@ -59,7 +60,7 @@ async function save() {
   try {
     await board.updatePost(props.post.id, { status: props.status, team_comment: reply.value.trim() || null })
     notification.success(props.status === 'done' ? 'Готово — видно на доске' : 'Отклонено — причина видна на доске')
-    emit('close')
+    close()
   } catch (e) {
     error.value = e instanceof ApiError ? (e.field('team_comment') ?? e.message) : String(e)
   } finally {

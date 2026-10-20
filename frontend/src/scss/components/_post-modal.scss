@@ -35,16 +35,6 @@
     }
 }
 
-.confirm {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--bug) 10%, transparent);
-}
-
 .shots {
     display: flex;
     flex-wrap: wrap;
@@ -84,7 +74,12 @@
     }
 }
 
-// selects in the team's edit form fill their grid cell
-.modal .field select.input {
+// selects in the team's edit form fill their grid cell and match input height
+.modal .select {
+    display: block;
     width: 100%;
+}
+.modal .select-trigger {
+    width: 100%;
+    padding: 9px 36px 9px 12px;
 }

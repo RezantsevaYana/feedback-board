@@ -3,31 +3,42 @@
 // SubmitForm.vue: shared by the board and the widget
 .fb-form {
     display: grid;
-    gap: 14px;
+    gap: 6px;
 }
 .fb-foot {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
+
+    @media screen and (max-width: $mobile-mini) {
+        flex-direction: column-reverse;      // primary action сверху
+        align-items: stretch;
+
+        > .btn,
+        > .link-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 }
 
 // screenshot drop zone and previews
 .drop {
-    border: 1px dashed color-mix(in srgb, var(--brand) 45%, var(--line));
+    border: 1px dashed var(--line);
     border-radius: 10px;
-    background: color-mix(in srgb, var(--brand-soft) 30%, var(--surface));
+    background: var(--surface-2);
     padding: 12px;
     text-align: center;
     color: var(--muted);
     font-size: 13px;
 
     &.over {
-        border-color: var(--brand);
-        background: var(--brand-soft);
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
     }
     label {
-        color: var(--brand-ink);
+        color: var(--fg);
         text-decoration: underline;
         cursor: pointer;
     }
@@ -109,7 +120,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-family: var(--font-mono);
+        font-family: var(--font-mono); // taste-skill-ignore post url
         font-size: 12px;
         color: var(--muted);
     }

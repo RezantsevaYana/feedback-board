@@ -14,20 +14,24 @@
     <div v-else class="board-layout">
       <nav class="board-nav" aria-label="Разделы доски">
         <RouterLink class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
-        <button type="button" class="nav-item" :aria-current="board.view.section === 'posts' ? 'page' : undefined" @click="setSection('posts')">
-          <AppIcon name="columns" /><span>Предложения</span>
-        </button>
-        <button type="button" class="nav-item" :aria-current="board.view.section === 'top' ? 'page' : undefined" @click="setSection('top')">
-          <AppIcon name="chart" /><span>Топ</span>
-        </button>
-        <button type="button" class="btn btn-primary" @click="composing = true">Предложить</button>
+        <div class="board-sections">
+          <button type="button" class="nav-item" :aria-current="board.view.section === 'posts' ? 'page' : undefined" @click="setSection('posts')">
+            <AppIcon name="columns" /><span>Предложения</span>
+          </button>
+          <button type="button" class="nav-item" :aria-current="board.view.section === 'top' ? 'page' : undefined" @click="setSection('top')">
+            <AppIcon name="chart" /><span>Топ</span>
+          </button>
+        </div>
+        <button type="button" class="btn btn-primary board-cta" @click="composing = true">Предложить</button>
         <div v-if="board.team" class="team-box">
           <span class="chip">режим команды</span>
           <span class="who-mail">{{ board.me?.email }}</span>
           <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
-          <button type="button" class="link-btn" @click="board.logout()">Выйти</button>
+          <span class="team-box-sep" aria-hidden="true" />
+          <button type="button" class="link-btn link-btn-danger" @click="askLogout">Выйти</button>
         </div>
         <button v-else type="button" class="link-btn team-login" @click="loggingIn = true">Вход для команды</button>
+        <ThemeToggle />
       </nav>
 
       <div class="board-main">
@@ -78,6 +82,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/api/types'
 import { PRIORITIES, PRIORITY, STATUS, STATUSES } from '@/shared/constants/dict'
+import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
@@ -90,6 +95,7 @@ import LoginModal from './components/LoginModal.vue'
 import PostList from './components/PostList.vue'
 import PostModal from './components/PostModal.vue'
 import SubmitModal from './components/SubmitModal.vue'
+import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 import TopPosts from './components/TopPosts.vue'
 
 // /<slug> and /<slug>/posts/<id>: the board with the post card on top (TZ 5.2).
@@ -97,6 +103,7 @@ const route = useRoute()
 const router = useRouter()
 const board = useBoardStore()
 const notification = useNotificationStore()
+const confirm = useConfirmStore()
 
 const slug = computed(() => String(route.params.slug ?? ''))
 const postId = computed(() => (route.params.id ? Number(route.params.id) : null))
@@ -139,5 +146,15 @@ function onSent(post: Post) {
 }
 function setSection(section: Section) {
   board.view.section = section
+}
+
+async function askLogout() {
+  const ok = await confirm.ask({
+    title: 'Выйти из режима команды?',
+    message: `${board.me?.email ?? 'Админ'} — выйти? Чтобы снова зайти, понадобится пароль.`,
+    confirmText: 'Выйти',
+    danger: true,
+  })
+  if (ok) board.logout()
 }
 </script>

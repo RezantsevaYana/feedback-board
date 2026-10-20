@@ -29,12 +29,16 @@ export const useBoardStore = defineStore('board', () => {
   const team = computed(() => !!me.value && !!project.value && me.value.projects.some((p) => p.slug === project.value?.slug))
   const categories = computed<Category[]>(() => project.value?.categories ?? [])
 
+  // На мобиле (≤767) по умолчанию — список: канбан-колонки съедают весь экран.
+  const defaultLayout: Layout =
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 'list' : 'kanban'
+
   const view = reactive({
     section: 'posts' as Section,
-    layout: 'kanban' as Layout,
+    layout: defaultLayout,
     category: '' as '' | number | 'none',
     status: '' as '' | PostStatus,
-    sort: 'top' as Sort,
+    sort: 'new' as Sort,
     topScope: 'open' as 'open' | 'all',
     // team only
     priority: '' as '' | PostPriority | 'none',

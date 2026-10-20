@@ -3,7 +3,10 @@
     <template v-if="missing">
       <div class="drawer-top">
         <h1>Предложение не найдено</h1>
-        <button type="button" class="icon-btn" aria-label="Закрыть" @click="emit('close')"><AppIcon name="close" /></button>
+        <div class="drawer-actions">
+          <CopyLink v-if="post" :post-id="post.id" />
+          <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
+        </div>
       </div>
       <p class="desc">Возможно, его удалили или скрыли.</p>
     </template>
@@ -17,7 +20,10 @@
           <PostTags :post="post" />
           <span class="mono">#{{ post.id }} · {{ fmtDate(post.created_at) }} · {{ post.author_name || TEXT.anonymous }}</span>
         </span>
-        <button type="button" class="icon-btn" aria-label="Закрыть" @click="emit('close')"><AppIcon name="close" /></button>
+        <div class="drawer-actions">
+          <CopyLink v-if="post" :post-id="post.id" />
+          <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
+        </div>
       </div>
       <InputComponent v-model="edit.title" label="Заголовок" :error="errors.title" maxlength="120" />
       <TextAreaComponent v-model="edit.description" label="Описание" :error="errors.description" rows="6" maxlength="5000" />
@@ -46,13 +52,7 @@
         </button>
         <span class="spacer" />
         <VoteButtons :post="post" small />
-        <button class="btn btn-danger" type="button" @click="confirmDelete = true">Удалить</button>
-      </div>
-      <div v-if="confirmDelete" class="confirm">
-        <span>Удалить предложение и скриншоты навсегда?</span>
-        <span class="spacer" />
-        <button class="btn btn-danger" type="button" @click="remove">Удалить</button>
-        <button class="btn" type="button" @click="confirmDelete = false">Отмена</button>
+        <button class="btn btn-danger" type="button" @click="askDelete">Удалить</button>
       </div>
     </template>
 
@@ -60,7 +60,10 @@
     <template v-else>
       <div class="drawer-top">
         <PostTags :post="post" status />
-        <button type="button" class="icon-btn" aria-label="Закрыть" @click="emit('close')"><AppIcon name="close" /></button>
+        <div class="drawer-actions">
+          <CopyLink v-if="post" :post-id="post.id" />
+          <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
+        </div>
       </div>
       <h1>{{ post.title }}</h1>
       <div class="meta">
@@ -81,17 +84,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, inject, reactive, ref, watch } from 'vue'
 import { ApiError, errorMessage } from '@/api/client'
 import { PostsApi } from '@/api/posts'
 import type { Post, PostPriority, PostStatus } from '@/api/types'
 import { NO_CATEGORY, PRIORITIES, PRIORITY, STATUS, STATUS_REPLY, STATUSES, TEXT } from '@/shared/constants/dict'
 import { fmtDate } from '@/shared/utils/format'
+import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import AttachmentShots from './AttachmentShots.vue'
 import BaseModal from '@/shared/ui/BaseModal.vue'
+import CopyLink from './CopyLink.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 import SelectComponent from '@/shared/ui/SelectComponent.vue'
 import TextAreaComponent from '@/shared/ui/TextAreaComponent.vue'
@@ -107,11 +112,12 @@ const emit = defineEmits<{
 }>()
 const board = useBoardStore()
 const notification = useNotificationStore()
+const confirm = useConfirmStore()
+const close = inject<() => void>('baseModal:close', () => emit('close'))
 
 const post = ref<Post | null>(null)
 const missing = ref(false)
 const saving = ref(false)
-const confirmDelete = ref(false)
 const errors = reactive<Record<string, string>>({})
 const edit = reactive({
   title: '',
@@ -135,7 +141,6 @@ const priorityOptions = [
 async function load() {
   missing.value = false
   post.value = null
-  confirmDelete.value = false
   try {
     const res = board.team ? await PostsApi.adminGet(props.id) : await PostsApi.get(board.project?.slug ?? '', props.id)
     // reuse the board's copy when there is one, so votes stay in sync in both places
@@ -165,7 +170,7 @@ async function save(patch?: { is_hidden: boolean }) {
     if (patch) notification.success(post.value.is_hidden ? 'Скрыто с доски' : 'Снова на доске')
     else {
       notification.success('Сохранено')
-      emit('close')
+      close()
     }
   } catch (e) {
     if (e instanceof ApiError && e.status === 422) {
@@ -176,12 +181,19 @@ async function save(patch?: { is_hidden: boolean }) {
   }
 }
 
-async function remove() {
+async function askDelete() {
   if (!post.value) return
+  const ok = await confirm.ask({
+    title: 'Удалить предложение?',
+    message: `«${post.value.title}» — удалить навсегда вместе со скриншотами и голосами. Отменить нельзя.`,
+    confirmText: 'Удалить',
+    danger: true,
+  })
+  if (!ok) return
   try {
     await board.deletePost(post.value.id)
     notification.success('Предложение удалено')
-    emit('close')
+    close()
   } catch (e) {
     notification.error(errorMessage(e))
   }

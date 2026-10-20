@@ -20,10 +20,40 @@
     align-items: center;
     gap: 8px;
 
-    // InputComponent's wrapper takes the free space in the row
+    // InputComponent занимает всё свободное место рядом с кнопками.
+    // Резерв под ошибкой здесь не нужен — ошибки показываются через .cat-err отдельной строкой.
     .field {
         flex: 1;
         min-width: 160px;
+        padding-bottom: 0;
+    }
+
+    // кнопки в ряду компактнее, чем дефолтные .btn
+    .btn {
+        padding: 7px 14px;
+    }
+
+    @media screen and (max-width: $mobile-mini) {
+        gap: 6px;
+
+        .field {
+            flex: 1 1 100%;
+            min-width: 0;
+        }
+        // кнопки под инпутом: одна — во всю ширину, две — поровну делят строку
+        .btn {
+            flex: 1 1 120px;
+            justify-content: center;
+        }
+        // ряд «только для чтения»: тег слева, спейсер уходит, ссылки прижаты вправо
+        &:not(form) {
+            > .spacer {
+                display: none;
+            }
+            .link-btn:first-of-type {
+                margin-left: auto;
+            }
+        }
     }
 }
 .cat-err {

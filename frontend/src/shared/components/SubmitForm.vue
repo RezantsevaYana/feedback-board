@@ -43,7 +43,7 @@
       <div v-if="files.length" class="thumbs">
         <div v-for="(f, i) in files" :key="f.preview" class="thumb">
           <img :src="f.preview" alt="" />
-          <button type="button" aria-label="Убрать скриншот" @click="removeFile(i)">✕</button>
+          <button type="button" aria-label="Убрать скриншот" @click="removeFile(i)"><AppIcon name="close" :size="12" /></button>
         </div>
       </div>
       <span v-if="errors.files" class="err">{{ errors.files }}</span>
@@ -66,6 +66,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { ApiError, errorMessage } from '@/api/client'
 import { PostsApi } from '@/api/posts'
 import type { Category, Post } from '@/api/types'
+import AppIcon from '@/shared/ui/AppIcon.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 import TextAreaComponent from '@/shared/ui/TextAreaComponent.vue'
 

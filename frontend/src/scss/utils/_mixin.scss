@@ -29,3 +29,26 @@
         animation: rise $duration ease-out;
     }
 }
+
+// Тонкий кастомный скроллбар. Применяется к любому прокручиваемому контейнеру
+// (модалка, выпадашка, канбан-карусель): 6px, прозрачный track, thumb из --line.
+@mixin thin-scrollbar {
+    scrollbar-width: thin;                     // Firefox
+    scrollbar-color: var(--line) transparent;  // Firefox: thumb / track
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: var(--line);
+        border-radius: 999px;
+
+        &:hover {
+            background: var(--muted);
+        }
+    }
+}

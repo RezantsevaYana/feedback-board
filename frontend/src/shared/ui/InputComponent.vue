@@ -1,19 +1,44 @@
 <template>
   <label class="field">
     <span v-if="label">{{ label }} <small v-if="hint">· {{ hint }}</small></span>
-    <input v-model="model" class="input" :class="{ invalid: !!error }" v-bind="$attrs" />
-    <span v-if="error" class="err" role="alert">{{ error }}</span>
+    <input v-model="model" class="input" :class="{ invalid: hasError }" v-bind="$attrs" @blur="onBlur" />
+    <span v-if="hasError" class="err" role="alert">{{ errorMessage }}</span>
   </label>
 </template>
 
 <script setup lang="ts">
-// Text input with an optional label, hint and error. Native attributes and listeners
-// (type, maxlength, placeholder, @input…) go to the <input>, not to the wrapper.
+import { computed, isRef } from 'vue'
+
+// Текстовый инпут. Нативные атрибуты (type, maxlength, placeholder, @input…) падают на <input>.
+// Ошибку принимает в двух форматах:
+//   :error="строка"   — для серверных сообщений (ApiError 422) и ручного управления;
+//   :errors="v$.foo"  — для клиентской валидации через @vuelidate: показываем первое $message,
+//                       только после $dirty (сработало после blur или ручного $touch).
+type VuelidateMessage = string | { value: string }
+type VuelidateField = { $dirty?: boolean; $errors?: { $message: VuelidateMessage }[]; $touch?: () => void }
+
 defineOptions({ inheritAttrs: false })
 const model = defineModel<string>({ required: true })
-defineProps<{
+const props = defineProps<{
   label?: string
   hint?: string
   error?: string
+  // приходит как `v$.field` — у него плотный тип vuelidate, принимаем через unknown
+  errors?: unknown
 }>()
+
+const vuelidate = computed(() => props.errors as VuelidateField | undefined)
+
+const vuelidateMessage = computed(() => {
+  const field = vuelidate.value
+  const raw = field?.$errors?.[0]?.$message
+  if (!field?.$dirty || !raw) return ''
+  return isRef(raw) ? (raw.value as string) : (raw as string)
+})
+const errorMessage = computed(() => props.error || vuelidateMessage.value)
+const hasError = computed(() => !!errorMessage.value)
+
+function onBlur() {
+  vuelidate.value?.$touch?.()
+}
 </script>

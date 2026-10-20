@@ -86,7 +86,7 @@ a {
     vertical-align: -2px;
 }
 .mono {
-    font-family: var(--font-mono);
+    font-family: var(--font-mono); // taste-skill-ignore ids only
     font-size: 12px;
     color: var(--muted);
 }
@@ -102,7 +102,7 @@ a {
 @mixin formGrid($columns) {
     display: grid;
     grid-template-columns: repeat($columns, 1fr);
-    gap: 10px;
+    gap: 4px;
 
     @media screen and (max-width: $mobile) {
         grid-template-columns: 1fr;

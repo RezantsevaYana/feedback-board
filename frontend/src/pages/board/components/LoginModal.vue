@@ -1,18 +1,36 @@
 <template>
-  <BaseModal label="Вход для команды" narrow tag="form" @close="emit('close')" @submit.prevent="submit">
+  <BaseModal label="Вход для команды" narrow tag="form" novalidate @close="emit('close')" @submit.prevent="submit">
     <div class="drawer-top">
       <h2>Вход для команды</h2>
-      <button type="button" class="icon-btn" aria-label="Закрыть" @click="emit('close')"><AppIcon name="close" /></button>
+      <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
     </div>
-    <InputComponent v-model="email" label="Email" type="email" autocomplete="username" required autofocus />
-    <InputComponent v-model="password" label="Пароль" :error="error" type="password" autocomplete="current-password" required />
+    <InputComponent
+      v-model="email"
+      label="Email"
+      type="text"
+      inputmode="email"
+      autocapitalize="off"
+      spellcheck="false"
+      autocomplete="username"
+      :errors="v$.email"
+      autofocus
+    />
+    <InputComponent
+      v-model="password"
+      label="Пароль"
+      type="password"
+      autocomplete="current-password"
+      :errors="v$.password"
+    />
     <button class="btn btn-primary" type="submit" :disabled="sending">{{ sending ? 'Входим…' : 'Войти' }}</button>
     <p class="note">Только для тех, кто разбирает предложения. Аккаунты заводит разработчик, у каждого свой пароль.</p>
   </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { inject, ref, watch } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { email as emailRule, helpers, required } from '@vuelidate/validators'
 import { ApiError } from '@/api/client'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
@@ -20,31 +38,72 @@ import AppIcon from '@/shared/ui/AppIcon.vue'
 import BaseModal from '@/shared/ui/BaseModal.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 
-// «Вход для команды» (TZ 5.6): email + password, Sanctum session on our domain.
+// «Вход для команды» (TZ 5.6): email + password, Sanctum session on our домен.
+// Валидация своя через @vuelidate (нативную отключаем: novalidate на форме,
+// type="text"+inputmode="email", никаких required). Паттерн как в kerrdental:
+// клиентские правила + отдельное server-правило, в которое кладём сообщение бэка.
 const emit = defineEmits<{
   close: []
 }>()
 const board = useBoardStore()
 const notification = useNotificationStore()
+const close = inject<() => void>('baseModal:close', () => emit('close'))
 
 const email = ref('')
 const password = ref('')
-const error = ref('')
 const sending = ref(false)
+const emailServer = ref('')
+const passwordServer = ref('')
+
+const rules = {
+  email: {
+    required: helpers.withMessage('Введите email.', required),
+    email: helpers.withMessage('Проверьте email: пропущена @ или домен.', emailRule),
+    server: helpers.withMessage(
+      () => emailServer.value,
+      () => !emailServer.value,
+    ),
+  },
+  password: {
+    required: helpers.withMessage('Введите пароль.', required),
+    server: helpers.withMessage(
+      () => passwordServer.value,
+      () => !passwordServer.value,
+    ),
+  },
+}
+
+const v$ = useVuelidate(rules, { email, password })
+
+watch(email, () => (emailServer.value = ''))
+watch(password, () => (passwordServer.value = ''))
 
 async function submit() {
-  error.value = ''
+  if (sending.value) return
+  emailServer.value = ''
+  passwordServer.value = ''
+  const isValid = await v$.value.$validate()
+  if (!isValid) return
+
   sending.value = true
   try {
     await board.login(email.value.trim(), password.value)
     if (!board.team) {
-      error.value = 'Вы вошли, но этот проект ведут другие админы.'
+      emailServer.value = 'Вы вошли, но этот проект ведут другие админы.'
+      v$.value.email.$touch()
       return
     }
     notification.success('Вы вошли — режим команды')
-    emit('close')
+    close()
   } catch (e) {
-    error.value = e instanceof ApiError ? (e.field('email') ?? e.field('password') ?? e.message) : String(e)
+    if (e instanceof ApiError) {
+      emailServer.value = e.field('email') ?? ''
+      passwordServer.value = e.field('password') ?? ''
+      if (!emailServer.value && !passwordServer.value) passwordServer.value = e.message
+    } else {
+      passwordServer.value = String(e)
+    }
+    v$.value.$touch()
   } finally {
     sending.value = false
   }

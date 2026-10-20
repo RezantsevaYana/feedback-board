@@ -7,9 +7,9 @@
     gap: 24px;
     align-items: start;
 
-    @media screen and (max-width: $mobile) {
+    @media screen and (max-width: $tablet) {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 14px;
     }
 }
 
@@ -33,18 +33,58 @@
         margin-top: 14px;
     }
 
-    @media screen and (max-width: $mobile) {
+    @media screen and (max-width: $tablet) {
         position: static;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 4px;
+        gap: 8px;
+        row-gap: 10px;
 
         .proj {
-            margin: 0 8px 0 0;
+            margin: 0;
         }
-        .btn {
-            margin: 0 0 0 auto;
+        // Разделы — одна группа; CTA и вход — свои отдельные элементы в общем ряду
+        .btn,
+        .team-login {
+            margin: 0;
+        }
+        .board-cta {
+            margin-left: auto;      // «Предложить» уезжает вправо, разделы остаются слева
+        }
+    }
+
+    @media screen and (max-width: $mobile) {
+        .board-cta {
+            margin-left: 0;         // на узких экранах порядок — слева направо
+            flex: 1 1 100%;         // CTA на всю ширину собственной строкой
+        }
+    }
+}
+
+// Группа табов «Предложения / Топ» — всегда идёт одним блоком
+.board-sections {
+    display: contents;              // на десктопе — как если бы обёртки не было
+
+    @media screen and (max-width: $tablet) {
+        display: inline-flex;
+        gap: 4px;
+        padding: 3px;
+        border-radius: 10px;
+        background: var(--surface-2);
+
+        .nav-item {
+            width: auto;
+            padding: 6px 12px;
+            border-radius: 8px;
+
+            @include hover {
+                background: var(--surface);
+            }
+            &[aria-current='page'] {
+                background: var(--surface);
+                color: var(--fg);
+            }
         }
     }
 }
@@ -66,8 +106,8 @@
         color: var(--fg);
     }
     &[aria-current='page'] {
-        background: var(--brand-soft);
-        color: var(--brand-ink);
+        background: var(--surface-2);
+        color: var(--fg);
     }
     .count {
         margin-left: auto;
@@ -75,7 +115,7 @@
         opacity: 0.7;
     }
 
-    @media screen and (max-width: $mobile) {
+    @media screen and (max-width: $tablet) {
         width: auto;
         white-space: nowrap;
     }
@@ -85,7 +125,7 @@
     justify-self: start;
     margin-top: 18px;
 
-    @media screen and (max-width: $mobile) {
+    @media screen and (max-width: $tablet) {
         margin-top: 0;
     }
 }
@@ -101,8 +141,8 @@
     font-size: 13px;
 
     .chip {
-        background: var(--accent);
-        color: var(--accent-fg);
+        background: var(--brand-soft);
+        color: var(--brand-ink);
     }
     .who-mail {
         word-break: break-all;
@@ -110,13 +150,30 @@
     .link-btn {
         padding: 0;
     }
+    // горизонтальная линия перед «Выйти» — визуально отделяет разрушительное
+    // действие от «Категории»
+    .team-box-sep {
+        display: block;
+        width: 100%;
+        height: 1px;
+        background: var(--line);
+        margin: 4px 0 2px;
+    }
+    .link-btn-danger {
+        color: var(--bug);
+        text-decoration-color: color-mix(in srgb, var(--bug) 40%, transparent);
 
-    @media screen and (max-width: $mobile) {
+        @include hover {
+            color: var(--bug);
+            text-decoration-color: currentColor;
+        }
+    }
+
+    @media screen and (max-width: $tablet) {
         margin-top: 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 8px;
+        // плашка одинаковая на всех разрешениях — вертикальный grid, не ряд.
+        // На узких экранах уводим её в собственную строку, чтобы не распирала nav
+        flex: 1 1 100%;
     }
 }
 
@@ -144,6 +201,33 @@
     gap: 10px;
     align-items: center;
     margin-bottom: 14px;
+
+    // в фильтрах нет валидации — резерв под ошибкой у .field не нужен,
+    // иначе из-за дополнительной высоты .field селект уплывает вверх при align:center
+    > .field {
+        padding-bottom: 0;
+    }
+
+    @media screen and (max-width: $mobile) {
+        gap: 8px;
+        // spacer на мобиле не нужен — сортировка идёт сразу слева следующей строкой
+        > .spacer {
+            display: none;
+        }
+        // переключатель вида — отдельная первая строка
+        > .seg-icons {
+            flex: 1 1 100%;
+            align-self: start;
+        }
+        // селекты (Статус, Приоритет) — своя строка на всю ширину
+        > .field {
+            flex: 1 1 100%;
+        }
+        > .field .select,
+        > .field .select-trigger {
+            width: 100%;
+        }
+    }
 }
 .chips {
     display: flex;
@@ -162,9 +246,9 @@
             color: var(--fg);
         }
         &[aria-pressed='true'] {
-            background: var(--brand-soft);
-            color: var(--brand-ink);
-            border-color: transparent;
+            background: var(--accent-dark);
+            color: var(--surface);
+            border-color: var(--accent-dark);
             font-weight: 500;
         }
     }
@@ -181,6 +265,7 @@
         background: transparent;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
         padding: 4px 10px;
         border-radius: 8px;
@@ -191,7 +276,16 @@
         &[aria-pressed='true'] {
             background: var(--surface);
             color: var(--fg);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        }
+    }
+
+    @media screen and (max-width: $mobile) {
+        display: flex;
+        width: 100%;
+
+        button {
+            flex: 1 1 50%;         // две кнопки по половине ширины
+            padding: 7px 10px;
         }
     }
 }
@@ -203,4 +297,41 @@
     @media screen and (max-width: $mobile) {
         display: none;
     }
+}
+
+// Небольшой переключатель темы — живёт в сайдбаре, внизу
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 999px;
+    font-size: 12px;
+    cursor: pointer;
+    justify-self: start;
+
+    .ico {
+        width: 14px;
+        height: 14px;
+    }
+
+    @include hover {
+        color: var(--fg);
+        border-color: color-mix(in srgb, var(--fg) 20%, var(--line));
+    }
+
+    @media screen and (max-width: $tablet) {
+        margin-top: 0;
+        margin-left: auto;      // уходит в правый угол нав-ряда
+    }
+    @media screen and (max-width: $mobile) {
+        margin-left: 0;
+    }
+}
+.theme-toggle-label {
+    text-transform: lowercase;
 }
