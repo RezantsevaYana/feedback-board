@@ -41,9 +41,11 @@ class CreateProject extends Command
 
         $project = Project::create(['name' => $name, 'slug' => $slug, 'allowed_origins' => array_values($origins)]);
         $project->createDefaultCategories();
+        $project->createDefaultStatuses();
 
         $this->info("Проект «{$project->name}» создан. Доска: /{$project->slug}");
         $this->line('Категории: '.implode(', ', $project->categories()->pluck('name')->all()).' — команда меняет их на доске.');
+        $this->line('Столбцы: '.implode(' → ', $project->statuses()->pluck('name')->all()).' — свои добавляются в разделе «Столбцы».');
         $this->line('Виджет: <script src="https://<сервис>/widget.js" data-project="'.$project->slug.'" defer></script>');
 
         return self::SUCCESS;

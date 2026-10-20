@@ -1,48 +1,50 @@
 <template>
-  <div class="fbw" :class="position === 'bottom-left' ? 'left' : 'right'">
-    <div v-if="open" class="fbw-panel" role="dialog" aria-label="Обратная связь">
-      <div class="fbw-head">
-        <h3>Обратная связь</h3>
-        <button type="button" class="icon-btn" aria-label="Закрыть" @click="toggle"><AppIcon name="close" /></button>
-      </div>
-      <div class="fbw-body">
-        <div v-if="sent" class="done-box">
-          <span class="done-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg>
-          </span>
-          <h3>Спасибо! Предложение на доске</h3>
-          <p class="note">Сохраните ссылку: по ней видно статус и ответ команды.</p>
-          <div class="post-link">
-            <span>{{ postUrl.replace(/^https?:\/\//, '') }}</span>
-            <button type="button" class="btn" @click="copy">{{ copied ? 'Скопировано' : 'Скопировать' }}</button>
-          </div>
-          <div class="row fbw-actions">
-            <a class="btn btn-primary" :href="postUrl" target="_blank" rel="noopener">Открыть на доске</a>
-            <button type="button" class="btn" @click="again">Отправить ещё</button>
-          </div>
+  <div ref="root" class="fbw" :class="position === 'bottom-left' ? 'left' : 'right'">
+    <Transition name="fbw-panel">
+      <div v-if="open" class="fbw-panel" role="dialog" aria-label="Обратная связь">
+        <div class="fbw-head">
+          <h3>Обратная связь</h3>
+          <button type="button" class="icon-btn" aria-label="Закрыть" @click="toggle"><AppIcon name="close" /></button>
         </div>
-        <div v-else-if="loadError" class="done-box">
-          <p class="alert">{{ loadError }}</p>
-          <button type="button" class="btn" @click="loadCategories">Попробовать ещё раз</button>
+        <div class="fbw-body">
+          <div v-if="sent" class="done-box">
+            <span class="done-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg>
+            </span>
+            <h3>Спасибо! Предложение на доске</h3>
+            <p class="note">Сохраните ссылку: по ней видно статус и ответ команды.</p>
+            <div class="post-link">
+              <span>{{ postUrl.replace(/^https?:\/\//, '') }}</span>
+              <button type="button" class="btn" @click="copy">{{ copied ? 'Скопировано' : 'Скопировать' }}</button>
+            </div>
+            <div class="fbw-actions">
+              <a class="btn btn-primary" :href="postUrl" target="_blank" rel="noopener">Открыть на доске</a>
+              <button type="button" class="btn" @click="again">Отправить ещё</button>
+            </div>
+          </div>
+          <div v-else-if="loadError" class="done-box">
+            <p class="alert">{{ loadError }}</p>
+            <button type="button" class="btn" @click="loadCategories">Попробовать ещё раз</button>
+          </div>
+          <p v-else-if="categories === null" class="note">Загружаем…</p>
+          <SubmitForm v-else :project="project" :categories="categories" :origin="origin" @sent="sent = $event">
+            <template #secondary>
+              <a class="link-btn" :href="boardUrl" target="_blank" rel="noopener">Все предложения →</a>
+            </template>
+          </SubmitForm>
         </div>
-        <p v-else-if="categories === null" class="note">Загружаем…</p>
-        <SubmitForm v-else :project="project" :categories="categories" :origin="origin" @sent="sent = $event">
-          <template #secondary>
-            <a class="link-btn" :href="boardUrl" target="_blank" rel="noopener">Все предложения →</a>
-          </template>
-        </SubmitForm>
       </div>
-    </div>
+    </Transition>
 
-    <button type="button" class="fbw-launcher slant" :aria-expanded="open" @click="toggle">
-      <AppIcon :name="open ? 'close' : 'chat'" />
-      {{ open ? 'Закрыть' : 'Обратная связь' }}
+    <button type="button" class="fbw-launcher slant" :class="{ open }" :aria-expanded="open" @click="toggle">
+      <AppIcon :name="open ? 'close' : 'chat'" :size="14" />
+      <span class="fbw-launcher-label">{{ open ? 'Закрыть' : 'Обратная связь' }}</span>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { errorMessage } from '@/api/client'
 import { ProjectsApi } from '@/api/projects'
 import type { Category, Post } from '@/api/types'
@@ -59,6 +61,7 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
+const root = ref<HTMLElement | null>(null)
 // categories come from the service on first open (cross-origin GET, allowed for the project's sites)
 const categories = ref<Category[] | null>(null)
 const loadError = ref('')
@@ -96,4 +99,13 @@ async function copy() {
   }
 }
 useEscapeKey(() => (open.value = false))
+
+// Клик вне виджета закрывает панель. Виджет живёт в Shadow DOM, поэтому
+// проверяем composedPath — он пробивает теневую границу и видит .fbw.
+function onDocPointer(e: Event) {
+  if (!open.value || !root.value) return
+  if (!e.composedPath().includes(root.value)) open.value = false
+}
+onMounted(() => document.addEventListener('pointerdown', onDocPointer, true))
+onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointer, true))
 </script>
