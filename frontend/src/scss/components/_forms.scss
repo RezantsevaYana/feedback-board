@@ -50,6 +50,59 @@ textarea.input {
     resize: vertical;
     min-height: 96px;
 }
+// SearchComponent.vue — поле поиска с иконкой-лупой и крестиком сброса.
+.search-field {
+    position: relative;
+    display: block;
+
+    &.narrow {
+        max-width: 260px;
+
+        @media screen and (max-width: $mobile) {
+            max-width: none;
+        }
+    }
+    .input {
+        padding-left: 36px;
+        padding-right: 36px;
+    }
+    .search-ico {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        pointer-events: none;
+    }
+    .search-clear {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        appearance: none;
+
+        @include hover {
+            background: var(--surface-2);
+            color: var(--fg);
+        }
+    }
+    // прячем нативный крестик у type=search (webkit/blink) — у нас свой
+    .input::-webkit-search-cancel-button,
+    .input::-webkit-search-decoration {
+        appearance: none;
+        -webkit-appearance: none;
+    }
+}
 // SelectComponent.vue — custom dropdown (no native <select>)
 .select {
     position: relative;

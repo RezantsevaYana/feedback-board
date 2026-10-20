@@ -194,6 +194,11 @@
     }
 }
 
+// Строка поиска над тулбаром — своя, чтобы не толкаться с чипами/селектами.
+.board-search {
+    margin-bottom: 10px;
+}
+
 // toolbar: view switch, category chips, filters, sort
 .filters {
     display: flex;

@@ -21,6 +21,9 @@
           <button type="button" class="nav-item" :aria-current="board.view.section === 'top' ? 'page' : undefined" @click="setSection('top')">
             <AppIcon name="chart" /><span>Топ</span>
           </button>
+          <button type="button" class="nav-item" :aria-current="board.view.section === 'authors' ? 'page' : undefined" @click="setSection('authors')">
+            <AppIcon name="thumb" /><span>Авторы</span>
+          </button>
         </div>
         <button type="button" class="btn btn-primary board-cta" @click="composing = true">Предложить</button>
         <div v-if="board.team" class="team-box">
@@ -37,6 +40,7 @@
 
       <div class="board-main">
         <TopPosts v-if="board.view.section === 'top'" @open="openPost" />
+        <LeaderboardAuthors v-else-if="board.view.section === 'authors'" />
         <template v-else>
           <div class="board-head">
             <h1>Предложения</h1>
@@ -44,6 +48,9 @@
             <p v-else>Что предлагают и что уже сделано. Голосуйте: 👍 — нужно, 💩 — не нужно.</p>
           </div>
 
+          <div class="board-search">
+            <SearchComponent v-model="searchInput" narrow placeholder="Поиск по доске" aria-label="Поиск по доске" maxlength="120" />
+          </div>
           <div class="filters">
             <div class="seg-icons" role="group" aria-label="Вид">
               <button type="button" :aria-pressed="board.view.layout === 'kanban'" @click="board.view.layout = 'kanban'"><AppIcon name="columns" />Колонки</button>
@@ -89,10 +96,12 @@ import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import CheckboxComponent from '@/shared/ui/CheckboxComponent.vue'
+import SearchComponent from '@/shared/ui/SearchComponent.vue'
 import SelectComponent from '@/shared/ui/SelectComponent.vue'
 import CategoriesModal from './components/CategoriesModal.vue'
 import CategoryChips from './components/CategoryChips.vue'
 import KanbanBoard from './components/KanbanBoard.vue'
+import LeaderboardAuthors from './components/LeaderboardAuthors.vue'
 import LoginModal from './components/LoginModal.vue'
 import PostList from './components/PostList.vue'
 import PostModal from './components/PostModal.vue'
@@ -114,6 +123,16 @@ const composing = ref(false)
 const loggingIn = ref(false)
 const editingCategories = ref(false)
 const editingStatuses = ref(false)
+
+// Локальная модель для поля поиска: каждый ввод — тик дебаунса в 300мс,
+// чтобы не стрелять запросом на каждую букву. Основной watcher в самом сторе
+// уже перезагружает список, когда board.view.search меняется.
+const searchInput = ref(board.view.search)
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchInput, (v) => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => (board.view.search = v.trim()), 300)
+})
 
 const statusOptions = computed(() => [
   { value: '' as const, label: 'Все статусы' },
@@ -146,7 +165,7 @@ watch(
 )
 // any change of what is shown reloads from the server; team mode switches endpoints
 watch(
-  () => [board.view.section, board.view.layout, board.view.category, board.view.status, board.view.sort, board.view.priority, board.view.showHidden, board.team],
+  () => [board.view.section, board.view.layout, board.view.category, board.view.status, board.view.search, board.view.sort, board.view.priority, board.view.showHidden, board.view.leaderboardScope, board.view.leaderboardMetric, board.team],
   () => board.project && board.refresh(),
 )
 

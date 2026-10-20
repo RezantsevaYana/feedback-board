@@ -3,13 +3,14 @@ import { defineStore } from 'pinia'
 import { AuthApi } from '@/api/auth'
 import { CategoriesApi } from '@/api/categories'
 import { ApiError, errorMessage } from '@/api/client'
+import { LeaderboardApi, type LeaderboardEntry, type LeaderboardMetric, type LeaderboardScope } from '@/api/leaderboard'
 import { type PostPatch, PostsApi } from '@/api/posts'
 import { ProjectsApi } from '@/api/projects'
 import { StatusesApi } from '@/api/statuses'
 import type { Category, Me, Post, PostPriority, Project, Status, VoteState, VoteValue } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 
-export type Section = 'posts' | 'top'
+export type Section = 'posts' | 'top' | 'authors'
 export type Layout = 'kanban' | 'list'
 export type Sort = 'top' | 'new' | 'priority'
 
@@ -41,8 +42,11 @@ export const useBoardStore = defineStore('board', () => {
     layout: defaultLayout,
     category: '' as '' | number | 'none',
     status: '' as '' | number,
+    search: '',
     sort: 'new' as Sort,
     topScope: 'open' as 'open' | 'all',
+    leaderboardScope: 'all' as LeaderboardScope,
+    leaderboardMetric: 'posts' as LeaderboardMetric,
     // team only
     priority: '' as '' | PostPriority | 'none',
     showHidden: true,
@@ -54,6 +58,7 @@ export const useBoardStore = defineStore('board', () => {
   const loading = ref(false)
   const loadError = ref('')
   const topPosts = ref<Post[]>([])
+  const leaderboard = ref<LeaderboardEntry[]>([])
 
   async function open(slug: string) {
     if (project.value?.slug === slug) return
@@ -86,6 +91,7 @@ export const useBoardStore = defineStore('board', () => {
       const query = {
         category: view.category,
         status_id: view.layout === 'list' ? view.status : '',
+        q: view.search.trim(),
         sort: !team.value && view.sort === 'priority' ? 'top' : view.sort,
         page: nextPage,
         per_page: view.layout === 'kanban' ? KANBAN_LIMIT : LIST_PAGE,
@@ -119,6 +125,25 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  async function loadLeaderboard(silent = false) {
+    if (!project.value) return
+    if (!silent) {
+      loading.value = true
+      loadError.value = ''
+    }
+    try {
+      const res = await LeaderboardApi.get(currentSlug(), {
+        scope: view.leaderboardScope,
+        metric: view.leaderboardMetric,
+      })
+      leaderboard.value = res.data
+    } catch (e) {
+      if (!silent) loadError.value = errorMessage(e)
+    } finally {
+      if (!silent) loading.value = false
+    }
+  }
+
   /** Ranking by likes minus dislikes; equal score shares a place, the earlier post goes first. Rejected ones do not compete. */
   const ranking = computed(() => {
     const list = topPosts.value
@@ -133,7 +158,11 @@ export const useBoardStore = defineStore('board', () => {
   })
 
   function refresh(silent = false) {
-    return view.section === 'top' ? loadTop(silent) : loadPosts(false, silent)
+    switch (view.section) {
+      case 'top': return loadTop(silent)
+      case 'authors': return loadLeaderboard(silent)
+      default: return loadPosts(false, silent)
+    }
   }
 
   // Пулинг: каждые POLL_INTERVAL мс тихо тянем первую страницу текущего вида,
@@ -262,7 +291,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, me, team, categories, statuses, defaultStatus, view, posts, page, lastPage, loading, loadError, ranking,
+    project, notFound, me, team, categories, statuses, defaultStatus, view, posts, page, lastPage, loading, loadError, ranking, leaderboard,
     open, refresh, loadPosts, vote, updatePost, deletePost,
     addCategory, renameCategory, deleteCategory,
     addStatus, renameStatus, deleteStatus,

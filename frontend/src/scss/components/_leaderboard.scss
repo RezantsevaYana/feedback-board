@@ -1,0 +1,35 @@
+@use '../utils' as *;
+
+// LeaderboardAuthors.vue
+.leader {
+    display: grid;
+    gap: 8px;
+    max-width: 640px;
+}
+.leader-row {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 14px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+
+    .card-body {
+        gap: 4px;
+    }
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+    }
+    &.top .rank-n {
+        color: var(--fg);
+        font-weight: 600;
+    }
+
+    @media screen and (max-width: $mobile-mini) {
+        grid-template-columns: 30px 1fr;
+        gap: 10px;
+    }
+}

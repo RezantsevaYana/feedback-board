@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['category_id', 'title', 'description', 'author_name', 'status_id', 'priority', 'team_comment', 'is_hidden'])]
+#[Fillable(['category_id', 'title', 'description', 'author_name', 'author_token', 'status_id', 'priority', 'team_comment', 'is_hidden'])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
@@ -132,5 +132,22 @@ class Post extends Model
             // popularity = likes minus dislikes
             default => $query->orderByRaw('likes_count - dislikes_count desc')->latest('id'),
         };
+    }
+
+    /**
+     * Полнотекстовый поиск по заголовку и описанию. Пустая строка — всё.
+     *
+     * @param  Builder<Post>  $query
+     */
+    public function scopeSearch(Builder $query, ?string $term): void
+    {
+        $term = trim((string) $term);
+        if ($term === '') {
+            return;
+        }
+        $like = '%'.addcslashes($term, '%_\\').'%';
+        $query->where(fn ($q) => $q
+            ->where('title', 'ilike', $like)
+            ->orWhere('description', 'ilike', $like));
     }
 }

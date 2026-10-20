@@ -30,6 +30,7 @@ class PostController extends Controller
             'status_id' => ['nullable', 'integer', Rule::exists('statuses', 'id')->where('project_id', $project->id)],
             'priority' => ['nullable', Rule::in([...array_column(PostPriority::cases(), 'value'), 'none'])],
             'hidden' => ['nullable', Rule::in(['include', 'exclude'])],
+            'q' => ['nullable', 'string', 'max:120'],
             'sort' => ['nullable', Rule::in(['top', 'new', 'priority'])],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
@@ -41,6 +42,7 @@ class PostController extends Controller
             ->when($filters['priority'] ?? null, fn ($q, $priority) => $priority === 'none'
                 ? $q->whereNull('priority')
                 : $q->where('priority', $priority))
+            ->search($filters['q'] ?? null)
             ->with(['category', 'status'])
             ->withCount('attachments')
             ->sorted($filters['sort'] ?? 'new')
