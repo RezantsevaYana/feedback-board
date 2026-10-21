@@ -5,7 +5,7 @@
         <div class="fbw-head">
           <div class="fbw-title">
             <h3>Обратная связь</h3>
-            <span v-if="projectName" class="fbw-project">{{ projectName }}</span>
+            <a class="fbw-board" :href="boardUrl" target="_blank" rel="noopener">{{ projectName ? `Доска ${projectName}` : 'Все предложения' }} ↗</a>
           </div>
           <button type="button" class="icon-btn" aria-label="Закрыть" @click="toggle"><AppIcon name="close" /></button>
         </div>
@@ -29,19 +29,32 @@
             <p class="alert">{{ loadError }}</p>
             <button type="button" class="btn" @click="loadCategories">Попробовать ещё раз</button>
           </div>
-          <p v-else-if="categories === null" class="note">Загружаем…</p>
-          <SubmitForm v-else :project="project" :categories="categories" :origin="origin" @sent="sent = $event">
-            <template #secondary>
-              <a class="link-btn" :href="boardUrl" target="_blank" rel="noopener">Все предложения →</a>
-            </template>
-          </SubmitForm>
+          <!-- the project's categories are on their way: the form's own rows in placeholders -->
+          <div v-else-if="categories === null" class="fbw-skeleton" role="status">
+            <span class="visually-hidden">Загружаем…</span>
+            <span class="sk sk-meta" aria-hidden="true" />
+            <span class="sk sk-input" aria-hidden="true" />
+            <span class="sk sk-meta" aria-hidden="true" />
+            <span class="sk sk-input" aria-hidden="true" />
+            <span class="sk sk-input fbw-sk-area" aria-hidden="true" />
+            <span class="sk sk-input" aria-hidden="true" />
+          </div>
+          <SubmitForm v-else :project="project" :categories="categories" :origin="origin" @sent="sent = $event" />
         </div>
       </div>
     </Transition>
 
-    <button type="button" class="fbw-launcher slant" :class="{ open }" :aria-expanded="open" @click="toggle">
-      <AppIcon :name="open ? 'close' : 'chat'" :size="14" />
-      <span class="fbw-launcher-label">{{ open ? 'Закрыть' : 'Обратная связь' }}</span>
+    <!-- closed: the brand tag «Обратная связь»; open: a round × (the panel has its own close too) -->
+    <button
+      type="button"
+      class="fbw-launcher"
+      :class="open ? 'open' : 'slant'"
+      :aria-expanded="open"
+      :aria-label="open ? 'Закрыть обратную связь' : undefined"
+      @click="toggle"
+    >
+      <AppIcon :name="open ? 'close' : 'chat'" :size="open ? 16 : 14" />
+      <span v-if="!open" class="fbw-launcher-label">Обратная связь</span>
     </button>
   </div>
 </template>

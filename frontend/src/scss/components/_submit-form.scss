@@ -3,13 +3,34 @@
 // SubmitForm.vue: shared by the board and the widget
 .fb-form {
     display: grid;
-    gap: 6px;
+    gap: 12px;
+
+    // compact: no reserved line under every field, an error simply takes its own line
+    .field {
+        padding-bottom: 0;
+
+        > .err {
+            position: static;
+            white-space: normal;
+        }
+    }
+
+    // grid items default to min-width: auto, and a long placeholder would push the form wider than a phone
+    > *,
+    .field {
+        min-width: 0;
+    }
 }
+// the note, an optional secondary action, and «Отправить» in one row
 .fb-foot {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 8px 12px;
+    flex-wrap: wrap;
+
+    > .note {
+        flex: 1 1 160px;
+    }
 
     @media screen and (max-width: $mobile-mini) {
         flex-direction: column-reverse;      // primary action сверху
@@ -20,27 +41,87 @@
             width: 100%;
             justify-content: center;
         }
+        > .note {
+            flex: none;
+            text-align: center;
+        }
     }
 }
 
-// screenshot drop zone and previews
+// «О чём это?»: the project's categories as one row of chips, styled like the board's filters
+.fb-kinds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    button {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--fg);
+        padding: 6px 14px;
+        border-radius: 8px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.12s, border-color 0.12s;
+
+        @include hover {
+            border-color: var(--control);
+        }
+        &[aria-pressed='true'] {
+            background: var(--active);
+            border-color: var(--active-line);
+            color: var(--active-fg);
+            font-weight: 600;
+        }
+    }
+}
+
+// screenshot picker: one filled row (the whole row opens the file dialog), green outline while a file is dragged over
 .drop {
-    border: 1px dashed var(--line);
+    display: flex;
+    align-items: center;
+    min-width: 0;         // a grid item of .field: lets the hint shrink to its ellipsis instead of widening the row
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid transparent;
     border-radius: 10px;
     background: var(--surface-2);
-    padding: 12px;
-    text-align: center;
     color: var(--muted);
     font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.12s, background-color 0.12s;
 
+    .ico {
+        flex: none;
+        width: 16px;
+        height: 16px;
+        color: var(--accent-ink);
+    }
+    .drop-main {
+        flex: none;
+        color: var(--fg);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .drop-hint {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    @include hover {
+        border-color: var(--control);
+    }
     &.over {
         border-color: var(--accent);
-        background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+        background: var(--active);
     }
-    label {
-        color: var(--fg);
-        text-decoration: underline;
-        cursor: pointer;
+    &:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
     }
 }
 .thumbs {

@@ -2,9 +2,9 @@
   <form class="fb-form" novalidate @submit.prevent="submit">
     <div v-if="askCategory" class="field">
       <span>О чём это?</span>
-      <div class="seg">
+      <div class="fb-kinds" role="group" aria-label="О чём это?">
         <button v-for="c in categories" :key="c.id" type="button" :aria-pressed="form.category === c.id" @click="pickCategory(c.id)">
-          <b>{{ c.name }}</b>
+          {{ c.name }}
         </button>
       </div>
       <span v-if="errors.category" class="err">{{ errors.category }}</span>
@@ -24,22 +24,29 @@
       label="Описание"
       :error="errors.description"
       maxlength="5000"
+      rows="3"
       placeholder="Что случилось или что хотите и зачем? Чем подробнее, тем быстрее разберёмся"
       @input="clearError('description')"
     />
 
     <div class="field">
-      <span>Скриншоты <small>· до 5 файлов, до 5 МБ</small></span>
-      <div
+      <span>Скриншоты <small>· по желанию, до 5 штук по 5 МБ</small></span>
+      <label
         class="drop"
         :class="{ over: dragOver }"
+        tabindex="0"
+        role="button"
+        @keydown.enter.prevent="fileInput?.click()"
+        @keydown.space.prevent="fileInput?.click()"
         @dragover.prevent="dragOver = true"
         @dragleave="dragOver = false"
         @drop.prevent="(dragOver = false), addFiles($event.dataTransfer?.files ?? [])"
       >
-        Перетащите сюда, вставьте Ctrl+V или
-        <label>выберите файл<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden @change="addFiles(($event.target as HTMLInputElement).files ?? []); ($event.target as HTMLInputElement).value = ''" /></label>
-      </div>
+        <AppIcon name="clip" :size="16" />
+        <span class="drop-main">Прикрепить скриншот</span>
+        <span class="drop-hint">или перетащите, Ctrl+V</span>
+        <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden @change="addFiles(($event.target as HTMLInputElement).files ?? []); ($event.target as HTMLInputElement).value = ''" />
+      </label>
       <div v-if="files.length" class="thumbs">
         <div v-for="(f, i) in files" :key="f.preview" class="thumb">
           <img :src="f.preview" alt="" />
@@ -51,10 +58,10 @@
 
     <InputComponent v-model="form.name" label="Ваше имя" hint="по желанию" :error="errors.name" maxlength="80" placeholder="Можно оставить пустым" />
 
-    <p class="note">Предложение и скриншоты будут видны всем на доске.</p>
     <div v-if="serverError" class="alert" role="alert">{{ serverError }}</div>
 
     <div class="fb-foot">
+      <p class="note">Предложение и скриншоты увидят все на доске</p>
       <slot name="secondary" />
       <button type="submit" class="btn btn-primary" :disabled="sending" :aria-busy="sending">{{ sending ? 'Отправляем…' : 'Отправить' }}</button>
     </div>
@@ -97,6 +104,7 @@ const errors = reactive<Record<string, string>>({})
 const serverError = ref('')
 const sending = ref(false)
 const dragOver = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const askCategory = computed(() => props.categories.length > 0)
 
