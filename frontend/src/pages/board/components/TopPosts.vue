@@ -1,7 +1,9 @@
 <template>
   <div class="board-head">
-    <h1>Топ</h1>
-    <p>Предложения по голосам: лайки минус дизлайки. Команда видит, что нужно в первую очередь.</p>
+    <div class="board-title">
+      <h1>Топ</h1>
+      <p>Предложения по голосам: лайки минус дизлайки. Команда видит, что нужно в первую очередь.</p>
+    </div>
   </div>
   <div class="filters">
     <CategoryChips />
@@ -11,7 +13,8 @@
       <button type="button" :aria-pressed="board.view.topScope === 'all'" @click="board.view.topScope = 'all'">Все, включая готовые</button>
     </div>
   </div>
-  <div class="rank">
+  <BoardSkeleton v-if="board.loading && !board.ranking.length" layout="rows" />
+  <div v-else class="rank">
     <article
       v-for="{ post, place } in board.ranking"
       :key="post.id"
@@ -48,6 +51,7 @@ import { TEXT } from '@/shared/constants/dict'
 import { fmtDate } from '@/shared/utils/format'
 import { score, useBoardStore } from '@/store/board/useBoardStore'
 import { useCardOpen } from '../composables/useCardOpen'
+import BoardSkeleton from './BoardSkeleton.vue'
 import CategoryChips from './CategoryChips.vue'
 import CategoryTag from './CategoryTag.vue'
 import CopyLink from './CopyLink.vue'

@@ -29,6 +29,30 @@
         opacity: 0.6;
         cursor: default;
     }
+    // working (saving, sending): a spinner before the label; the button stays at full strength
+    &[aria-busy='true'] {
+        cursor: progress;
+
+        &:disabled {
+            opacity: 1;
+        }
+        &::before {
+            content: '';
+            flex: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: btn-spin 0.7s linear infinite;
+        }
+    }
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 .btn-primary {
     background: var(--accent);

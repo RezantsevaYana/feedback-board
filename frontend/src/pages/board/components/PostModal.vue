@@ -11,7 +11,20 @@
       <p class="desc">Возможно, его удалили или скрыли.</p>
     </template>
 
-    <div v-else-if="!post" class="empty">Загружаем…</div>
+    <!-- loading: the card's own layout in placeholders (tags, title, meta, text, votes) -->
+    <div v-else-if="!post" class="sk-stack" role="status">
+      <span class="visually-hidden">Загружаем предложение…</span>
+      <div class="drawer-top" aria-hidden="true">
+        <span class="sk sk-chip" />
+        <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
+      </div>
+      <span class="sk sk-h1" aria-hidden="true" />
+      <span class="sk sk-meta" aria-hidden="true" />
+      <span class="sk sk-line" aria-hidden="true" />
+      <span class="sk sk-line" aria-hidden="true" />
+      <span class="sk sk-line sk-short" aria-hidden="true" />
+      <span class="sk sk-votes" aria-hidden="true" />
+    </div>
 
     <!-- team: edit form -->
     <template v-else-if="board.team">
@@ -52,8 +65,8 @@
         :placeholder="currentReply?.placeholder ?? 'Например, когда планируем'"
       />
       <div class="row">
-        <button class="btn btn-primary" type="submit" :disabled="saving">Сохранить</button>
-        <button class="btn" type="button" :disabled="saving" @click="save({ is_hidden: !post.is_hidden })">
+        <button class="btn btn-primary" type="submit" :disabled="!!saving" :aria-busy="saving === 'save'">Сохранить</button>
+        <button class="btn" type="button" :disabled="!!saving" :aria-busy="saving === 'hide'" @click="save({ is_hidden: !post.is_hidden })">
           {{ post.is_hidden ? 'Показать на доске' : 'Скрыть с доски' }}
         </button>
         <span class="spacer" />
@@ -130,7 +143,8 @@ const voteSummary = computed(() => {
 })
 
 const missing = ref(false)
-const saving = ref(false)
+// which button is working: the spinner goes on that one, both are locked
+const saving = ref<'save' | 'hide' | null>(null)
 const errors = reactive<Record<string, string>>({})
 const edit = reactive({
   title: '',
@@ -182,7 +196,7 @@ watch(() => [props.id, board.team], load, { immediate: true })
 async function save(patch?: { is_hidden: boolean }) {
   if (!post.value) return
   for (const key of Object.keys(errors)) delete errors[key]
-  saving.value = true
+  saving.value = patch ? 'hide' : 'save'
   try {
     const body = patch ?? { ...edit, priority: edit.priority || null, team_comment: edit.team_comment.trim() || null }
     Object.assign(post.value, await board.updatePost(post.value.id, body))
@@ -196,7 +210,7 @@ async function save(patch?: { is_hidden: boolean }) {
       for (const [key, messages] of Object.entries(e.errors)) if (messages[0]) errors[key] = messages[0]
     } else notification.error(errorMessage(e))
   } finally {
-    saving.value = false
+    saving.value = null
   }
 }
 

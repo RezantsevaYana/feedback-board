@@ -24,8 +24,8 @@
     <div v-if="!board.posts.length && !board.loading" class="empty">Пока ни одного предложения. Нажмите «Предложить», чтобы стать первым.</div>
   </div>
   <div v-if="board.page < board.lastPage" class="more">
-    <button type="button" class="btn" :disabled="board.loading" @click="board.loadPosts(true)">
-      {{ board.loading ? 'Загружаем…' : 'Показать ещё' }}
+    <button type="button" class="btn" :disabled="board.loading" :aria-busy="board.loadingMore" @click="board.loadPosts(true)">
+      {{ board.loadingMore ? 'Загружаем…' : 'Показать ещё' }}
     </button>
   </div>
   <StatusReplyModal v-if="asking" :post="asking.post" :status="asking.status" @close="asking = null" />

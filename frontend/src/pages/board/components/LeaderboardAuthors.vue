@@ -1,7 +1,9 @@
 <template>
   <div class="board-head">
-    <h1>Авторы</h1>
-    <p>{{ metricExplainer }} Чтобы попасть в топ — укажите имя при подаче предложения.</p>
+    <div class="board-title">
+      <h1>Авторы</h1>
+      <p>{{ metricExplainer }} Чтобы попасть в топ — укажите имя при подаче предложения.</p>
+    </div>
   </div>
   <div class="filters leader-filters">
     <div class="seg-icons" role="group" aria-label="Ранжировать по">
@@ -14,7 +16,8 @@
       <button type="button" :aria-pressed="board.view.leaderboardScope === 'week'" @click="board.view.leaderboardScope = 'week'">За неделю</button>
     </div>
   </div>
-  <div class="leader">
+  <BoardSkeleton v-if="board.loading && !board.leaderboard.length" layout="rows" />
+  <div v-else class="leader">
     <article
       v-for="entry in board.leaderboard"
       :key="entry.token"
@@ -46,6 +49,7 @@ import type { LeaderboardEntry } from '@/api/leaderboard'
 import { fireConfetti } from '@/shared/utils/confetti'
 import { voterToken } from '@/shared/utils/voter'
 import { useBoardStore } from '@/store/board/useBoardStore'
+import BoardSkeleton from './BoardSkeleton.vue'
 
 // Лидерборд: топ 20 авторов за всё время или за 7 дней, по двум метрикам —
 // числу идей или сумме голосов (лайки минус дизлайки). Своя строка подсвечивается,

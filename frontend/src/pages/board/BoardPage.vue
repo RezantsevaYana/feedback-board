@@ -7,8 +7,38 @@
       </div>
     </div>
 
-    <div v-else-if="!board.project" class="center-page">
-      <p class="note">{{ board.loadError || 'Загружаем доску…' }}</p>
+    <div v-else-if="!board.project && board.loadError" class="center-page">
+      <div>
+        <p class="note">Не получилось загрузить доску: {{ board.loadError }}</p>
+        <button type="button" class="btn" @click="board.open(slug)">Повторить</button>
+      </div>
+    </div>
+
+    <!-- first load: the page's own frame in placeholders, so nothing jumps when the board arrives -->
+    <div v-else-if="!board.project" class="board-layout" role="status">
+      <span class="visually-hidden">Загружаем доску…</span>
+      <div class="board-nav sk-stack" aria-hidden="true">
+        <span class="sk sk-tag" />
+        <span class="sk sk-nav" />
+        <span class="sk sk-nav" />
+        <span class="sk sk-nav" />
+        <span class="sk sk-btn" />
+      </div>
+      <div class="board-main" aria-hidden="true">
+        <div class="board-head">
+          <div class="board-title sk-stack">
+            <span class="sk sk-h1" />
+            <span class="sk sk-line sk-short" />
+          </div>
+          <span class="sk sk-input board-search" />
+        </div>
+        <div class="filters">
+          <span class="sk sk-votes" />
+          <span class="sk sk-chip" />
+          <span class="sk sk-chip" />
+        </div>
+        <BoardSkeleton :layout="board.view.layout" />
+      </div>
     </div>
 
     <div v-else class="board-layout">
@@ -41,6 +71,7 @@
       </nav>
 
       <div class="board-main">
+        <div v-if="refreshing" class="board-progress" role="progressbar" aria-label="Обновляем доску" />
         <TopPosts v-if="board.view.section === 'top'" @open="openPost" />
         <LeaderboardAuthors v-else-if="board.view.section === 'authors'" />
         <template v-else>
@@ -80,7 +111,11 @@
             <BoardFilters />
           </div>
 
-          <div v-if="board.loadError" class="alert" role="alert">{{ board.loadError }}</div>
+          <div v-if="board.loadError" class="alert" role="alert">
+            {{ board.loadError }}
+            <button type="button" class="link-btn" @click="board.refresh()">Повторить</button>
+          </div>
+          <BoardSkeleton v-else-if="!board.postsLoaded || (board.loading && !board.posts.length)" :layout="board.view.layout" />
           <div v-else-if="noResults" class="board-empty">
             <h2>{{ board.view.search ? `По запросу «${board.view.search}» ничего не нашлось` : 'Под эти фильтры ничего не нашлось' }}</h2>
             <p>Попробуйте другое слово или сбросьте фильтры. Если такого ещё никто не предлагал, предложите первым.</p>
@@ -115,6 +150,7 @@ import AppIcon from '@/shared/ui/AppIcon.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 import SearchComponent from '@/shared/ui/SearchComponent.vue'
 import BoardFilters from './components/BoardFilters.vue'
+import BoardSkeleton from './components/BoardSkeleton.vue'
 import CategoriesModal from './components/CategoriesModal.vue'
 import FiltersModal from './components/FiltersModal.vue'
 import KanbanBoard from './components/KanbanBoard.vue'
@@ -150,6 +186,13 @@ function closeCompose() {
   composing.value = false
   composeTitle.value = ''
 }
+// data already on screen is reloading (filter, view, sort): a thin bar on top instead of placeholders
+const refreshing = computed(() => {
+  if (!board.loading || board.loadingMore) return false
+  if (board.view.section === 'top') return board.ranking.length > 0
+  if (board.view.section === 'authors') return board.leaderboard.length > 0
+  return board.posts.length > 0
+})
 // a search or filter that found nothing gets one message instead of empty columns
 const noResults = computed(() => !board.loading && board.filtered && board.posts.length === 0)
 const shortSearch = computed(() => (board.view.search.length > 28 ? `${board.view.search.slice(0, 27)}…` : board.view.search))

@@ -68,6 +68,10 @@ export const useBoardStore = defineStore('board', () => {
   const page = ref(1)
   const lastPage = ref(1)
   const loading = ref(false)
+  /** The first page of posts has arrived: until then the board shows skeletons, not empty columns. */
+  const postsLoaded = ref(false)
+  /** «Показать ещё» is loading the next page (its button spins; no bar over the whole board). */
+  const loadingMore = ref(false)
   const loadError = ref('')
   const topPosts = ref<Post[]>([])
   const leaderboard = ref<LeaderboardEntry[]>([])
@@ -75,7 +79,9 @@ export const useBoardStore = defineStore('board', () => {
   async function open(slug: string) {
     if (project.value?.slug === slug) return
     notFound.value = false
+    loadError.value = ''
     project.value = null
+    postsLoaded.value = false
     try {
       const [p, user] = await Promise.all([
         ProjectsApi.get(slug),
@@ -97,6 +103,7 @@ export const useBoardStore = defineStore('board', () => {
     const nextPage = append ? page.value + 1 : 1
     if (!silent) {
       loading.value = true
+      loadingMore.value = append
       loadError.value = ''
     }
     try {
@@ -112,12 +119,16 @@ export const useBoardStore = defineStore('board', () => {
         ? await PostsApi.adminList(currentSlug(), { ...query, priority: view.priority, hidden: view.showHidden ? 'include' : 'exclude' })
         : await PostsApi.list(currentSlug(), query)
       posts.value = append ? [...posts.value, ...res.data] : res.data
+      postsLoaded.value = true
       page.value = res.meta.current_page
       lastPage.value = res.meta.last_page
     } catch (e) {
       if (!silent) loadError.value = errorMessage(e)
     } finally {
-      if (!silent) loading.value = false
+      if (!silent) {
+        loading.value = false
+        loadingMore.value = false
+      }
     }
   }
 
@@ -303,7 +314,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadError, ranking, leaderboard,
+    project, notFound, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard,
     open, refresh, loadPosts, vote, updatePost, deletePost,
     addCategory, renameCategory, deleteCategory,
     addStatus, renameStatus, deleteStatus,

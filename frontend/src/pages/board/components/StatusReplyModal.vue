@@ -15,7 +15,7 @@
       autofocus
     />
     <div class="row">
-      <button class="btn btn-primary" type="submit" :disabled="saving">{{ ask.title }}</button>
+      <button class="btn btn-primary" type="submit" :disabled="saving" :aria-busy="saving">{{ ask.title }}</button>
       <button class="btn" type="button" @click="close()">Отмена</button>
     </div>
   </BaseModal>

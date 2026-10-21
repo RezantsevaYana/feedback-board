@@ -22,7 +22,7 @@
       autocomplete="current-password"
       :errors="v$.password"
     />
-    <button class="btn btn-primary" type="submit" :disabled="sending">{{ sending ? 'Входим…' : 'Войти' }}</button>
+    <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">{{ sending ? 'Входим…' : 'Войти' }}</button>
     <p class="note">Только для тех, кто разбирает предложения. Аккаунты заводит разработчик, у каждого свой пароль.</p>
   </BaseModal>
 </template>

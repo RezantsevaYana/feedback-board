@@ -56,7 +56,7 @@
 
     <div class="fb-foot">
       <slot name="secondary" />
-      <button type="submit" class="btn btn-primary" :disabled="sending">{{ sending ? 'Отправляем…' : 'Отправить' }}</button>
+      <button type="submit" class="btn btn-primary" :disabled="sending" :aria-busy="sending">{{ sending ? 'Отправляем…' : 'Отправить' }}</button>
     </div>
   </form>
 </template>
