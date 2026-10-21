@@ -16,7 +16,7 @@ export const STATUS_REPLY: Partial<Record<SystemStatusSlug, { title: string; lab
     title: 'Отклонить',
     label: 'Почему отклонено',
     placeholder: 'Например: это уже есть — наведите на сообщение и нажмите на смайлик',
-    required: true,
+    required: false,
   },
 }
 

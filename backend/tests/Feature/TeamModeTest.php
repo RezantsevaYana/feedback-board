@@ -116,23 +116,18 @@ class TeamModeTest extends TestCase
             ->assertJsonValidationErrors(['status_id', 'title']);
     }
 
-    public function test_rejecting_requires_a_reason(): void
+    public function test_rejecting_reason_is_optional(): void
     {
         $post = Post::factory()->for($this->project)->create();
         $rejectedId = $this->statusId('rejected');
-        $newId = $this->statusId('new');
         $this->actingAs($this->admin);
 
         $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $rejectedId])
-            ->assertJsonValidationErrors(['team_comment' => 'Напишите, почему отклонено, — это увидят все.']);
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $rejectedId, 'team_comment' => '  '])
-            ->assertJsonValidationErrors('team_comment');
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $rejectedId, 'team_comment' => 'Уже есть в настройках'])
             ->assertOk()->assertJsonPath('data.status.slug', 'rejected');
-
-        // the reason cannot be wiped while the post stays rejected
-        $this->patchJson("/api/admin/posts/{$post->id}", ['team_comment' => null])->assertJsonValidationErrors('team_comment');
-        $this->patchJson("/api/admin/posts/{$post->id}", ['status_id' => $newId, 'team_comment' => null])->assertOk();
+        $this->patchJson("/api/admin/posts/{$post->id}", ['team_comment' => 'Уже есть в настройках'])
+            ->assertOk()->assertJsonPath('data.team_comment', 'Уже есть в настройках');
+        $this->patchJson("/api/admin/posts/{$post->id}", ['team_comment' => null])
+            ->assertOk()->assertJsonPath('data.team_comment', null);
     }
 
     public function test_team_moves_post_to_another_category_of_the_same_project_only(): void

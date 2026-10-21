@@ -32,7 +32,7 @@ import AppIcon from '@/shared/ui/AppIcon.vue'
 import BaseModal from '@/shared/ui/BaseModal.vue'
 import TextAreaComponent from '@/shared/ui/TextAreaComponent.vue'
 
-// Asked when a card is dragged to «Готово» (what exactly is done — optional) or «Отклонено» (why — required).
+// Asked when a card is dragged to «Готово» (what exactly is done) or «Отклонено» (why); both optional.
 // The answer becomes the public «Ответ команды». Срабатывает только для системных столбцов.
 const props = defineProps<{
   post: Post
@@ -59,7 +59,7 @@ async function save() {
   saving.value = true
   try {
     await board.updatePost(props.post.id, { status_id: props.status.id, team_comment: reply.value.trim() || null })
-    notification.success(props.status.slug === 'done' ? 'Готово — видно на доске' : 'Отклонено — причина видна на доске')
+    notification.success(props.status.slug === 'done' ? 'Готово — видно на доске' : 'Отклонено')
     close()
   } catch (e) {
     error.value = e instanceof ApiError ? (e.field('team_comment') ?? e.message) : String(e)

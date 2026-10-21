@@ -4,10 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\PostPriority;
 use App\Models\Post;
-use App\Models\Status;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 
 /**
  * Team edit of a post; every field is optional so drag-and-drop can send only the status (and a reply).
@@ -30,26 +28,6 @@ class UpdatePostRequest extends FormRequest
             'team_comment' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'is_hidden' => ['sometimes', 'boolean'],
         ];
-    }
-
-    /**
-     * A rejected post must say why: the reply is shown to everyone on the board.
-     *
-     * @return array<int, callable>
-     */
-    public function after(): array
-    {
-        return [function (Validator $validator) {
-            $targetStatusId = $this->integer('status_id', $this->editedPost()->status_id);
-            $target = Status::find($targetStatusId);
-            if ($target?->slug !== 'rejected') {
-                return;
-            }
-            $comment = $this->exists('team_comment') ? $this->input('team_comment') : $this->editedPost()->team_comment;
-            if (blank($comment)) {
-                $validator->errors()->add('team_comment', 'Напишите, почему отклонено, — это увидят все.');
-            }
-        }];
     }
 
     /**
