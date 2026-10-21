@@ -1,33 +1,37 @@
-// Design tokens. Muted take on the company palette: green #27AD5A for actions, lavender #d1daff /
-// purple #8179f4 for selection. `:host` gives the same tokens to the widget's Shadow DOM; the widget
-// stays light (host sites rarely switch with the OS), so dark overrides target only :root.
+// Design tokens. White page, sage tone steps taken from the company green, ink with a touch of
+// Rocont Green Dark (#00474c). Green is the one hue: the primary action, your vote and every
+// selected state (pale green with dark-green text) — no ink-filled buttons.
+// Purple is left out of the board: next to green it read as acid.
+// `:host` gives the same tokens to the widget's Shadow DOM; the widget stays light (host sites rarely
+// switch with the OS), so dark overrides target only :root.
 :root,
 :host {
-    --bg: #f3f4fa;
+    --bg: #ffffff;
     --surface: #ffffff;
-    --surface-2: #eceefa;
-    --line: #dcdfee;
-    --fg: #102528;
-    --muted: #5c6b72;
-    --accent: #27ad5a;        // Rocont Green — акцент, действия
+    --surface-2: #e8eee9;     // sage tone step: column trays, chips, hover
+    --tag: #e8eee9;           // category tag on a card
+    --active: #cfe7d7;        // selected: nav item, chip, segment
+    --active-fg: #063f2c;     // text on --active, towards Green Dark; 9.6:1
+    --active-line: #1d8547;   // edge of a selected tab: the green outline gives it its contrast
+    --line: #d8e1db;
+    --control: #a9bcb0;       // edge of the selected segment
+    --fg: #0f2224;            // ink, a step towards Green Dark
+    --muted: #4c5d60;         // 6.3:1 on --bg, 5.6:1 on --surface-2
+    --accent: #1d8547;        // Rocont Green, one step deeper than #27AD5A so white text holds 4.5:1
     --accent-ink: #1b7f41;
-    --accent-dark: #00474c;   // Rocont Green Dark — тёмный акцент для выделенных табов
     --accent-fg: #ffffff;
-    --brand: #8179f4;         // Rocont Purple — для контраста (focus, team-mode)
-    --brand-ink: #4b42c4;
-    --brand-soft: #dde3ff;
-    --bug: #c2453b;
-    --feature: #5b52d6;
-    --dislike: #a0785a;
-    --s-new: #6b7487;
-    --s-review: #6a61e0;
-    --s-planned: #00737a;
-    --s-progress: #a8690f;
-    --s-done: #1f9150;
-    --s-rejected: #c2453b;
+    --focus: #1b7f41;
+    --bug: #b0423a;
+    // VoteButtons.vue: tint and edge of your own 👍 (green) and 💩 (brown)
+    --like: #27ad5a;
+    --poo: #94603d;
+    // status pills: 12px text on a 12% tint over the column tray, each at 5.2:1 or more
+    --s-new: #46575a;
+    --s-done: #14623a;
+    --s-rejected: #8f3029;
     --overlay: rgba(8, 24, 26, 0.55);
     --shadow: 0 10px 28px rgba(16, 37, 40, 0.12);
-    --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+    --font-display: 'Unbounded', 'Onest', system-ui, sans-serif; // the wordmark only
     --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; // taste-skill-ignore ids/urls only
     --radius: 10px;
@@ -36,25 +40,26 @@
 // Dark theme — применяется, когда пользователь явно выбрал её переключателем
 // (`<html data-theme="dark">`) ИЛИ когда выбрана системная тема и ОС в dark.
 @mixin dark-tokens {
-    --bg: #0c1718;
-    --surface: #122123;
-    --surface-2: #182b2e;
-    --line: #243a3d;
-    --fg: #e5eeee;
-    --muted: #94a8aa;
-    --accent-ink: #4fcf85;
-    --accent-dark: #bfeed1;   // в тёмной теме инвертируем: светло-зелёная пилюля на тёмном фоне
-    --brand: #9a93f7;
-    --brand-ink: #c3c4ff;
-    --brand-soft: #262c58;
-    --bug: #f07a6f;
-    --feature: #a29bf8;
-    --s-new: #9aa5b4;
-    --s-review: #a29bf8;
-    --s-planned: #4fc2c8;
-    --s-progress: #e6a64a;
-    --s-done: #4fcf85;
-    --s-rejected: #f07a6f;
+    // soft graphite with a trace of green; page, trays and cards are three clear lightness steps
+    --bg: #1f2524;
+    --surface: #3a4442;       // cards, inputs: the lightest layer
+    --surface-2: #2c3433;     // column trays sit between page and cards
+    --tag: #4d5a57;           // a step above the card, so the tag doesn't read as a hole
+    --active: #24543b;
+    --active-fg: #d2f7e0;
+    --active-line: #4fb27a;
+    --line: #4b5754;
+    --control: #66746f;
+    --fg: #f1f5f4;
+    --muted: #c0cac7;
+    --accent-ink: #6fcf96;
+    --focus: #6fcf96;
+    --bug: #ec8a80;
+    --like: #3cc472;
+    --poo: #a8714b;
+    --s-new: #b3c0bd;
+    --s-done: #6fcf96;
+    --s-rejected: #f49d94;
     --overlay: rgba(0, 0, 0, 0.7);
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     color-scheme: dark;

@@ -8,7 +8,7 @@
     gap: 12px;
     overflow-x: auto;
     padding-bottom: 8px;
-    align-items: start;
+    align-items: stretch;    // trays end level; the empty part of a short column is its drop zone
     scroll-snap-type: x mandatory;
     scroll-padding-left: 4px;
     @include thin-scrollbar;
@@ -46,6 +46,9 @@
     color: var(--muted);
     font-size: 13px;
 }
+.col-count {
+    font-variant-numeric: tabular-nums;
+}
 .col-empty {
     color: var(--muted);
     font-size: 13px;
@@ -71,7 +74,7 @@
     &.dragging {
         opacity: 0.4;
     }
-    h4 {
+    h3 {
         font-size: 14px;
         font-weight: 600;
         line-height: 1.35;
@@ -80,7 +83,7 @@
         gap: 6px;
     }
     .excerpt {
-        font-size: 12px;
+        font-size: 13px;
         @include lineClamp(3);
     }
     .meta {
@@ -93,11 +96,59 @@
     justify-content: space-between;
     gap: 8px;
 }
+// the team's answer on the card: a tinted inset block in the status's own hue
+// (green for «Готово», red for «Отклонено», neutral for the team's own columns)
 .kcard-reply {
+    --c: var(--s-new);
     margin: 0;
     font-size: 12px;
-    color: var(--muted);
-    border-left: 2px solid var(--line);
-    padding-left: 8px;
+    color: var(--fg);
+    background: color-mix(in srgb, var(--c) 10%, var(--surface));
+    border-radius: 6px;
+    // the inset is a transparent border, not padding: the 2-line clamp cuts at the padding box,
+    // so with padding the top of a third line would peek out under the second
+    border: solid transparent;
+    border-width: 6px 8px;
     @include lineClamp(2);
+
+    &[data-s='done'] {
+        --c: var(--s-done);
+    }
+    &[data-s='rejected'] {
+        --c: var(--s-rejected);
+    }
+}
+// KanbanBoard.vue: the team emptied «Новое» — a quiet win state
+.col-cleared {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 28px 8px;
+
+    b {
+        color: var(--fg);
+        font-size: 14px;
+        font-weight: 600;
+    }
+}
+.col-cleared-mark {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 4px;
+    border-radius: 50%;
+    background: var(--active);
+    color: var(--active-fg);
+
+    @media (prefers-reduced-motion: no-preference) {
+        animation: cleared-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+
+@keyframes cleared-pop {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
 }

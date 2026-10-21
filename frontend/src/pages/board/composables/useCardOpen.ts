@@ -17,5 +17,5 @@ export function useCardOpen(emit: (name: 'open', post: Post) => void) {
   function onCardEnter(post: Post) {
     open(post)
   }
-  return { onCardClick, onCardEnter }
+  return { open, onCardClick, onCardEnter }
 }

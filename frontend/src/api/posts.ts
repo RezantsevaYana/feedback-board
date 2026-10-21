@@ -50,7 +50,7 @@ export const PostsApi = {
     return request<void>(`${ADMIN_URL}/posts/${id}`, { method: 'DELETE' })
   },
 
-  // 👍 / 💩 from this browser
+  // like / dislike from this browser
   vote(id: number, value: VoteValue) {
     return request<Item<VoteState>>(`${PUBLIC_URL}/posts/${id}/vote`, { method: 'POST', body: { value } })
   },

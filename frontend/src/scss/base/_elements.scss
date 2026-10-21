@@ -3,6 +3,10 @@
 * {
     box-sizing: border-box;
 }
+// the scrollbar's place is always reserved, so locking the page under a modal (body.locked) doesn't shift it sideways
+html {
+    scrollbar-gutter: stable;
+}
 body {
     margin: 0;
     min-width: 320px;
@@ -27,7 +31,7 @@ button {
     cursor: pointer;
 }
 :focus-visible {
-    outline: 2px solid var(--brand);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
 }
 h1,

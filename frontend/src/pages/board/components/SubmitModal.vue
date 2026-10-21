@@ -4,7 +4,7 @@
       <h2>Новое предложение</h2>
       <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
     </div>
-    <SubmitForm :project="project" :categories="categories" @sent="emit('sent', $event)">
+    <SubmitForm :project="project" :categories="categories" :title="title" @sent="emit('sent', $event)">
       <template #secondary>
         <button type="button" class="btn" @click="close()">Отмена</button>
       </template>
@@ -23,6 +23,7 @@ import SubmitForm from '@/shared/components/SubmitForm.vue'
 defineProps<{
   project: string
   categories: Category[]
+  title?: string
 }>()
 const emit = defineEmits<{
   close: []

@@ -6,10 +6,16 @@
     grid-template-columns: 190px 1fr;
     gap: 24px;
     align-items: start;
+    min-height: calc(100vh - 72px);   // the divider runs to the bottom of the screen even on a short board
 
     @media screen and (max-width: $tablet) {
         grid-template-columns: 1fr;
         gap: 14px;
+        min-height: 0;
+    }
+    // room under the list for the pinned «Предложить» on a phone
+    @media screen and (max-width: $mobile) {
+        padding-bottom: 64px;
     }
 }
 
@@ -23,7 +29,7 @@
         @include displayFont;
         font-size: 15px;
         justify-self: start;
-        background: var(--accent);
+        background: var(--accent);    // brand tag: the company green with the slanted edge
         color: var(--accent-fg);
         padding: 4px 14px 5px 16px;
         margin: 2px 0 14px;
@@ -54,12 +60,61 @@
         }
     }
 
-    @media screen and (max-width: $mobile) {
-        .board-cta {
-            margin-left: 0;         // на узких экранах порядок — слева направо
-            flex: 1 1 100%;         // CTA на всю ширину собственной строкой
+    // tablet and phone: the team box becomes the «Команда» menu (MenuComponent) next to the theme switch
+    .menu:has(.team-menu) {
+        display: none;
+
+        @media screen and (max-width: $tablet) {
+            display: block;
         }
     }
+    @media screen and (max-width: $tablet) {
+        .team-box {
+            display: none;
+        }
+    }
+
+    // phone: row 1 is the wordmark with the theme and team controls, row 2 the sections;
+    // «Предложить» is pinned to the bottom of the screen, under the thumb
+    @media screen and (max-width: $mobile) {
+        .proj {
+            order: 0;
+            margin-right: auto;
+        }
+        .theme-toggle,
+        .team-login,
+        .menu {
+            order: 1;
+        }
+        // the three sections split the full width evenly
+        .board-sections {
+            order: 2;
+            flex: 1 1 100%;
+            display: flex;
+
+            .nav-item {
+                flex: 1 1 0;
+                justify-content: center;
+                min-width: 0;
+            }
+        }
+        .board-cta {
+            position: fixed;
+            left: 16px;
+            right: 16px;
+            bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            z-index: 15;
+            margin: 0;
+            padding: 12px 16px;
+            box-shadow: var(--shadow); // taste-skill-ignore floats over the list
+        }
+    }
+}
+.menu-trigger.team-menu {
+    width: auto;
+    padding: 0 12px;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 // Группа табов «Предложения / Топ» — всегда идёт одним блоком
@@ -82,8 +137,9 @@
                 background: var(--surface);
             }
             &[aria-current='page'] {
-                background: var(--surface);
-                color: var(--fg);
+                background: var(--active);
+                border-color: var(--active-line);
+                color: var(--active-fg);
             }
         }
     }
@@ -93,7 +149,7 @@
     align-items: center;
     gap: 10px;
     width: 100%;
-    border: 0;
+    border: 1px solid transparent;
     background: none;
     padding: 8px 10px;
     border-radius: 8px;
@@ -106,8 +162,10 @@
         color: var(--fg);
     }
     &[aria-current='page'] {
-        background: var(--surface-2);
-        color: var(--fg);
+        background: var(--active);
+        border-color: var(--active-line);
+        color: var(--active-fg);
+        font-weight: 600;
     }
     .count {
         margin-left: auto;
@@ -140,10 +198,6 @@
     justify-items: start;
     font-size: 13px;
 
-    .chip {
-        background: var(--brand-soft);
-        color: var(--brand-ink);
-    }
     .who-mail {
         word-break: break-all;
     }
@@ -177,26 +231,79 @@
     }
 }
 
+// a full-height line between the sidebar and the board; on tablet and below the nav sits on top
 .board-main {
     min-width: 0;
+    align-self: stretch;
+    border-left: 1px solid var(--line);
+    padding-left: 32px;
+
+    @media screen and (max-width: $tablet) {
+        border-left: 0;
+        padding-left: 0;
+    }
 }
+// title and its line on the left, the search on the right of the same row
 .board-head {
-    margin-bottom: 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin-bottom: 16px;
 
     h1 {
-        @include displayFont;
-        font-size: clamp(22px, 3.4vw, 28px);
-        letter-spacing: -0.01em;
+        @include headingFont;
+        font-size: 28px;
+        line-height: 1.2;
     }
     p {
         margin: 4px 0 0;
+        max-width: 72ch;
         color: var(--muted);
+        font-size: 14px;
+    }
+    kbd {
+        display: inline-block;
+        min-width: 20px;
+        padding: 0 5px;
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 5px;
+        background: var(--surface);
+        color: var(--fg);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 18px;
+        text-align: center;
+    }
+
+    @media screen and (max-width: $tablet) {
+        flex-direction: column;
+        align-items: stretch;
+
+        h1 {
+            font-size: 24px;
+        }
     }
 }
+.board-title {
+    min-width: 0;
 
-// Строка поиска над тулбаром — своя, чтобы не толкаться с чипами/селектами.
+    .board-keys {
+        @media screen and (max-width: $mobile) {
+            display: none;
+        }
+    }
+}
 .board-search {
-    margin-bottom: 10px;
+    flex: 0 1 300px;
+    min-width: 220px;
+
+    @media screen and (max-width: $tablet) {
+        flex-basis: auto;
+        min-width: 0;
+    }
 }
 
 // toolbar: view switch, category chips, filters, sort
@@ -213,15 +320,17 @@
         padding-bottom: 0;
     }
 
+    // phone: only the view switch and «Фильтры · N»; the filters open in FiltersModal
     @media screen and (max-width: $mobile) {
         gap: 8px;
         // spacer на мобиле не нужен — сортировка идёт сразу слева следующей строкой
         > .spacer {
             display: none;
         }
-        // переключатель вида — отдельная первая строка
+        // переключатель вида и «Фильтры» — одна первая строка
         > .seg-icons {
-            flex: 1 1 100%;
+            flex: 1 1 auto;
+            width: auto;
             align-self: start;
         }
         // селекты (Статус, Приоритет) — своя строка на всю ширину
@@ -250,11 +359,12 @@
         @include hover {
             color: var(--fg);
         }
+        // selected filter / sort: pale green with dark-green text, same as the selected nav item
         &[aria-pressed='true'] {
-            background: var(--accent-dark);
-            color: var(--surface);
-            border-color: var(--accent-dark);
-            font-weight: 500;
+            background: var(--active);
+            color: var(--active-fg);
+            border-color: var(--active-line);
+            font-weight: 600;
         }
     }
 }
@@ -266,7 +376,7 @@
     background: var(--surface-2);
 
     button {
-        border: 0;
+        border: 1px solid transparent;
         background: transparent;
         display: inline-flex;
         align-items: center;
@@ -279,8 +389,9 @@
         color: var(--muted);
 
         &[aria-pressed='true'] {
-            background: var(--surface);
-            color: var(--fg);
+            background: var(--active);
+            border-color: var(--active-line);
+            color: var(--active-fg);
         }
     }
 
@@ -293,6 +404,59 @@
             padding: 7px 10px;
         }
     }
+}
+// BoardFilters.vue: part of the toolbar row on desktop, hidden on a phone; `stacked` inside FiltersModal
+.board-filters {
+    display: contents;
+
+    // no validation here: the error reserve under .field would push the selects off the row's centre
+    > .field {
+        padding-bottom: 0;
+    }
+
+    @media screen and (max-width: $mobile) {
+        display: none;
+    }
+    &.stacked {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 20px;
+
+        .select,
+        .select-trigger {
+            display: block;
+            width: 100%;
+        }
+    }
+}
+.filters-modal-actions {
+    .btn-primary {
+        flex: 1;
+    }
+}
+.btn.filters-toggle {
+    display: none;
+    padding: 6px 12px;
+
+    &[aria-expanded='true'] {
+        background: var(--active);
+        border-color: var(--active-line);
+        color: var(--active-fg);
+    }
+    @media screen and (max-width: $mobile) {
+        display: inline-flex;
+    }
+}
+.filters-count {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 20px;
+    text-align: center;
 }
 .toolbar-sep {
     width: 1px;
@@ -339,4 +503,35 @@
 }
 .theme-toggle-label {
     text-transform: lowercase;
+}
+// BoardPage.vue: a search or filter found nothing — one message with the way out, instead of empty columns
+.board-empty {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+    padding: 32px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    @include rise(0.2s);
+
+    h2 {
+        @include headingFont;
+        font-size: 18px;
+        overflow-wrap: anywhere;
+    }
+    p {
+        margin: 0 0 8px;
+        max-width: 60ch;
+        color: var(--muted);
+    }
+
+    @media screen and (max-width: $mobile) {
+        padding: 20px 16px;
+
+        .row {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
 }

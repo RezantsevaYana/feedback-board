@@ -78,6 +78,8 @@ const props = defineProps<{
   categories: Category[]
   /** Service origin when used from the widget on someone else's site; omitted on the board. */
   origin?: string
+  /** Title to start with (the board's «Предложить «…»» after a search found nothing). */
+  title?: string
 }>()
 const emit = defineEmits<{
   sent: [post: Post]
@@ -89,7 +91,7 @@ const MAX_BYTES = 5 * 1024 * 1024
 const IMAGE = /^image\/(png|jpeg|webp|gif)$/
 const NAME_KEY = 'fb-author-name'
 
-const form = reactive({ category: null as number | null, title: '', description: '', name: readName() })
+const form = reactive({ category: null as number | null, title: props.title ?? '', description: '', name: readName() })
 const files = ref<Array<{ file: File; preview: string }>>([])
 const errors = reactive<Record<string, string>>({})
 const serverError = ref('')

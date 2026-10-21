@@ -52,6 +52,18 @@ export const useBoardStore = defineStore('board', () => {
     showHidden: true,
   })
 
+  /** Something narrows the board (search, category, status, priority, hidden posts left out). */
+  const filtered = computed(
+    () =>
+      !!view.search.trim() ||
+      view.category !== '' ||
+      (view.layout === 'list' && view.status !== '') ||
+      (team.value && (view.priority !== '' || !view.showHidden)),
+  )
+  function resetFilters() {
+    Object.assign(view, { search: '', category: '', status: '', priority: '', showHidden: true })
+  }
+
   const posts = ref<Post[]>([])
   const page = ref(1)
   const lastPage = ref(1)
@@ -195,7 +207,7 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  /** Click on 👍 / 💩: a second click on the same one cancels, the other one switches. */
+  /** Click on like / dislike: a second click on the same one cancels, the other one switches. */
   async function vote(post: Post, value: VoteValue) {
     const was: VoteState = { likes_count: post.likes_count, dislikes_count: post.dislikes_count, my_vote: post.my_vote }
     const cancel = post.my_vote === value
@@ -291,7 +303,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, me, team, categories, statuses, defaultStatus, view, posts, page, lastPage, loading, loadError, ranking, leaderboard,
+    project, notFound, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadError, ranking, leaderboard,
     open, refresh, loadPosts, vote, updatePost, deletePost,
     addCategory, renameCategory, deleteCategory,
     addStatus, renameStatus, deleteStatus,

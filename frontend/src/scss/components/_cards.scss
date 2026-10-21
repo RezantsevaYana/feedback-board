@@ -18,14 +18,23 @@
     font-size: 14px;
     @include lineClamp(3);
 }
-.is-hidden {
-    opacity: 0.55;
+// hidden from the public board (team mode): a quieter card with a dashed edge and the «скрыто» chip;
+// the text keeps its full contrast instead of fading with opacity
+.card.is-hidden,
+.kcard.is-hidden {
+    background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+    border-style: dashed;
+    border-color: var(--control);
 }
 
 // PostList.vue
 .list {
     display: grid;
     gap: 10px;
+
+    @media screen and (max-width: $mobile) {
+        gap: 8px;
+    }
 }
 .card {
     display: grid;
@@ -42,23 +51,57 @@
     @include hover {
         border-color: color-mix(in srgb, var(--fg) 22%, var(--line));
     }
-    h3 {
+    h2 {
         font-size: 16px;
         font-weight: 600;
     }
 
-    @media screen and (max-width: $mobile-mini) {
-        grid-template-columns: 1fr;
+    // phone: a compact card. The menu (or copy-link) is pinned to the top right corner,
+    // the text runs full width, votes and the status share the last row.
+    @media screen and (max-width: $mobile) {
+        position: relative;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            'body body'
+            'votes status';
+        gap: 10px 12px;
+        align-items: center;
+        padding: 12px;
 
+        > .card-body {
+            grid-area: body;
+            gap: 4px;
+        }
+        .post-tags {
+            padding-right: 38px;  // room for the corner button
+        }
+        h2 {
+            font-size: 15px;
+            line-height: 1.35;
+        }
+        .excerpt {
+            font-size: 13px;
+            @include lineClamp(2);
+        }
+        .meta {
+            font-size: 12px;
+        }
         > .votes {
-            order: 3;
+            grid-area: votes;
             flex-direction: row;
         }
         > .card-side {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
+            display: contents;
+
+            .pill {
+                grid-area: status;
+            }
+            > .menu,
+            > .copy-link {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+            }
         }
     }
 }
@@ -72,4 +115,22 @@
     display: flex;
     justify-content: center;
     margin-top: 14px;
+}
+// The card title is the card's button (KanbanBoard.vue, PostList.vue): looks like a heading,
+// opens the post, and carries the keyboard focus; the whole card shows the ring.
+.card-open {
+    all: unset;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+
+    &:focus-visible {
+        outline: none;
+    }
+}
+.card,
+.kcard {
+    &:has(.card-open:focus-visible) {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
 }

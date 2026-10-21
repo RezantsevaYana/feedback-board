@@ -1,6 +1,6 @@
 @use '../utils' as *;
 
-// 👍 / 💩 pair
+// VoteButtons.vue: 👍 / 💩. Your own vote takes a pale tint (green / brown) and the emoji hops once when it's set.
 .votes {
     display: inline-flex;
     gap: 6px;
@@ -10,12 +10,12 @@
     }
     &.sm .vote {
         min-width: 0;
-        padding: 2px 8px;
-        font-size: 12px;
+        padding: 3px 8px 3px 6px;
+        font-size: 13px;
         border-radius: 8px;
 
         .emo {
-            font-size: 13px;
+            font-size: 14px;
         }
     }
 }
@@ -23,45 +23,69 @@
     min-width: 56px;
     border: 1px solid var(--line);
     background: var(--surface);
+    color: var(--fg);
     border-radius: 10px;
-    padding: 5px 10px;
+    padding: 4px 10px 4px 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.12s, background-color 0.12s;
 
     .emo {
-        font-size: 15px;
+        flex: none;
+        font-size: 16px;
         line-height: 1;
-        filter: grayscale(0.6);
+        transform-origin: 50% 90%;
+        transition: transform 0.15s ease-out;
     }
     @include hover {
-        border-color: var(--accent);
+        border-color: color-mix(in srgb, var(--fg) 25%, var(--line));
 
         .emo {
-            filter: none;
+            transform: rotate(-10deg) scale(1.1);
         }
     }
+    &:active .emo {
+        transform: scale(0.88);
+    }
     &[aria-pressed='true'] {
-        background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-        border-color: var(--accent);
+        background: color-mix(in srgb, var(--like) 14%, var(--surface));
+        border-color: var(--like);
         color: var(--accent-ink);
 
         .emo {
-            filter: none;
+            @media (prefers-reduced-motion: no-preference) {
+                animation: vote-hop 0.4s cubic-bezier(0.25, 1, 0.5, 1); // ease-out-quart; the hop is in the keyframes, not an overshoot
+            }
         }
     }
 
     &.dislike {
         @include hover {
-            border-color: var(--dislike);
+            .emo {
+                transform: rotate(8deg) scale(1.1);
+            }
         }
         &[aria-pressed='true'] {
-            background: color-mix(in srgb, var(--dislike) 16%, var(--surface));
-            border-color: var(--dislike);
+            background: color-mix(in srgb, var(--poo) 16%, var(--surface));
+            border-color: var(--poo);
             color: var(--fg);
         }
+    }
+}
+
+@keyframes vote-hop {
+    0% {
+        transform: scale(0.8);
+    }
+    45% {
+        transform: translateY(-5px) scale(1.18) rotate(-8deg);
+    }
+    100% {
+        transform: none;
     }
 }

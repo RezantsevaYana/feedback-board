@@ -1,6 +1,22 @@
 @use '../utils' as *;
 
 // LeaderboardAuthors.vue
+// phone: «Больше идей / Больше поддержки» and the period each take a full row, options split it evenly
+.leader-filters {
+    @media screen and (max-width: $mobile) {
+        > .seg-icons,
+        > .chips {
+            flex: 1 1 100%;
+            width: 100%;
+            display: flex;
+        }
+        > .seg-icons button,
+        > .chips button {
+            flex: 1 1 0;
+            white-space: nowrap;
+        }
+    }
+}
 .leader {
     display: grid;
     gap: 8px;

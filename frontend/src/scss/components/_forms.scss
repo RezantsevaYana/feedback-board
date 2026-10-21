@@ -38,8 +38,8 @@
     font: inherit;
 
     &:focus-visible {
-        border-color: var(--brand);
-        outline: 2px solid var(--brand);
+        border-color: var(--focus);
+        outline: 2px solid var(--focus);
         outline-offset: 2px;
     }
     &.invalid {
@@ -66,13 +66,57 @@ textarea.input {
         padding-left: 36px;
         padding-right: 36px;
     }
+    // the magnifier in the accent, so the search reads as a tool at a glance
     .search-ico {
         position: absolute;
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: var(--muted);
+        color: var(--accent-ink);
         pointer-events: none;
+    }
+    // a filled sage field stands out on the white page better than one more white box with a hairline
+    .input {
+        background: var(--surface-2);
+        border-color: transparent;
+        transition: border-color 0.12s, box-shadow 0.12s, background-color 0.12s;
+
+        @include hover {
+            border-color: var(--control);
+        }
+        &:focus-visible {
+            background: var(--surface);
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--active); // taste-skill-ignore focus ring, not elevation
+        }
+    }
+    // «/» hint while the field is empty (SearchComponent `shortcut`); no keyboard on touch, so hidden there
+    .search-key {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        min-width: 20px;
+        padding: 0 5px;
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 5px;
+        background: var(--surface);
+        color: var(--muted);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 18px;
+        text-align: center;
+        pointer-events: none;
+
+        @media (hover: none) {
+            display: none;
+        }
+    }
+    .input:focus ~ .search-key {
+        display: none;
     }
     .search-clear {
         position: absolute;
@@ -211,7 +255,7 @@ textarea.input {
         }
 
         &:focus-visible {
-            outline: 2px solid var(--brand);
+            outline: 2px solid var(--focus);
             outline-offset: 1px;
         }
 
@@ -270,13 +314,8 @@ textarea.input {
             font-size: 12px;
         }
         &[aria-pressed='true'] {
-            border-color: var(--accent-dark);
-            background: var(--accent-dark);
-            color: var(--surface);
-
-            small {
-                color: color-mix(in srgb, var(--surface) 72%, transparent);
-            }
+            border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 7%, var(--surface));
         }
     }
 }

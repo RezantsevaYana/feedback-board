@@ -7,10 +7,10 @@
     max-width: 65ch;
 }
 
-// team's reply to the author, coloured by status
+// team's reply to the author; only done / rejected take their status hue
 .answer {
-    --c: var(--brand-ink);
-    background: color-mix(in srgb, var(--brand-soft) 60%, var(--surface));
+    --c: var(--fg);
+    background: var(--surface-2);
     padding: 12px 16px;
     border-radius: var(--radius);
 
@@ -65,4 +65,24 @@
 .modal .select-trigger {
     width: 100%;
     padding: 9px 36px 9px 12px;
+}
+
+// PostModal.vue (team): the votes in their own row, away from Сохранить / Удалить
+.post-votes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+
+    .post-votes-label {
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .note {
+        margin-left: auto;
+    }
 }

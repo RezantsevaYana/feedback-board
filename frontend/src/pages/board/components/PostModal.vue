@@ -18,7 +18,7 @@
       <div class="drawer-top">
         <span class="row">
           <PostTags :post="post" />
-          <span class="mono">#{{ post.id }} · {{ fmtDate(post.created_at) }} · {{ post.author_name || TEXT.anonymous }}</span>
+          <span class="note"><span class="mono">#{{ post.id }}</span> · {{ fmtDate(post.created_at) }} · {{ post.author_name || TEXT.anonymous }}</span>
         </span>
         <div class="drawer-actions">
           <CopyLink v-if="post" :post-id="post.id" />
@@ -30,6 +30,12 @@
       <div v-if="post.attachments?.length" class="field">
         <span>Скриншоты</span>
         <AttachmentShots :attachments="post.attachments" />
+      </div>
+      <!-- how the board reacted: read at a glance, apart from the post's own actions -->
+      <div class="post-votes">
+        <span class="post-votes-label">Голоса</span>
+        <VoteButtons :post="post" small />
+        <span class="note">{{ voteSummary }}</span>
       </div>
       <div class="grid3">
         <SelectComponent v-model="edit.category_id" label="Категория" :options="categoryOptions" />
@@ -51,7 +57,6 @@
           {{ post.is_hidden ? 'Показать на доске' : 'Скрыть с доски' }}
         </button>
         <span class="spacer" />
-        <VoteButtons :post="post" small />
         <button class="btn btn-danger" type="button" @click="askDelete">Удалить</button>
       </div>
     </template>
@@ -116,6 +121,14 @@ const confirm = useConfirmStore()
 const close = inject<() => void>('baseModal:close', () => emit('close'))
 
 const post = ref<Post | null>(null)
+// «рейтинг +3» next to the team's vote buttons: likes minus dislikes, as the board sorts by it
+const voteSummary = computed(() => {
+  if (!post.value) return ''
+  const n = post.value.likes_count - post.value.dislikes_count
+  if (!post.value.likes_count && !post.value.dislikes_count) return 'пока никто не голосовал'
+  return `рейтинг ${n > 0 ? '+' : ''}${n}`
+})
+
 const missing = ref(false)
 const saving = ref(false)
 const errors = reactive<Record<string, string>>({})
@@ -134,7 +147,7 @@ const categoryOptions = computed(() => [
 ])
 const statusOptions = computed(() => board.statuses.map((s) => ({ value: s.id, label: s.name })))
 const priorityOptions = [
-  { value: '' as const, label: '—' },
+  { value: '' as const, label: 'Без приоритета' },
   ...PRIORITIES.map((p) => ({ value: p, label: PRIORITY[p] })),
 ]
 

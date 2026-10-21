@@ -1,46 +1,52 @@
 <template>
   <div class="kanban">
     <section
-      v-for="col in columns"
+      v-for="(col, n) in columns"
       :key="col.status.id"
       class="col"
       :class="{ over: overColumn === col.status.id }"
-      :aria-label="col.status.name"
+      :aria-label="`${col.status.name}: ${col.posts.length}`"
       @dragover="dragId !== null && ($event.preventDefault(), (overColumn = col.status.id))"
       @dragleave="overColumn === col.status.id && (overColumn = null)"
       @drop.prevent="onDrop(col.status)"
     >
       <div class="col-head">
-        <span class="pill" :data-s="col.status.slug">{{ col.status.name }}</span>
-        <span>{{ col.posts.length }}</span>
+        <h2 class="pill" :data-s="col.status.slug">{{ col.status.name }}</h2>
+        <span class="col-count" :title="board.team && n < 9 ? `Клавиша ${n + 1} переносит карточку сюда` : undefined">{{ col.posts.length }}</span>
       </div>
       <article
         v-for="post in col.posts"
         :key="post.id"
         class="kcard"
         :class="{ 'is-hidden': post.is_hidden, dragging: dragId === post.id }"
+        :data-post-id="post.id"
         :draggable="board.team"
-        tabindex="0"
-        role="link"
-        :aria-label="post.title"
         @click="onCardClick($event, post)"
-        @keydown.enter.prevent="onCardEnter(post)"
         @dragstart="onDragStart($event, post)"
         @dragend="(dragId = null), (overColumn = null)"
       >
         <div class="kcard-top">
           <PostTags :post="post" :team="board.team" />
-          <CopyLink :post-id="post.id" />
+          <CardMenu v-if="board.team" :post="post" @move="move(post, $event)" @hide="toggleHidden(post)" />
+          <CopyLink v-else :post-id="post.id" />
         </div>
         <div class="card-body">
-          <h4>{{ post.title }}</h4>
+          <h3><button type="button" class="card-open" @click="open(post)">{{ post.title }}</button></h3>
           <div v-if="post.description" class="excerpt">{{ post.description }}</div>
-          <p v-if="post.status.slug !== 'new' && post.team_comment" class="kcard-reply">{{ post.team_comment }}</p>
+          <p v-if="post.status.slug !== 'new' && post.team_comment" class="kcard-reply" :data-s="post.status.slug">{{ post.team_comment }}</p>
           <PostMeta :post="post" />
         </div>
         <VoteButtons :post="post" small />
       </article>
-      <div v-if="!col.posts.length" class="col-empty">{{ board.team ? 'Перетащите карточку сюда' : 'Пока пусто' }}</div>
+      <template v-if="!col.posts.length">
+        <!-- the team cleared the queue: a small win instead of an empty tray -->
+        <div v-if="board.team && col.status.slug === 'new' && !board.filtered" class="col-empty col-cleared">
+          <span class="col-cleared-mark" aria-hidden="true"><AppIcon name="check" :size="18" /></span>
+          <b>Всё разобрано</b>
+          <span>Новые предложения появятся здесь</span>
+        </div>
+        <div v-else class="col-empty">{{ board.team ? 'Перетащите карточку сюда' : 'Пока пусто' }}</div>
+      </template>
     </section>
   </div>
   <StatusReplyModal v-if="asking" :post="asking.post" :status="asking.status" @close="asking = null" />
@@ -48,12 +54,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { errorMessage } from '@/api/client'
-import type { Post, Status, SystemStatusSlug } from '@/api/types'
-import { STATUS_REPLY } from '@/shared/constants/dict'
-import { useNotificationStore } from '@/store/modals/useNotificationStore'
+import type { Post, Status } from '@/api/types'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import { useCardOpen } from '../composables/useCardOpen'
+import { useTriage } from '../composables/useTriage'
+import { useTriageKeys } from '../composables/useTriageKeys'
+import AppIcon from '@/shared/ui/AppIcon.vue'
+import CardMenu from './CardMenu.vue'
 import CopyLink from './CopyLink.vue'
 import PostMeta from './PostMeta.vue'
 import PostTags from './PostTags.vue'
@@ -61,13 +68,14 @@ import StatusReplyModal from './StatusReplyModal.vue'
 import VoteButtons from './VoteButtons.vue'
 
 // Columns come from the project's statuses (3 системных + добавленные командой).
-// Перенос в «Готово» / «Отклонено» сперва просит ответ команды — остальные столбцы не трогают диалог.
+// The team moves cards by drag, by the card menu or by keys 1–9; «Готово» / «Отклонено» ask for a reply first.
 const emit = defineEmits<{
   open: [post: Post]
 }>()
 const board = useBoardStore()
-const notification = useNotificationStore()
-const { onCardClick, onCardEnter } = useCardOpen(emit)
+const { open, onCardClick } = useCardOpen(emit)
+const { asking, move, toggleHidden } = useTriage()
+useTriageKeys({ move, toggleHidden })
 
 const columns = computed(() =>
   board.statuses.map((status) => ({
@@ -78,7 +86,6 @@ const columns = computed(() =>
 
 const dragId = ref<number | null>(null)
 const overColumn = ref<number | null>(null)
-const asking = ref<{ post: Post; status: Status } | null>(null)
 
 function onDragStart(e: DragEvent, post: Post) {
   dragId.value = post.id
@@ -86,19 +93,10 @@ function onDragStart(e: DragEvent, post: Post) {
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
 }
 
-async function onDrop(status: Status) {
+function onDrop(status: Status) {
   const post = board.posts.find((p) => p.id === dragId.value)
   dragId.value = null
   overColumn.value = null
-  if (!post || post.status.id === status.id) return
-  if (STATUS_REPLY[status.slug as SystemStatusSlug]) {
-    asking.value = { post, status }
-    return
-  }
-  try {
-    await board.updatePost(post.id, { status_id: status.id })
-  } catch (e) {
-    notification.error(errorMessage(e))
-  }
+  if (post) move(post, status)
 }
 </script>

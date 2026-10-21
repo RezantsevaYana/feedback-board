@@ -3,7 +3,7 @@
     <h1>Авторы</h1>
     <p>{{ metricExplainer }} Чтобы попасть в топ — укажите имя при подаче предложения.</p>
   </div>
-  <div class="filters">
+  <div class="filters leader-filters">
     <div class="seg-icons" role="group" aria-label="Ранжировать по">
       <button type="button" :aria-pressed="board.view.leaderboardMetric === 'posts'" @click="board.view.leaderboardMetric = 'posts'">Больше идей</button>
       <button type="button" :aria-pressed="board.view.leaderboardMetric === 'support'" @click="board.view.leaderboardMetric = 'support'">Больше поддержки</button>

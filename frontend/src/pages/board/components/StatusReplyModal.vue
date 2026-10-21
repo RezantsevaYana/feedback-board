@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { computed, inject, ref } from 'vue'
-import { ApiError } from '@/api/client'
+import { ApiError, errorMessage } from '@/api/client'
 import type { Post, Status, SystemStatusSlug } from '@/api/types'
 import { STATUS_REPLY } from '@/shared/constants/dict'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
@@ -57,9 +57,15 @@ async function save() {
     return
   }
   saving.value = true
+  // what to put back if the team presses «Отменить» in the toast
+  const prev = { status_id: props.post.status.id, team_comment: props.post.team_comment }
+  const id = props.post.id
   try {
-    await board.updatePost(props.post.id, { status_id: props.status.id, team_comment: reply.value.trim() || null })
-    notification.success(props.status.slug === 'done' ? 'Готово — видно на доске' : 'Отклонено')
+    await board.updatePost(id, { status_id: props.status.id, team_comment: reply.value.trim() || null })
+    notification.success(props.status.slug === 'done' ? 'Готово — видно на доске' : 'Отклонено', {
+      label: 'Отменить',
+      run: () => board.updatePost(id, prev).catch((e) => notification.error(errorMessage(e))),
+    })
     close()
   } catch (e) {
     error.value = e instanceof ApiError ? (e.field('team_comment') ?? e.message) : String(e)
