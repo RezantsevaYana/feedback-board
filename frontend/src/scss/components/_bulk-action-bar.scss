@@ -1,0 +1,138 @@
+@use '../utils' as *;
+
+// BulkActionBar.vue — floating panel for mass triage from the list view.
+// Mounts above the list when at least one card is selected; rises in on first selection,
+// fades out when selection is cleared. Reduced-motion disables the transition.
+.bulk-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    z-index: 50;
+    max-width: calc(100vw - 32px);
+    font-size: 14px;
+}
+.bulk-count {
+    font-weight: 600;
+    padding-right: 4px;
+    white-space: nowrap;
+}
+// пустое состояние — подсказка пока ничего не выбрано; панель уже стоит, вход в режим виден.
+.bulk-empty {
+    color: var(--muted);
+    font-size: 13px;
+}
+.bulk-bar.empty {
+    padding: 8px 14px;
+}
+.bulk-group {
+    position: relative;
+}
+.bulk-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+
+    .icon {
+        transition: transform 0.18s ease;
+    }
+}
+// chevron поворачивается, когда соответствующее подменю открыто
+.bulk-group.open .bulk-trigger .icon {
+    transform: rotate(180deg);
+}
+.bulk-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    min-width: 200px;
+    max-height: 60vh;
+    overflow: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 6px;
+    list-style: none;
+    margin: 0;
+    display: grid;
+    gap: 2px;
+    z-index: 1;
+}
+.bulk-item {
+    all: unset;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    @include hover {
+        background: var(--surface-2);
+    }
+    &:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: -2px;
+    }
+}
+.bulk-item-plain {
+    color: var(--muted);
+}
+.btn.danger {
+    color: var(--bug);
+    border-color: color-mix(in srgb, var(--bug) 35%, var(--line));
+
+    @include hover {
+        background: color-mix(in srgb, var(--bug) 10%, transparent);
+        border-color: var(--bug);
+    }
+}
+.bulk-authors {
+    margin-top: 4px;
+}
+
+// Rise + fade, matching the project's single `rise` motion vocabulary.
+.bulk-bar-enter-active,
+.bulk-bar-leave-active {
+    transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.22s ease;
+}
+.bulk-bar-enter-from,
+.bulk-bar-leave-to {
+    transform: translate(-50%, 14px);
+    opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+    .bulk-bar-enter-active,
+    .bulk-bar-leave-active {
+        transition: none;
+    }
+}
+
+@media screen and (max-width: $mobile) {
+    .bulk-bar {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        transform: none;
+        padding: 10px 12px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .bulk-bar-enter-from,
+    .bulk-bar-leave-to {
+        transform: translateY(14px);
+    }
+    .bulk-menu {
+        min-width: 160px;
+    }
+}

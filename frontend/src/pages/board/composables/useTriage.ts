@@ -13,7 +13,7 @@ import { useBoardStore } from '@/store/board/useBoardStore'
 export function useTriage() {
   const board = useBoardStore()
   const notification = useNotificationStore()
-  const asking = ref<{ post: Post; status: Status } | null>(null)
+  const asking = ref<{ posts: Post[]; status: Status } | null>(null)
 
   async function undo(id: number, patch: Parameters<typeof board.updatePost>[1]) {
     try {
@@ -26,7 +26,7 @@ export function useTriage() {
   async function move(post: Post, status: Status) {
     if (post.status.id === status.id) return
     if (STATUS_REPLY[status.slug as SystemStatusSlug]) {
-      asking.value = { post, status }
+      asking.value = { posts: [post], status }
       return
     }
     const prev = post.status.id

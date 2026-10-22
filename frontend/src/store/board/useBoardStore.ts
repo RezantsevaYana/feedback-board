@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { AuthApi } from '@/api/auth'
 import { CategoriesApi } from '@/api/categories'
@@ -252,6 +252,179 @@ export const useBoardStore = defineStore('board', () => {
     topPosts.value = topPosts.value.filter((p) => p.id !== id)
   }
 
+  // ---------- Массовый выбор карточек в списке ----------
+  // Режим выбора включается кнопкой «Выделить»: только тогда у карточек появляются
+  // чекбоксы. Shift-клик расширяет диапазон от «якоря» (прошлый клик) до текущего
+  // по видимому порядку. Bulk-операции чистят выбор, но режим остаётся — удобно гонять
+  // пачки подряд. Смена секции/фильтров выключает режим целиком.
+
+  const selectionMode = ref(false)
+  // ref<Set> с immutable-reassign вместо reactive(Set): трекинг `has(id)` на reactive-Set
+  // в Vue 3 в нашем кейсе не триггерил ре-рендер `<input :checked>` — пересоздание ссылки надёжнее.
+  const selectedIds = ref<Set<number>>(new Set())
+  const lastSelectedId = ref<number | null>(null)
+
+  function mutate(fn: (next: Set<number>) => void) {
+    const next = new Set(selectedIds.value)
+    fn(next)
+    selectedIds.value = next
+  }
+
+  function exitSelection() {
+    selectionMode.value = false
+    selectedIds.value = new Set()
+    lastSelectedId.value = null
+  }
+
+  function toggleSelectionMode() {
+    if (selectionMode.value) exitSelection()
+    else selectionMode.value = true
+  }
+
+  const selectionCount = computed(() => selectedIds.value.size)
+  const hasSelection = computed(() => selectedIds.value.size > 0)
+  function isSelected(id: number): boolean {
+    return selectedIds.value.has(id)
+  }
+
+  function toggleSelect(id: number) {
+    mutate((next) => {
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+    })
+    lastSelectedId.value = id
+  }
+
+  function selectRange(toId: number) {
+    const anchor = lastSelectedId.value
+    const order = posts.value.map((p) => p.id)
+    const from = anchor === null ? -1 : order.indexOf(anchor)
+    const to = order.indexOf(toId)
+    mutate((next) => {
+      if (from < 0 || to < 0 || from === to) {
+        next.add(toId)
+        return
+      }
+      const [a, b] = from < to ? [from, to] : [to, from]
+      for (let i = a; i <= b; i++) next.add(order[i])
+    })
+    lastSelectedId.value = toId
+  }
+
+  function clearSelection() {
+    selectedIds.value = new Set()
+    lastSelectedId.value = null
+  }
+
+  /** Выбранные посты, которые ещё лежат в текущем списке — для подсказок в UI (кто получит ответ). */
+  const selectedPosts = computed(() => posts.value.filter((p) => selectedIds.value.has(p.id)))
+
+  /** Все ли выбранные скрыты (чтобы кнопка «скрыть» превратилась в «показать»). */
+  const allSelectedHidden = computed(() => selectedPosts.value.length > 0 && selectedPosts.value.every((p) => p.is_hidden))
+
+  function patchLocalMany(updated: Post[]) {
+    for (const next of updated) patchLocal(next.id, next)
+  }
+
+  /**
+   * Откатить bulk-операцию: по снапшоту каждой карточки шлём one-shot patch через single-post эндпоинт.
+   * Параллельно; локальный стейт патчится из ответов. Исходный bulk-эндпоинт берёт один payload на всех —
+   * для разнородного восстановления (у каждого свой прежний столбец/категория) one-shot честнее.
+   */
+  async function restoreMany(snaps: Array<{ id: number; patch: PostPatch }>) {
+    const results = await Promise.all(snaps.map(async (s) => (await PostsApi.update(s.id, s.patch)).data))
+    patchLocalMany(results)
+  }
+
+  async function bulkMove(statusId: number, teamComment: string | null = null) {
+    const ids = Array.from(selectedIds.value)
+    if (!ids.length) return
+    const snaps = selectedPosts.value.map((p) => ({
+      id: p.id,
+      patch: { status_id: p.status.id, team_comment: p.team_comment } as PostPatch,
+    }))
+    const res = await PostsApi.bulkMove(ids, statusId, teamComment)
+    patchLocalMany(res.data)
+    const target = statuses.value.find((s) => s.id === statusId)
+    exitSelection()
+    notification.success(`Перенесено (${ids.length}) в «${target?.name ?? '…'}»`, {
+      label: 'Отменить',
+      run: () => restoreMany(snaps).catch((e) => notification.error(errorMessage(e))),
+    })
+  }
+
+  async function bulkCategorize(categoryId: number | null) {
+    const ids = Array.from(selectedIds.value)
+    if (!ids.length) return
+    const snaps = selectedPosts.value.map((p) => ({
+      id: p.id,
+      patch: { category_id: p.category?.id ?? null } as PostPatch,
+    }))
+    const res = await PostsApi.bulkCategorize(ids, categoryId)
+    patchLocalMany(res.data)
+    const target = categories.value.find((c) => c.id === categoryId)
+    exitSelection()
+    notification.success(
+      categoryId === null
+        ? `Снята категория у ${ids.length} карточек`
+        : `Назначена «${target?.name ?? '…'}» (${ids.length})`,
+      {
+        label: 'Отменить',
+        run: () => restoreMany(snaps).catch((e) => notification.error(errorMessage(e))),
+      },
+    )
+  }
+
+  async function bulkHide(hidden: boolean) {
+    const ids = Array.from(selectedIds.value)
+    if (!ids.length) return
+    const snaps = selectedPosts.value.map((p) => ({
+      id: p.id,
+      patch: { is_hidden: p.is_hidden } as PostPatch,
+    }))
+    const res = await PostsApi.bulkHide(ids, hidden)
+    patchLocalMany(res.data)
+    // с выключенным «показать скрытые» карточки должны уехать с доски прямо сейчас
+    if (hidden && !view.showHidden) await refresh(true)
+    exitSelection()
+    notification.success(hidden ? `Скрыто с доски (${ids.length})` : `Снова на доске (${ids.length})`, {
+      label: 'Отменить',
+      run: async () => {
+        try {
+          await restoreMany(snaps)
+          if (hidden && !view.showHidden) await refresh(true)
+        } catch (e) {
+          notification.error(errorMessage(e))
+        }
+      },
+    })
+  }
+
+  async function bulkDelete() {
+    const ids = Array.from(selectedIds.value)
+    if (!ids.length) return
+    await PostsApi.bulkDelete(ids)
+    posts.value = posts.value.filter((p) => !selectedIds.value.has(p.id))
+    topPosts.value = topPosts.value.filter((p) => !selectedIds.value.has(p.id))
+    exitSelection()
+    notification.success(`Удалено карточек: ${ids.length}`)
+  }
+
+  // Жёсткий выход — контекст изменился: ушли из list в top, сменили раскладку, или перещёлкнули
+  // «показывать скрытые» (у которых другой список). Выбор привязан к контексту, в новом он бесполезен.
+  watch(
+    () => [view.section, view.layout, view.showHidden],
+    () => exitSelection(),
+  )
+  // Мягкий сброс — просто сузили срез внутри той же сессии (поиск, фильтры): выбор чистим,
+  // но из режима не выгоняем. Админ сузила список, продолжает триаж в нём.
+  watch(
+    () => [view.category, view.status, view.search, view.priority],
+    () => {
+      if (selectionMode.value) clearSelection()
+    },
+  )
+
   async function addCategory(name: string, color: PaletteColor | null) {
     const res = await CategoriesApi.create(currentSlug(), name, color)
     project.value?.categories.push(res.data)
@@ -320,5 +493,9 @@ export const useBoardStore = defineStore('board', () => {
     addStatus, updateStatus, deleteStatus,
     login, logout,
     startPolling, stopPolling,
+    selectionMode, selectedIds, selectionCount, hasSelection, isSelected, selectedPosts, allSelectedHidden,
+    exitSelection, toggleSelectionMode,
+    toggleSelect, selectRange, clearSelection,
+    bulkMove, bulkCategorize, bulkHide, bulkDelete,
   }
 })

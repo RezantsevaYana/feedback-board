@@ -34,6 +34,12 @@ Route::prefix('admin')->group(function () {
         Route::patch('posts/{post}', [Admin\PostController::class, 'update']);
         Route::delete('posts/{post}', [Admin\PostController::class, 'destroy']);
 
+        // Пачкой: массовый триаж из списка (чекбоксы + плавающая панель).
+        Route::post('posts/bulk/move', [Admin\PostController::class, 'bulkMove']);
+        Route::post('posts/bulk/categorize', [Admin\PostController::class, 'bulkCategorize']);
+        Route::post('posts/bulk/hide', [Admin\PostController::class, 'bulkHide']);
+        Route::delete('posts/bulk', [Admin\PostController::class, 'bulkDelete']);
+
         Route::get('attachments/{attachment}', [Admin\AttachmentController::class, 'show']);
 
         Route::post('projects/{project:slug}/categories', [Admin\CategoryController::class, 'store']);

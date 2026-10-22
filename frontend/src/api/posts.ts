@@ -1,6 +1,9 @@
 import { request, type RequestOptions } from './client'
 import type { Item, Paginated, Post, VoteState, VoteValue } from './types'
 
+/** Ответ bulk-эндпоинтов: массив обновлённых карточек (кроме delete — он возвращает 204). */
+type BulkResponse = { data: Post[] }
+
 const PUBLIC_URL = '/public'
 const ADMIN_URL = '/admin'
 
@@ -58,5 +61,25 @@ export const PostsApi = {
   // cancel this browser's vote
   unvote(id: number) {
     return request<Item<VoteState>>(`${PUBLIC_URL}/posts/${id}/vote`, { method: 'DELETE' })
+  },
+
+  // move a batch of posts to one column; `teamComment` ships to all when target is done/rejected
+  bulkMove(ids: number[], statusId: number, teamComment: string | null = null) {
+    return request<BulkResponse>(`${ADMIN_URL}/posts/bulk/move`, { method: 'POST', body: { ids, status_id: statusId, team_comment: teamComment } })
+  },
+
+  // set the same category on a batch (null clears the category back to «без категории»)
+  bulkCategorize(ids: number[], categoryId: number | null) {
+    return request<BulkResponse>(`${ADMIN_URL}/posts/bulk/categorize`, { method: 'POST', body: { ids, category_id: categoryId } })
+  },
+
+  // hide a batch from the public board or restore them
+  bulkHide(ids: number[], hidden: boolean) {
+    return request<BulkResponse>(`${ADMIN_URL}/posts/bulk/hide`, { method: 'POST', body: { ids, hidden } })
+  },
+
+  // delete a batch together with their screenshots
+  bulkDelete(ids: number[]) {
+    return request<void>(`${ADMIN_URL}/posts/bulk`, { method: 'DELETE', body: { ids } })
   },
 }

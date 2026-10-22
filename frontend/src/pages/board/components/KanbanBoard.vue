@@ -49,7 +49,7 @@
       </template>
     </section>
   </div>
-  <StatusReplyModal v-if="asking" :post="asking.post" :status="asking.status" @close="asking = null" />
+  <StatusReplyModal v-if="asking" :posts="asking.posts" :status="asking.status" @close="asking = null" />
 </template>
 
 <script setup lang="ts">
