@@ -48,6 +48,8 @@ class AuthController extends Controller
 
     /**
      * The board calls this on load: 401 means guest, 200 means team mode for the listed projects.
+     * `projects` — legacy teams via project_user pivot (still used by team-mode login on the board).
+     * `boards` — self-serve boards owned by this user, drives the admin hub.
      */
     public function me(Request $request): JsonResponse
     {
@@ -59,6 +61,8 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'projects' => $user->projects()->orderBy('name')->get()
+                ->map(fn (Project $p) => ['id' => $p->id, 'name' => $p->name, 'slug' => $p->slug]),
+            'boards' => $user->boards()->orderBy('name')->get()
                 ->map(fn (Project $p) => ['id' => $p->id, 'name' => $p->name, 'slug' => $p->slug]),
         ]]);
     }

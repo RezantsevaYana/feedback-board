@@ -35,5 +35,7 @@ class AppServiceProvider extends ServiceProvider
             ->response($tooMany('Слишком много голосов подряд. Подождите минуту.')));
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by($request->ip())
             ->response($tooMany('Слишком много попыток входа. Подождите минуту.')));
+        RateLimiter::for('register', fn (Request $request) => Limit::perHour(5)->by($request->ip())
+            ->response($tooMany('Слишком много регистраций с этого адреса. Попробуйте позже.')));
     }
 }

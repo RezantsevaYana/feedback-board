@@ -1,0 +1,122 @@
+@use '../utils' as *;
+
+// BoardNewPage.vue — single-screen create wizard.
+.board-new {
+    display: grid;
+    place-items: start center;
+    padding-top: 24px;
+}
+.board-new-form {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    // Same tight-field override as auth-pages: this is a short self-contained form.
+    .field {
+        padding-bottom: 0;
+        gap: 3px;
+    }
+    .field > .err {
+        position: static;
+        white-space: normal;
+        text-overflow: unset;
+        overflow: visible;
+        margin-top: 2px;
+    }
+}
+.board-new-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 2px;
+
+    h1 {
+        font-size: 22px;
+        margin: 0;
+    }
+}
+.board-new-back {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    width: fit-content;
+
+    @include hover {
+        color: var(--fg);
+    }
+}
+.board-new-slug {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.board-new-slug-hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+
+    &.ok { color: var(--accent-ink); }
+    &.err { color: var(--bug); }
+    &.muted { color: var(--muted); }
+}
+.board-new-origins {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 2px 0 0;
+
+    legend {
+        padding: 0 6px;
+        font-size: 13px;
+        font-weight: 500;
+
+        small {
+            color: var(--muted);
+            font-weight: 400;
+        }
+    }
+}
+.board-new-origins-note {
+    margin: 0 0 2px;
+}
+.board-new-origin-row {
+    display: flex;
+    align-items: start;
+    gap: 8px;
+
+    .field {
+        flex: 1;
+    }
+    .icon-btn {
+        margin-top: 2px;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        flex: none;
+
+        @include hover {
+            color: var(--bug);
+            border-color: color-mix(in srgb, var(--bug) 40%, var(--line));
+        }
+    }
+}
+.board-new-add-origin {
+    align-self: flex-start;
+    font-size: 13px;
+    padding: 6px 12px;
+}
+.board-new-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}

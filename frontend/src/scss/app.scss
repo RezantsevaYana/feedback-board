@@ -26,3 +26,13 @@
 @use 'components/bulk-action-bar';
 @use 'components/toast';
 @use 'components/skeleton';
+
+// Self-serve admin area (/app/*): hub, auth pages, shared shell.
+@use 'components/app-shell';
+@use 'components/auth-pages';
+@use 'components/boards-hub';
+@use 'components/board-card';
+@use 'components/board-new';
+@use 'components/board-embed';
+@use 'components/copy-button';
+@use 'components/home-page';

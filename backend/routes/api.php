@@ -25,10 +25,17 @@ Route::prefix('public')->group(function () {
 // Team mode of the board: Sanctum session.
 Route::prefix('admin')->group(function () {
     Route::post('login', [Admin\AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('register', [Admin\RegistrationController::class, 'store'])->middleware('throttle:register');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [Admin\AuthController::class, 'logout']);
         Route::get('me', [Admin\AuthController::class, 'me']);
+
+        // Self-serve boards owned by the current admin — drives the hub, create wizard and embed screen.
+        Route::get('boards', [Admin\BoardController::class, 'index']);
+        Route::post('boards', [Admin\BoardController::class, 'store']);
+        Route::post('boards/check-slug', [Admin\BoardController::class, 'checkSlug']);
+        Route::get('boards/{board:slug}/embed', [Admin\BoardController::class, 'embed']);
 
         Route::get('projects/{project:slug}/posts', [Admin\PostController::class, 'index']);
         Route::get('posts/{post}', [Admin\PostController::class, 'show']);

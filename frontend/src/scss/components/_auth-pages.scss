@@ -1,0 +1,55 @@
+@use '../utils' as *;
+
+// RegisterPage.vue, LoginPage.vue — standalone auth forms under /app/register and /app/login.
+// Vertical centering between header and viewport bottom at every breakpoint.
+.auth-page {
+    min-height: calc(100dvh - 65px); // minus the AppHeader row
+    display: grid;
+    place-items: center;
+    padding: 24px 0;
+}
+.auth-form {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    h1 {
+        font-size: 22px;
+        margin: 0;
+    }
+    .auth-intro {
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+    .btn-primary {
+        margin-top: 6px;
+    }
+
+    // Shared .field reserves 20px under the input so the absolute-positioned error
+    // doesn't jump the layout. Auth forms are tiny and only ever show one error at a
+    // time, so we drop the reserve and let the error push siblings down in-flow.
+    .field {
+        padding-bottom: 0;
+        gap: 3px;
+    }
+    .field > .err {
+        position: static;
+        white-space: normal;
+        text-overflow: unset;
+        overflow: visible;
+        margin-top: 2px;
+    }
+}
+.auth-switch {
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+
+    a {
+        font-weight: 500;
+    }
+}

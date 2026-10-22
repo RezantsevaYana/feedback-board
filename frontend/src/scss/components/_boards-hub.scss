@@ -1,0 +1,75 @@
+@use '../utils' as *;
+
+// BoardsHubPage.vue + BoardNewPage.vue (placeholder) — the admin's "my boards" screen.
+.boards-hub {
+    h1 {
+        font-size: 24px;
+        margin: 0;
+    }
+}
+.boards-hub-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+.boards-hub-empty {
+    max-width: 480px;
+    margin: 48px auto 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+
+    h1 {
+        font-size: 24px;
+    }
+    .boards-hub-empty-lead {
+        margin: 0;
+        font-size: 16px;
+    }
+    .note {
+        margin: 0;
+        color: var(--muted);
+    }
+    .btn {
+        margin-top: 8px;
+    }
+}
+.boards-list {
+    list-style: none;
+    padding: 0;
+    margin: 24px 0 0;
+    display: grid;
+    gap: 12px;
+}
+.boards-list-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+
+    @include hover {
+        border-color: color-mix(in srgb, var(--fg) 25%, var(--line));
+    }
+}
+.board-name {
+    font-weight: 500;
+    color: var(--fg);
+    text-decoration: none;
+
+    @include hover {
+        color: var(--accent-ink);
+    }
+}
+.board-slug {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+}

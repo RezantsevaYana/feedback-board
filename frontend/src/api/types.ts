@@ -63,11 +63,21 @@ export interface Project {
   statuses: Status[]
 }
 
+/** Short board descriptor returned in Me and in the hub list. */
+export interface BoardSummary {
+  id: number
+  name: string
+  slug: string
+}
+
 export interface Me {
   id: number
   name: string
   email: string
-  projects: Array<{ id: number; name: string; slug: string }>
+  /** Legacy projects via project_user pivot — drives team-mode login on the board. */
+  projects: BoardSummary[]
+  /** Self-serve boards owned by this user — drives the admin hub. */
+  boards: BoardSummary[]
 }
 
 export interface Paginated<T> {
@@ -77,6 +87,11 @@ export interface Paginated<T> {
 
 export interface Item<T> {
   data: T
+}
+
+/** Non-paginated list response ({"data": [...]}). */
+export interface Collection<T> {
+  data: T[]
 }
 
 export interface VoteState {

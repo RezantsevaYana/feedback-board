@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Project;
+use App\Services\ProjectService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -16,7 +16,7 @@ class CreateProject extends Command
 
     protected $description = 'Create a project: its own board and widget';
 
-    public function handle(): int
+    public function handle(ProjectService $projects): int
     {
         $name = $this->argument('name');
         $slug = $this->option('slug') ?: Str::slug($name);
@@ -39,9 +39,7 @@ class CreateProject extends Command
             return self::FAILURE;
         }
 
-        $project = Project::create(['name' => $name, 'slug' => $slug, 'allowed_origins' => array_values($origins)]);
-        $project->createDefaultCategories();
-        $project->createDefaultStatuses();
+        $project = $projects->create($name, $slug, $origins, null);
 
         $this->info("Проект «{$project->name}» создан. Доска: /{$project->slug}");
         $this->line('Категории: '.implode(', ', $project->categories()->pluck('name')->all()).' — команда меняет их на доске.');

@@ -1,0 +1,23 @@
+@use '../utils' as *;
+
+// CopyButton.vue — compact "copy to clipboard" button with a 2s "copied" state.
+.copy-btn {
+    align-self: flex-start;
+    font-size: 13px;
+    padding: 6px 12px;
+    gap: 6px;
+
+    .ico {
+        color: var(--muted);
+    }
+
+    &.copied {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+        color: var(--accent-ink);
+
+        .ico {
+            color: var(--accent-ink);
+        }
+    }
+}

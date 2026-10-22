@@ -1,0 +1,58 @@
+@use '../utils' as *;
+
+// BoardCard.vue — one card in the admin hub grid.
+.boards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+.board-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--fg);
+    transition: border-color 0.12s, transform 0.12s;
+
+    @include hover {
+        border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+    }
+}
+.board-card-top {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.board-card-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+.board-card-slug {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+}
+.board-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}
+.board-card-queue {
+    color: var(--muted);
+
+    &.pending {
+        color: var(--accent-ink);
+        font-weight: 500;
+    }
+}
+.board-card-last {
+    color: var(--muted);
+    font-size: 12px;
+}

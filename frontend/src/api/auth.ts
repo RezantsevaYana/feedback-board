@@ -14,6 +14,11 @@ export const AuthApi = {
     return request<Item<Me>>(`${BASE_URL}/login`, { method: 'POST', body: { email, password } })
   },
 
+  // self-serve registration — creates a user and logs in in the same request
+  register(name: string, email: string, password: string) {
+    return request<Item<Me>>(`${BASE_URL}/register`, { method: 'POST', body: { name, email, password } })
+  },
+
   logout() {
     return request<void>(`${BASE_URL}/logout`, { method: 'POST' })
   },

@@ -1,0 +1,105 @@
+@use '../utils' as *;
+
+// BoardEmbedPage.vue — "how to connect" screen (post-create + settings reuse).
+.board-embed {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+}
+.board-embed-back {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    width: fit-content;
+
+    @include hover {
+        color: var(--fg);
+    }
+}
+.board-embed-welcome {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    h1 {
+        font-size: 22px;
+        margin: 0;
+    }
+    p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+    }
+}
+.board-embed-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+.board-embed-block-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    h2 {
+        font-size: 15px;
+        margin: 0;
+    }
+    .note {
+        margin: 0;
+    }
+}
+.board-embed-code {
+    margin: 0;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--fg);
+}
+.board-embed-origins {
+    .note {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+    .mono {
+        font-family: var(--font-mono);
+        background: var(--surface-2);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+}
+.board-embed-warn {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--bug) 10%, var(--surface));
+    color: var(--bug);
+    font-size: 13px;
+    line-height: 1.5;
+}
+.board-embed-link-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.board-embed-finish {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+}
