@@ -30,12 +30,15 @@ class CategoriesTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $id = $this->postJson('/api/admin/projects/demo/categories', ['name' => '  Доставка '])
-            ->assertCreated()->assertJsonPath('data.name', 'Доставка')->json('data.id');
-        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Баг'])
+        $id = $this->postJson('/api/admin/projects/demo/categories', ['name' => '  Доставка ', 'color' => 'green'])
+            ->assertCreated()->assertJsonPath('data.name', 'Доставка')->assertJsonPath('data.color', 'green')->json('data.id');
+        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Баг', 'color' => 'red'])
             ->assertJsonValidationErrors(['name' => 'Такая категория уже есть.']);
+        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Фуксия', 'color' => 'ultraviolet'])
+            ->assertJsonValidationErrors(['color' => 'Такой цвет недоступен.']);
 
-        $this->patchJson("/api/admin/categories/{$id}", ['name' => 'Доставка и оплата'])->assertOk();
+        $this->patchJson("/api/admin/categories/{$id}", ['name' => 'Доставка и оплата', 'color' => 'blue'])
+            ->assertOk()->assertJsonPath('data.color', 'blue');
         $this->getJson('/api/public/projects/demo')->assertJsonPath('data.categories.*.name', ['Баг', 'Идея', 'Доставка и оплата']);
 
         $post = Post::factory()->for($this->project)->create(['category_id' => $id]);
@@ -47,17 +50,17 @@ class CategoriesTest extends TestCase
     {
         $this->actingAs($this->admin);
         foreach (range(3, Category::MAX_PER_PROJECT) as $i) {
-            $this->postJson('/api/admin/projects/demo/categories', ['name' => "Категория {$i}"])->assertCreated();
+            $this->postJson('/api/admin/projects/demo/categories', ['name' => "Категория {$i}", 'color' => 'blue'])->assertCreated();
         }
-        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Лишняя'])->assertJsonValidationErrors('name');
+        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Лишняя', 'color' => 'blue'])->assertJsonValidationErrors('name');
 
         $foreign = Project::factory()->create();
         $foreign->createDefaultCategories();
-        $this->postJson("/api/admin/projects/{$foreign->slug}/categories", ['name' => 'Чужая'])->assertForbidden();
-        $this->patchJson('/api/admin/categories/'.$foreign->categories()->first()->id, ['name' => 'Взлом'])->assertForbidden();
+        $this->postJson("/api/admin/projects/{$foreign->slug}/categories", ['name' => 'Чужая', 'color' => 'blue'])->assertForbidden();
+        $this->patchJson('/api/admin/categories/'.$foreign->categories()->first()->id, ['name' => 'Взлом', 'color' => 'blue'])->assertForbidden();
         $this->deleteJson('/api/admin/categories/'.$foreign->categories()->first()->id)->assertForbidden();
 
         auth()->forgetGuards();
-        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Гость'])->assertUnauthorized();
+        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Гость', 'color' => 'blue'])->assertUnauthorized();
     }
 }

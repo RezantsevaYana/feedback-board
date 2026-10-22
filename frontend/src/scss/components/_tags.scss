@@ -10,12 +10,17 @@
     white-space: nowrap;
 }
 
-// status
+// status pill. Admin picks the colour per status; without one (null, [data-color='none'])
+// the pill falls back to the neutral --s-new look. A long status name is ellipsised in
+// place rather than allowed to stretch the parent (column head / card side) that holds it.
 .pill {
     --c: var(--s-new);
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
     font-size: 12px;
     font-weight: 500;
     padding: 2px 8px;
@@ -23,17 +28,16 @@
     color: var(--c);
     background: color-mix(in srgb, var(--c) 12%, transparent);
 
-    &[data-s='done'] {
-        --c: var(--s-done);
-    }
-    &[data-s='rejected'] {
-        --c: var(--s-rejected);
-    }
+    &[data-color='red']    { --c: var(--sta-red); }
+    &[data-color='orange'] { --c: var(--sta-orange); }
+    &[data-color='yellow'] { --c: var(--sta-yellow); }
+    &[data-color='green']  { --c: var(--sta-green); }
+    &[data-color='blue']   { --c: var(--sta-blue); }
+    &[data-color='pink']   { --c: var(--sta-pink); }
 }
 
-// category tag. Position-cycled hues read as a rainbow and carry no meaning
-// (category names are user-defined, so `tone='0' = bug` is coincidence, not
-// semantics). One neutral family; the slanted edge is the category's identity.
+// category tag. The team picks a colour per category in the Categories modal; without
+// one (legacy rows, [data-color='none']) the tag falls back to the neutral --tag token.
 .type {
     display: inline-flex;
     align-items: center;
@@ -42,6 +46,13 @@
     padding: 1px 10px 1px 14px;
     color: var(--fg);
     background: var(--tag);
+
+    &[data-color='red']    { background: var(--cat-red); }
+    &[data-color='orange'] { background: var(--cat-orange); }
+    &[data-color='yellow'] { background: var(--cat-yellow); }
+    &[data-color='green']  { background: var(--cat-green); }
+    &[data-color='blue']   { background: var(--cat-blue); }
+    &[data-color='pink']   { background: var(--cat-pink); }
 }
 
 .prio-tag {

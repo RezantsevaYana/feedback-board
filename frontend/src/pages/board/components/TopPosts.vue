@@ -31,7 +31,7 @@
         <h3>{{ post.title }}</h3>
         <div class="meta">
           <CategoryTag :category="post.category" />
-          <span class="pill" :data-s="post.status.slug">{{ post.status.name }}</span>
+          <span class="pill" :data-color="post.status.color ?? 'none'">{{ post.status.name }}</span>
           <span>{{ post.author_name || TEXT.anonymous }}</span>
           <span>{{ fmtDate(post.created_at) }}</span>
         </div>

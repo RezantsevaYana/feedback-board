@@ -59,3 +59,36 @@
 .cat-err {
     flex-basis: 100%;
 }
+// wrapper for add/edit forms: name row on top, colour palette and live preview underneath
+.cat-edit {
+    display: grid;
+    gap: 10px;
+    margin-top: 6px;
+}
+// live preview of the pill / tag that will ship for the status / category being edited.
+// Reuses the board's one authored motion (@keyframes rise) so the preview rises in when
+// the admin starts typing or opens edit; swatch-pick re-colours smoothly in place.
+.cat-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+    color: var(--muted);
+    font-size: 12px;
+    animation: rise 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+
+    .label {
+        white-space: nowrap;
+    }
+    .pill,
+    .type {
+        transition: color 0.22s ease, background-color 0.22s ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        .pill,
+        .type {
+            transition: none;
+        }
+    }
+}

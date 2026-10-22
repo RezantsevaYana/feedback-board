@@ -15,11 +15,12 @@ class ProjectController extends Controller
         return response()->json(['data' => [
             'name' => $project->name,
             'slug' => $project->slug,
-            'categories' => $project->categories->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name]),
+            'categories' => $project->categories->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name, 'color' => $c->color]),
             'statuses' => $project->statuses->map(fn (Status $s) => [
                 'id' => $s->id,
                 'slug' => $s->slug,
                 'name' => $s->name,
+                'color' => $s->color,
                 'position' => $s->position,
                 'is_system' => $s->is_system,
             ]),

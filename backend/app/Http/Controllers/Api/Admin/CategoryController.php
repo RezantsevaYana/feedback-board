@@ -25,9 +25,10 @@ class CategoryController extends Controller
             throw ValidationException::withMessages(['name' => 'Не больше '.Category::MAX_PER_PROJECT.' категорий в проекте.']);
         }
 
-        $data = $this->validateName($request, $project);
+        $data = $this->validateFields($request, $project);
         $category = $project->categories()->create([
             'name' => $data['name'],
+            'color' => $data['color'],
             'position' => (int) $project->categories()->max('position') + 1,
         ]);
 
@@ -38,7 +39,7 @@ class CategoryController extends Controller
     {
         Gate::authorize('manage-project', $category->project);
 
-        $category->update($this->validateName($request, $category->project, $category));
+        $category->update($this->validateFields($request, $category->project, $category));
 
         return response()->json(['data' => $this->present($category)]);
     }
@@ -56,9 +57,9 @@ class CategoryController extends Controller
     }
 
     /**
-     * @return array{name: string}
+     * @return array{name: string, color: string|null}
      */
-    private function validateName(Request $request, Project $project, ?Category $ignore = null): array
+    private function validateFields(Request $request, Project $project, ?Category $ignore = null): array
     {
         $request->merge(['name' => is_string($request->name) ? trim($request->name) : $request->name]);
 
@@ -67,18 +68,21 @@ class CategoryController extends Controller
                 'required', 'string', 'max:40',
                 Rule::unique('categories', 'name')->where('project_id', $project->id)->ignore($ignore),
             ],
+            // null is a valid pick: the tag falls back to the neutral --tag token.
+            'color' => ['nullable', 'string', Rule::in(Category::PALETTE)],
         ], [
             'name.required' => 'Назовите категорию.',
             'name.max' => 'Название — не длиннее 40 символов.',
             'name.unique' => 'Такая категория уже есть.',
+            'color.in' => 'Такой цвет недоступен.',
         ]);
     }
 
     /**
-     * @return array{id: int, name: string}
+     * @return array{id: int, name: string, color: string|null}
      */
     private function present(Category $category): array
     {
-        return ['id' => $category->id, 'name' => $category->name];
+        return ['id' => $category->id, 'name' => $category->name, 'color' => $category->color];
     }
 }

@@ -24,7 +24,7 @@ class PostResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'category' => $this->category ? ['id' => $this->category->id, 'name' => $this->category->name] : null,
+            'category' => $this->category ? ['id' => $this->category->id, 'name' => $this->category->name, 'color' => $this->category->color] : null,
             'title' => $this->title,
             'description' => $this->description,
             'author_name' => $this->author_name,
@@ -32,6 +32,7 @@ class PostResource extends JsonResource
                 'id' => $this->status->id,
                 'slug' => $this->status->slug,
                 'name' => $this->status->name,
+                'color' => $this->status->color,
                 'position' => $this->status->position,
                 'is_system' => $this->status->is_system,
             ] : null,

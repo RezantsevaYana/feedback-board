@@ -9,7 +9,14 @@
     --bg: #ffffff;
     --surface: #ffffff;
     --surface-2: #e8eee9;     // sage tone step: column trays, chips, hover
-    --tag: #e8eee9;           // category tag on a card
+    --tag: #e8eee9;           // category tag on a card (no colour / legacy fallback)
+    // category tag palette — muted pastels, admin picks per category
+    --cat-red: #f3cfc8;
+    --cat-orange: #f6d8b3;
+    --cat-yellow: #efe09f;
+    --cat-green: #cce4d1;
+    --cat-blue: #c9dde6;
+    --cat-pink: #efccd4;
     --active: #cfe7d7;        // selected: nav item, chip, segment
     --active-fg: #063f2c;     // text on --active, towards Green Dark; 9.6:1
     --active-line: #1d8547;   // edge of a selected tab: the green outline gives it its contrast
@@ -25,10 +32,19 @@
     // VoteButtons.vue: tint and edge of your own 👍 (green) and 💩 (brown)
     --like: #27ad5a;
     --poo: #94603d;
-    // status pills: 12px text on a 12% tint over the column tray, each at 5.2:1 or more
+    // status pills: 12px text on a 12% tint over the column tray. Orange and yellow needed
+    // a darker step than the other four to clear 4.5:1 on the mixed background.
+    // --s-* stay for .kcard-reply (still keyed by slug); .pill now reads --sta-* by palette slug.
     --s-new: #46575a;
     --s-done: #14623a;
     --s-rejected: #8f3029;
+    // palette for status pills (saturated: text + 12% tint); same slugs as --cat-*
+    --sta-red: #8f3029;
+    --sta-orange: #7f4718;
+    --sta-yellow: #6b531a;
+    --sta-green: #14623a;
+    --sta-blue: #2a4e6a;
+    --sta-pink: #8a3059;
     --overlay: rgba(8, 24, 26, 0.55);
     --shadow: 0 10px 28px rgba(16, 37, 40, 0.12);
     --font-display: 'Unbounded', 'Onest', system-ui, sans-serif; // the wordmark only
@@ -45,6 +61,13 @@
     --surface: #3a4442;       // cards, inputs: the lightest layer
     --surface-2: #2c3433;     // column trays sit between page and cards
     --tag: #4d5a57;           // a step above the card, so the tag doesn't read as a hole
+    // deeper, desaturated versions for dark theme, text keeps var(--fg)
+    --cat-red: #7a3d37;
+    --cat-orange: #7a5a35;
+    --cat-yellow: #726a3e;
+    --cat-green: #3b5f49;
+    --cat-blue: #3c5564;
+    --cat-pink: #6e3e50;
     --active: #24543b;
     --active-fg: #d2f7e0;
     --active-line: #4fb27a;
@@ -60,6 +83,13 @@
     --s-new: #b3c0bd;
     --s-done: #6fcf96;
     --s-rejected: #f49d94;
+    // palette for status pills on dark theme
+    --sta-red: #f49d94;
+    --sta-orange: #f0b878;
+    --sta-yellow: #e8d279;
+    --sta-green: #6fcf96;
+    --sta-blue: #7fb5d1;
+    --sta-pink: #e8a4bc;
     --overlay: rgba(0, 0, 0, 0.7);
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     color-scheme: dark;

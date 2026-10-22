@@ -10,7 +10,14 @@ export type VoteValue = 'like' | 'dislike'
 export interface Category {
   id: number
   name: string
+  // Palette slug chosen by the admin. null = legacy rows that predate the
+  // colour feature; the tag falls back to the neutral --tag token.
+  color: PaletteColor | null
 }
+
+/** Palette slugs used by category tags and status pills. CSS tokens live in scss/base/_tokens.scss. */
+export const PALETTE_COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'pink'] as const
+export type PaletteColor = (typeof PALETTE_COLORS)[number]
 
 /** Колонка канбана. Три системных создаются вместе с проектом, остальные — команда сама. */
 export interface Status {
@@ -19,6 +26,8 @@ export interface Status {
   name: string
   position: number
   is_system: boolean
+  // Palette slug chosen by the admin; drives pill colour and column accent.
+  color: PaletteColor | null
 }
 
 export interface Attachment {

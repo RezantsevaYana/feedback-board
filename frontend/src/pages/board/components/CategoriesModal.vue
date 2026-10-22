@@ -8,25 +8,39 @@
 
     <ul class="cat-list">
       <li v-for="c in board.categories" :key="c.id">
-        <form v-if="editingId === c.id" class="cat-row" @submit.prevent="saveEdit">
-          <InputComponent v-model="editName" maxlength="40" aria-label="Название категории" autofocus />
-          <button class="btn btn-primary" type="submit">Сохранить</button>
-          <button class="btn" type="button" @click="editingId = null">Отмена</button>
+        <form v-if="editingId === c.id" class="cat-edit" @submit.prevent="saveEdit">
+          <div class="cat-row">
+            <InputComponent v-model="editName" maxlength="40" aria-label="Название категории" autofocus />
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+            <button class="btn" type="button" @click="editingId = null">Отмена</button>
+          </div>
+          <ColorPaletteComponent v-model="editColor" label="Цвет категории" variant="category" />
+          <div class="cat-preview">
+            <span class="label">Как будет выглядеть:</span>
+            <span class="type slant" :data-color="editColor ?? 'none'">{{ editName.trim() || c.name }}</span>
+          </div>
           <span v-if="editError" class="err cat-err">{{ editError }}</span>
         </form>
         <div v-else class="cat-row">
           <CategoryTag :category="c" />
           <span class="spacer" />
-          <button class="link-btn" type="button" @click="startEdit(c.id, c.name)">Переименовать</button>
+          <button class="link-btn" type="button" @click="startEdit(c)">Переименовать</button>
           <button class="link-btn" type="button" @click="askRemove(c)">Удалить</button>
         </div>
       </li>
       <li v-if="!board.categories.length" class="note">Категорий нет — форма отправки будет без выбора.</li>
     </ul>
 
-    <form class="cat-row" @submit.prevent="add">
-      <InputComponent v-model="newName" maxlength="40" placeholder="Новая категория, например «Доставка»" aria-label="Новая категория" @input="addError = ''" />
-      <button class="btn btn-primary" type="submit" :disabled="!newName.trim()">Добавить</button>
+    <form class="cat-edit" @submit.prevent="add">
+      <div class="cat-row">
+        <InputComponent v-model="newName" maxlength="40" placeholder="Новая категория, например «Доставка»" aria-label="Новая категория" @input="addError = ''" />
+        <button class="btn btn-primary" type="submit" :disabled="!newName.trim()">Добавить</button>
+      </div>
+      <ColorPaletteComponent v-model="newColor" label="Цвет новой категории" variant="category" />
+      <div v-if="newName.trim()" class="cat-preview">
+        <span class="label">Как будет выглядеть:</span>
+        <span class="type slant" :data-color="newColor ?? 'none'">{{ newName.trim() }}</span>
+      </div>
       <span v-if="addError" class="err cat-err">{{ addError }}</span>
     </form>
   </BaseModal>
@@ -35,12 +49,13 @@
 <script setup lang="ts">
 import { inject, ref } from 'vue'
 import { ApiError } from '@/api/client'
-import type { Category } from '@/api/types'
+import type { Category, PaletteColor } from '@/api/types'
 import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import BaseModal from '@/shared/ui/BaseModal.vue'
+import ColorPaletteComponent from '@/shared/ui/ColorPaletteComponent.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 import CategoryTag from './CategoryTag.vue'
 
@@ -54,34 +69,38 @@ const confirm = useConfirmStore()
 const close = inject<() => void>('baseModal:close', () => emit('close'))
 
 const newName = ref('')
+const newColor = ref<PaletteColor | null>(null)
 const addError = ref('')
 const editingId = ref<number | null>(null)
 const editName = ref('')
+const editColor = ref<PaletteColor | null>(null)
 const editError = ref('')
 
-const message = (e: unknown) => (e instanceof ApiError ? (e.field('name') ?? e.message) : String(e))
+const message = (e: unknown) => (e instanceof ApiError ? (e.field('name') ?? e.field('color') ?? e.message) : String(e))
 
 async function add() {
   addError.value = ''
   if (!newName.value.trim()) return
   try {
-    await board.addCategory(newName.value.trim())
+    await board.addCategory(newName.value.trim(), newColor.value)
     newName.value = ''
+    newColor.value = null
   } catch (e) {
     addError.value = message(e)
   }
 }
 
-function startEdit(id: number, name: string) {
-  editingId.value = id
-  editName.value = name
+function startEdit(c: Category) {
+  editingId.value = c.id
+  editName.value = c.name
+  editColor.value = c.color
   editError.value = ''
 }
 
 async function saveEdit() {
   if (editingId.value === null) return
   try {
-    await board.renameCategory(editingId.value, editName.value.trim())
+    await board.updateCategory(editingId.value, editName.value.trim(), editColor.value)
     editingId.value = null
   } catch (e) {
     editError.value = message(e)

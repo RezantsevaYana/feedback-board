@@ -1,19 +1,13 @@
 <template>
-  <span v-if="category" class="type slant" :data-tone="tone">{{ category.name }}</span>
+  <span v-if="category" class="type slant" :data-color="category.color ?? 'none'">{{ category.name }}</span>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { Category } from '@/api/types'
-import { useBoardStore } from '@/store/board/useBoardStore'
 
-// Categories get a colour by their position in the project's list, so the same category is always the same colour.
-const props = defineProps<{
+// The tag colour is the one the team picked in Categories; legacy categories
+// without a colour fall back to the neutral --tag token.
+defineProps<{
   category: Category | null
 }>()
-const board = useBoardStore()
-const tone = computed(() => {
-  const index = board.categories.findIndex((c) => c.id === props.category?.id)
-  return index < 0 ? 'none' : String(index % 6)
-})
 </script>

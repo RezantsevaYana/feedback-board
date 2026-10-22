@@ -7,7 +7,7 @@ import { LeaderboardApi, type LeaderboardEntry, type LeaderboardMetric, type Lea
 import { type PostPatch, PostsApi } from '@/api/posts'
 import { ProjectsApi } from '@/api/projects'
 import { StatusesApi } from '@/api/statuses'
-import type { Category, Me, Post, PostPriority, Project, Status, VoteState, VoteValue } from '@/api/types'
+import type { Category, PaletteColor, Me, Post, PostPriority, Project, Status, VoteState, VoteValue } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 
 export type Section = 'posts' | 'top' | 'authors'
@@ -252,15 +252,15 @@ export const useBoardStore = defineStore('board', () => {
     topPosts.value = topPosts.value.filter((p) => p.id !== id)
   }
 
-  async function addCategory(name: string) {
-    const res = await CategoriesApi.create(currentSlug(), name)
+  async function addCategory(name: string, color: PaletteColor | null) {
+    const res = await CategoriesApi.create(currentSlug(), name, color)
     project.value?.categories.push(res.data)
   }
 
-  async function renameCategory(id: number, name: string) {
-    const res = await CategoriesApi.rename(id, name)
+  async function updateCategory(id: number, name: string, color: PaletteColor | null) {
+    const res = await CategoriesApi.update(id, name, color)
     const category = project.value?.categories.find((c) => c.id === id)
-    if (category) category.name = res.data.name
+    if (category) Object.assign(category, res.data)
     for (const post of [...posts.value, ...topPosts.value]) if (post.category?.id === id) post.category = { ...res.data }
   }
 
@@ -272,17 +272,17 @@ export const useBoardStore = defineStore('board', () => {
     for (const post of [...posts.value, ...topPosts.value]) if (post.category?.id === id) post.category = null
   }
 
-  async function addStatus(name: string) {
-    const res = await StatusesApi.create(currentSlug(), name)
+  async function addStatus(name: string, color: PaletteColor | null) {
+    const res = await StatusesApi.create(currentSlug(), name, color)
     project.value?.statuses.push(res.data)
     project.value?.statuses.sort((a, b) => a.position - b.position || a.id - b.id)
   }
 
-  async function renameStatus(id: number, name: string) {
-    const res = await StatusesApi.rename(id, name)
+  async function updateStatus(id: number, name: string, color: PaletteColor | null) {
+    const res = await StatusesApi.update(id, name, color)
     const status = project.value?.statuses.find((s) => s.id === id)
     if (status) Object.assign(status, res.data)
-    // в карточках статус хранится объектом — обновим имя там тоже
+    // в карточках статус хранится объектом — обновим имя и цвет там тоже
     for (const post of [...posts.value, ...topPosts.value]) {
       if (post.status.id === id) Object.assign(post.status, res.data)
     }
@@ -316,8 +316,8 @@ export const useBoardStore = defineStore('board', () => {
   return {
     project, notFound, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard,
     open, refresh, loadPosts, vote, updatePost, deletePost,
-    addCategory, renameCategory, deleteCategory,
-    addStatus, renameStatus, deleteStatus,
+    addCategory, updateCategory, deleteCategory,
+    addStatus, updateStatus, deleteStatus,
     login, logout,
     startPolling, stopPolling,
   }

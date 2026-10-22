@@ -16,7 +16,7 @@
         <PostMeta :post="post" reply-label />
       </div>
       <div class="card-side">
-        <span class="pill" :data-s="post.status.slug">{{ post.status.name }}</span>
+        <span class="pill" :data-color="post.status.color ?? 'none'">{{ post.status.name }}</span>
         <CardMenu v-if="board.team" :post="post" @move="move(post, $event)" @hide="toggleHidden(post)" />
         <CopyLink v-else :post-id="post.id" />
       </div>

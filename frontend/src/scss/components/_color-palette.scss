@@ -1,0 +1,61 @@
+@use '../utils' as *;
+
+// shared/ui/ColorPaletteComponent.vue
+.color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-left: 2px;
+}
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    padding: 0;
+    background: var(--tag); // neutral/none fallback — also the look of [data-color='none']
+    transition: transform 0.12s ease, outline-offset 0.12s ease;
+
+    // category picker: swatch wears the pastel category tag colour
+    .v-category &[data-color='red']    { background: var(--cat-red); }
+    .v-category &[data-color='orange'] { background: var(--cat-orange); }
+    .v-category &[data-color='yellow'] { background: var(--cat-yellow); }
+    .v-category &[data-color='green']  { background: var(--cat-green); }
+    .v-category &[data-color='blue']   { background: var(--cat-blue); }
+    .v-category &[data-color='pink']   { background: var(--cat-pink); }
+
+    // status picker: swatch wears the saturated pill text colour so the admin
+    // sees the dominant colour of the thing they are about to ship
+    .v-status &[data-color='red']    { background: var(--sta-red); }
+    .v-status &[data-color='orange'] { background: var(--sta-orange); }
+    .v-status &[data-color='yellow'] { background: var(--sta-yellow); }
+    .v-status &[data-color='green']  { background: var(--sta-green); }
+    .v-status &[data-color='blue']   { background: var(--sta-blue); }
+    .v-status &[data-color='pink']   { background: var(--sta-pink); }
+
+    // selected swatch gets the green ring used for selected tabs/chips elsewhere
+    &[aria-checked='true'] {
+        outline: 2px solid var(--active-line);
+        outline-offset: 2px;
+    }
+    // keyboard focus on a swatch that is not the current pick: dashed focus ring so
+    // Tab-and-arrow users can see where they are without stealing the selected swatch's ring
+    &:focus-visible:not([aria-checked='true']) {
+        outline: 2px dashed var(--focus);
+        outline-offset: 2px;
+    }
+    @include hover {
+        transform: scale(1.08);
+    }
+    // on dark theme --line is close in luminance to the darker fills (--cat-green
+    // especially); use --control for a crisper edge so the dot does not read as hollow
+    :root[data-theme='dark'] & {
+        border-color: var(--control);
+    }
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']):not([data-theme='dark']) & {
+            border-color: var(--control);
+        }
+    }
+}

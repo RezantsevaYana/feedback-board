@@ -10,10 +10,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * What a post is about: "Баг", "Идея", "Доставка"… Configured by the team per project.
  */
-#[Fillable(['name', 'position'])]
+#[Fillable(['name', 'color', 'position'])]
 class Category extends Model
 {
-    public const DEFAULTS = ['Баг', 'Идея'];
+    // Default categories a new project starts with: name => palette slug.
+    public const DEFAULTS = ['Баг' => 'red', 'Идея' => 'blue'];
+
+    // Palette shown in the admin modal; CSS tokens for each slug live in scss/base/_tokens.scss.
+    public const PALETTE = ['red', 'orange', 'yellow', 'green', 'blue', 'pink'];
 
     public const MAX_PER_PROJECT = 20;
 

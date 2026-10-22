@@ -59,8 +59,9 @@ class Project extends Model
      */
     public function createDefaultCategories(): void
     {
-        foreach (Category::DEFAULTS as $position => $name) {
-            $this->categories()->create(['name' => $name, 'position' => $position]);
+        $position = 0;
+        foreach (Category::DEFAULTS as $name => $color) {
+            $this->categories()->create(['name' => $name, 'color' => $color, 'position' => $position++]);
         }
     }
 
@@ -76,7 +77,7 @@ class Project extends Model
             ['slug' => 'rejected', 'name' => 'Отклонено', 'position' => 9100],
         ];
         foreach ($defaults as $s) {
-            $this->statuses()->create([...$s, 'is_system' => true]);
+            $this->statuses()->create([...$s, 'color' => Status::DEFAULT_COLORS[$s['slug']], 'is_system' => true]);
         }
     }
 

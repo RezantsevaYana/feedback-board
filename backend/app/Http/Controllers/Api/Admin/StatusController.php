@@ -29,7 +29,7 @@ class StatusController extends Controller
             throw ValidationException::withMessages(['name' => 'Не больше '.Status::MAX_PER_PROJECT.' столбцов в проекте.']);
         }
 
-        $data = $this->validateName($request, $project);
+        $data = $this->validateFields($request, $project);
 
         // Новые кастомные статусы встают между «Новое» (pos ≈ 100) и «Готово» (pos ≈ 9000):
         // позиция = max(позиций кастомных) + 100, но строго меньше позиции «Готово».
@@ -39,6 +39,7 @@ class StatusController extends Controller
         $status = $project->statuses()->create([
             'slug' => $this->uniqueSlug($project, $data['name']),
             'name' => $data['name'],
+            'color' => $data['color'],
             'position' => $position,
             'is_system' => false,
         ]);
@@ -50,7 +51,7 @@ class StatusController extends Controller
     {
         Gate::authorize('manage-project', $status->project);
 
-        $status->update($this->validateName($request, $status->project, $status));
+        $status->update($this->validateFields($request, $status->project, $status));
 
         return response()->json(['data' => $this->present($status->fresh())]);
     }
@@ -79,9 +80,9 @@ class StatusController extends Controller
     }
 
     /**
-     * @return array{name: string}
+     * @return array{name: string, color: string|null}
      */
-    private function validateName(Request $request, Project $project, ?Status $ignore = null): array
+    private function validateFields(Request $request, Project $project, ?Status $ignore = null): array
     {
         $request->merge(['name' => is_string($request->name) ? trim($request->name) : $request->name]);
 
@@ -90,10 +91,13 @@ class StatusController extends Controller
                 'required', 'string', 'max:40',
                 Rule::unique('statuses', 'name')->where('project_id', $project->id)->ignore($ignore),
             ],
+            // null is a valid pick: the pill falls back to the neutral --s-new look.
+            'color' => ['nullable', 'string', Rule::in(Status::PALETTE)],
         ], [
             'name.required' => 'Назовите столбец.',
             'name.max' => 'Название — не длиннее 40 символов.',
             'name.unique' => 'Такой столбец уже есть.',
+            'color.in' => 'Такой цвет недоступен.',
         ]);
     }
 
@@ -122,6 +126,7 @@ class StatusController extends Controller
             'id' => $status->id,
             'slug' => $status->slug,
             'name' => $status->name,
+            'color' => $status->color,
             'position' => $status->position,
             'is_system' => $status->is_system,
         ];
