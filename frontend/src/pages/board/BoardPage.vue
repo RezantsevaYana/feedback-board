@@ -45,15 +45,36 @@
       <nav class="board-nav" aria-label="Разделы доски">
         <RouterLink class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
         <div class="board-sections">
-          <button type="button" class="nav-item" :aria-current="board.view.section === 'posts' ? 'page' : undefined" @click="setSection('posts')">
-            <AppIcon name="columns" /><span>Предложения</span>
+          <button
+            v-for="s in primarySections"
+            :key="s.id"
+            type="button"
+            class="nav-item"
+            :aria-current="board.view.section === s.id ? 'page' : undefined"
+            @click="setSection(s.id)"
+          >
+            <AppIcon :name="s.icon" /><span>{{ s.label }}</span>
           </button>
-          <button type="button" class="nav-item" :aria-current="board.view.section === 'top' ? 'page' : undefined" @click="setSection('top')">
-            <AppIcon name="chart" /><span>Топ</span>
+          <!-- Desktop sidebar: overflow sections live here too; segmented control on tablet/mobile hides them in favour of the "Ещё" menu below -->
+          <button
+            v-for="s in overflowSections"
+            :key="s.id"
+            type="button"
+            class="nav-item nav-item-overflow"
+            :aria-current="board.view.section === s.id ? 'page' : undefined"
+            @click="setSection(s.id)"
+          >
+            <AppIcon :name="s.icon" /><span>{{ s.label }}</span>
           </button>
-          <button type="button" class="nav-item" :aria-current="board.view.section === 'authors' ? 'page' : undefined" @click="setSection('authors')">
-            <AppIcon name="thumb" /><span>Авторы</span>
-          </button>
+          <MenuComponent
+            v-if="overflowSections.length"
+            :items="overflowItems"
+            class="sections-more"
+            :class="{ active: overflowActive }"
+            aria-label="Ещё разделы"
+          >
+            <span>Ещё</span><AppIcon name="chevron" />
+          </MenuComponent>
         </div>
         <button type="button" class="btn btn-primary board-cta" @click="compose()">Предложить</button>
         <div v-if="board.team" class="team-box">
@@ -74,6 +95,7 @@
         <div v-if="refreshing" class="board-progress" role="progressbar" aria-label="Обновляем доску" />
         <TopPosts v-if="board.view.section === 'top'" @open="openPost" />
         <LeaderboardAuthors v-else-if="board.view.section === 'authors'" />
+        <WeeklyWinners v-else-if="board.view.section === 'weekly'" @open="openPost" />
         <template v-else>
           <div class="board-head">
             <div class="board-title">
@@ -139,6 +161,7 @@
     <CategoriesModal v-if="editingCategories && board.team" @close="editingCategories = false" />
     <StatusesModal v-if="editingStatuses && board.team" @close="editingStatuses = false" />
     <FiltersModal v-if="filtersOpen" @close="filtersOpen = false" @reset="resetFilters" />
+    <WeeklyWinnersModal v-if="weeklyModalOpen" @close="dismissWeeklyModal" @open-section="openWeeklySection" />
   </main>
 </template>
 
@@ -165,6 +188,8 @@ import StatusesModal from './components/StatusesModal.vue'
 import SubmitModal from './components/SubmitModal.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 import TopPosts from './components/TopPosts.vue'
+import WeeklyWinners from './components/WeeklyWinners.vue'
+import WeeklyWinnersModal from './components/WeeklyWinnersModal.vue'
 
 // /<slug> and /<slug>/posts/<id>: the board with the post card on top (TZ 5.2).
 const route = useRoute()
@@ -194,6 +219,7 @@ const refreshing = computed(() => {
   if (!board.loading || board.loadingMore) return false
   if (board.view.section === 'top') return board.ranking.length > 0
   if (board.view.section === 'authors') return board.leaderboard.length > 0
+  if (board.view.section === 'weekly') return board.weeklyWinners.length > 0
   return board.posts.length > 0
 })
 // a search or filter that found nothing gets one message instead of empty columns
@@ -294,6 +320,69 @@ function onSent(post: Post) {
 function setSection(section: Section) {
   board.view.section = section
 }
+
+// Разделы доски — data-driven, чтобы потом подложить сюда админский конфиг
+// (видимость/порядок/primary vs secondary per project). primary — всегда видны;
+// остальные уходят в выпадашку «Ещё» на tablet/mobile.
+type SectionConfig = { id: Section; label: string; icon: 'columns' | 'chart' | 'thumb'; primary: boolean }
+const SECTIONS: readonly SectionConfig[] = [
+  { id: 'posts', label: 'Предложения', icon: 'columns', primary: true },
+  { id: 'top', label: 'Топ', icon: 'chart', primary: true },
+  { id: 'authors', label: 'Авторы', icon: 'thumb', primary: false },
+  { id: 'weekly', label: 'Хиты недели', icon: 'chart', primary: false },
+]
+const primarySections = computed(() => SECTIONS.filter((s) => s.primary))
+const overflowSections = computed(() => SECTIONS.filter((s) => !s.primary))
+const overflowItems = computed<MenuItem[]>(() =>
+  overflowSections.value.map((s) => ({ label: s.label, run: () => setSection(s.id) })),
+)
+// Активная секция оказалась в выпадашке — подсветим кнопку «Ещё».
+const overflowActive = computed(() => overflowSections.value.some((s) => s.id === board.view.section))
+
+// Модалка «Пост недели» показывается один раз в неделю на проект: ключ в
+// localStorage привязан к дате понедельника текущей ISO-недели, поэтому с
+// началом новой недели модалка снова всплывёт один раз. Пустую неделю (все
+// категории без постов) не показываем — незачем хвастаться пустотой.
+const weeklyModalOpen = ref(false)
+function currentWeekKey(): string {
+  const d = new Date()
+  const day = d.getDay() || 7
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() - (day - 1))
+  return d.toISOString().slice(0, 10)
+}
+function weeklyStorageKey(slug: string): string {
+  return `fb-weekly-seen-${slug}-${currentWeekKey()}`
+}
+async function maybeShowWeeklyModal(slug: string) {
+  try {
+    if (localStorage.getItem(weeklyStorageKey(slug))) return
+  } catch {
+    return
+  }
+  await board.loadWeeklyWinners(true)
+  if (board.weeklyWinners.some((e) => e.post)) weeklyModalOpen.value = true
+}
+function dismissWeeklyModal() {
+  weeklyModalOpen.value = false
+  const slug = board.project?.slug
+  if (!slug) return
+  try {
+    localStorage.setItem(weeklyStorageKey(slug), '1')
+  } catch {
+    // storage недоступен — следующий визит снова покажет модалку
+  }
+}
+function openWeeklySection() {
+  dismissWeeklyModal()
+  setSection('weekly')
+}
+watch(
+  () => board.project?.slug,
+  (slug) => {
+    if (slug) maybeShowWeeklyModal(slug)
+  },
+)
 
 async function askLogout() {
   const ok = await confirm.ask({

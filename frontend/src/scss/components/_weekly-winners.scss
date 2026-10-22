@@ -1,0 +1,271 @@
+@use '../utils' as *;
+
+// WeeklyWinners.vue + WeeklyWinnersModal.vue
+.weekly-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+    @media screen and (max-width: $mobile) {
+        gap: 12px;
+    }
+    @media screen and (max-width: $mobile-mini) {
+        grid-template-columns: 1fr;
+    }
+}
+
+// One card per category. The win reads through the crown's coloured halo,
+// the score in the category hue and a hover border that picks up --sta-*.
+// Empty categories keep the shape and fall back to muted so the grid stays
+// steady week to week.
+.weekly-card {
+    --sta: var(--muted);
+    position: relative;
+    display: grid;
+    gap: 12px;
+    padding: 16px 18px 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-align: left;
+
+    &[data-color='red']    { --sta: var(--sta-red); }
+    &[data-color='orange'] { --sta: var(--sta-orange); }
+    &[data-color='yellow'] { --sta: var(--sta-yellow); }
+    &[data-color='green']  { --sta: var(--sta-green); }
+    &[data-color='blue']   { --sta: var(--sta-blue); }
+    &[data-color='pink']   { --sta: var(--sta-pink); }
+
+    // staggered reveal — the week's hits unroll one after another
+    @media (prefers-reduced-motion: no-preference) {
+        animation: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--i, 0) * 60ms);
+    }
+
+    &.has-post {
+        cursor: pointer;
+        transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.18s ease;
+
+        @include hover {
+            transform: translateY(-2px);
+            border-color: color-mix(in srgb, var(--sta) 55%, var(--line));
+            box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--sta) 55%, transparent);
+        }
+        &:focus-visible {
+            outline: 2px solid var(--focus);
+            outline-offset: 2px;
+        }
+    }
+
+    &.empty {
+        background: color-mix(in srgb, var(--surface) 60%, transparent);
+    }
+}
+
+.weekly-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+// The trophy carries a halo in the category's hue — one subtle moment of
+// colour that reads «winner» without hitting confetti territory.
+.weekly-crown {
+    font-size: 20px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--sta) 55%, transparent));
+}
+
+.weekly-title {
+    @include headingFont;
+    @include lineClamp(2);
+    font-size: 18px;
+    line-height: 1.3;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.weekly-byline {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+
+    .who {
+        color: var(--fg);
+        font-weight: 600;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+// The big number is the moment: a win in the category's own colour.
+.weekly-score {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+
+    &[data-dir='up'] {
+        color: var(--sta);
+    }
+}
+
+.weekly-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+
+    .when {
+        color: var(--muted);
+        font-size: 13px;
+    }
+}
+
+.weekly-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.weekly-empty {
+    display: grid;
+    gap: 4px;
+    font-size: 14px;
+    color: var(--muted);
+
+    p { margin: 0; }
+    .muted { font-size: 13px; }
+}
+
+.weekly-range {
+    color: var(--muted);
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+// WeeklyWinnersModal.vue
+// Заголовок с короной — крупнее стандартного, корона несёт тот же halo,
+// что и в карточках секции, чтобы модалка читалась как её «эмиссар».
+.weekly-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    h2 {
+        @include headingFont;
+        font-size: clamp(20px, 3.6vw, 24px);
+        margin: 0;
+    }
+}
+.weekly-modal-crown {
+    font-size: 26px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+.weekly-modal-sub {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 14px;
+    margin: 2px 0 10px;
+}
+.weekly-modal-range-chip {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+.weekly-modal-list {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 6px;
+    display: grid;
+    gap: 8px;
+}
+.weekly-modal-row {
+    --sta: var(--muted);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition: border-color 0.14s ease, transform 0.14s ease;
+
+    &[data-color='red']    { --sta: var(--sta-red); }
+    &[data-color='orange'] { --sta: var(--sta-orange); }
+    &[data-color='yellow'] { --sta: var(--sta-yellow); }
+    &[data-color='green']  { --sta: var(--sta-green); }
+    &[data-color='blue']   { --sta: var(--sta-blue); }
+    &[data-color='pink']   { --sta: var(--sta-pink); }
+
+    @media (prefers-reduced-motion: no-preference) {
+        animation: rise 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--i, 0) * 80ms + 150ms);
+    }
+    @include hover {
+        border-color: color-mix(in srgb, var(--sta) 55%, var(--line));
+    }
+}
+.weekly-modal-body {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+
+    h3 {
+        @include lineClamp(2);
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+    .who {
+        color: var(--muted);
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+.weekly-modal-score {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+
+    &[data-dir='up'] {
+        color: var(--sta);
+    }
+}
+.weekly-modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: flex-end;
+
+    @media screen and (max-width: $mobile-mini) {
+        flex-direction: column-reverse;
+        .btn {
+            width: 100%;
+        }
+    }
+}

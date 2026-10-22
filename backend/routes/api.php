@@ -11,6 +11,7 @@ Route::prefix('public')->group(function () {
     Route::get('projects/{project:slug}', [Public\ProjectController::class, 'show'])->middleware(AllowProjectOrigin::class);
     Route::get('projects/{project:slug}/posts', [Public\PostController::class, 'index']);
     Route::get('projects/{project:slug}/leaderboard', [Public\LeaderboardController::class, 'index']);
+    Route::get('projects/{project:slug}/weekly-winners', [Public\WeeklyWinnersController::class, 'index']);
     Route::options('projects/{project:slug}/posts', fn (Project $project) => response()->noContent())->middleware(AllowProjectOrigin::class);
     Route::post('projects/{project:slug}/posts', [Public\PostController::class, 'store'])->middleware([AllowProjectOrigin::class, 'throttle:posts']);
     Route::get('projects/{project:slug}/posts/{post}', [Public\PostController::class, 'show'])->scopeBindings();

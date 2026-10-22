@@ -31,6 +31,18 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 12px 14px;
+    transition: border-color 0.14s ease, transform 0.14s ease, box-shadow 0.18s ease;
+
+    // Staggered reveal — подиум раскатывается сверху вниз, как объявление мест
+    @media (prefers-reduced-motion: no-preference) {
+        animation: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--i, 0) * 50ms);
+    }
+
+    // Карточка «замечает» внимание — не кликабельна, но слегка подсвечивается
+    @include hover {
+        border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+    }
 
     .card-body {
         gap: 4px;
@@ -42,20 +54,48 @@
         align-items: center;
         gap: 8px;
     }
-    &.top .rank-n {
-        color: var(--fg);
-        font-weight: 600;
-        font-size: 22px;    // медали крупнее цифры — акцент на подиум
+    // Подиум: медаль крупнее + лёгкий зелёный ореол (brand hue, не золото/серебро/бронза)
+    &.top {
+        .rank-n {
+            color: var(--fg);
+            font-weight: 600;
+            font-size: 22px;
+            filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--accent) 35%, transparent));
+            transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @include hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -14px color-mix(in srgb, var(--accent) 50%, transparent);
+
+            .rank-n {
+                transform: scale(1.1) rotate(-4deg);
+            }
+        }
     }
-    // «вы здесь» — лёгкий фон и акцентная рамка
+    // «вы здесь» — лёгкий фон, акцентная рамка и один «вдох» на первом появлении
     &.me {
         background: color-mix(in srgb, var(--accent) 8%, var(--surface));
         border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+
+        @media (prefers-reduced-motion: no-preference) {
+            animation:
+                rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both,
+                me-pulse 1.6s ease-out calc(var(--i, 0) * 50ms + 400ms) 1;
+        }
     }
 
     @media screen and (max-width: $mobile-mini) {
         grid-template-columns: 30px 1fr auto;
         gap: 10px;
+    }
+}
+// Короткий ореол вокруг «вашей» строки — один раз, не циклит
+@keyframes me-pulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+    }
+    100% {
+        box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent);
     }
 }
 .you-chip {

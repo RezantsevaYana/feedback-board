@@ -19,10 +19,11 @@
   <BoardSkeleton v-if="board.loading && !board.leaderboard.length" layout="rows" />
   <div v-else class="leader">
     <article
-      v-for="entry in board.leaderboard"
+      v-for="(entry, i) in board.leaderboard"
       :key="entry.token"
       class="leader-row"
       :class="{ top: entry.place <= 3, me: entry.token === myToken }"
+      :style="{ '--i': i }"
     >
       <span class="rank-n" :aria-label="`Место ${entry.place}`">
         <span v-if="entry.place <= 3" aria-hidden="true">{{ medal(entry.place) }}</span>

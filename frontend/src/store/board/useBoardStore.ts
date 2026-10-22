@@ -8,9 +8,10 @@ import { type PostPatch, PostsApi } from '@/api/posts'
 import { ProjectsApi } from '@/api/projects'
 import { StatusesApi } from '@/api/statuses'
 import type { Category, PaletteColor, Me, Post, PostPriority, Project, Status, VoteState, VoteValue } from '@/api/types'
+import { WeeklyWinnersApi, type WeeklyWinnerEntry, type WeeklyWinnersMeta } from '@/api/weeklyWinners'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 
-export type Section = 'posts' | 'top' | 'authors'
+export type Section = 'posts' | 'top' | 'authors' | 'weekly'
 export type Layout = 'kanban' | 'list'
 export type Sort = 'top' | 'new' | 'priority'
 
@@ -75,6 +76,8 @@ export const useBoardStore = defineStore('board', () => {
   const loadError = ref('')
   const topPosts = ref<Post[]>([])
   const leaderboard = ref<LeaderboardEntry[]>([])
+  const weeklyWinners = ref<WeeklyWinnerEntry[]>([])
+  const weeklyWinnersMeta = ref<WeeklyWinnersMeta | null>(null)
 
   async function open(slug: string) {
     if (project.value?.slug === slug) return
@@ -167,6 +170,23 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  async function loadWeeklyWinners(silent = false) {
+    if (!project.value) return
+    if (!silent) {
+      loading.value = true
+      loadError.value = ''
+    }
+    try {
+      const res = await WeeklyWinnersApi.get(currentSlug())
+      weeklyWinners.value = res.data
+      weeklyWinnersMeta.value = res.meta
+    } catch (e) {
+      if (!silent) loadError.value = errorMessage(e)
+    } finally {
+      if (!silent) loading.value = false
+    }
+  }
+
   /** Ranking by likes minus dislikes; equal score shares a place, the earlier post goes first. Rejected ones do not compete. */
   const ranking = computed(() => {
     const list = topPosts.value
@@ -184,6 +204,7 @@ export const useBoardStore = defineStore('board', () => {
     switch (view.section) {
       case 'top': return loadTop(silent)
       case 'authors': return loadLeaderboard(silent)
+      case 'weekly': return loadWeeklyWinners(silent)
       default: return loadPosts(false, silent)
     }
   }
@@ -487,8 +508,8 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard,
-    open, refresh, loadPosts, vote, updatePost, deletePost,
+    project, notFound, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
+    open, refresh, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
     addStatus, updateStatus, deleteStatus,
     login, logout,

@@ -86,7 +86,7 @@
         .menu {
             order: 1;
         }
-        // the three sections split the full width evenly
+        // the sections split the full width evenly — including the «Ещё» pill
         .board-sections {
             order: 2;
             flex: 1 1 100%;
@@ -96,6 +96,14 @@
                 flex: 1 1 0;
                 justify-content: center;
                 min-width: 0;
+            }
+            .menu:has(.sections-more) {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+            .sections-more {
+                width: 100%;
+                justify-content: center;
             }
         }
         .board-cta {
@@ -133,6 +141,11 @@
             padding: 6px 12px;
             border-radius: 8px;
 
+            // segmented плотный — иконки съедают ширину, оставляем только текст;
+            // в сайдбаре на десктопе иконки по-прежнему помогают сканировать.
+            .ico {
+                display: none;
+            }
             @include hover {
                 background: var(--surface);
             }
@@ -142,7 +155,57 @@
                 color: var(--active-fg);
             }
         }
+        // вторичные разделы уезжают в выпадашку «Ещё» — не светим их в самом segmented
+        .nav-item-overflow {
+            display: none;
+        }
     }
+}
+
+// «Ещё» — триггер выпадашки с вторичными разделами. На десктопе в сайдбаре
+// скрыт (там все пункты стоят вертикально по порядку), на tablet/mobile — становится
+// такой же пилюлей segmented control. :has() как у .team-menu — одинаковый приём.
+.menu:has(.sections-more) {
+    display: none;
+
+    @media screen and (max-width: $tablet) {
+        display: inline-flex;
+    }
+}
+// .menu-trigger в _menu.scss жёстко задаёт 30x30 — повышаем специфичность,
+// чтобы «Ещё» рос по контенту (текст + chevron) и жил как пилюля segmented.
+.menu-trigger.sections-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    height: auto;
+    padding: 6px 10px 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: none;
+    font-weight: 500;
+    color: var(--muted);
+
+    .ico {
+        width: 14px;
+        height: 14px;
+        opacity: 0.6;
+        transition: transform 0.15s ease;
+    }
+    @include hover {
+        background: var(--surface);
+        color: var(--fg);
+    }
+    &.active {
+        background: var(--active);
+        border-color: var(--active-line);
+        color: var(--active-fg);
+    }
+}
+// открытое состояние — chevron переворачивается, подсказка «уже открыто»
+.menu.open .menu-trigger.sections-more .ico {
+    transform: rotate(180deg);
 }
 .nav-item {
     display: flex;
