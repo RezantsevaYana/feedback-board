@@ -107,6 +107,9 @@
             <button type="button" class="btn filters-toggle" aria-haspopup="dialog" @click="filtersOpen = true">
               Фильтры<span v-if="activeFilters" class="filters-count">{{ activeFilters }}</span>
             </button>
+            <Transition name="filters-reset">
+              <button v-if="activeFilters" type="button" class="icon-btn filters-reset" aria-label="Сбросить фильтры" title="Сбросить фильтры" @click="resetFilters"><AppIcon name="close" /></button>
+            </Transition>
             <span class="toolbar-sep" aria-hidden="true" />
             <BoardFilters />
           </div>
@@ -202,6 +205,7 @@ function composeFromSearch() {
 function resetFilters() {
   searchInput.value = ''
   board.resetFilters()
+  board.view.sort = 'new'
 }
 // phone: filters sit in a bottom sheet behind «Фильтры · N»
 const filtersOpen = ref(false)

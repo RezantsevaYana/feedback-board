@@ -30,6 +30,5 @@ const close = inject<() => void>('baseModal:close', () => emit('close'))
 const showLabel = computed(() => (board.loading ? 'Показать' : `Показать ${board.posts.length}`))
 function reset() {
   emit('reset')
-  board.view.sort = 'new'
 }
 </script>
