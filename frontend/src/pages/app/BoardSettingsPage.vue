@@ -5,7 +5,7 @@
       <RouterLink to="/app/boards" class="board-settings-back">← Все доски</RouterLink>
       <div class="board-settings-title">
         <h1>{{ settings?.name ?? slug }}</h1>
-        <a :href="`/${slug}`" class="btn" target="_blank" rel="noopener">Открыть доску ↗</a>
+        <a v-if="settings" :href="`/${slug}`" class="btn" target="_blank" rel="noopener">Открыть доску ↗</a>
       </div>
     </div>
 
@@ -36,6 +36,11 @@
           <h2>Домены</h2>
           <SettingsDomains :settings="settings" @saved="onSaved" />
         </section>
+
+        <section id="delete" class="board-settings-section danger">
+          <h2>Удаление</h2>
+          <DeleteBoardSection :settings="settings" />
+        </section>
       </div>
     </div>
 
@@ -47,17 +52,18 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { type BoardSettings, BoardsApi } from '@/api/boards'
-import { ApiError, errorMessage } from '@/api/client'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import CategoriesEditor from '@/shared/components/CategoriesEditor.vue'
 import StatusesEditor from '@/shared/components/StatusesEditor.vue'
+import DeleteBoardSection from './components/DeleteBoardSection.vue'
 import SettingsDomains from './components/SettingsDomains.vue'
 import SettingsGeneral from './components/SettingsGeneral.vue'
 import SettingsNav from './components/SettingsNav.vue'
+import { boardLoadError } from './composables/boardLoadError'
 
-// One page, sections with anchors (#general, #categories, #statuses, #domains).
+// One page, sections with anchors (#general, #categories, #statuses, #domains, #delete).
 // Name and domains go through BoardsApi; categories and columns reuse the board's editors,
 // so the board store opens this project the same way BoardPage does.
 const route = useRoute()
@@ -81,7 +87,7 @@ async function load() {
     settings.value = res.data
     void board.open(slug.value)
   } catch (e) {
-    loadError.value = e instanceof ApiError && e.status === 403 ? 'Эта доска принадлежит другому аккаунту.' : errorMessage(e)
+    loadError.value = boardLoadError(e)
   } finally {
     loading.value = false
   }

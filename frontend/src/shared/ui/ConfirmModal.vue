@@ -6,13 +6,14 @@
     </div>
     <p class="desc">{{ confirm.options?.message }}</p>
     <div class="row confirm-actions">
-      <button type="button" class="btn" @click="onCancel">
+      <!-- focus starts on the safe choice for destructive actions, so a stray Enter doesn't delete -->
+      <button type="button" class="btn" :autofocus="confirm.options?.danger || undefined" @click="onCancel">
         {{ confirm.options?.cancelText ?? 'Отмена' }}
       </button>
       <button
         type="button"
         :class="['btn', confirm.options?.danger ? 'btn-danger' : 'btn-primary']"
-        autofocus
+        :autofocus="!confirm.options?.danger || undefined"
         @click="onConfirm"
       >
         {{ confirm.options?.confirmText ?? 'Продолжить' }}

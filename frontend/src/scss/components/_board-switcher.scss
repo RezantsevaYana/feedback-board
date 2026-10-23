@@ -1,0 +1,52 @@
+@use '../utils' as *;
+
+// BoardSwitcher.vue — the trigger is MenuComponent's button, widened from a 30px icon to a label + chevron.
+// In AppHeader it's a quiet text button; on the board it takes the brand tag look (.proj, see layout/_board.scss).
+// the wrapper (.menu is `flex: none` for kebab menus) may shrink here, so a long name ellipsizes instead of
+// pushing the header past the screen edge
+.menu:has(> .board-switcher) {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.menu-trigger.board-switcher {
+    width: auto;
+    max-width: min(280px, 100%);
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: none;
+    color: var(--fg);
+    font-size: 15px;
+    font-weight: 500;
+
+    .ico {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        transition: transform 0.12s;
+    }
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
+    // a thumb, not a cursor: the trigger gets a full-size tap area
+    @media (pointer: coarse) {
+        min-height: 44px;
+    }
+}
+.menu.open .board-switcher {
+    background: var(--surface-2);
+    color: var(--fg);
+
+    .ico {
+        transform: rotate(180deg);
+    }
+}
+.board-switcher-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -38,6 +38,8 @@ Route::prefix('admin')->group(function () {
         Route::get('boards/{board:slug}/embed', [Admin\BoardController::class, 'embed']);
         Route::get('boards/{board:slug}', [Admin\BoardController::class, 'show']);
         Route::patch('boards/{board:slug}', [Admin\BoardController::class, 'update']);
+        Route::delete('boards/{board:slug}', [Admin\BoardController::class, 'destroy']);
+        Route::post('boards/{board:slug}/restore', [Admin\BoardController::class, 'restore'])->withTrashed();
 
         Route::get('projects/{project:slug}/posts', [Admin\PostController::class, 'index']);
         Route::get('posts/{post}', [Admin\PostController::class, 'show']);

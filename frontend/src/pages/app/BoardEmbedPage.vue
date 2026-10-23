@@ -55,40 +55,45 @@
       </div>
     </template>
 
-    <p v-else class="note">Доску не удалось загрузить. Вернитесь в <RouterLink to="/app/boards">hub</RouterLink>.</p>
+    <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { BoardsApi, type EmbedInfo } from '@/api/boards'
-import { errorMessage } from '@/api/client'
 import { useAuthStore } from '@/store/auth/useAuthStore'
-import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import CopyButton from '@/shared/ui/CopyButton.vue'
+import { boardLoadError } from './composables/boardLoadError'
 
 const route = useRoute()
 const auth = useAuthStore()
-const notification = useNotificationStore()
 
 const info = ref<EmbedInfo | null>(null)
 const loading = ref(true)
+const loadError = ref('')
 
 const slug = computed(() => String(route.params.slug ?? ''))
 const justCreated = computed(() => route.query.created === '1')
 const domainsLink = computed(() => `/app/boards/${slug.value}/settings#domains`)
 const boardName = computed(() => auth.boardSummaries.find((b) => b.slug === slug.value)?.name ?? slug.value)
 
-onMounted(async () => {
+// reloads when the header switcher moves to another board's embed page (same route, new slug)
+watch(slug, load, { immediate: true })
+
+async function load() {
+  loading.value = true
+  loadError.value = ''
+  info.value = null
   try {
     const res = await BoardsApi.embed(slug.value)
     info.value = res.data
   } catch (e) {
-    notification.error(errorMessage(e))
+    loadError.value = boardLoadError(e)
   } finally {
     loading.value = false
   }
-})
+}
 </script>

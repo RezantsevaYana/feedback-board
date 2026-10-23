@@ -1,13 +1,21 @@
 <template>
   <label class="field">
     <span v-if="label">{{ label }} <small v-if="hint">· {{ hint }}</small></span>
-    <input v-model="model" class="input" :class="{ invalid: hasError }" v-bind="$attrs" @blur="onBlur" />
-    <span v-if="hasError" class="err" role="alert">{{ errorMessage }}</span>
+    <input
+      v-model="model"
+      class="input"
+      :class="{ invalid: hasError }"
+      :aria-invalid="hasError || undefined"
+      :aria-describedby="hasError ? errorId : undefined"
+      v-bind="$attrs"
+      @blur="onBlur"
+    />
+    <span v-if="hasError" :id="errorId" class="err" role="alert">{{ errorMessage }}</span>
   </label>
 </template>
 
 <script setup lang="ts">
-import { computed, isRef } from 'vue'
+import { computed, isRef, useId } from 'vue'
 
 // Текстовый инпут. Нативные атрибуты (type, maxlength, placeholder, @input…) падают на <input>.
 // Ошибку принимает в двух форматах:
@@ -37,6 +45,8 @@ const vuelidateMessage = computed(() => {
 })
 const errorMessage = computed(() => props.error || vuelidateMessage.value)
 const hasError = computed(() => !!errorMessage.value)
+// the field points at its error, so a screen reader reads both together
+const errorId = useId()
 
 function onBlur() {
   vuelidate.value?.$touch?.()

@@ -1,12 +1,21 @@
 <template>
   <label class="field">
     <span v-if="label">{{ label }} <small v-if="hint">· {{ hint }}</small></span>
-    <textarea v-model="model" class="input" :class="{ invalid: !!error }" v-bind="$attrs" />
-    <span v-if="error" class="err" role="alert">{{ error }}</span>
+    <textarea
+      v-model="model"
+      class="input"
+      :class="{ invalid: !!error }"
+      :aria-invalid="!!error || undefined"
+      :aria-describedby="error ? errorId : undefined"
+      v-bind="$attrs"
+    />
+    <span v-if="error" :id="errorId" class="err" role="alert">{{ error }}</span>
   </label>
 </template>
 
 <script setup lang="ts">
+import { useId } from 'vue'
+
 // Textarea with an optional label, hint and error. Native attributes and listeners
 // (rows, maxlength, placeholder, @input…) go to the <textarea>, not to the wrapper.
 defineOptions({ inheritAttrs: false })
@@ -16,4 +25,6 @@ defineProps<{
   hint?: string
   error?: string
 }>()
+// the field points at its error, so a screen reader reads both together
+const errorId = useId()
 </script>

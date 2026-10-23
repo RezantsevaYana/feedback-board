@@ -15,6 +15,7 @@
           :style="swipeStyle"
           role="dialog"
           aria-modal="true"
+          tabindex="-1"
           :aria-label="label"
           v-bind="$attrs"
           @touchstart.passive="onTouchStart"
@@ -33,6 +34,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { useEscapeKey } from '@/shared/composables/useEscapeKey'
+import { useFocusTrap } from '@/shared/composables/useFocusTrap'
 
 // Закрывается на крестик (slot), клик по фону, Esc, и свайп вниз на мобиле (≤479).
 // Анимация симметричная: открытие и закрытие проходят Transition. Чтобы leave успел
@@ -71,8 +73,12 @@ function onBgMouseUp() {
 // отдаём внутренним компонентам, чтобы они закрывали модалку через анимацию
 provide<() => void>('baseModal:close', requestClose)
 
-// пока галерея скриншотов открыта (lightgallery), Esc берёт она
-useEscapeKey(() => !document.querySelector('.lg-outer.lg-visible') && requestClose())
+// keyboard focus moves into the dialog, stays there on Tab and returns to the opener on close
+const { isTop } = useFocusTrap(modalEl)
+
+// пока галерея скриншотов открыта (lightgallery), Esc берёт она; из двух модалок (подтверждение
+// поверх категорий) закрывается только верхняя
+useEscapeKey(() => isTop() && !document.querySelector('.lg-outer.lg-visible') && requestClose())
 onMounted(() => document.body.classList.add('locked'))
 onBeforeUnmount(() => document.body.classList.remove('locked'))
 

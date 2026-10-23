@@ -1,0 +1,20 @@
+{
+  "id": "c844bdba",
+  "phase": "completed",
+  "pageUrl": "/demo",
+  "sourceFile": "frontend/src/pages/board/components/KanbanBoard.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 3,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 27,
+  "activeOwner": "8fc74680",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [],
+  "updatedAt": "2026-10-23T09:01:26.284Z"
+}

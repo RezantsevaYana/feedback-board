@@ -11,6 +11,56 @@
     justify-content: space-between;
     gap: 16px;
     padding: 16px 0;
+
+    // phone: two rows. Wordmark and «Выход» on top, the board switcher across the full width below,
+    // so the current board's name gets the whole line instead of a few letters
+    @media screen and (max-width: $mobile-mini) {
+        &:has(.board-switcher) {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas:
+                'brand user'
+                'switch switch';
+            gap: 8px 12px;
+            padding: 12px 0 10px;
+        }
+    }
+}
+.app-shell-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+
+    // the brand and the switcher join the header grid directly
+    @media screen and (max-width: $mobile-mini) {
+        display: contents;
+
+        .app-brand {
+            grid-area: brand;
+            align-self: center;
+        }
+        .menu {
+            grid-area: switch;
+            margin: 0 -10px;            // the trigger's own padding lines its text up with the wordmark
+        }
+        .menu-trigger.board-switcher {
+            width: 100%;
+            max-width: none;
+            justify-content: space-between;
+        }
+        .menu-list {
+            right: 0;                   // the list spans the row, names are not cut at 220px
+        }
+    }
+}
+.app-shell-sep {
+    color: var(--line);
+    font-size: 18px;
+
+    @media screen and (max-width: $mobile-mini) {
+        display: none;
+    }
 }
 .app-brand {
     font-family: var(--font-display);
@@ -19,12 +69,14 @@
     color: var(--fg);
     text-decoration: none;
     letter-spacing: -0.01em;
+    white-space: nowrap;
 
     @include hover {
         color: var(--accent-ink);
     }
 }
 .app-shell-user {
+    grid-area: user;
     display: flex;
     align-items: center;
     gap: 12px;

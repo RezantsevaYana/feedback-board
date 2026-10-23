@@ -77,6 +77,13 @@
     &.danger {
         color: var(--bug);
     }
+    &.current {
+        font-weight: 600;
+    }
+    // touch screens: rows tall enough for a finger (44px)
+    @media (pointer: coarse) {
+        padding: 12px 10px;
+    }
 }
 .menu-key {
     font: inherit;
@@ -87,4 +94,17 @@
     height: 1px;
     margin: 4px 6px;
     background: var(--line);
+}
+// long names (board switcher) cut with an ellipsis instead of stretching the menu
+.menu-label {
+    min-width: 0;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.menu-check {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    color: var(--accent-ink);
 }

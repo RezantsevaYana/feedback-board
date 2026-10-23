@@ -22,6 +22,11 @@
     width: min(680px, 100%);
     max-height: calc(100vh - 48px);
     overflow-y: auto;
+
+    // the dialog itself takes focus only as a fallback (nothing focusable inside), it isn't a control
+    &:focus-visible {
+        outline: none;
+    }
     background: var(--surface);
     border-radius: 16px;
     box-shadow: var(--shadow); // taste-skill-ignore floating dialog
@@ -104,6 +109,20 @@
 .confirm-actions {
     justify-content: flex-end;
     margin-top: 4px;
+
+    // the destructive answer of a dialog is filled once it's armed; while it waits (slug not typed yet)
+    // it stays the quiet red outline, so «ready» and «not yet» look different, not just paler
+    .btn-danger:not(:disabled) {
+        background: var(--bug);
+        border-color: var(--bug);
+        color: var(--bug-fg);
+        font-weight: 600;
+
+        @include hover {
+            background: color-mix(in srgb, var(--bug) 88%, var(--fg));
+            border-color: transparent;
+        }
+    }
 }
 // CopyLink.vue: a filled tone-step button, so it reads as a control at rest, not only on hover
 .copy-link {

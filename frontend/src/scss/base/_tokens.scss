@@ -29,6 +29,7 @@
     --accent-fg: #ffffff;
     --focus: #1b7f41;
     --bug: #b0423a;
+    --bug-fg: #ffffff;        // text on a filled --bug button (confirm «Удалить»); 5.9:1
     // VoteButtons.vue: tint and edge of your own 👍 (green) and 💩 (brown)
     --like: #27ad5a;
     --poo: #94603d;
@@ -78,6 +79,7 @@
     --accent-ink: #6fcf96;
     --focus: #6fcf96;
     --bug: #efb0a6;    // 5.4:1 on --surface (dark), 6.7:1 on --surface-2
+    --bug-fg: #3b1410; // text on a filled --bug button, 8.9:1
 
     --like: #3cc472;
     --poo: #a8714b;

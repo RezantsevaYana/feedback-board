@@ -43,7 +43,9 @@
 
     <div v-else class="board-layout">
       <nav class="board-nav" aria-label="Разделы доски">
-        <RouterLink class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
+        <!-- team mode with several boards: the brand tag opens the switcher instead of reloading this board -->
+        <BoardSwitcher v-if="switchBoards.length > 1" class="proj slant" :boards="switchBoards" :current="slug" :label="board.project.name" />
+        <RouterLink v-else class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
         <div class="board-sections">
           <button
             v-for="s in primarySections"
@@ -76,12 +78,16 @@
             <span>Ещё</span><AppIcon name="chevron" />
           </MenuComponent>
         </div>
-        <button type="button" class="btn btn-primary board-cta" @click="compose()">Предложить</button>
+        <!-- hover rolls the label up to a question; screen readers always hear «Предложить» -->
+        <button type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
+          <span class="cta-roll" aria-hidden="true"><span>Предложить</span><span>Есть идея?</span></span>
+        </button>
         <div v-if="board.team" class="team-box">
           <span class="chip">режим команды</span>
           <span class="who-mail">{{ board.me?.email }}</span>
           <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
           <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
+          <RouterLink v-if="owned" :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
           <span class="team-box-sep" aria-hidden="true" />
           <button type="button" class="link-btn link-btn-danger" @click="askLogout">Выйти</button>
         </div>
@@ -173,6 +179,7 @@ import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
+import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 import SearchComponent from '@/shared/ui/SearchComponent.vue'
 import BoardFilters from './components/BoardFilters.vue'
@@ -245,9 +252,14 @@ const activeFilters = computed(
       board.view.sort !== 'new',
     ].filter(Boolean).length,
 )
+// team mode: every board this admin manages is one click away; the owner also gets the settings page
+const switchBoards = computed(() => (board.team ? (board.me?.projects ?? []) : []))
+const owned = computed(() => board.team && !!board.me?.boards.some((b) => b.slug === slug.value))
+const settingsLink = computed(() => `/app/boards/${slug.value}/settings`)
 const teamItems = computed<MenuItem[]>(() => [
   { label: 'Категории', run: () => (editingCategories.value = true) },
   { label: 'Столбцы', run: () => (editingStatuses.value = true) },
+  ...(owned.value ? [{ label: 'Настройки доски', run: () => router.push(settingsLink.value) }] : []),
   { label: 'Выйти', danger: true, separated: true, run: askLogout },
 ])
 

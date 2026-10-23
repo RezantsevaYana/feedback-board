@@ -19,6 +19,7 @@
         <BoardCard v-for="b in auth.boards" :key="b.id" :board="b" />
       </div>
     </template>
+    <TrashSection v-if="auth.boardsLoaded && auth.trashed.length" :boards="auth.trashed" />
   </main>
 </template>
 
@@ -27,7 +28,8 @@ import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
-import BoardCard from '@/pages/app/components/BoardCard.vue'
+import BoardCard from './components/BoardCard.vue'
+import TrashSection from './components/TrashSection.vue'
 
 const auth = useAuthStore()
 

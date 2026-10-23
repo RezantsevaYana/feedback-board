@@ -24,6 +24,7 @@
     top: 24px;
     display: grid;
     gap: 2px;
+    min-width: 0;   // a long board name in the switcher ellipsizes instead of widening the grid column
 
     .proj {
         @include displayFont;
@@ -34,6 +35,46 @@
         padding: 4px 14px 5px 16px;
         margin: 2px 0 14px;
         text-decoration: none;
+    }
+    // team mode with several boards: the brand tag is BoardSwitcher's trigger, the menu wrapper takes its place
+    .menu:has(.board-switcher) {
+        justify-self: start;
+        // never wider than the sidebar column (or 280px in the tablet/phone row), so the name ellipsizes
+        // and the theme and team controls keep their place next to it
+        max-width: min(280px, 100%);
+        margin: 2px 0 14px;
+
+        .proj {
+            margin: 0;
+            max-width: min(280px, 100%);
+        }
+
+        @media screen and (max-width: $tablet) {
+            margin: 0;
+        }
+        // phone: stays first in the top row, like the plain tag (the generic `.menu` rule below sends menus right)
+        // and takes only what the theme and team controls leave in that row
+        @media screen and (max-width: $mobile) {
+            order: 0;
+            flex: 1 1 0;
+            margin-right: auto;
+        }
+    }
+    .proj.board-switcher {
+        background: var(--accent);
+        color: var(--accent-fg);
+        padding: 4px 12px 5px 16px;
+        font-size: 15px;
+        font-weight: inherit;
+
+        @include hover {
+            background: var(--accent);
+            color: var(--accent-fg);
+        }
+    }
+    .menu.open .proj.board-switcher {
+        background: var(--accent);
+        color: var(--accent-fg);
     }
     .btn {
         margin-top: 14px;
@@ -620,6 +661,50 @@
             width: 100%;
             flex-direction: column;
             align-items: stretch;
+        }
+    }
+}
+
+// BoardPage.vue «Предложить»: on hover or keyboard focus the label rolls up into «Есть идея?».
+// Both lines share one grid cell, so the button keeps the width of the longer one and never jumps.
+.cta-roll {
+    display: inline-grid;
+    height: 1.5em;
+    overflow: hidden;
+
+    > span {
+        grid-area: 1 / 1;
+        transition: transform 0.24s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s;
+    }
+    > span + span {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        > span {
+            transition: none;
+        }
+    }
+}
+.board-cta {
+    @include hover {
+        .cta-roll > span:first-child {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        .cta-roll > span + span {
+            transform: none;
+            opacity: 1;
+        }
+    }
+    &:focus-visible .cta-roll {
+        > span:first-child {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        > span + span {
+            transform: none;
+            opacity: 1;
         }
     }
 }

@@ -13,6 +13,15 @@ export interface Board {
   last_post_at: string | null
 }
 
+/** A board in the trash: listed on the hub until purge_at, then removed for good. */
+export interface TrashedBoard {
+  id: number
+  name: string
+  slug: string
+  deleted_at: string
+  purge_at: string
+}
+
 /** Response from GET /boards/{slug}/embed — ready-to-paste script and the direct link. */
 export interface EmbedInfo {
   script_tag: string
@@ -27,6 +36,8 @@ export interface BoardSettings {
   name: string
   slug: string
   allowed_origins: string[]
+  /** how long a deleted board stays in the trash (feedback.trash_retention_days) */
+  trash_retention_days: number
 }
 
 /** Live slug check — the create wizard calls this with debounce as the user types. */
@@ -37,9 +48,9 @@ export interface SlugCheck {
 }
 
 export const BoardsApi = {
-  // boards owned by the current admin, newest first
+  // boards owned by the current admin, newest first, plus the ones in the trash
   list() {
-    return request<Collection<Board>>(BASE_URL)
+    return request<Collection<Board> & { trashed: TrashedBoard[] }>(BASE_URL)
   },
 
   // create a self-serve board — origins can be omitted when the owner wants direct-link only
@@ -55,6 +66,16 @@ export const BoardsApi = {
   // rename the board or replace its widget domains — send only what the section changed
   update(slug: string, body: { name?: string; origins?: string[] }) {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`, { method: 'PATCH', body })
+  },
+
+  // to the trash — the owner types the slug as confirmation
+  destroy(slug: string, confirm: string) {
+    return request<Item<TrashedBoard>>(`${BASE_URL}/${slug}`, { method: 'DELETE', body: { confirm } })
+  },
+
+  // back from the trash with its posts, categories and columns
+  restore(slug: string) {
+    return request<Item<Board>>(`${BASE_URL}/${slug}/restore`, { method: 'POST' })
   },
 
   // widget script + direct board URL for the "how to connect" screen

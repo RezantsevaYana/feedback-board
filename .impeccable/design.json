@@ -1,0 +1,420 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T08:12:51.095364+00:00",
+  "title": "Design System: Feedback Board",
+  "extensions": {
+    "colorMeta": {
+      "rocont-green": {
+        "role": "primary",
+        "displayName": "Rocont Green",
+        "canonical": "#1d8547",
+        "tonalRamp": [
+          "#153823",
+          "#1f6039",
+          "#278c50",
+          "#2cb965",
+          "#54d488",
+          "#92ddb0",
+          "#c7ead5",
+          "#edf7f1"
+        ]
+      },
+      "green-ink": {
+        "role": "primary",
+        "displayName": "Green Ink",
+        "canonical": "#1b7f41",
+        "tonalRamp": [
+          "#143822",
+          "#1f6138",
+          "#268c4d",
+          "#2bba62",
+          "#53d584",
+          "#91deae",
+          "#c7ebd4",
+          "#edf8f1"
+        ]
+      },
+      "sprout-active": {
+        "role": "primary",
+        "displayName": "Sprout Active",
+        "canonical": "#cfe7d7",
+        "tonalRamp": [
+          "#1d2f23",
+          "#2f513a",
+          "#3f7351",
+          "#4e9767",
+          "#72b589",
+          "#a4cbb1",
+          "#d0e2d6",
+          "#f0f5f1"
+        ]
+      },
+      "sprout-active-ink": {
+        "role": "primary",
+        "displayName": "Sprout Active Ink",
+        "canonical": "#063f2c",
+        "tonalRamp": [
+          "#0f3d2e",
+          "#166a4e",
+          "#189a6f",
+          "#18ce91",
+          "#41e7b0",
+          "#87e8c8",
+          "#c2f0e0",
+          "#ecf9f4"
+        ]
+      },
+      "sage-step": {
+        "role": "neutral",
+        "displayName": "Sage Step",
+        "canonical": "#e8eee9",
+        "tonalRamp": [
+          "#222a23",
+          "#38473b",
+          "#4d6551",
+          "#628368",
+          "#85a38a",
+          "#afc0b2",
+          "#d5ddd6",
+          "#f1f3f1"
+        ]
+      },
+      "sage-line": {
+        "role": "neutral",
+        "displayName": "Sage Line",
+        "canonical": "#d8e1db",
+        "tonalRamp": [
+          "#232a25",
+          "#39463e",
+          "#4f6356",
+          "#64816e",
+          "#87a190",
+          "#b0bfb5",
+          "#d5dcd8",
+          "#f1f3f2"
+        ]
+      },
+      "sage-control": {
+        "role": "neutral",
+        "displayName": "Sage Control",
+        "canonical": "#a9bcb0",
+        "tonalRamp": [
+          "#232a25",
+          "#39463e",
+          "#4f6357",
+          "#65806f",
+          "#87a091",
+          "#b0bfb6",
+          "#d5dcd8",
+          "#f1f3f2"
+        ]
+      },
+      "deep-ink": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "canonical": "#0f2224",
+        "tonalRamp": [
+          "#1b2f32",
+          "#2b5155",
+          "#39737a",
+          "#4597a0",
+          "#6bb5bd",
+          "#9fcbd0",
+          "#cde2e4",
+          "#eff5f6"
+        ]
+      },
+      "moss-muted": {
+        "role": "neutral",
+        "displayName": "Moss Muted",
+        "canonical": "#4c5d60",
+        "tonalRamp": [
+          "#232829",
+          "#3a4446",
+          "#506062",
+          "#667c80",
+          "#889ca0",
+          "#b1bcbe",
+          "#d6dbdc",
+          "#f1f3f3"
+        ]
+      },
+      "clay-red": {
+        "role": "semantic",
+        "displayName": "Clay Red",
+        "canonical": "#b0423a",
+        "tonalRamp": [
+          "#341a18",
+          "#592a26",
+          "#813732",
+          "#aa433b",
+          "#c66861",
+          "#d59e9a",
+          "#e7cdcb",
+          "#f6efee"
+        ]
+      },
+      "graphite-bg": {
+        "role": "neutral",
+        "displayName": "Graphite Ground (dark)",
+        "canonical": "#1f2524",
+        "tonalRamp": [
+          "#242928",
+          "#3b4443",
+          "#52605e",
+          "#697c79",
+          "#8b9d9a",
+          "#b2bdbb",
+          "#d6dbda",
+          "#f2f3f3"
+        ]
+      },
+      "graphite-step": {
+        "role": "neutral",
+        "displayName": "Graphite Step (dark)",
+        "canonical": "#2c3433",
+        "tonalRamp": [
+          "#242928",
+          "#3c4443",
+          "#53605e",
+          "#6a7c7a",
+          "#8c9c9a",
+          "#b3bdbb",
+          "#d6dbda",
+          "#f2f3f3"
+        ]
+      },
+      "graphite-surface": {
+        "role": "neutral",
+        "displayName": "Graphite Surface (dark)",
+        "canonical": "#3a4442",
+        "tonalRamp": [
+          "#242828",
+          "#3c4442",
+          "#535f5d",
+          "#6a7b78",
+          "#8c9c99",
+          "#b3bcba",
+          "#d7dbda",
+          "#f2f3f3"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "Project name tag and the admin wordmark only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "One per page; 22–24px on admin pages and phones."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section and card headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text, card titles, form values."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, link buttons, secondary nav."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Chips, pills, tags, notes and hints."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Slugs, URLs and ids only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 10px 28px rgba(16, 37, 40, 0.12)",
+        "purpose": "Menus, toasts, dialogs; dark theme 0 10px 30px rgba(0,0,0,0.5)."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px #cfe7d7",
+        "purpose": "Search field focus ring only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "rise",
+        "value": "translateY(8px) → 0, 0.14–0.18s ease-out",
+        "purpose": "Menus, toasts and panels appearing; off under prefers-reduced-motion."
+      },
+      {
+        "name": "state",
+        "value": "0.12s",
+        "purpose": "Hover, border and background colour changes."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "desktop",
+        "value": "1919px"
+      },
+      {
+        "name": "medium",
+        "value": "1439px"
+      },
+      {
+        "name": "tablet",
+        "value": "1023px"
+      },
+      {
+        "name": "mobile",
+        "value": "767px"
+      },
+      {
+        "name": "mobile-mini",
+        "value": "479px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action of a view (Предложить, Сохранить).",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Предложить</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--line,#d8e1db);border-radius:10px;background:var(--surface,#fff);color:var(--fg,#0f2224);font:500 15px/1.5 Onest,system-ui,sans-serif;cursor:pointer;transition:border-color .12s,background-color .12s}.ds-btn:focus-visible{outline:2px solid var(--focus,#1b7f41);outline-offset:2px}.ds-btn-primary{background:var(--accent,#1d8547);border-color:var(--accent,#1d8547);color:var(--accent-fg,#fff);font-weight:600}.ds-btn-primary:hover{background:color-mix(in srgb,var(--accent,#1d8547) 88%,#000);border-color:transparent}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other action: white with a sage hairline.",
+      "html": "<button class=\"ds-btn\">Отмена</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--line,#d8e1db);border-radius:10px;background:var(--surface,#fff);color:var(--fg,#0f2224);font:500 15px/1.5 Onest,system-ui,sans-serif;cursor:pointer;transition:border-color .12s,background-color .12s}.ds-btn:focus-visible{outline:2px solid var(--focus,#1b7f41);outline-offset:2px}.ds-btn:hover{border-color:color-mix(in srgb,var(--fg,#0f2224) 25%,var(--line,#d8e1db))}"
+    },
+    {
+      "name": "Danger Button (armed)",
+      "kind": "button",
+      "refersTo": "button-danger-armed",
+      "description": "Quiet red outline at rest, filled clay red once a dialog's destructive answer is armed.",
+      "html": "<button class=\"ds-btn ds-btn-danger\" disabled>Удалить доску</button> <button class=\"ds-btn ds-btn-danger ds-armed\">Удалить доску</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--line,#d8e1db);border-radius:10px;background:var(--surface,#fff);color:var(--fg,#0f2224);font:500 15px/1.5 Onest,system-ui,sans-serif;cursor:pointer;transition:border-color .12s,background-color .12s}.ds-btn:focus-visible{outline:2px solid var(--focus,#1b7f41);outline-offset:2px}.ds-btn-danger{color:var(--bug,#b0423a)}.ds-btn-danger:disabled{opacity:.6;cursor:default}.ds-btn-danger.ds-armed{background:var(--bug,#b0423a);border-color:var(--bug,#b0423a);color:var(--bug-fg,#fff);font-weight:600}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "White field with a sage hairline; label, hint and error belong to the component.",
+      "html": "<label class=\"ds-field\"><span>Название доски <small>· пользователи увидят его в шапке</small></span><input class=\"ds-input\" value=\"Demo\"></label>",
+      "css": ".ds-field{display:grid;gap:4px;font:15px/1.5 Onest,system-ui,sans-serif;color:var(--fg,#0f2224)}.ds-field>span{font-size:13px;font-weight:500}.ds-field small{font-size:12px;font-weight:400;color:var(--muted,#4c5d60)}.ds-input{border:1px solid var(--line,#d8e1db);background:var(--surface,#fff);color:inherit;border-radius:10px;padding:9px 12px;font:inherit}.ds-input:focus-visible{border-color:var(--focus,#1b7f41);outline:2px solid var(--focus,#1b7f41);outline-offset:2px}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Filled sage field with a green magnifier; turns white with a sprout halo on focus.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><path d=\"M20 20l-4.5-4.5M4 11a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0z\"/></svg><input placeholder=\"Поиск по доске\"></label>",
+      "css": ".ds-search{position:relative;display:block;max-width:300px}.ds-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--accent-ink,#1b7f41)}.ds-search input{width:100%;box-sizing:border-box;padding:9px 12px 9px 36px;border:1px solid transparent;border-radius:10px;background:var(--surface-2,#e8eee9);color:var(--fg,#0f2224);font:15px/1.5 Onest,system-ui,sans-serif;transition:border-color .12s,box-shadow .12s,background-color .12s}.ds-search input:hover{border-color:var(--control,#a9bcb0)}.ds-search input:focus-visible{outline:none;background:var(--surface,#fff);border-color:var(--accent,#1d8547);box-shadow:0 0 0 3px var(--active,#cfe7d7)}"
+    },
+    {
+      "name": "Side Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Muted items, sage hover, the current one in sprout green with a green edge.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Предложения</a><a href=\"#\">Топ</a><a href=\"#\">Авторы</a></nav>",
+      "css": ".ds-nav{display:grid;gap:2px;width:190px;font:14px/1.5 Onest,system-ui,sans-serif}.ds-nav a{padding:7px 10px;border:1px solid transparent;border-radius:8px;color:var(--muted,#4c5d60);text-decoration:none}.ds-nav a:hover{background:var(--surface-2,#e8eee9);color:var(--fg,#0f2224)}.ds-nav a:focus-visible{outline:2px solid var(--focus,#1b7f41);outline-offset:2px}.ds-nav a[aria-current]{background:var(--active,#cfe7d7);border-color:var(--active-line,#1d8547);color:var(--active-fg,#063f2c);font-weight:600}"
+    },
+    {
+      "name": "Category Tag and Status Pill",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Slanted pastel category tag, status as ink on its own 12% tint, neutral chip.",
+      "html": "<span class=\"ds-tag\" style=\"--g:#cce4d1\">Идея</span> <span class=\"ds-pill\" style=\"--c:#14623a\">Готово</span> <span class=\"ds-chip\">базовый</span>",
+      "css": ".ds-tag,.ds-pill,.ds-chip{display:inline-flex;align-items:center;font:600 12px/1.6 Onest,system-ui,sans-serif}.ds-tag{padding:1px 10px 1px 16px;background:var(--g,#e8eee9);color:var(--fg,#0f2224);clip-path:polygon(10px 0,100% 0,100% 100%,0 100%);border-radius:4px 10px 10px 4px}.ds-pill{padding:2px 8px;border-radius:6px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}.ds-chip{padding:1px 8px;border-radius:6px;font-weight:500;background:var(--surface-2,#e8eee9);color:var(--muted,#4c5d60)}"
+    },
+    {
+      "name": "Brand Tag",
+      "kind": "custom",
+      "refersTo": "nav-item-active",
+      "description": "The board's signboard: Unbounded in a Rocont Green slant.",
+      "html": "<a class=\"ds-brand\" href=\"#\">Demo</a>",
+      "css": ".ds-brand{display:inline-block;font:500 15px/1.2 Unbounded,Onest,system-ui,sans-serif;background:var(--accent,#1d8547);color:var(--accent-fg,#fff);padding:4px 14px 5px 16px;text-decoration:none;clip-path:polygon(10px 0,100% 0,100% 100%,0 100%);border-radius:4px 10px 10px 4px}.ds-brand:focus-visible{outline:2px solid var(--focus,#1b7f41);outline-offset:2px}"
+    },
+    {
+      "name": "Board Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat white card with a hairline; hover tints the edge green.",
+      "html": "<article class=\"ds-card\"><h3>Demo</h3><code>/demo</code><p>Очередь пуста</p></article>",
+      "css": ".ds-card{display:flex;flex-direction:column;gap:6px;width:260px;padding:18px 20px;background:var(--surface,#fff);border:1px solid var(--line,#d8e1db);border-radius:10px;color:var(--fg,#0f2224);font:15px/1.5 Onest,system-ui,sans-serif;transition:border-color .12s}.ds-card:hover{border-color:color-mix(in srgb,var(--accent,#1d8547) 50%,var(--line,#d8e1db))}.ds-card h3{margin:0;font-size:16px;font-weight:600}.ds-card code{font:13px ui-monospace,Menlo,monospace;color:var(--muted,#4c5d60)}.ds-card p{margin:0;font-size:13px;color:var(--muted,#4c5d60)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Tended Garden",
+    "overview": "The board is a garden someone looks after every day. The ground is plain white with sage tone steps for trays and chips; one green, Rocont Green, grows only where something can be done or has been chosen. Nothing is planted for decoration. A team member opening the queue for the fifth time today should see the same calm beds, with the new shoots (posts in «Новое», your vote, the selected filter) standing out because they are the only green on screen.\n\nLiveliness lives in the small moments, as PRODUCT.md puts it: \"reactions, votes, small motion, empty states\", not in colour or layout tricks. The 👍 and 💩 vote buttons, a short rise when a menu or toast appears, a friendly empty column (\"Всё разобрано\"): that is where the personality is allowed. The structure itself stays quiet and familiar so the queue always comes first.\n\nThe system rejects the generated \"AI look\" (gradient blobs, glass panels, icon-in-a-tinted-circle cards, tiny uppercase letter-spaced labels, dashed hint boxes), dull monochrome admin kits with ink-black buttons, the childish green-plus-purple mix of an earlier version, Trello-style multicolour boards, and harsh contrast for its own sake. Right-lane references: Linear for density and precise states, Notion for warm neutrality, Canny and Featurebase for what a feedback board must do.",
+    "keyCharacteristics": [
+      "One hue: Rocont Green marks actions and the current selection, nothing else.",
+      "Depth by sage tone steps and 1px lines; shadows only on floating layers.",
+      "Calm, precise components: 10px corners, hairline edges, green fill only for the main action.",
+      "One body family (Onest); the Unbounded display face is reserved for the wordmark.",
+      "Light and dark themes are both first-class; the embeddable widget stays light.",
+      "Desktop-first breakpoints (1919 / 1439 / 1023 / 767 / 479), fixed side gutters, 1712px max container."
+    ],
+    "rules": [
+      {
+        "name": "The One Green Rule",
+        "body": "Green means \"act here\" or \"you chose this\". If a green element on screen is neither an action nor a selection, remove the green.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sage Not Grey Rule",
+        "body": "Every neutral leans toward the brand green. Pure greys (#888, #ccc) and pure black are forbidden.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Danger Rule",
+        "body": "Clay Red is an outline until the moment of no return. Only an armed confirm inside a dialog gets a red fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Signboard Rule",
+        "body": "Unbounded is the sign on the gate. It never appears in buttons, labels, data or headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "No uppercase letter-spaced micro labels. Labels are sentence case, weight does the work.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-At-Rest Rule",
+        "body": "Cards, columns and sections never carry a shadow. If a resting element needs to stand out, give it a tone step or a line, not a shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep Rocont Green (#1d8547) to actions and the current selection; one green fill per view.",
+      "Do show selection as Sprout Active (#cfe7d7) with Sprout Active Ink (#063f2c) text, never an ink-filled block.",
+      "Do build depth from Sage Step (#e8eee9) trays and Sage Line (#d8e1db) hairlines.",
+      "Do use the 10px radius for buttons, inputs, cards and sections; 6px for chips and pills; the slant shape only for the brand and category tags.",
+      "Do give every status a text label, not only a colour.",
+      "Do define every new colour as a token in both themes; the widget's `:host` reads the same tokens.",
+      "Do keep text at WCAG AA (4.5:1) in both themes and keep a visible 2px green focus outline.",
+      "Do put personality into reactions, votes, empty states and small motion."
+    ],
+    "donts": [
+      "Don't use the generated \"AI look\": gradient blobs, glass panels, icon-in-a-tinted-circle cards, tiny uppercase letter-spaced labels, dashed hint boxes.",
+      "Don't fall into dull monochrome admin kits: grey ground, ink-black buttons, no colour anywhere.",
+      "Don't bring back childish, toy-like colour: no purple or a second hue next to the green (\"one hue, not two\").",
+      "Don't make it look like Trello: saturated multicolour labels and loud boards.",
+      "Don't use harsh contrast for its own sake.",
+      "Don't put a shadow on a resting card, column or section.",
+      "Don't use Unbounded outside the wordmark and brand tag.",
+      "Don't use `border-left` or `border-right` wider than 1px as a coloured accent stripe.",
+      "Don't fill a destructive button red until the user has confirmed what they are destroying.",
+      "Don't use pure black, pure grey, or a raw hex inside a component; go through the tokens."
+    ]
+  }
+}

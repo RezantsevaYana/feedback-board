@@ -61,7 +61,7 @@
     border-radius: 10px;
     padding: 10px;
     display: grid;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
     transition: border-color 0.12s;
 
@@ -75,7 +75,7 @@
         opacity: 0.4;
     }
     h3 {
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
         line-height: 1.35;
     }
@@ -95,6 +95,25 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+}
+// who, when and the votes on one ruled line; a like count above zero turns green
+.kcard-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+
+    .meta {
+        min-width: 0;
+    }
+    // your own pressed like keeps its fuller look from _votes.scss
+    &.liked .vote:not(.dislike):not([aria-pressed='true']) {
+        color: var(--accent-ink);
+        font-weight: 650;
+        border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    }
 }
 // the team's answer on the card: a tinted inset block in the status's own hue
 // (green for «Готово», red for «Отклонено», neutral for the team's own columns)

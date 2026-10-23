@@ -34,9 +34,12 @@
           <h3><button type="button" class="card-open" @click="open(post)">{{ post.title }}</button></h3>
           <div v-if="post.description" class="excerpt">{{ post.description }}</div>
           <p v-if="post.status.slug !== 'new' && post.team_comment" class="kcard-reply" :data-s="post.status.slug">{{ post.team_comment }}</p>
-          <PostMeta :post="post" />
         </div>
-        <VoteButtons :post="post" small />
+        <!-- who, when and the votes share one ruled line at the bottom -->
+        <div class="kcard-foot" :class="{ liked: post.likes_count > 0 }">
+          <PostMeta :post="post" />
+          <VoteButtons :post="post" small />
+        </div>
       </article>
       <template v-if="!col.posts.length">
         <!-- the team cleared the queue: a small win instead of an empty tray -->

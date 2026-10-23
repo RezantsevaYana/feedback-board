@@ -10,10 +10,12 @@ use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * Self-serve boards owned by the current admin: list for the hub, create from the wizard,
- * slug availability for the live check, embed payload for the "how to connect" screen.
+ * slug availability for the live check, embed payload for the "how to connect" screen,
+ * delete to the trash and restore from it (PurgeTrashedBoards empties the trash).
  */
 class BoardController extends Controller
 {
@@ -29,7 +31,13 @@ class BoardController extends Controller
             ->get()
             ->map(fn (Project $p) => $this->summary($p));
 
-        return response()->json(['data' => $boards]);
+        // the hub shows them in a separate "Корзина" block, newest deletion first
+        $trashed = $request->user()->boards()->onlyTrashed()
+            ->orderByDesc('deleted_at')
+            ->get()
+            ->map(fn (Project $p) => $this->trashedSummary($p));
+
+        return response()->json(['data' => $boards, 'trashed' => $trashed]);
     }
 
     public function store(CreateBoardRequest $request, ProjectService $projects): JsonResponse
@@ -67,6 +75,45 @@ class BoardController extends Controller
         ], fn ($v) => $v !== null));
 
         return response()->json(['data' => $this->settings($board)]);
+    }
+
+    /**
+     * To the trash, not gone: the owner types the slug to confirm, the board stays recoverable
+     * for feedback.trash_retention_days. Its slug stays taken meanwhile (checkSlug uses withTrashed).
+     */
+    public function destroy(Request $request, Project $board): JsonResponse
+    {
+        $this->authorizeOwner($request, $board);
+
+        $request->validate(
+            ['confirm' => ['required', 'string', Rule::in([$board->slug])]],
+            [
+                'confirm.required' => 'Введите адрес доски, чтобы подтвердить удаление.',
+                'confirm.in' => 'Адрес не совпадает — проверьте и введите ещё раз.',
+            ],
+        );
+
+        $board->delete();
+
+        return response()->json(['data' => $this->trashedSummary($board)]);
+    }
+
+    /**
+     * Back from the trash. The route binds {board} withTrashed(); a live board is a no-op.
+     */
+    public function restore(Request $request, Project $board): JsonResponse
+    {
+        $this->authorizeOwner($request, $board);
+
+        if ($board->trashed()) {
+            $board->restore();
+        }
+
+        $board->loadCount([
+            'posts as queue_count' => fn ($q) => $q->whereHas('status', fn ($s) => $s->where('slug', 'new')),
+        ])->loadMax('posts as last_post_at', 'created_at');
+
+        return response()->json(['data' => $this->summary($board)]);
     }
 
     /**
@@ -126,7 +173,21 @@ class BoardController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, slug: string, allowed_origins: array<int, string>}
+     * @return array{id: int, name: string, slug: string, deleted_at: mixed, purge_at: mixed}
+     */
+    private function trashedSummary(Project $p): array
+    {
+        return [
+            'id' => $p->id,
+            'name' => $p->name,
+            'slug' => $p->slug,
+            'deleted_at' => $p->deleted_at,
+            'purge_at' => $p->deleted_at?->copy()->addDays((int) config('feedback.trash_retention_days')),
+        ];
+    }
+
+    /**
+     * @return array{id: int, name: string, slug: string, allowed_origins: array<int, string>, trash_retention_days: int}
      */
     private function settings(Project $p): array
     {
@@ -135,6 +196,8 @@ class BoardController extends Controller
             'name' => $p->name,
             'slug' => $p->slug,
             'allowed_origins' => $p->allowed_origins ?? [],
+            // the delete section says how long the board stays recoverable
+            'trash_retention_days' => (int) config('feedback.trash_retention_days'),
         ];
     }
 

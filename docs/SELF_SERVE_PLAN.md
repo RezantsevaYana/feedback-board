@@ -460,12 +460,20 @@ UPDATE projects SET owner_id = (SELECT id FROM users WHERE email = 'admin@exampl
 - Добавление домена → виджет на этом домене начинает работать
 
 ### Итерация 4 — Удаление и переключение
-- [ ] BoardController@destroy + restore
-- [ ] PurgeTrashedBoards command + schedule
-- [ ] DeleteBoardSection
-- [ ] TrashSection
-- [ ] BoardSwitcher
-- [ ] Интеграция BoardSwitcher в BoardPage
+- [x] BoardController@destroy (`confirm` = slug, иначе 422) + restore (роут `withTrashed()`), только owner — `BoardTrashTest`
+- [x] `index` отдаёт `trashed: [{…, deleted_at, purge_at}]` рядом с `data`
+- [x] PurgeTrashedBoards (`boards:purge-trashed`, `--dry-run`) — forceDelete + файлы вложений; `Schedule::…->daily()` в `routes/console.php`. **На проде нужен cron `schedule:run`** — в docker-compose планировщика нет
+- [x] DeleteBoardSection — секция `#delete` в настройках, модалка с вводом slug; тост «в корзине до …» с кнопкой «Восстановить»
+- [x] TrashSection — блок «Корзина» в hub, дата удаления навсегда, «Восстановить»
+- [x] BoardSwitcher (`shared/components/`) на MenuComponent (+ `current` у пункта): в AppHeader рядом с лого (на settings/embed переключает на ту же страницу другой доски)
+- [x] Интеграция в BoardPage: в режиме команды с 2+ досками зелёный тег-название открывает переключатель; владельцу — «Настройки доски» в team-box и меню «Команда»
+
+**Что проверить руками в браузере:**
+- Удаление с правильным slug — редирект на hub, тост с «Восстановить», доска в «Корзине»
+- Неправильный slug — кнопка «Удалить доску» неактивна
+- Удалённая доска по `/<slug>` — «Доска не найдена»; виджет перестаёт грузиться
+- Восстановление из корзины — карточка вернулась наверх, доска снова открывается
+- Переключение между 3 досками: выпадашка в шапке hub/настроек и на самой доске
 
 ### Итерация 5 — Защита
 - [ ] Капча на регистрации (бэк + фронт)

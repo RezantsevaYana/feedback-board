@@ -1,15 +1,16 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { AuthApi } from '@/api/auth'
-import { type Board, BoardsApi } from '@/api/boards'
+import { type Board, BoardsApi, type TrashedBoard } from '@/api/boards'
 import { ApiError } from '@/api/client'
 import type { BoardSummary, Me } from '@/api/types'
 
 /**
  * Global auth state for the admin app (/app/*): who's logged in and which boards they own.
  * Two sources for boards:
- *  - `me.boards` — short summaries from /me, powers the board switcher (iteration 4).
- *  - `boards`   — full rows with queue_count / last_post_at from /admin/boards, drives the hub.
+ *  - `me.boards` — short summaries from /me, powers the board switcher.
+ *  - `boards`   — full rows with queue_count / last_post_at from /admin/boards, drives the hub;
+ *                 `trashed` comes with the same request and fills the hub's trash block.
  *
  * Separate from useBoardStore — the latter is tied to a specific project context and keeps its
  * own `me` for team-mode checks on the public board. Both stores coexist by design.
@@ -20,6 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
 
   const boards = ref<Board[]>([])
+  const trashed = ref<TrashedBoard[]>([])
   const boardsLoaded = ref(false)
   const boardsLoading = ref(false)
 
@@ -49,6 +51,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await BoardsApi.list()
       boards.value = res.data
+      trashed.value = res.trashed
       boardsLoaded.value = true
     } finally {
       boardsLoading.value = false
@@ -70,6 +73,32 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /** Delete to the trash; the board disappears from the hub, the switcher and team mode at once. */
+  async function trashBoard(slug: string, confirm: string): Promise<TrashedBoard> {
+    const res = await BoardsApi.destroy(slug, confirm)
+    boards.value = boards.value.filter((b) => b.slug !== slug)
+    trashed.value = [res.data, ...trashed.value.filter((b) => b.slug !== slug)]
+    if (me.value) {
+      me.value.boards = me.value.boards.filter((b) => b.slug !== slug)
+      me.value.projects = me.value.projects.filter((b) => b.slug !== slug)
+    }
+    return res.data
+  }
+
+  /** Back from the trash, to the top of the hub (it was the most recent thing touched). */
+  async function restoreBoard(slug: string): Promise<Board> {
+    const res = await BoardsApi.restore(slug)
+    trashed.value = trashed.value.filter((b) => b.slug !== slug)
+    boards.value = [res.data, ...boards.value.filter((b) => b.slug !== slug)]
+    if (me.value) {
+      const brief = { id: res.data.id, name: res.data.name, slug: res.data.slug }
+      const bySlug = (list: typeof me.value.boards) => [...list.filter((b) => b.slug !== slug), brief].sort((a, b) => a.name.localeCompare(b.name))
+      me.value.boards = bySlug(me.value.boards)
+      me.value.projects = bySlug(me.value.projects)
+    }
+    return res.data
+  }
+
   async function register(name: string, email: string, password: string): Promise<void> {
     const res = await AuthApi.register(name, email, password)
     me.value = res.data
@@ -88,13 +117,14 @@ export const useAuthStore = defineStore('auth', () => {
     loaded.value = true
     // next admin session starts clean
     boards.value = []
+    trashed.value = []
     boardsLoaded.value = false
   }
 
   return {
     me, loaded, loading, isAuth, boardSummaries,
-    boards, boardsLoaded, boardsLoading,
-    fetchMe, fetchBoards, addBoard, renameBoard,
+    boards, trashed, boardsLoaded, boardsLoading,
+    fetchMe, fetchBoards, addBoard, renameBoard, trashBoard, restoreBoard,
     register, login, logout,
   }
 })

@@ -1,0 +1,25 @@
+{
+  "id": "c1896551",
+  "phase": "agent_error",
+  "pageUrl": "/demo",
+  "sourceFile": "frontend/src/pages/board/components/KanbanBoard.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 3,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 15,
+  "activeOwner": "8fc74680",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "agent_error",
+      "message": "Session markers not found for id: c1896551"
+    }
+  ],
+  "updatedAt": "2026-10-23T08:59:19.007Z"
+}

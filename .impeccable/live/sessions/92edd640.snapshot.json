@@ -1,0 +1,25 @@
+{
+  "id": "92edd640",
+  "phase": "agent_error",
+  "pageUrl": "/demo",
+  "sourceFile": null,
+  "expectedVariants": 3,
+  "arrivedVariants": 0,
+  "visibleVariant": 0,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 2,
+  "activeOwner": "e566ed2a",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "agent_error",
+      "message": "Запрос отменён, выберите элемент заново"
+    }
+  ],
+  "updatedAt": "2026-10-23T08:38:17.579Z"
+}

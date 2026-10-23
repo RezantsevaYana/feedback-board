@@ -1,0 +1,20 @@
+{
+  "id": "eb98a15c",
+  "phase": "discarded",
+  "pageUrl": "/demo",
+  "sourceFile": "frontend/src/pages/board/components/PostList.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 11,
+  "activeOwner": "26cc8a2e",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [],
+  "updatedAt": "2026-10-23T09:03:29.282Z"
+}

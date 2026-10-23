@@ -67,6 +67,13 @@
         font-size: 16px;
         margin: 0;
     }
+    &.danger {
+        border-color: color-mix(in srgb, var(--bug) 30%, var(--line));
+
+        h2 {
+            color: var(--bug);
+        }
+    }
 
     @media screen and (max-width: $mobile-mini) {
         padding: 14px 14px 16px;
@@ -101,6 +108,20 @@
     @include hover {
         color: var(--fg);
         background: var(--surface-2);
+    }
+
+    // the section on screen, same look as the current section on the board
+    &[aria-current='location'] {
+        background: var(--active);
+        color: var(--active-fg);
+        font-weight: 600;
+    }
+    &.danger {
+        color: var(--bug);
+
+        &[aria-current='location'] {
+            background: color-mix(in srgb, var(--bug) 12%, var(--surface));
+        }
     }
 
     @media screen and (max-width: $tablet) {
@@ -168,5 +189,26 @@
 
     .spacer {
         flex: 1;
+    }
+}
+// DeleteBoardSection.vue — the confirmation modal: type the slug, then the red button turns on
+.delete-board {
+    display: grid;
+    gap: 12px;
+}
+.delete-board-form {
+    display: grid;
+    gap: 12px;
+
+    .desc {
+        margin: 0;
+    }
+    .field {
+        padding-bottom: 0;
+    }
+    .field > .err {
+        position: static;
+        white-space: normal;
+        margin-top: 2px;
     }
 }

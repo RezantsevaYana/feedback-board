@@ -35,7 +35,8 @@ class BoardSettingsTest extends TestCase
         $this->getJson('/api/admin/boards/my-board')
             ->assertOk()
             ->assertJsonPath('data.slug', 'my-board')
-            ->assertJsonPath('data.allowed_origins', []);
+            ->assertJsonPath('data.allowed_origins', [])
+            ->assertJsonPath('data.trash_retention_days', 30);
 
         $this->patchJson('/api/admin/boards/my-board', ['name' => '  Новое имя '])
             ->assertOk()

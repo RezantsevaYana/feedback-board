@@ -20,13 +20,16 @@
         <button
           type="button"
           class="menu-item"
-          :class="{ danger: item.danger }"
+          :class="{ danger: item.danger, current: item.current }"
           role="menuitem"
+          :aria-current="item.current ? 'true' : undefined"
           tabindex="-1"
           :disabled="item.disabled"
           @click.stop="pick(item)"
         >
-          {{ item.label }}<kbd v-if="item.key" class="menu-key">{{ item.key }}</kbd>
+          <span class="menu-label">{{ item.label }}</span>
+          <kbd v-if="item.key" class="menu-key">{{ item.key }}</kbd>
+          <AppIcon v-else-if="item.current" name="check" class="menu-check" />
         </button>
       </template>
     </div>
@@ -46,6 +49,8 @@ export interface MenuItem {
   disabled?: boolean
   /** a thin gap above the item starts a new group */
   separated?: boolean
+  /** the one you're on now (board switcher): a check on the right */
+  current?: boolean
 }
 
 // Action menu behind an icon button (kebab by default): arrows move, Enter picks, Esc / click outside close.

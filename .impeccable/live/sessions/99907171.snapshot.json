@@ -1,0 +1,22 @@
+{
+  "id": "99907171",
+  "phase": "discarded",
+  "pageUrl": "/demo",
+  "sourceFile": "frontend/src/pages/board/components/KanbanBoard.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {
+    "mark": 0.14
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 49,
+  "activeOwner": "f31d47f6",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [],
+  "updatedAt": "2026-10-23T08:48:53.633Z"
+}

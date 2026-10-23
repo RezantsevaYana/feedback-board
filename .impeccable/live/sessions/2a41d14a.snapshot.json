@@ -1,0 +1,27 @@
+{
+  "id": "2a41d14a",
+  "phase": "agent_error",
+  "pageUrl": "/demo",
+  "sourceFile": "frontend/src/pages/board/components/KanbanBoard.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {
+    "title": "l"
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 34,
+  "activeOwner": "f31d47f6",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "agent_error",
+      "message": "Session markers not found for id: 2a41d14a"
+    }
+  ],
+  "updatedAt": "2026-10-23T08:42:10.542Z"
+}

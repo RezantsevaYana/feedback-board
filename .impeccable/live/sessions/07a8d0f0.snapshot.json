@@ -1,0 +1,20 @@
+{
+  "id": "07a8d0f0",
+  "phase": "completed",
+  "pageUrl": "/demo",
+  "sourceFile": "frontend/src/pages/board/BoardPage.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 2,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 56,
+  "activeOwner": "f31d47f6",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [],
+  "updatedAt": "2026-10-23T08:52:24.117Z"
+}
