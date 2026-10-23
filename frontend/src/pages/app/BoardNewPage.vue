@@ -3,7 +3,11 @@
   <main class="container base-page board-new">
     <form class="board-new-form" novalidate @submit.prevent="submit">
       <div class="board-new-head">
-        <RouterLink to="/app/boards" class="board-new-back">← Назад</RouterLink>
+        <nav class="board-new-crumbs" aria-label="Путь">
+          <RouterLink to="/app/boards">Мои доски</RouterLink>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">Новая доска</span>
+        </nav>
         <h1>Новая доска</h1>
       </div>
 
@@ -11,6 +15,7 @@
         v-model="name"
         label="Название доски"
         hint="пользователи увидят его в шапке"
+        class="board-new-name"
         type="text"
         maxlength="80"
         :errors="v$.name"
@@ -30,13 +35,13 @@
           :errors="slugError ? undefined : v$.slug"
           @input="onSlugInput"
         />
-        <p v-if="slugHint" class="board-new-slug-hint" :class="slugHintClass">{{ slugHint }}</p>
+        <p class="board-new-slug-hint" :class="slugHintClass">{{ slugHint }}</p>
       </div>
 
       <fieldset class="board-new-origins">
         <legend>Домены <small>· необязательно</small></legend>
         <p class="note board-new-origins-note">
-          Сайты, где у вас будет виджет. Без домена доска работает только по прямой ссылке — виджет настроите позже.
+          Сайты, где у вас будет виджет. Без домена доска работает только по прямой ссылке, виджет можно настроить позже.
         </p>
         <div v-for="(origin, idx) in origins" :key="idx" class="board-new-origin-row">
           <InputComponent
@@ -55,8 +60,10 @@
       </fieldset>
 
       <div class="board-new-actions">
-        <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">
-          {{ sending ? 'Создаём…' : 'Создать доску' }}
+        <!-- hover rolls the label into «Поехали →» (shared .cta-roll); while sending it reads «Создаём…» -->
+        <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending" :aria-label="sending ? undefined : 'Создать доску'">
+          <template v-if="sending">Создаём…</template>
+          <span v-else class="cta-roll" aria-hidden="true"><span>Создать доску</span><span>Поехали →</span></span>
         </button>
       </div>
     </form>

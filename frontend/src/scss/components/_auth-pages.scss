@@ -1,31 +1,46 @@
 @use '../utils' as *;
 
 // RegisterPage.vue, LoginPage.vue — standalone auth forms under /app/register and /app/login.
-// Vertical centering between header and viewport bottom at every breakpoint.
+// Vertical centering between header and viewport bottom at every breakpoint. The form is a white card
+// on a sage page (DESIGN.md tonal layering); the header keeps its own white background above it.
+body:has(.auth-page) {
+    background: var(--surface-2);
+}
 .auth-page {
-    min-height: calc(100dvh - 65px); // minus the AppHeader row
+    min-height: calc(100dvh - 84px); // minus the sticky AppHeader bar
     display: grid;
     place-items: center;
     padding: 24px 0;
 }
 .auth-form {
     width: 100%;
-    max-width: 360px;
+    max-width: 400px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 28px 28px 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
 
     h1 {
-        font-size: 22px;
+        font-size: 24px;
         margin: 0;
     }
     .auth-intro {
-        margin: 0 0 6px;
+        margin: 0 0 12px;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 14px;
     }
     .btn-primary {
+        width: 100%;
+        min-height: 44px;
         margin-top: 6px;
+    }
+
+    @media screen and (max-width: $mobile-mini) {
+        padding: 20px 16px 16px;
+        border-radius: 12px;
     }
 
     // Shared .field reserves 20px under the input so the absolute-positioned error

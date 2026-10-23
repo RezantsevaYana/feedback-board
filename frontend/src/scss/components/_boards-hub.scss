@@ -1,6 +1,6 @@
 @use '../utils' as *;
 
-// BoardsHubPage.vue + BoardNewPage.vue (placeholder) — the admin's "my boards" screen.
+// BoardsHubPage.vue — the admin's "my boards" screen: the first-visit greeting, the grid, the trash.
 .boards-hub {
     h1 {
         font-size: 24px;
@@ -14,28 +14,49 @@
     gap: 16px;
     margin-bottom: 8px;
 }
-.boards-hub-empty {
-    max-width: 480px;
-    margin: 48px auto 0;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
+// first visit: the greeting sits in the vertical middle of the screen, left-aligned with the container
+.boards-hub-hello {
+    display: grid;
+    justify-items: start;
+    align-content: center;
+    gap: 14px;
+    max-width: 640px;
+    // the viewport minus the sticky header bar (~84px) and the page's own top/bottom padding (24 + 48)
+    min-height: calc(100dvh - 84px - 72px);
+
+    @media screen and (max-width: $mobile) {
+        min-height: calc(100dvh - 84px - 48px);
+    }
 
     h1 {
-        font-size: 24px;
-    }
-    .boards-hub-empty-lead {
-        margin: 0;
-        font-size: 16px;
+        font-size: 44px;
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+
+        @media screen and (max-width: $mobile) {
+            font-size: 32px;
+        }
     }
     .note {
         margin: 0;
         color: var(--muted);
+        max-width: 52ch;
     }
     .btn {
-        margin-top: 8px;
+        margin-top: 10px;
+        min-height: 48px;
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+}
+.boards-hub-hello-lead {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.4;
+    max-width: 30ch;
+
+    @media screen and (max-width: $mobile) {
+        font-size: 18px;
     }
 }
 .boards-list {

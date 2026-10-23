@@ -1,0 +1,25 @@
+{
+  "id": "588ec4eb",
+  "phase": "completed",
+  "pageUrl": "/app/boards/new",
+  "sourceFile": "frontend/src/pages/app/BoardNewPage.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 27,
+  "activeOwner": "9282b44a",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "stale_checkpoint_ignored",
+      "revision": 1
+    }
+  ],
+  "updatedAt": "2026-10-23T12:17:43.813Z"
+}

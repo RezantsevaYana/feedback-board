@@ -1,0 +1,20 @@
+{
+  "id": "b8434ec4",
+  "phase": "completed",
+  "pageUrl": "/app/boards/new",
+  "sourceFile": "frontend/src/pages/app/BoardNewPage.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 2,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 45,
+  "activeOwner": "9282b44a",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [],
+  "updatedAt": "2026-10-23T12:22:53.989Z"
+}

@@ -1,57 +1,183 @@
 @use '../utils' as *;
 
-// HomePage.vue — single centred column, same vertical centering on mobile and desktop.
+// HomePage.vue — the seed-packet landing: Rocont Green edge to edge, the wordmark huge and left-aligned,
+// buttons inverted to white on the green. The one place the green is the ground, not an accent.
 .home-page {
     min-height: 100dvh;
     display: grid;
-    place-items: center;
-    padding: 32px 0;
-}
-.home-page-inner {
-    max-width: 420px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
+    align-content: end;
+    gap: 28px;
+    padding: 40px 0 48px;
+    color: var(--accent-fg);
+    // full-bleed green without widening the page: a spread shadow, clipped to the sides only
+    background: var(--accent);
+    box-shadow: 0 0 0 100vmax var(--accent);
+    clip-path: inset(0 -100vmax);
 
     h1 {
         font-family: var(--font-display);
-        font-size: 28px;
-        letter-spacing: -0.01em;
+        font-weight: 500;
+        font-size: clamp(56px, 13vw, 240px);
+        line-height: 0.88;
+        letter-spacing: -0.04em;
         margin: 0;
+    }
+    .btn-primary {
+        background: var(--accent-fg);
+        border-color: var(--accent-fg);
+        color: var(--accent);
 
-        @media screen and (max-width: $mobile) {
-            font-size: 24px;
+        @include hover {
+            background: color-mix(in srgb, var(--accent-fg) 88%, var(--accent));
+            border-color: transparent;
+        }
+    }
+    .btn:not(.btn-primary) {
+        background: transparent;
+        border-color: color-mix(in srgb, var(--accent-fg) 55%, transparent);
+        color: var(--accent-fg);
+
+        @include hover {
+            border-color: var(--accent-fg);
+        }
+    }
+    :focus-visible {
+        outline-color: var(--accent-fg);
+    }
+
+    @media screen and (max-width: $mobile) {
+        gap: 20px;
+        padding: 32px 0;
+    }
+}
+.home-ground {
+    display: grid;
+    gap: 28px;
+
+    @media screen and (max-width: $mobile) {
+        gap: 20px;
+    }
+}
+.home-tag {
+    justify-self: start;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 12px 3px 18px;
+    background: var(--accent-fg);
+    color: var(--accent);
+}
+.home-lead {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--accent-fg) 88%, transparent);
+
+    a {
+        color: inherit;
+        font-weight: 600;
+    }
+}
+.home-claim {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent-fg);
+
+    @media screen and (max-width: $mobile) {
+        font-size: 19px;
+    }
+}
+// the board address as a translucent browser bar on the green
+.home-bar {
+    justify-self: start;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 8px 14px 8px 12px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent-fg) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-fg) 30%, transparent);
+
+    code {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        color: var(--accent-fg);
+    }
+}
+.home-bar-sep {
+    opacity: 0.6;
+}
+// the CTA slot is sized for the buttons even before /me answers, so nothing below it jumps
+.home-cta {
+    display: grid;
+    gap: 10px;
+    min-height: 44px;
+}
+.home-signed-in {
+    margin: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    color: color-mix(in srgb, var(--accent-fg) 80%, transparent);
+
+    .link-btn {
+        color: inherit;
+        text-decoration-color: currentColor;
+    }
+}
+// «Мои доски» for a signed-in admin: the brand slant (shared .slant), bigger, the arrow nudges on hover
+.home-go {
+    padding: 12px 24px 12px 30px;
+    font-size: 17px;
+    font-weight: 700;
+    gap: 10px;
+    clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%);
+    border-radius: 4px 12px 12px 4px;
+
+    @include hover {
+        .home-go-arrow {
+            transform: translateX(3px);
         }
     }
 }
-.home-lead {
-    margin: 0;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.55;
+.home-go-arrow {
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 
-    .mono {
-        font-family: var(--font-mono);
-        background: var(--surface-2);
-        color: var(--fg);
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 13px;
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
     }
-    a {
-        font-weight: 500;
+}
+// «Мои доски 3»: a green count inside the white button, it swells a little on hover
+.home-count {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 12px;
+    font-weight: 700;
+    transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+
+    .btn:hover & {
+        @media (hover: hover) and (pointer: fine) {
+            transform: scale(1.12);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
     }
 }
 .home-cta-actions {
     display: flex;
     gap: 10px;
-    justify-content: center;
     flex-wrap: wrap;
-    margin-top: 4px;
 
     .btn {
         min-width: 140px;
+        gap: 8px;
     }
 }

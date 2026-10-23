@@ -60,8 +60,12 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    // anchor jumps land below the page edge, not flush against it
-    scroll-margin-top: 16px;
+    // anchor jumps land below the sticky AppHeader bar (~76px; two rows on a narrow phone), not under it
+    scroll-margin-top: 96px;
+
+    @media screen and (max-width: $mobile-mini) {
+        scroll-margin-top: 140px;
+    }
 
     h2 {
         font-size: 16px;
@@ -83,7 +87,7 @@
 // SettingsNav.vue — sticky column on desktop, a scrollable row of chips on tablet and below
 .settings-nav {
     position: sticky;
-    top: 16px;
+    top: 92px;              // under the sticky AppHeader bar
     display: flex;
     flex-direction: column;
     gap: 2px;

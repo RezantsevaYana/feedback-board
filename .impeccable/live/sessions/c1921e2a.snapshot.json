@@ -1,0 +1,25 @@
+{
+  "id": "c1921e2a",
+  "phase": "agent_error",
+  "pageUrl": "/app/register",
+  "sourceFile": "frontend/src/pages/auth/RegisterPage.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 11,
+  "activeOwner": "b5578750",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "agent_error",
+      "message": "Session markers not found for id: c1921e2a"
+    }
+  ],
+  "updatedAt": "2026-10-23T10:32:24.238Z"
+}

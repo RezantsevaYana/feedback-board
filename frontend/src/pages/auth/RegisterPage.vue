@@ -3,7 +3,7 @@
   <main class="container base-page auth-page">
     <form class="auth-form" novalidate @submit.prevent="submit">
       <h1>Создать аккаунт</h1>
-      <p class="auth-intro">Один аккаунт на все ваши продукты — у каждого будет своя доска.</p>
+      <p class="auth-intro">Один аккаунт на все ваши продукты, у каждого своя доска.</p>
       <InputComponent
         v-model="name"
         label="Имя"
