@@ -24,11 +24,15 @@
         <CopyButton :value="info.script_tag" label="Скопировать код" />
         <div class="board-embed-origins">
           <template v-if="info.allowed_origins.length">
-            <p class="note">Работает на: <code v-for="o in info.allowed_origins" :key="o" class="mono">{{ o }}</code></p>
+            <p class="note">
+              Работает на: <code v-for="o in info.allowed_origins" :key="o" class="mono">{{ o }}</code>
+              <RouterLink :to="domainsLink">изменить</RouterLink>
+            </p>
           </template>
           <template v-else>
             <p class="board-embed-warn">
-              Домены ещё не добавлены — виджет не сможет отправлять посты. Добавите их в настройках доски (на следующем этапе).
+              Домены ещё не добавлены — виджет не сможет отправлять посты.
+              <RouterLink :to="domainsLink">Добавить домен</RouterLink>
             </p>
           </template>
         </div>
@@ -74,6 +78,7 @@ const loading = ref(true)
 
 const slug = computed(() => String(route.params.slug ?? ''))
 const justCreated = computed(() => route.query.created === '1')
+const domainsLink = computed(() => `/app/boards/${slug.value}/settings#domains`)
 const boardName = computed(() => auth.boardSummaries.find((b) => b.slug === slug.value)?.name ?? slug.value)
 
 onMounted(async () => {

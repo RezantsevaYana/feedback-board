@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import type { Post } from '@/api/types'
 import { PRIORITY } from '@/shared/constants/dict'
-import CategoryTag from './CategoryTag.vue'
+import CategoryTag from '@/shared/components/CategoryTag.vue'
 
 // Category tag, optional status pill and (in team mode) priority / hidden marks.
 defineProps<{

@@ -6,6 +6,7 @@ import LoginPage from '@/pages/auth/LoginPage.vue'
 import BoardsHubPage from '@/pages/app/BoardsHubPage.vue'
 import BoardNewPage from '@/pages/app/BoardNewPage.vue'
 import BoardEmbedPage from '@/pages/app/BoardEmbedPage.vue'
+import BoardSettingsPage from '@/pages/app/BoardSettingsPage.vue'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 
 const router = createRouter({
@@ -16,6 +17,7 @@ const router = createRouter({
     { path: '/app/login', name: 'login', component: LoginPage, meta: { guest: true } },
     { path: '/app/boards', name: 'hub', component: BoardsHubPage, meta: { auth: true } },
     { path: '/app/boards/new', name: 'board-new', component: BoardNewPage, meta: { auth: true } },
+    { path: '/app/boards/:slug/settings', name: 'board-settings', component: BoardSettingsPage, meta: { auth: true } },
     { path: '/app/boards/:slug/embed', name: 'board-embed', component: BoardEmbedPage, meta: { auth: true } },
     { path: '/:slug', name: 'board', component: BoardPage },
     // the post card opens as a modal on top of the board, with its own address (TZ 5.2)

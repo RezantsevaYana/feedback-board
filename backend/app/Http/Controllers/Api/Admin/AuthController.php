@@ -48,22 +48,31 @@ class AuthController extends Controller
 
     /**
      * The board calls this on load: 401 means guest, 200 means team mode for the listed projects.
-     * `projects` — legacy teams via project_user pivot (still used by team-mode login on the board).
+     * `projects` — every project the user manages: legacy teams via project_user pivot plus
+     *              owned boards (drives team mode on the board, same rule as User::managesProject).
      * `boards` — self-serve boards owned by this user, drives the admin hub.
      */
     public function me(Request $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
+        $boards = $user->boards()->orderBy('name')->get();
 
         return response()->json(['data' => [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'projects' => $user->projects()->orderBy('name')->get()
-                ->map(fn (Project $p) => ['id' => $p->id, 'name' => $p->name, 'slug' => $p->slug]),
-            'boards' => $user->boards()->orderBy('name')->get()
-                ->map(fn (Project $p) => ['id' => $p->id, 'name' => $p->name, 'slug' => $p->slug]),
+            'projects' => $user->projects()->get()->merge($boards)->sortBy('name')->values()
+                ->map(fn (Project $p) => $this->brief($p)),
+            'boards' => $boards->map(fn (Project $p) => $this->brief($p)),
         ]]);
+    }
+
+    /**
+     * @return array{id: int, name: string, slug: string}
+     */
+    private function brief(Project $p): array
+    {
+        return ['id' => $p->id, 'name' => $p->name, 'slug' => $p->slug];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateBoardRequest;
+use App\Http\Requests\Admin\UpdateBoardRequest;
 use App\Models\Project;
 use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
@@ -42,6 +43,30 @@ class BoardController extends Controller
         );
 
         return response()->json(['data' => $this->summary($board)], 201);
+    }
+
+    /**
+     * Settings screen: what the owner can edit (name, domains) plus the read-only slug.
+     * Categories and statuses come with GET /public/projects/{slug}, as on the board.
+     */
+    public function show(Request $request, Project $board): JsonResponse
+    {
+        $this->authorizeOwner($request, $board);
+
+        return response()->json(['data' => $this->settings($board)]);
+    }
+
+    public function update(UpdateBoardRequest $request, Project $board): JsonResponse
+    {
+        $this->authorizeOwner($request, $board);
+
+        $data = $request->validated();
+        $board->update(array_filter([
+            'name' => $data['name'] ?? null,
+            'allowed_origins' => array_key_exists('origins', $data) ? array_values($data['origins']) : null,
+        ], fn ($v) => $v !== null));
+
+        return response()->json(['data' => $this->settings($board)]);
     }
 
     /**
@@ -97,6 +122,19 @@ class BoardController extends Controller
             'created_at' => $p->created_at,
             'queue_count' => (int) ($p->queue_count ?? 0),
             'last_post_at' => $p->last_post_at ?? null,
+        ];
+    }
+
+    /**
+     * @return array{id: int, name: string, slug: string, allowed_origins: array<int, string>}
+     */
+    private function settings(Project $p): array
+    {
+        return [
+            'id' => $p->id,
+            'name' => $p->name,
+            'slug' => $p->slug,
+            'allowed_origins' => $p->allowed_origins ?? [],
         ];
     }
 

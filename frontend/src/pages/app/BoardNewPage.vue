@@ -44,7 +44,7 @@
             type="text"
             autocapitalize="off"
             spellcheck="false"
-            placeholder="https://app.example.com"
+            :placeholder="ORIGIN_EXAMPLE"
             :error="originErrors[idx]"
           />
           <button type="button" class="icon-btn" aria-label="Удалить домен" @click="removeOrigin(idx)">
@@ -89,6 +89,8 @@ const slugServer = ref('')
 const slugCheck = ref<SlugCheck | null>(null)
 const slugChecking = ref(false)
 
+// kept out of the template: a literal "//" there trips vue-tsc and drops the v-for scope
+const ORIGIN_EXAMPLE = 'https://app.example.com'
 const origins = reactive<Array<{ value: string }>>([{ value: '' }])
 const originErrors = ref<Record<number, string>>({})
 

@@ -56,6 +56,8 @@ class User extends Authenticatable
 
     public function managesProject(Project $project): bool
     {
-        return $this->projects()->whereKey($project->getKey())->exists();
+        // self-serve owner (owner_id) or a legacy team member (project_user pivot)
+        return $project->owner_id === $this->id
+            || $this->projects()->whereKey($project->getKey())->exists();
     }
 }

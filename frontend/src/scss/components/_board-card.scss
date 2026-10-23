@@ -15,7 +15,6 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    text-decoration: none;
     color: var(--fg);
     transition: border-color 0.12s, transform 0.12s;
 
@@ -23,10 +22,27 @@
         border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
     }
 }
+// the name block opens the board; settings and embed links sit in .board-card-actions
 .board-card-top {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    color: inherit;
+    text-decoration: none;
+
+    @include hover {
+        .board-card-name {
+            color: var(--accent-ink);
+        }
+    }
+}
+.board-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin: 0 -4px -4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
 }
 .board-card-name {
     font-size: 16px;

@@ -58,7 +58,7 @@ import { fmtDate } from '@/shared/utils/format'
 import { score, useBoardStore } from '@/store/board/useBoardStore'
 import { useCardOpen } from '../composables/useCardOpen'
 import BoardSkeleton from './BoardSkeleton.vue'
-import CategoryTag from './CategoryTag.vue'
+import CategoryTag from '@/shared/components/CategoryTag.vue'
 import CopyLink from './CopyLink.vue'
 import VoteButtons from './VoteButtons.vue'
 

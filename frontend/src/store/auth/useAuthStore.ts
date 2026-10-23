@@ -63,6 +63,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /** After a rename in settings: the hub card and the /me summaries show the new name without a refetch. */
+  function renameBoard(slug: string, name: string): void {
+    for (const b of [...boards.value, ...(me.value?.boards ?? []), ...(me.value?.projects ?? [])]) {
+      if (b.slug === slug) b.name = name
+    }
+  }
+
   async function register(name: string, email: string, password: string): Promise<void> {
     const res = await AuthApi.register(name, email, password)
     me.value = res.data
@@ -87,7 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     me, loaded, loading, isAuth, boardSummaries,
     boards, boardsLoaded, boardsLoading,
-    fetchMe, fetchBoards, addBoard,
+    fetchMe, fetchBoards, addBoard, renameBoard,
     register, login, logout,
   }
 })

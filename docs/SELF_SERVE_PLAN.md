@@ -445,12 +445,19 @@ UPDATE projects SET owner_id = (SELECT id FROM users WHERE email = 'admin@exampl
 - Открой чужую доску `/demo` (без owner) — должна открываться, но ты там не админ
 
 ### Итерация 3 — Настройки
-- [ ] BoardController@update + UpdateBoardRequest
-- [ ] BoardSettingsPage + SettingsNav
-- [ ] SettingsGeneral
-- [ ] SettingsCategories
-- [ ] SettingsStatuses
-- [ ] SettingsDomains
+- [x] BoardController@show/update + UpdateBoardRequest (name, origins; slug игнорируется) — `BoardSettingsTest`
+- [x] `User::managesProject` пускает и owner'а (owner_id), не только pivot — CRUD категорий/статусов/постов работает для self-serve досок; `/me.projects` включает свои доски
+- [x] BoardSettingsPage + SettingsNav — одна страница, секции с якорями `#general/#categories/#statuses/#domains`
+- [x] SettingsGeneral — rename, slug read-only; новое имя сразу в сторе (`renameBoard`)
+- [x] SettingsCategories / SettingsStatuses — вынесены в `shared/components/CategoriesEditor.vue` и `StatusesEditor.vue`, модалки на доске их переиспользуют; `CategoryTag` переехал в `shared/components/`
+- [x] SettingsDomains — список origins, add/remove, ошибки сервера по строкам
+- [x] BoardCard: ссылки «Настройки» и «Как подключить»; BoardEmbedPage ссылается на `#domains`
+
+**Что проверить руками в браузере:**
+- Переименование доски → видно на карточке в hub
+- Добавление/удаление категории работает так же, как в модалке на доске
+- Нельзя удалить «Новое»
+- Добавление домена → виджет на этом домене начинает работать
 
 ### Итерация 4 — Удаление и переключение
 - [ ] BoardController@destroy + restore

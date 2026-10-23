@@ -1,0 +1,172 @@
+@use '../utils' as *;
+
+// BoardSettingsPage.vue + SettingsNav.vue, SettingsGeneral.vue, SettingsDomains.vue.
+// Categories and columns reuse CategoriesEditor / StatusesEditor (styles in _categories-modal.scss).
+.board-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 24px;
+}
+.board-settings-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.board-settings-back {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    width: fit-content;
+
+    @include hover {
+        color: var(--fg);
+    }
+}
+.board-settings-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    h1 {
+        font-size: 22px;
+        margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+.board-settings-layout {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 680px);
+    gap: 32px;
+    align-items: start;
+
+    @media screen and (max-width: $tablet) {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+}
+.board-settings-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.board-settings-section {
+    display: grid;
+    gap: 12px;
+    padding: 18px 20px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    // anchor jumps land below the page edge, not flush against it
+    scroll-margin-top: 16px;
+
+    h2 {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    @media screen and (max-width: $mobile-mini) {
+        padding: 14px 14px 16px;
+    }
+}
+
+// SettingsNav.vue — sticky column on desktop, a scrollable row of chips on tablet and below
+.settings-nav {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    @media screen and (max-width: $tablet) {
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 6px;
+        margin: 0 -4px;
+        padding: 0 4px 4px;
+    }
+}
+.settings-nav-item {
+    padding: 7px 10px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+
+    @include hover {
+        color: var(--fg);
+        background: var(--surface-2);
+    }
+
+    @media screen and (max-width: $tablet) {
+        border: 1px solid var(--line);
+        font-size: 13px;
+        padding: 5px 10px;
+    }
+}
+
+// SettingsGeneral.vue, SettingsDomains.vue
+.settings-general,
+.settings-domains {
+    display: grid;
+    gap: 12px;
+
+    .input[readonly] {
+        background: var(--surface-2);
+        color: var(--muted);
+        font-family: var(--font-mono);
+    }
+    // short self-contained form: the error goes on its own line instead of the reserved slot
+    .field {
+        padding-bottom: 0;
+    }
+    .field > .err {
+        position: static;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        margin-top: 2px;
+    }
+}
+.settings-domains-row {
+    display: flex;
+    align-items: start;
+    gap: 8px;
+
+    .field {
+        flex: 1;
+    }
+    .icon-btn {
+        flex: none;
+        margin-top: 2px;
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--muted);
+
+        @include hover {
+            color: var(--bug);
+            border-color: color-mix(in srgb, var(--bug) 40%, var(--line));
+        }
+    }
+}
+.settings-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+
+    .spacer {
+        flex: 1;
+    }
+}
