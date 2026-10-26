@@ -54,6 +54,44 @@ class BoardSettingsTest extends TestCase
         $this->patchJson('/api/admin/boards/my-board', ['origins' => []])->assertOk()->assertJsonPath('data.allowed_origins', []);
     }
 
+    public function test_widget_color_takes_pasted_hex_and_reaches_the_widget(): void
+    {
+        $this->actingAs($this->owner);
+
+        $this->getJson('/api/admin/boards/my-board/embed')->assertJsonPath('data.widget_color', null);
+
+        // what people paste: no «#», upper case, short form, spaces
+        foreach (['  7C3AED ' => '#7c3aed', '#1D8547' => '#1d8547', '#a3f' => '#aa33ff'] as $pasted => $stored) {
+            $this->patchJson('/api/admin/boards/my-board', ['widget_color' => $pasted])
+                ->assertOk()
+                ->assertJsonPath('data.widget_color', $stored);
+        }
+
+        // the widget reads it from the public project, the connection page from embed
+        $this->getJson('/api/public/projects/my-board')->assertJsonPath('data.widget_color', '#aa33ff');
+        $this->getJson('/api/admin/boards/my-board/embed')->assertJsonPath('data.widget_color', '#aa33ff');
+
+        // other fields leave the colour alone
+        $this->patchJson('/api/admin/boards/my-board', ['name' => 'Доска'])->assertJsonPath('data.widget_color', '#aa33ff');
+
+        // empty string or null: back to the service's green
+        $this->patchJson('/api/admin/boards/my-board', ['widget_color' => ''])->assertOk()->assertJsonPath('data.widget_color', null);
+        $this->patchJson('/api/admin/boards/my-board', ['widget_color' => '#123456'])->assertOk();
+        $this->patchJson('/api/admin/boards/my-board', ['widget_color' => null])->assertOk()->assertJsonPath('data.widget_color', null);
+    }
+
+    public function test_widget_color_rejects_what_is_not_hex(): void
+    {
+        $this->actingAs($this->owner);
+
+        foreach (['red', '#12345', '#1234567', 'rgb(0,0,0)', '#ggg'] as $bad) {
+            $this->patchJson('/api/admin/boards/my-board', ['widget_color' => $bad])
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors(['widget_color' => 'Цвет — HEX из 6 или 3 цифр, например #1d8547']);
+        }
+        $this->assertNull($this->board->refresh()->widget_color);
+    }
+
     public function test_slug_cannot_be_changed(): void
     {
         $this->actingAs($this->owner)

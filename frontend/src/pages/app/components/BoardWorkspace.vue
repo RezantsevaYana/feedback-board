@@ -8,9 +8,12 @@
           <span aria-hidden="true">/</span>
           <span aria-current="page">{{ name }}</span>
         </nav>
+        <!-- on a phone the button shrinks to a 40px square arrow, centred against the name; the label stays for screen readers -->
         <div class="board-workspace-title">
           <h1>{{ title ?? name }}</h1>
-          <a :href="`/${slug}`" class="btn btn-primary" target="_blank" rel="noopener">Открыть доску ↗</a>
+          <a :href="`/${slug}`" class="btn btn-primary board-workspace-open" target="_blank" rel="noopener" aria-label="Открыть доску в новой вкладке">
+            <span class="board-workspace-open-full" aria-hidden="true">Открыть доску ↗</span><span class="board-workspace-open-short" aria-hidden="true">↗</span>
+          </a>
         </div>
         <p v-if="$slots.lead" class="page-lead"><slot name="lead" /></p>
       </div>

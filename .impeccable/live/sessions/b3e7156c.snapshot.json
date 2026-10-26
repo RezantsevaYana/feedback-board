@@ -1,0 +1,26 @@
+{
+  "id": "b3e7156c",
+  "phase": "completed",
+  "pageUrl": "/app/boards/testovaya-doska/embed",
+  "sourceFile": "frontend/src/pages/app/components/WidgetColorSection.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 2,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 16,
+  "activeOwner": "fe7730c7",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "carbonize_cleanup_required",
+      "file": "frontend/src/pages/app/components/WidgetColorSection.vue",
+      "message": "Accepted variant still has carbonize markers that must be folded into source CSS."
+    }
+  ],
+  "updatedAt": "2026-10-26T13:35:05.966Z"
+}

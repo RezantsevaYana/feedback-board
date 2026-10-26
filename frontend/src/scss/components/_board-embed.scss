@@ -70,3 +70,137 @@
         min-height: 44px;
     }
 }
+// WidgetColorSection.vue — the widget's colour: HEX field, a preview painted with the widget's own tokens
+// (widgetPalette sets --accent, --active… on .widget-color-preview), save / back to default.
+.widget-color-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+        'field   field   field'
+        'preview preview preview'
+        'note    note    note'
+        '.       reset   save';
+    align-items: center;
+    gap: 12px 8px;
+    max-width: 360px;
+
+    > .field {
+        grid-area: field;
+        padding-bottom: 0;
+
+        > .err {
+            position: static;
+            white-space: normal;
+            margin-top: 2px;
+        }
+    }
+    .note {
+        margin: 0;
+    }
+
+    // phone: two rows — the field with «Сохранить» beside it, then a small launcher with the reset on the right;
+    // the chip, the link, the note and the hint stay on desktop
+    @media screen and (max-width: $mobile) {
+        max-width: none;
+        grid-template-columns: minmax(0, 1fr) auto;
+        // the launcher and the reset share the second row's one cell (start / end), so the reset's
+        // width doesn't stretch the «Сохранить» column
+        grid-template-areas:
+            'field   save'
+            'preview preview';
+        align-items: end;
+        gap: 10px 8px;
+
+        > .field small {
+            display: none;
+        }
+        .input {
+            height: 40px;
+            padding: 0 10px;
+            font-size: 16px; // iOS zooms into anything smaller
+        }
+    }
+}
+.widget-color-save {
+    grid-area: save;
+
+    @media screen and (max-width: $mobile) {
+        height: 40px;
+        padding: 0 14px;
+    }
+}
+.widget-color-note {
+    grid-area: note;
+
+    @media screen and (max-width: $mobile) {
+        display: none;
+    }
+}
+.widget-color-reset {
+    grid-area: reset;
+
+    @media screen and (max-width: $mobile) {
+        grid-area: preview;
+        align-self: center;
+        justify-self: end;
+        padding: 0;
+    }
+}
+.widget-color-preview {
+    grid-area: preview;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+
+    // phone: just a small launcher in the chosen colour, no tray around it
+    @media screen and (max-width: $mobile) {
+        align-self: center;
+        justify-self: start;
+        padding: 0;
+        background: none;
+
+        .widget-color-chip,
+        .widget-color-link {
+            display: none;
+        }
+        .widget-color-launcher {
+            padding: 5px 12px 5px 14px;
+            gap: 6px;
+            font-size: 12px;
+            box-shadow: none;
+        }
+    }
+}
+// the widget's closed launcher (scss/widget/_widget.scss .fbw-launcher), at the same size
+.widget-color-launcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px 9px 20px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(16, 37, 40, 0.18); // taste-skill-ignore the launcher floats over the host page
+}
+// a selected category chip in the form
+.widget-color-chip {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--active-line);
+    background: var(--active);
+    color: var(--active-fg);
+    font-size: 13px;
+    font-weight: 500;
+}
+.widget-color-link {
+    color: var(--accent-ink);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}

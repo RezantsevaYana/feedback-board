@@ -69,10 +69,15 @@ class BoardController extends Controller
         $this->authorizeOwner($request, $board);
 
         $data = $request->validated();
-        $board->update(array_filter([
+        $board->fill(array_filter([
             'name' => $data['name'] ?? null,
             'allowed_origins' => array_key_exists('origins', $data) ? array_values($data['origins']) : null,
         ], fn ($v) => $v !== null));
+        // null is a real value here (back to the default green), so it can't go through the filter above
+        if (array_key_exists('widget_color', $data)) {
+            $board->widget_color = $data['widget_color'];
+        }
+        $board->save();
 
         return response()->json(['data' => $this->settings($board)]);
     }
@@ -154,6 +159,7 @@ class BoardController extends Controller
             'widget_url' => $widgetUrl,
             'direct_url' => $publicUrl.'/'.$board->slug,
             'allowed_origins' => $board->allowed_origins ?? [],
+            'widget_color' => $board->widget_color,
         ]]);
     }
 
@@ -187,7 +193,7 @@ class BoardController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, slug: string, allowed_origins: array<int, string>, trash_retention_days: int}
+     * @return array{id: int, name: string, slug: string, allowed_origins: array<int, string>, widget_color: ?string, trash_retention_days: int}
      */
     private function settings(Project $p): array
     {
@@ -196,6 +202,7 @@ class BoardController extends Controller
             'name' => $p->name,
             'slug' => $p->slug,
             'allowed_origins' => $p->allowed_origins ?? [],
+            'widget_color' => $p->widget_color,
             // the delete section says how long the board stays recoverable
             'trash_retention_days' => (int) config('feedback.trash_retention_days'),
         ];

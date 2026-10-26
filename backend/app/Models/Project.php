@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'slug', 'owner_id', 'allowed_origins'])]
+#[Fillable(['name', 'slug', 'owner_id', 'allowed_origins', 'widget_color'])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */

@@ -1,5 +1,6 @@
 <template>
-  <div ref="root" class="fbw" :class="position === 'bottom-left' ? 'left' : 'right'">
+  <!-- the owner's colour arrives with the project as custom properties (the only inline style: it's data, not design) -->
+  <div ref="root" class="fbw" :class="[position === 'bottom-left' ? 'left' : 'right', { ready }]" :style="palette">
     <Transition name="fbw-panel">
       <div v-if="open" class="fbw-panel" role="dialog" aria-label="Обратная связь">
         <div class="fbw-head">
@@ -67,6 +68,7 @@ import type { Category, Post } from '@/api/types'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import SubmitForm from '@/shared/components/SubmitForm.vue'
 import { useEscapeKey } from '@/shared/composables/useEscapeKey'
+import { widgetPalette } from '@/shared/utils/widgetColor'
 
 // Floating button + panel with the shared form. The widget only accepts submissions:
 // statuses and voting live on the board (TZ 5.1).
@@ -78,9 +80,14 @@ const props = defineProps<{
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
-// categories come from the service on first open (cross-origin GET, allowed for the project's sites)
+// the project (categories, name, colour) comes from the service as soon as the widget mounts:
+// one cross-origin GET, allowed for the project's sites; opening the panel then needs no wait
 const categories = ref<Category[] | null>(null)
 const projectName = ref('')
+const color = ref<string | null>(null)
+// the launcher waits for the project (or its failure), so the service's green never flashes before the owner's colour
+const ready = ref(false)
+const palette = computed(() => widgetPalette(color.value))
 const loadError = ref('')
 const sent = ref<Post | null>(null)
 const copied = ref(false)
@@ -94,15 +101,19 @@ async function loadCategories() {
     const res = await ProjectsApi.get(props.project, props.origin)
     categories.value = res.data.categories
     projectName.value = res.data.name
+    color.value = res.data.widget_color
   } catch (e) {
     loadError.value = errorMessage(e)
+  } finally {
+    ready.value = true
   }
 }
 
 function toggle() {
   open.value = !open.value
   copied.value = false
-  if (open.value && categories.value === null) loadCategories()
+  // a failed first load is retried from the panel («Попробовать ещё раз»)
+  if (open.value && categories.value === null && !loadError.value) loadCategories()
 }
 function again() {
   sent.value = null
@@ -124,6 +135,9 @@ function onDocPointer(e: Event) {
   if (!open.value || !root.value) return
   if (!e.composedPath().includes(root.value)) open.value = false
 }
-onMounted(() => document.addEventListener('pointerdown', onDocPointer, true))
+onMounted(() => {
+  document.addEventListener('pointerdown', onDocPointer, true)
+  loadCategories()
+})
 onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointer, true))
 </script>

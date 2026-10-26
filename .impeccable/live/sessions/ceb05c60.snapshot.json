@@ -1,0 +1,23 @@
+{
+  "id": "ceb05c60",
+  "phase": "discarded",
+  "pageUrl": "/app/boards/testovaya-doska/embed",
+  "sourceFile": "frontend/src/pages/app/components/WidgetColorSection.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {
+    "density": 1,
+    "stage": 0.48
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 11,
+  "activeOwner": "d61113b2",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [],
+  "updatedAt": "2026-10-26T13:29:37.513Z"
+}

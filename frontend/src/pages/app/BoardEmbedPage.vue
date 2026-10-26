@@ -3,7 +3,7 @@
   <main class="container base-page board-workspace-page">
     <BoardWorkspace :slug="slug" :name="boardName" page="embed" :title="justCreated ? `Доска «${boardName}» готова` : undefined">
       <template v-if="justCreated" #lead>
-        Осталось подключить её к продукту: виджетом на сайте, ссылкой или обоими способами сразу.
+        Осталось подключить её к продукту: ссылкой, виджетом на сайте или обоими способами сразу.
       </template>
 
       <p v-if="loading" class="note">Загружаем…</p>
@@ -14,6 +14,18 @@
           Пока почта не подтверждена, виджет и ссылка не работают для посетителей: они увидят «Доска ещё не открыта».
           Подтвердите почту по ссылке из письма, и доска откроется сама.
         </p>
+        <section class="board-settings-section board-embed-section">
+          <div class="board-embed-section-head">
+            <h2>Прямая ссылка</h2>
+            <p class="note">Автор откроет доску и оставит идею прямо там.</p>
+          </div>
+          <pre class="board-embed-code"><code>{{ info.direct_url }}</code></pre>
+          <div class="board-embed-link-row">
+            <CopyButton :value="info.direct_url" label="Скопировать ссылку" />
+            <a :href="info.direct_url" class="btn btn-primary" target="_blank" rel="noopener">Открыть доску ↗</a>
+          </div>
+        </section>
+
         <section class="board-settings-section board-embed-section">
           <div class="board-embed-section-head">
             <h2>Виджет на сайте</h2>
@@ -31,17 +43,7 @@
           </p>
         </section>
 
-        <section class="board-settings-section board-embed-section">
-          <div class="board-embed-section-head">
-            <h2>Прямая ссылка</h2>
-            <p class="note">Автор откроет доску и оставит идею прямо там.</p>
-          </div>
-          <pre class="board-embed-code"><code>{{ info.direct_url }}</code></pre>
-          <div class="board-embed-link-row">
-            <CopyButton :value="info.direct_url" label="Скопировать ссылку" />
-            <a :href="info.direct_url" class="btn btn-primary" target="_blank" rel="noopener">Открыть доску ↗</a>
-          </div>
-        </section>
+        <WidgetColorSection :slug="slug" :color="info.widget_color" @saved="info.widget_color = $event" />
 
         <div v-if="justCreated" class="board-embed-actions">
           <RouterLink to="/app/boards" class="btn btn-primary">Готово</RouterLink>
@@ -61,6 +63,7 @@ import { useAuthStore } from '@/store/auth/useAuthStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import CopyButton from '@/shared/ui/CopyButton.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
+import WidgetColorSection from './components/WidgetColorSection.vue'
 import { boardLoadError } from './composables/boardLoadError'
 
 const route = useRoute()

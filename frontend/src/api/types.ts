@@ -61,6 +61,8 @@ export interface Project {
   slug: string
   /** false until the owner confirms the email; only the team ever gets it, everyone else gets 403 */
   published: boolean
+  /** the widget's main colour, «#rrggbb»; null = the service's green (shared/utils/widgetColor) */
+  widget_color: string | null
   categories: Category[]
   statuses: Status[]
 }

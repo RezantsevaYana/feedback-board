@@ -28,6 +28,8 @@ export interface EmbedInfo {
   widget_url: string
   direct_url: string
   allowed_origins: string[]
+  /** «#rrggbb» or null for the service's green */
+  widget_color: string | null
 }
 
 /** GET/PATCH /boards/{slug} — what the settings page edits. Slug is read-only after creation. */
@@ -36,6 +38,7 @@ export interface BoardSettings {
   name: string
   slug: string
   allowed_origins: string[]
+  widget_color: string | null
   /** how long a deleted board stays in the trash (feedback.trash_retention_days) */
   trash_retention_days: number
 }
@@ -63,8 +66,8 @@ export const BoardsApi = {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`)
   },
 
-  // rename the board or replace its widget domains — send only what the section changed
-  update(slug: string, body: { name?: string; origins?: string[] }) {
+  // rename the board, replace its widget domains or set the widget colour (null = default) — send only what the section changed
+  update(slug: string, body: { name?: string; origins?: string[]; widget_color?: string | null }) {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`, { method: 'PATCH', body })
   },
 

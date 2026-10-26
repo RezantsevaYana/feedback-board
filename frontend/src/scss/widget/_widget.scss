@@ -48,13 +48,18 @@ h3 {
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(16, 37, 40, 0.18); // taste-skill-ignore floats over the host page
-    transition: background-color 0.15s ease, transform 0.15s ease;
+    transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.2s ease;
 
     @include hover {
         background: color-mix(in srgb, var(--accent) 88%, #000);
     }
     &:active {
         transform: scale(0.97);
+    }
+    // hidden until the project (and its colour) has loaded, so the default green doesn't flash first
+    .fbw:not(.ready) & {
+        opacity: 0;
+        pointer-events: none;
     }
     &.open {
         width: 44px;
