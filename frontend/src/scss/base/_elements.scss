@@ -71,6 +71,52 @@ a {
         padding: 16px 0 32px;
     }
 }
+// page head of the admin flow (new board, embed): breadcrumbs, big heading, optional lead
+.page-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 2px;
+
+    h1 {
+        font-size: 36px;
+        line-height: 1.1;
+        letter-spacing: -0.025em;
+        margin: 0;
+
+        @media screen and (max-width: $mobile) {
+            font-size: 28px;
+        }
+    }
+}
+.page-lead {
+    margin: 4px 0 0;
+    color: var(--muted);
+    max-width: 60ch;
+}
+// breadcrumbs «Мои доски / …» above the heading
+.page-crumbs {
+    display: flex;
+    gap: 6px;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--muted);
+
+    a {
+        color: var(--muted);
+        text-decoration: none;
+
+        @include hover {
+            color: var(--fg);
+        }
+    }
+    [aria-current] {
+        color: var(--fg);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
 .center-page {
     min-height: 70vh;
     display: grid;

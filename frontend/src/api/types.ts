@@ -74,6 +74,8 @@ export interface Me {
   id: number
   name: string
   email: string
+  /** Soft mode: the account works either way, the cabinet shows a banner until the letter's link is opened. */
+  email_verified: boolean
   /** Legacy projects via project_user pivot — drives team-mode login on the board. */
   projects: BoardSummary[]
   /** Self-serve boards owned by this user — drives the admin hub. */

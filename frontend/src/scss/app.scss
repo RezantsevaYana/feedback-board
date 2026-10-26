@@ -29,10 +29,12 @@
 
 // Self-serve admin area (/app/*): hub, auth pages, shared shell.
 @use 'components/app-shell';
+@use 'components/verify-banner';
 @use 'components/auth-pages';
 @use 'components/boards-hub';
 @use 'components/board-card';
 @use 'components/board-new';
+@use 'components/board-workspace';
 @use 'components/board-embed';
 @use 'components/board-settings';
 @use 'components/board-switcher';

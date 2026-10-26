@@ -1,0 +1,43 @@
+{
+  "id": "d5ee03ad",
+  "phase": "discarded",
+  "pageUrl": "/app/boards",
+  "sourceFile": "frontend/src/pages/app/BoardsHubPage.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {
+    "title": 44
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 7,
+  "activeOwner": "aa32b18e",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "stale_checkpoint_ignored",
+      "revision": 1
+    },
+    {
+      "error": "stale_checkpoint_ignored",
+      "revision": 2
+    },
+    {
+      "error": "stale_checkpoint_ignored",
+      "revision": 3
+    },
+    {
+      "error": "stale_checkpoint_ignored",
+      "revision": 4
+    },
+    {
+      "error": "stale_checkpoint_ignored",
+      "revision": 5
+    }
+  ],
+  "updatedAt": "2026-10-26T08:17:51.923Z"
+}

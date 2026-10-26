@@ -1,0 +1,28 @@
+{
+  "id": "49719afa",
+  "phase": "completed",
+  "pageUrl": "/app/boards",
+  "sourceFile": "frontend/src/pages/app/components/BoardCard.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 2,
+  "paramValues": {
+    "motion": true
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 10,
+  "activeOwner": "8672e5b2",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "carbonize_cleanup_required",
+      "file": "frontend/src/pages/app/components/BoardCard.vue",
+      "message": "Accepted variant still has carbonize markers that must be folded into source CSS."
+    }
+  ],
+  "updatedAt": "2026-10-26T08:20:10.897Z"
+}

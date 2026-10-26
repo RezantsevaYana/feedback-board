@@ -15,9 +15,13 @@
       </RouterLink>
     </section>
     <template v-else>
+      <!-- on a phone the button leaves the head and pins to the bottom, like «Предложить» on the board;
+           hover rolls the label into «Поехали →» (shared .cta-roll) -->
       <div class="boards-hub-top">
         <h1>Мои доски</h1>
-        <RouterLink to="/app/boards/new" class="btn btn-primary">+ Новая доска</RouterLink>
+        <RouterLink to="/app/boards/new" class="btn btn-primary boards-hub-new" aria-label="Новая доска">
+          <span class="cta-roll" aria-hidden="true"><span>+ Новая доска</span><span>Поехали →</span></span>
+        </RouterLink>
       </div>
       <div class="boards-grid">
         <BoardCard v-for="b in auth.boards" :key="b.id" :board="b" />

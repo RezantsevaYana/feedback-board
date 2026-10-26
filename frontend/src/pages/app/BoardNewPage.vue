@@ -2,8 +2,8 @@
   <AppHeader />
   <main class="container base-page board-new">
     <form class="board-new-form" novalidate @submit.prevent="submit">
-      <div class="board-new-head">
-        <nav class="board-new-crumbs" aria-label="Путь">
+      <div class="page-head board-new-head">
+        <nav class="page-crumbs" aria-label="Путь">
           <RouterLink to="/app/boards">Мои доски</RouterLink>
           <span aria-hidden="true">/</span>
           <span aria-current="page">Новая доска</span>
@@ -19,6 +19,7 @@
         type="text"
         maxlength="80"
         :errors="v$.name"
+        validate-on-submit
         autofocus
       />
 
@@ -33,6 +34,7 @@
           maxlength="64"
           :error="slugError"
           :errors="slugError ? undefined : v$.slug"
+          validate-on-submit
           @input="onSlugInput"
         />
         <p class="board-new-slug-hint" :class="slugHintClass">{{ slugHint }}</p>

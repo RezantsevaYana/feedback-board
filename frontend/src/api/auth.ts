@@ -22,4 +22,27 @@ export const AuthApi = {
   logout() {
     return request<void>(`${BASE_URL}/logout`, { method: 'POST' })
   },
+
+  // the link from the letter: path and signed query go to the API as they are; no session needed, 403 if stale
+  verifyEmail(id: string, hash: string, expires: string, signature: string) {
+    return request<Item<{ id: number; email: string }>>(`${BASE_URL}/email/verify/${id}/${hash}`, {
+      method: 'POST',
+      query: { expires, signature },
+    })
+  },
+
+  // forgotten password: the letter with a link; 204 whether the address is known or not
+  forgotPassword(email: string) {
+    return request<void>(`${BASE_URL}/forgot-password`, { method: 'POST', body: { email } })
+  },
+
+  // new password from the letter's link; logs in like login(), 422 on a stale or used token
+  resetPassword(token: string, email: string, password: string) {
+    return request<Item<Me>>(`${BASE_URL}/reset-password`, { method: 'POST', body: { token, email, password } })
+  },
+
+  // send the confirmation letter again (6 per 10 minutes)
+  resendVerification() {
+    return request<void>(`${BASE_URL}/email/verification-notification`, { method: 'POST' })
+  },
 }

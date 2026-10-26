@@ -1,0 +1,28 @@
+{
+  "id": "9b5022e1",
+  "phase": "discarded",
+  "pageUrl": "/app/boards",
+  "sourceFile": null,
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {
+    "title": 44,
+    "card": "regular"
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 7,
+  "activeOwner": "adb2ede7",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "stale_checkpoint_ignored",
+      "revision": 1
+    }
+  ],
+  "updatedAt": "2026-10-26T08:02:31.496Z"
+}

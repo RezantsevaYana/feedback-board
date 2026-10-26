@@ -60,23 +60,6 @@
         margin-top: 2px;
     }
 }
-.board-new-head {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 2px;
-
-    h1 {
-        font-size: 36px;
-        line-height: 1.1;
-        letter-spacing: -0.025em;
-        margin: 0;
-
-        @media screen and (max-width: $mobile) {
-            font-size: 28px;
-        }
-    }
-}
 // the board's name is the hero field of the wizard: bigger type, taller box
 // (the class lands on the <input>: InputComponent passes attrs through)
 .board-new-name.input {
@@ -87,25 +70,6 @@
 }
 .field:has(.board-new-name) > span {
     font-size: 14px;
-}
-// breadcrumbs «Мои доски / Новая доска» above the heading
-.board-new-crumbs {
-    display: flex;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--muted);
-
-    a {
-        color: var(--muted);
-        text-decoration: none;
-
-        @include hover {
-            color: var(--fg);
-        }
-    }
-    [aria-current] {
-        color: var(--fg);
-    }
 }
 .board-new-slug {
     display: flex;

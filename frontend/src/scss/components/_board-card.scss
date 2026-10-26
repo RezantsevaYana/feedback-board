@@ -1,6 +1,7 @@
 @use '../utils' as *;
 
-// BoardCard.vue — one card in the admin hub grid.
+// BoardCard.vue — one card in the admin hub grid: name and slug with the queue badge on the right,
+// last activity under them, «Настройки» and «Как подключить» as compact buttons at the bottom.
 .boards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -8,25 +9,50 @@
     margin-top: 20px;
 }
 .board-card {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        'top status'
+        'last last'
+        'actions actions';
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    gap: 6px 12px;
     padding: 18px 20px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     color: var(--fg);
-    transition: border-color 0.12s, transform 0.12s;
+    transition:
+        border-color 0.12s,
+        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 
+    // hover: the card lifts a little and the arrow by the name slides in
     @include hover {
         border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+        transform: translateY(-2px);
+
+        .board-card-go {
+            opacity: 1;
+            transform: none;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: border-color 0.12s;
+
+        @include hover {
+            transform: none;
+        }
     }
 }
-// the name block opens the board; settings and embed links sit in .board-card-actions
+// the name block opens the board
 .board-card-top {
+    grid-area: top;
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
     color: inherit;
     text-decoration: none;
 
@@ -36,51 +62,167 @@
         }
     }
 }
-.board-card-actions {
+.board-card-name-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 12px;
-    margin: auto -4px -4px;     // top: auto pins the links to the card's bottom when names wrap differently
-    padding-top: 10px;
-    border-top: 1px solid var(--line);
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.board-card-go {
+    flex: none;
+    color: var(--accent-ink);
+    font-weight: 600;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+        opacity 0.18s ease-out,
+        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 
-    // touch screens: the two links become full-height tap targets instead of 28px text
-    @media (pointer: coarse) {
-        gap: 4px 8px;
-
-        .link-btn {
-            display: inline-flex;
-            align-items: center;
-            min-height: 44px;
-            padding: 0 8px;
-        }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
     }
 }
 .board-card-name {
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 600;
     margin: 0;
+    overflow-wrap: anywhere;
 }
 .board-card-slug {
     font-family: var(--font-mono);
     font-size: 12px;
     color: var(--muted);
 }
+// the queue badge and the last activity take their own grid cells
 .board-card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 13px;
+    display: contents;
 }
+// quiet outline when nothing waits; filled green when there are new posts to triage
 .board-card-queue {
+    grid-area: status;
+    justify-self: end;
+    padding: 3px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--muted);
+    white-space: nowrap;
 
+    // new posts: a dot that breathes slowly, so a waiting queue is noticed without shouting
     &.pending {
-        color: var(--accent-ink);
-        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-color: var(--accent);
+        background: var(--accent);
+        color: var(--accent-fg);
+
+        &::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: currentColor;
+
+            @media (prefers-reduced-motion: no-preference) {
+                animation: board-card-breathe 2.4s ease-in-out infinite;
+            }
+        }
+    }
+}
+@keyframes board-card-breathe {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
     }
 }
 .board-card-last {
+    grid-area: last;
     color: var(--muted);
     font-size: 12px;
+}
+// align-self: end pins the buttons to the card's bottom when names wrap differently
+.board-card-actions {
+    grid-area: actions;
+    align-self: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+
+    .btn {
+        font-size: 13px;
+        padding: 5px 10px;
+
+        // touch screens: full-height tap targets
+        @media (pointer: coarse) {
+            min-height: 44px;
+        }
+    }
+}
+
+// Phone: the boards become one compact list (hairlines between rows, no separate cards):
+// name and badge on the first line, slug and last activity on the second, the two actions as quiet links.
+@media screen and (max-width: $mobile) {
+    .boards-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+    }
+    .board-card {
+        grid-template-areas:
+            'top status'
+            'actions actions';
+        grid-template-rows: auto auto;
+        gap: 4px 12px;
+        padding: 12px 14px;
+        border: 0;
+        border-radius: 0;
+
+        & + & {
+            border-top: 1px solid var(--line);
+        }
+    }
+    .board-card-top {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0 8px;
+    }
+    .board-card-name {
+        font-size: 16px;
+    }
+    // the last activity is the least needed on a phone; the badge already says whether something waits
+    .board-card-last {
+        display: none;
+    }
+    .board-card-queue {
+        align-self: center;
+        padding: 1px 8px;
+    }
+    .board-card-actions {
+        align-self: start;
+        gap: 16px;
+        margin-top: 0;
+
+        .btn {
+            min-height: 32px;
+            padding: 0;
+            border: 0;
+            background: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: underline;
+            text-decoration-color: var(--line);
+            text-underline-offset: 3px;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 @use '../utils' as *;
 
-// RegisterPage.vue, LoginPage.vue — standalone auth forms under /app/register and /app/login.
+// RegisterPage.vue, LoginPage.vue, ForgotPasswordPage.vue, ResetPasswordPage.vue, VerifyEmailPage.vue —
+// standalone auth forms under /app/*.
 // Vertical centering between header and viewport bottom at every breakpoint. The form is a white card
 // on a sage page (DESIGN.md tonal layering); the header keeps its own white background above it.
 body:has(.auth-page) {
@@ -58,13 +59,20 @@ body:has(.auth-page) {
         margin-top: 2px;
     }
 }
+.auth-forgot {
+    align-self: flex-end;
+    margin-top: -2px;
+    font-size: 13px;
+    font-weight: 500;
+}
 .auth-switch {
     margin: 12px 0 0;
     color: var(--muted);
     font-size: 13px;
     text-align: center;
 
-    a {
+    a,
+    .link-btn {
         font-weight: 500;
     }
 }

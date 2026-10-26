@@ -46,6 +46,8 @@ class CreateAdmin extends Command
             'email' => $email,
             'password' => $password,
         ]);
+        // the address comes from whoever runs the command, not from a stranger: nothing to confirm
+        $user->markEmailAsVerified();
         $user->projects()->sync(Project::whereIn('slug', $slugs)->pluck('id'));
 
         $this->info("Админ {$user->email} создан, проекты: ".implode(', ', $slugs));

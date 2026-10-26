@@ -1,21 +1,25 @@
 <template>
   <article class="board-card">
     <RouterLink :to="`/${board.slug}`" class="board-card-top">
-      <h3 class="board-card-name">{{ board.name }}</h3>
+      <!-- the arrow slides in on hover: this part opens the board -->
+      <span class="board-card-name-row">
+        <h3 class="board-card-name">{{ board.name }}</h3>
+        <span class="board-card-go" aria-hidden="true">→</span>
+      </span>
       <code class="board-card-slug">/{{ board.slug }}</code>
     </RouterLink>
     <div class="board-card-meta">
       <span class="board-card-queue" :class="{ pending: board.queue_count > 0 }">
         <template v-if="board.queue_count > 0">
-          {{ board.queue_count }} в очереди
+          {{ board.queue_count }} новых
         </template>
-        <template v-else>Очередь пуста</template>
+        <template v-else>Пусто</template>
       </span>
       <span class="board-card-last">{{ lastActivity }}</span>
     </div>
     <div class="board-card-actions">
-      <RouterLink :to="`/app/boards/${board.slug}/settings`" class="link-btn">Настройки</RouterLink>
-      <RouterLink :to="`/app/boards/${board.slug}/embed`" class="link-btn">Как подключить</RouterLink>
+      <RouterLink :to="`/app/boards/${board.slug}/settings`" class="btn">Настройки</RouterLink>
+      <RouterLink :to="`/app/boards/${board.slug}/embed`" class="btn">Как подключить</RouterLink>
     </div>
   </article>
 </template>

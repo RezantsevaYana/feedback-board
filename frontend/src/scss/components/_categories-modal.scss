@@ -31,6 +31,10 @@
     // кнопки в ряду компактнее, чем дефолтные .btn
     .btn {
         padding: 7px 14px;
+
+        @media screen and (max-width: $mobile) {
+            padding: 7px 12px;
+        }
     }
 
     @media screen and (max-width: $mobile-mini) {
@@ -40,10 +44,9 @@
             flex: 1 1 100%;
             min-width: 0;
         }
-        // кнопки под инпутом: одна — во всю ширину, две — поровну делят строку
-        .btn {
-            flex: 1 1 120px;
-            justify-content: center;
+        // кнопки под инпутом своего размера, прижаты вправо (как «Сохранить» в остальных формах)
+        .field + .btn {
+            margin-left: auto;
         }
         // ряд «только для чтения»: тег слева, спейсер уходит, ссылки прижаты вправо
         &:not(form) {

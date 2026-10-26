@@ -3,6 +3,9 @@ import BoardPage from '@/pages/board/BoardPage.vue'
 import HomePage from '@/pages/home/HomePage.vue'
 import RegisterPage from '@/pages/auth/RegisterPage.vue'
 import LoginPage from '@/pages/auth/LoginPage.vue'
+import VerifyEmailPage from '@/pages/auth/VerifyEmailPage.vue'
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage.vue'
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage.vue'
 import BoardsHubPage from '@/pages/app/BoardsHubPage.vue'
 import BoardNewPage from '@/pages/app/BoardNewPage.vue'
 import BoardEmbedPage from '@/pages/app/BoardEmbedPage.vue'
@@ -15,6 +18,11 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomePage },
     { path: '/app/register', name: 'register', component: RegisterPage, meta: { guest: true } },
     { path: '/app/login', name: 'login', component: LoginPage, meta: { guest: true } },
+    { path: '/app/forgot-password', name: 'forgot-password', component: ForgotPasswordPage, meta: { guest: true } },
+    // the link from the reset letter; no meta: it works even if someone else is logged in on this device
+    { path: '/app/reset-password/:token', name: 'reset-password', component: ResetPasswordPage },
+    // the link from the confirmation letter; no meta: it opens with or without a session
+    { path: '/app/verify-email/:id(\\d+)/:hash', name: 'verify-email', component: VerifyEmailPage },
     { path: '/app/boards', name: 'hub', component: BoardsHubPage, meta: { auth: true } },
     { path: '/app/boards/new', name: 'board-new', component: BoardNewPage, meta: { auth: true } },
     { path: '/app/boards/:slug/settings', name: 'board-settings', component: BoardSettingsPage, meta: { auth: true } },

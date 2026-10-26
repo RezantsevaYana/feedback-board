@@ -73,11 +73,14 @@ function focusAt(i: number) {
   const all = buttons()
   if (all.length) all[(i + all.length) % all.length]!.focus()
 }
-async function openAt(i: number) {
+// a click opens on the current item (if any), so the highlight lands on where you are, not on the first row
+async function openAt(i: number | 'current') {
   open.value = true
   document.addEventListener('pointerdown', onOutside, true)
   await nextTick()
-  focusAt(i)
+  const all = buttons()
+  const at = i === 'current' ? Math.max(0, all.findIndex((b) => b.classList.contains('current'))) : i
+  focusAt(at)
 }
 function close(refocus = true) {
   open.value = false
@@ -86,7 +89,7 @@ function close(refocus = true) {
 }
 function toggle() {
   if (open.value) close()
-  else openAt(0)
+  else openAt('current')
 }
 function onOutside(e: PointerEvent) {
   if (!root.value?.contains(e.target as Node)) close(false)

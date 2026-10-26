@@ -29,6 +29,11 @@
         opacity: 0.6;
         cursor: default;
     }
+    // phone: a smaller button (36px tall, 14px label), so a form's actions don't outweigh its fields
+    @media screen and (max-width: $mobile) {
+        padding: 7px 12px;
+        font-size: 14px;
+    }
     // working (saving, sending): a spinner before the label; the button stays at full strength
     &[aria-busy='true'] {
         cursor: progress;
@@ -68,7 +73,6 @@
 .btn-danger {
     color: var(--bug);
 }
-
 .link-btn {
     border: 0;
     background: none;

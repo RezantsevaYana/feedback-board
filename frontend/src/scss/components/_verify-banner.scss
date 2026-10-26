@@ -1,0 +1,36 @@
+@use '../utils' as *;
+
+// VerifyEmailBanner.vue — «Подтвердите почту» under AppHeader until the letter's link is opened.
+// A warm note, not an alarm: the account works either way. Scrolls away with the page, the header stays.
+.verify-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 10px;
+    padding: 10px 12px 10px 18px;
+    background: var(--cat-yellow);
+    color: var(--fg);
+    border-radius: 14px;
+
+    .btn {
+        flex: none;
+    }
+
+    // phone: text above, the button full width under it
+    @media screen and (max-width: $mobile) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+    }
+}
+.verify-banner-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.45;
+}
+.verify-banner-email {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}

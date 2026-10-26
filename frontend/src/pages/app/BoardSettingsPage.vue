@@ -1,20 +1,10 @@
 <template>
   <AppHeader />
-  <main class="container base-page board-settings">
-    <div class="board-settings-head">
-      <RouterLink to="/app/boards" class="board-settings-back">← Все доски</RouterLink>
-      <div class="board-settings-title">
-        <h1>{{ settings?.name ?? slug }}</h1>
-        <a v-if="settings" :href="`/${slug}`" class="btn" target="_blank" rel="noopener">Открыть доску ↗</a>
-      </div>
-    </div>
+  <main class="container base-page board-workspace-page">
+    <BoardWorkspace :slug="slug" :name="boardName" page="settings">
+      <p v-if="loading" class="note">Загружаем…</p>
 
-    <p v-if="loading" class="note">Загружаем…</p>
-
-    <div v-else-if="settings" class="board-settings-layout">
-      <SettingsNav :slug="slug" />
-
-      <div class="board-settings-sections">
+      <template v-else-if="settings">
         <section id="general" class="board-settings-section">
           <h2>Общее</h2>
           <SettingsGeneral :settings="settings" @saved="onSaved" />
@@ -37,14 +27,15 @@
           <SettingsDomains :settings="settings" @saved="onSaved" />
         </section>
 
-        <section id="delete" class="board-settings-section danger">
-          <h2>Удаление</h2>
-          <DeleteBoardSection :settings="settings" />
-        </section>
-      </div>
-    </div>
+        <!-- not a section of the nav: an action on the whole board, set apart below everything -->
+        <div class="board-settings-delete">
+          <p class="note">Доска уйдёт в корзину, из списка досок её можно будет восстановить.</p>
+          <button type="button" class="btn btn-danger" @click="deleteBoard(settings.slug, settings.name)">Удалить доску</button>
+        </div>
+      </template>
 
-    <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
+      <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
+    </BoardWorkspace>
   </main>
 </template>
 
@@ -57,24 +48,27 @@ import { useBoardStore } from '@/store/board/useBoardStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import CategoriesEditor from '@/shared/components/CategoriesEditor.vue'
 import StatusesEditor from '@/shared/components/StatusesEditor.vue'
-import DeleteBoardSection from './components/DeleteBoardSection.vue'
+import BoardWorkspace from './components/BoardWorkspace.vue'
 import SettingsDomains from './components/SettingsDomains.vue'
 import SettingsGeneral from './components/SettingsGeneral.vue'
-import SettingsNav from './components/SettingsNav.vue'
 import { boardLoadError } from './composables/boardLoadError'
+import { useDeleteBoard } from './composables/useDeleteBoard'
 
-// One page, sections with anchors (#general, #categories, #statuses, #domains, #delete).
+// One page, sections with anchors (#general, #categories, #statuses, #domains); deletion sits below them (useDeleteBoard).
 // Name and domains go through BoardsApi; categories and columns reuse the board's editors,
 // so the board store opens this project the same way BoardPage does.
 const route = useRoute()
 const auth = useAuthStore()
 const board = useBoardStore()
+const { deleteBoard } = useDeleteBoard()
 
 const slug = computed(() => String(route.params.slug ?? ''))
 const settings = ref<BoardSettings | null>(null)
 const loading = ref(true)
 const loadError = ref('')
 const projectReady = computed(() => board.project?.slug === slug.value)
+// the head shows the name from /me right away, before the settings arrive
+const boardName = computed(() => settings.value?.name ?? auth.boardSummaries.find((b) => b.slug === slug.value)?.name ?? slug.value)
 
 watch(slug, load, { immediate: true })
 

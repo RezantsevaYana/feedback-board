@@ -62,6 +62,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'email_verified' => $user->hasVerifiedEmail(),
             'projects' => $user->projects()->get()->merge($boards)->sortBy('name')->values()
                 ->map(fn (Project $p) => $this->brief($p)),
             'boards' => $boards->map(fn (Project $p) => $this->brief($p)),

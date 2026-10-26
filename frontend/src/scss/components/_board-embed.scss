@@ -1,68 +1,25 @@
 @use '../utils' as *;
 
-// BoardEmbedPage.vue — "how to connect" screen (post-create + settings reuse).
-.board-embed {
-    max-width: 640px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    padding-top: 24px;
-}
-.board-embed-back {
-    font-size: 13px;
-    color: var(--muted);
-    text-decoration: none;
-    width: fit-content;
-
-    @include hover {
-        color: var(--fg);
+// BoardEmbedPage.vue — "how to connect": a board page inside BoardWorkspace (frame: _board-workspace.scss).
+// Its blocks are settings cards (.board-settings-section), the rules below only add what's inside them.
+.board-embed-section {
+    // the card is a grid: the compact copy button keeps its own width instead of stretching
+    .copy-btn {
+        justify-self: start;
     }
 }
-.board-embed-welcome {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    h1 {
-        font-size: 22px;
-        margin: 0;
-    }
-    p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 14px;
-    }
-}
-.board-embed-block {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 18px 20px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-}
-.board-embed-block-head {
+.board-embed-section-head {
     display: flex;
     flex-direction: column;
     gap: 2px;
-
-    h2 {
-        font-size: 15px;
-        margin: 0;
-    }
-    .note {
-        margin: 0;
-    }
 }
 .board-embed-code {
     margin: 0;
     padding: 12px 14px;
     background: var(--surface-2);
-    border-radius: 8px;
+    border-radius: var(--radius);
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.55;
     overflow-x: auto;
     white-space: pre-wrap;
@@ -70,24 +27,23 @@
     color: var(--fg);
 }
 .board-embed-origins {
-    .note {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px;
-    }
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+
     .mono {
-        font-family: var(--font-mono);
         background: var(--surface-2);
+        color: var(--fg);
         padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 12px;
+        border-radius: 6px;
     }
 }
 .board-embed-warn {
     margin: 0;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: color-mix(in srgb, var(--bug) 10%, var(--surface));
     color: var(--bug);
     font-size: 13px;
@@ -97,9 +53,20 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+
+    // «Открыть доску» matches the compact copy button next to it
+    .btn {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
 }
-.board-embed-finish {
+// same size as «Создать доску» on the previous screen
+.board-embed-actions {
     display: flex;
-    justify-content: center;
-    padding-top: 8px;
+    margin-top: 4px;
+
+    .btn-primary {
+        min-width: 180px;
+        min-height: 44px;
+    }
 }

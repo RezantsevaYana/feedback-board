@@ -1,61 +1,50 @@
 <template>
   <AppHeader />
-  <main class="container base-page board-embed">
-    <RouterLink to="/app/boards" class="board-embed-back">← Все доски</RouterLink>
+  <main class="container base-page board-workspace-page">
+    <BoardWorkspace :slug="slug" :name="boardName" page="embed" :title="justCreated ? `Доска «${boardName}» готова` : undefined">
+      <template v-if="justCreated" #lead>
+        Осталось подключить её к продукту: виджетом на сайте, ссылкой или обоими способами сразу.
+      </template>
 
-    <p v-if="loading" class="note">Загружаем…</p>
+      <p v-if="loading" class="note">Загружаем…</p>
 
-    <template v-else-if="info">
-      <section v-if="justCreated" class="board-embed-welcome">
-        <h1>Доска «{{ boardName }}» готова</h1>
-        <p>Теперь подключите её к продукту — одним из двух способов.</p>
-      </section>
-      <section v-else class="board-embed-welcome">
-        <h1>Как подключить доску «{{ boardName }}»</h1>
-        <p>Два способа, оба можно использовать вместе.</p>
-      </section>
+      <template v-else-if="info">
+        <section class="board-settings-section board-embed-section">
+          <div class="board-embed-section-head">
+            <h2>Виджет на сайте</h2>
+            <p class="note">Вставьте тег перед закрывающим <code class="mono">&lt;/body&gt;</code>.</p>
+          </div>
+          <pre class="board-embed-code"><code>{{ info.script_tag }}</code></pre>
+          <CopyButton :value="info.script_tag" label="Скопировать код" />
+          <p v-if="info.allowed_origins.length" class="note board-embed-origins">
+            Работает на: <code v-for="o in info.allowed_origins" :key="o" class="mono">{{ o }}</code>
+            <RouterLink :to="domainsLink">изменить</RouterLink>
+          </p>
+          <p v-else class="board-embed-warn">
+            Доменов пока нет, поэтому виджет не сможет отправлять посты.
+            <RouterLink :to="domainsLink">Добавить домен</RouterLink>
+          </p>
+        </section>
 
-      <section class="board-embed-block">
-        <header class="board-embed-block-head">
-          <h2>① Виджет на вашем сайте</h2>
-          <p class="note">Вставьте этот тег перед закрывающим <code class="mono">&lt;/body&gt;</code>.</p>
-        </header>
-        <pre class="board-embed-code"><code>{{ info.script_tag }}</code></pre>
-        <CopyButton :value="info.script_tag" label="Скопировать код" />
-        <div class="board-embed-origins">
-          <template v-if="info.allowed_origins.length">
-            <p class="note">
-              Работает на: <code v-for="o in info.allowed_origins" :key="o" class="mono">{{ o }}</code>
-              <RouterLink :to="domainsLink">изменить</RouterLink>
-            </p>
-          </template>
-          <template v-else>
-            <p class="board-embed-warn">
-              Домены ещё не добавлены — виджет не сможет отправлять посты.
-              <RouterLink :to="domainsLink">Добавить домен</RouterLink>
-            </p>
-          </template>
+        <section class="board-settings-section board-embed-section">
+          <div class="board-embed-section-head">
+            <h2>Прямая ссылка</h2>
+            <p class="note">Автор откроет доску и оставит идею прямо там.</p>
+          </div>
+          <pre class="board-embed-code"><code>{{ info.direct_url }}</code></pre>
+          <div class="board-embed-link-row">
+            <CopyButton :value="info.direct_url" label="Скопировать ссылку" />
+            <a :href="info.direct_url" class="btn btn-primary" target="_blank" rel="noopener">Открыть доску ↗</a>
+          </div>
+        </section>
+
+        <div v-if="justCreated" class="board-embed-actions">
+          <RouterLink to="/app/boards" class="btn btn-primary">Готово</RouterLink>
         </div>
-      </section>
+      </template>
 
-      <section class="board-embed-block">
-        <header class="board-embed-block-head">
-          <h2>② Прямая ссылка</h2>
-          <p class="note">Поделитесь ссылкой — автор оставит идею прямо на доске.</p>
-        </header>
-        <pre class="board-embed-code"><code>{{ info.direct_url }}</code></pre>
-        <div class="board-embed-link-row">
-          <CopyButton :value="info.direct_url" label="Скопировать ссылку" />
-          <a :href="info.direct_url" class="btn" target="_blank" rel="noopener">Открыть доску ↗</a>
-        </div>
-      </section>
-
-      <div v-if="justCreated" class="board-embed-finish">
-        <RouterLink to="/app/boards" class="btn">Готово, вернуться в hub</RouterLink>
-      </div>
-    </template>
-
-    <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
+      <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
+    </BoardWorkspace>
   </main>
 </template>
 
@@ -66,6 +55,7 @@ import { BoardsApi, type EmbedInfo } from '@/api/boards'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import CopyButton from '@/shared/ui/CopyButton.vue'
+import BoardWorkspace from './components/BoardWorkspace.vue'
 import { boardLoadError } from './composables/boardLoadError'
 
 const route = useRoute()

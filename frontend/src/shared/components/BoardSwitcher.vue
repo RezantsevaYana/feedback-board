@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import type { BoardSummary } from '@/api/types'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
@@ -20,6 +20,7 @@ const props = defineProps<{
   label: string
   link?: (slug: string) => string
 }>()
+const route = useRoute()
 const router = useRouter()
 
 const items = computed<MenuItem[]>(() => [
@@ -28,7 +29,8 @@ const items = computed<MenuItem[]>(() => [
     current: b.slug === props.current,
     run: () => router.push(props.link ? props.link(b.slug) : `/${b.slug}`),
   })),
-  { label: 'Все доски', separated: true, run: () => router.push('/app/boards') },
-  { label: '+ Новая доска', run: () => router.push('/app/boards/new') },
+  // the hub and the new-board page are sections too: the one you're on gets the check
+  { label: 'Все доски', separated: true, current: route.name === 'hub', run: () => router.push('/app/boards') },
+  { label: '+ Новая доска', current: route.name === 'board-new', run: () => router.push('/app/boards/new') },
 ])
 </script>

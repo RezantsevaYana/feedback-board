@@ -1,0 +1,28 @@
+{
+  "id": "0fb1b9b8",
+  "phase": "discarded",
+  "pageUrl": "/app/boards",
+  "sourceFile": null,
+  "expectedVariants": 3,
+  "arrivedVariants": 0,
+  "visibleVariant": 0,
+  "paramValues": {
+    "title": 44,
+    "card": "regular"
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 2,
+  "activeOwner": "1a5fefb4",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "agent_error",
+      "message": "Отменено: оставили как было"
+    }
+  ],
+  "updatedAt": "2026-10-26T08:02:31.591Z"
+}

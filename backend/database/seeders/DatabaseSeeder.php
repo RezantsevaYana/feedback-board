@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $admin = User::create(['name' => 'Админ', 'email' => 'admin@example.com', 'password' => 'password']);
+        $admin->markEmailAsVerified();
         $admin->projects()->attach($project);
 
         $project->createDefaultCategories();

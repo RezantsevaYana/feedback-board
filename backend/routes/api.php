@@ -26,10 +26,17 @@ Route::prefix('public')->group(function () {
 Route::prefix('admin')->group(function () {
     Route::post('login', [Admin\AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('register', [Admin\RegistrationController::class, 'store'])->middleware('throttle:register');
+    // the link from the letter; the SPA posts its path and query here (see AppServiceProvider)
+    Route::post('email/verify/{user}/{hash}', [Admin\EmailVerificationController::class, 'verify'])
+        ->middleware(['signed:relative', 'throttle:verify-email'])->name('verification.verify');
+    // forgotten password: the letter, then the new password from the page it links to
+    Route::post('forgot-password', [Admin\PasswordResetController::class, 'send'])->middleware('throttle:password-reset');
+    Route::post('reset-password', [Admin\PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [Admin\AuthController::class, 'logout']);
         Route::get('me', [Admin\AuthController::class, 'me']);
+        Route::post('email/verification-notification', [Admin\EmailVerificationController::class, 'resend'])->middleware('throttle:verify-email');
 
         // Self-serve boards owned by the current admin — drives the hub, create wizard and embed screen.
         Route::get('boards', [Admin\BoardController::class, 'index']);

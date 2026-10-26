@@ -29,9 +29,12 @@ export const useAuthStore = defineStore('auth', () => {
   /** Short summaries kept in sync with the server copy — used by the board switcher. */
   const boardSummaries = computed<BoardSummary[]>(() => me.value?.boards ?? [])
 
-  /** Called by the router guard before entering /app/*; a 401 is a legitimate "guest" state. */
-  async function fetchMe(): Promise<void> {
-    if (loaded.value || loading.value) return
+  /**
+   * Called by the router guard before entering /app/*; a 401 is a legitimate "guest" state.
+   * `force` skips the cache: after the letter's link, so the banner goes away.
+   */
+  async function fetchMe(force = false): Promise<void> {
+    if (loading.value || (loaded.value && !force)) return
     loading.value = true
     try {
       const res = await AuthApi.me()
@@ -111,6 +114,28 @@ export const useAuthStore = defineStore('auth', () => {
     loaded.value = true
   }
 
+  /** The link from the letter; then /me again, so this tab knows the address is confirmed (and who is logged in). */
+  async function verifyEmail(id: string, hash: string, expires: string, signature: string): Promise<void> {
+    await AuthApi.verifyEmail(id, hash, expires, signature)
+    // the address is confirmed either way; a failed /me only leaves the banner until the next reload
+    await fetchMe(true).catch(() => undefined)
+  }
+
+  async function forgotPassword(email: string): Promise<void> {
+    await AuthApi.forgotPassword(email)
+  }
+
+  /** The server logs in with the new password, so the page goes straight to the hub. */
+  async function resetPassword(token: string, email: string, password: string): Promise<void> {
+    const res = await AuthApi.resetPassword(token, email, password)
+    me.value = res.data
+    loaded.value = true
+  }
+
+  async function resendVerification(): Promise<void> {
+    await AuthApi.resendVerification()
+  }
+
   async function logout(): Promise<void> {
     await AuthApi.logout().catch(() => undefined)
     me.value = null
@@ -125,6 +150,6 @@ export const useAuthStore = defineStore('auth', () => {
     me, loaded, loading, isAuth, boardSummaries,
     boards, trashed, boardsLoaded, boardsLoading,
     fetchMe, fetchBoards, addBoard, renameBoard, trashBoard, restoreBoard,
-    register, login, logout,
+    register, login, logout, verifyEmail, resendVerification, forgotPassword, resetPassword,
   }
 })

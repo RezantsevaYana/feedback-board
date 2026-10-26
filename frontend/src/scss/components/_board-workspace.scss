@@ -1,0 +1,73 @@
+@use '../utils' as *;
+
+// BoardWorkspace.vue — frame of a board's pages in the cabinet (BoardSettingsPage, BoardEmbedPage).
+// Like the board itself: the side nav from the top, a full-height line, and the page (crumbs, heading,
+// content) to the right of it across the rest of the container.
+.board-workspace-page {
+    padding-top: 24px;
+}
+.board-workspace {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+    // the line runs to the bottom of the screen even when the page is short (minus the header bar)
+    min-height: calc(100vh - 120px);
+
+    @media screen and (max-width: $tablet) {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+        min-height: 0;
+    }
+}
+// same line as .board-main on the board. On tablet and below the main column dissolves (display: contents),
+// so its head, the nav and the sections become one stack: heading first, then the tabs, then the content
+.board-workspace-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    align-self: stretch;
+    border-left: 1px solid var(--line);
+    padding-left: 32px;
+
+    // cards keep a readable width instead of stretching across a wide screen
+    > :not(.board-workspace-head) {
+        max-width: 680px;
+    }
+
+    @media screen and (max-width: $tablet) {
+        display: contents;
+
+        // one column of the screen's width: cards line up with the heading and «Открыть доску»
+        > :not(.board-workspace-head) {
+            max-width: none;
+        }
+    }
+}
+.board-workspace-head {
+    margin-bottom: 8px;
+
+    @media screen and (max-width: $tablet) {
+        order: -1;
+        margin-bottom: 0;
+    }
+    // phone: the header's switcher already names the board and the brand tag leads to «Мои доски»
+    @media screen and (max-width: $mobile) {
+        .page-crumbs {
+            display: none;
+        }
+    }
+}
+.board-workspace-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    h1 {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}

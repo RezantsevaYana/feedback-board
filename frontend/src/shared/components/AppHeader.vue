@@ -3,6 +3,8 @@
     <div class="container app-shell-header-inner">
       <div class="app-shell-nav">
         <RouterLink :to="brandTarget" class="app-brand">Feedback Board</RouterLink>
+        <!-- phone: the wordmark gives way to the short brand tag, so the board's name gets the row -->
+        <RouterLink :to="brandTarget" class="app-brand-mark slant" aria-label="Feedback Board">FB</RouterLink>
         <template v-if="auth.isAuth && auth.boardSummaries.length">
           <span class="app-shell-sep" aria-hidden="true">/</span>
           <BoardSwitcher :boards="auth.boardSummaries" :current="currentSlug" :label="switcherLabel" :link="switchLink" />
@@ -14,6 +16,8 @@
       </div>
     </div>
   </header>
+  <!-- the verify page says the same itself, with its own button -->
+  <VerifyEmailBanner v-if="auth.me && !auth.me.email_verified && route.name !== 'verify-email'" />
 </template>
 
 <script setup lang="ts">
@@ -21,6 +25,7 @@ import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
+import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
 
 const auth = useAuthStore()
 const route = useRoute()

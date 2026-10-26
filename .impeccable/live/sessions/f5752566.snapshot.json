@@ -1,0 +1,26 @@
+{
+  "id": "f5752566",
+  "phase": "completed",
+  "pageUrl": "/app/boards",
+  "sourceFile": "frontend/src/shared/components/AppHeader.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 2,
+  "paramValues": {},
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 12,
+  "activeOwner": "7ee8b6f5",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "carbonize_cleanup_required",
+      "file": "frontend/src/shared/components/AppHeader.vue",
+      "message": "Accepted variant still has carbonize markers that must be folded into source CSS."
+    }
+  ],
+  "updatedAt": "2026-10-26T08:13:35.552Z"
+}

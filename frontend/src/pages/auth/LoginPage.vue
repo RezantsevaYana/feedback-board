@@ -22,6 +22,9 @@
         autocomplete="current-password"
         :errors="v$.password"
       />
+      <RouterLink :to="{ path: '/app/forgot-password', query: email.trim() ? { email: email.trim() } : {} }" class="auth-forgot">
+        Забыли пароль?
+      </RouterLink>
       <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">
         {{ sending ? 'Входим…' : 'Войти' }}
       </button>
