@@ -1,0 +1,273 @@
+/* Feedback Board letters (DESIGN.md): a sage page, one white card with a hairline edge, one green button.
+   Laravel inlines these rules into the markup, so they reach Gmail and Outlook; the phone rules live
+   in layout.blade.php. Colors are the board's light tokens.
+   Don't write the at-rule keyword for media queries in comments here: the inliner cuts it out by regex
+   together with the rules that follow. */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: Onest, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #e8eee9;
+    color: #0f2224;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.55;
+    text-align: left;
+}
+
+a {
+    color: #1b7f41;
+}
+
+a img {
+    border: none;
+}
+
+/* Typography */
+
+h1 {
+    color: #0f2224;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin-top: 0;
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+h2 {
+    color: #0f2224;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 0;
+    text-align: left;
+}
+
+p {
+    color: #0f2224;
+    font-size: 15px;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+p.sub {
+    font-size: 12px;
+}
+
+img {
+    max-width: 100%;
+}
+
+/* Layout */
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #e8eee9;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Header: the brand tag (slanted left edge, as on the board) and the wordmark */
+
+.header {
+    padding: 32px 0 16px;
+}
+
+.header-inner {
+    margin: 0 auto;
+    width: 560px;
+}
+
+.brand {
+    text-decoration: none;
+}
+
+/* the slant: a zero-size cell whose two borders meet on the diagonal, page colour above, green below */
+.brand-slant {
+    border-right: 9px solid #1d8547;
+    border-top: 28px solid #e8eee9;
+    font-size: 0;
+    height: 0;
+    line-height: 0;
+    width: 0;
+}
+
+.brand-tag {
+    background-color: #1d8547;
+    border-radius: 0 10px 10px 0;
+    color: #ffffff;
+    font-family: Unbounded, Onest, -apple-system, 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    height: 28px;
+    line-height: 16px;
+    padding: 6px 11px 6px 4px;
+}
+
+.brand-name {
+    color: #0f2224;
+    font-family: Unbounded, Onest, -apple-system, 'Segoe UI', Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    padding-left: 10px;
+}
+
+/* Body */
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #e8eee9;
+    border-bottom: 1px solid #e8eee9;
+    border-top: 1px solid #e8eee9;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 560px;
+    background-color: #ffffff;
+    border: 1px solid #d8e1db;
+    border-radius: 16px;
+    margin: 0 auto;
+    padding: 0;
+    width: 560px;
+}
+
+.inner-body a {
+    word-break: break-all;
+}
+
+/* Subcopy: the small print under the button, behind a hairline */
+
+.subcopy {
+    border-top: 1px solid #d8e1db;
+    margin-top: 8px;
+    padding-top: 20px;
+}
+
+.subcopy p {
+    color: #4c5d60;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+/* Footer */
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 560px;
+    margin: 0 auto;
+    padding: 0;
+    width: 560px;
+}
+
+.footer p {
+    color: #4c5d60;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 4px;
+    text-align: left;
+}
+
+.footer a {
+    color: #4c5d60;
+    text-decoration: underline;
+}
+
+/* Utilities */
+
+.content-cell {
+    max-width: 100vw;
+    padding: 32px 36px 28px;
+}
+
+.footer .content-cell {
+    padding: 20px 36px 40px;
+}
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 8px 0 28px;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+    float: unset;
+}
+
+/* Button: the board's primary action, Rocont Green with white text (4.5:1) */
+
+.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 10px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 600;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.button-primary {
+    background-color: #1d8547;
+    border-bottom: 12px solid #1d8547;
+    border-left: 22px solid #1d8547;
+    border-right: 22px solid #1d8547;
+    border-top: 12px solid #1d8547;
+}
+
+/* Preview text in the inbox list, never shown in the letter itself */
+
+.preheader {
+    color: transparent;
+    display: none;
+    font-size: 1px;
+    line-height: 1px;
+    max-height: 0;
+    max-width: 0;
+    mso-hide: all;
+    opacity: 0;
+    overflow: hidden;
+    visibility: hidden;
+}
+
+.break-all {
+    word-break: break-all;
+}

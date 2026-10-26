@@ -59,6 +59,8 @@ export interface Post {
 export interface Project {
   name: string
   slug: string
+  /** false until the owner confirms the email; only the team ever gets it, everyone else gets 403 */
+  published: boolean
   categories: Category[]
   statuses: Status[]
 }

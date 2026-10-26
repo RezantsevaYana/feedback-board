@@ -31,7 +31,10 @@
         </p>
       </template>
       <div v-else-if="auth.loaded" class="home-cta-actions">
-        <RouterLink to="/app/register" class="btn btn-primary">Создать доску</RouterLink>
+        <!-- hover rolls the label into «Поехали →» (shared .cta-roll), same as in the hub -->
+        <RouterLink to="/app/register" class="btn btn-primary" aria-label="Создать доску">
+          <span class="cta-roll" aria-hidden="true"><span>Создать доску</span><span>Поехали →</span></span>
+        </RouterLink>
         <RouterLink to="/app/login" class="btn">Войти</RouterLink>
       </div>
     </div>

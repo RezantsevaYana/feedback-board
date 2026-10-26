@@ -27,6 +27,8 @@ export const useBoardStore = defineStore('board', () => {
 
   const project = ref<Project | null>(null)
   const notFound = ref(false)
+  /** 403 from EnsureProjectPublished: the owner hasn't confirmed the email yet, the board is closed to visitors. */
+  const unpublished = ref(false)
   const me = ref<Me | null>(null)
   /** Team mode: logged in and managing this project (the API checks it again on every call). */
   const team = computed(() => !!me.value && !!project.value && me.value.projects.some((p) => p.slug === project.value?.slug))
@@ -82,20 +84,23 @@ export const useBoardStore = defineStore('board', () => {
   async function open(slug: string) {
     if (project.value?.slug === slug) return
     notFound.value = false
+    unpublished.value = false
     loadError.value = ''
     project.value = null
     postsLoaded.value = false
+    const user = AuthApi.me().then((r) => r.data).catch(() => null)
     try {
-      const [p, user] = await Promise.all([
-        ProjectsApi.get(slug),
-        AuthApi.me().then((r) => r.data).catch(() => null),
-      ])
+      const [p, u] = await Promise.all([ProjectsApi.get(slug), user])
       project.value = p.data
-      me.value = user
+      me.value = u
       await refresh()
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) notFound.value = true
-      else loadError.value = errorMessage(e)
+      else if (e instanceof ApiError && e.status === 403) {
+        // the closed-board screen tells a guest to log in and a logged-in stranger whose board it is
+        unpublished.value = true
+        me.value = await user
+      } else loadError.value = errorMessage(e)
     }
   }
 
@@ -508,7 +513,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
+    project, notFound, unpublished, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
     open, refresh, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
     addStatus, updateStatus, deleteStatus,

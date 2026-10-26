@@ -46,6 +46,50 @@
         border-color: var(--bug);
     }
 }
+// InputComponent.vue with type="password": the field and the eye button at its right edge
+.field > .input-wrap {
+    position: relative;
+    display: block;
+    // .field > span sets the label's small type; the field keeps the form's own
+    font-size: inherit;
+    font-weight: inherit;
+
+    .input {
+        padding-right: 44px;
+
+        // Edge's own eye would stand next to ours
+        &::-ms-reveal {
+            display: none;
+        }
+    }
+}
+.input-reveal {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+
+    @include hover {
+        color: var(--fg);
+        background: var(--surface-2);
+    }
+    &:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: -2px;
+    }
+    &[aria-pressed='true'] {
+        color: var(--accent-ink);
+    }
+}
 textarea.input {
     resize: vertical;
     min-height: 96px;

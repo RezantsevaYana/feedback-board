@@ -1,16 +1,16 @@
-{{-- Password reset (AppServiceProvider, ResetPassword::toMailUsing). Own text, like mail/verify-email. --}}
-<x-mail::message>
-# Здравствуйте, {{ $name }}!
+{{-- Password reset (AppServiceProvider, ResetPassword::toMailUsing). Layout and theme: views/vendor/mail. --}}
+<x-mail::message :preheader="'Ссылка для нового пароля, действует '.$minutes.' минут.'">
+# Новый пароль
 
-Кто-то запросил сброс пароля для вашего аккаунта в Feedback Board. Если это были вы, задайте новый пароль по кнопке.
+{{ $name }}, кто-то запросил сброс пароля для вашего аккаунта в Feedback Board. Если это были вы, задайте новый пароль по кнопке.
 
 <x-mail::button :url="$url">
 Задать новый пароль
 </x-mail::button>
 
+<x-slot:subcopy>
 Ссылка действует {{ $minutes }} минут и сработает один раз. Если вы не запрашивали сброс, просто удалите это письмо: пароль останется прежним.
 
-<x-mail::subcopy>
-Если кнопка не открывается, скопируйте ссылку в браузер: <span class="break-all">[{{ $url }}]({{ $url }})</span>
-</x-mail::subcopy>
+Кнопка не открывается? Скопируйте ссылку в браузер: <span class="break-all">[{{ $url }}]({{ $url }})</span>
+</x-slot:subcopy>
 </x-mail::message>

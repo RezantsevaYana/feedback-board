@@ -308,6 +308,13 @@
     .link-btn {
         padding: 0;
     }
+    // «← Мои доски»: navigation out of the board, so it reads as a link in the accent, not one more board action
+    .team-box-back {
+        margin: 2px 0 4px;
+        color: var(--accent-ink);
+        font-weight: 500;
+        text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
+    }
     // горизонтальная линия перед «Выйти» — визуально отделяет разрушительное
     // действие от «Категории»
     .team-box-sep {

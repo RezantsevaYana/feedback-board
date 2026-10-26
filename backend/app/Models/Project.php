@@ -113,6 +113,15 @@ class Project extends Model
     }
 
     /**
+     * Open to the public: legacy projects (no owner, made by artisan) always, self-serve boards once the owner
+     * has confirmed the email. Until then only the team sees the board (EnsureProjectPublished).
+     */
+    public function isPublished(): bool
+    {
+        return $this->owner_id === null || (bool) $this->owner?->hasVerifiedEmail();
+    }
+
+    /**
      * Whether the widget may submit from this site. Patterns allow "*", e.g. "http://localhost:*".
      */
     public function allowsOrigin(string $origin): bool

@@ -11,6 +11,8 @@
 # Dependencies / builds
 node_modules/
 vendor/
+# published Laravel templates (letters), not dependencies
+!backend/resources/views/vendor/
 dist/
 
 # Logs

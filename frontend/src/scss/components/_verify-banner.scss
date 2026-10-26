@@ -1,6 +1,6 @@
 @use '../utils' as *;
 
-// VerifyEmailBanner.vue — «Подтвердите почту» under AppHeader until the letter's link is opened.
+// VerifyEmailBanner.vue — «Подтвердите почту» under AppHeader and on top of an unpublished board.
 // A warm note, not an alarm: the account works either way. Scrolls away with the page, the header stays.
 .verify-banner {
     display: flex;
@@ -24,6 +24,10 @@
         gap: 10px;
         padding: 12px;
     }
+}
+// on an unpublished board the banner opens the main column, above the board's own head
+.verify-banner.board-verify {
+    margin: 0 0 16px;
 }
 .verify-banner-text {
     margin: 0;

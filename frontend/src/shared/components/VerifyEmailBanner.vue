@@ -1,21 +1,19 @@
 <template>
-  <div class="container">
-    <div class="verify-banner" role="status">
-      <p class="verify-banner-text">
-        <strong>Подтвердите почту.</strong>
-        Откройте ссылку из письма, которое мы прислали на <span class="verify-banner-email">{{ auth.me?.email }}</span>,
-        чтобы убедиться, что адрес ваш. Доски работают и без этого.
-      </p>
-      <button
-        type="button"
-        class="btn"
-        :disabled="sending || sent"
-        :aria-busy="sending"
-        @click="resend"
-      >
-        {{ sent ? 'Письмо отправлено' : 'Отправить ещё раз' }}
-      </button>
-    </div>
+  <div class="verify-banner" role="status">
+    <p class="verify-banner-text">
+      <strong>Подтвердите почту, чтобы открыть доски для всех.</strong>
+      Пока их видите только вы: ссылка и виджет заработают после подтверждения.
+      Письмо со ссылкой ушло на <span class="verify-banner-email">{{ email }}</span>.
+    </p>
+    <button
+      type="button"
+      class="btn"
+      :disabled="sending || sent"
+      :aria-busy="sending"
+      @click="resend"
+    >
+      {{ sent ? 'Письмо отправлено' : 'Отправить ещё раз' }}
+    </button>
   </div>
 </template>
 
@@ -25,7 +23,12 @@ import { errorMessage } from '@/api/client'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 
-// Soft email confirmation: shown under AppHeader until the letter's link is opened (see VerifyEmailPage).
+// Until the email is confirmed the owner's boards are closed to the public (EnsureProjectPublished on the API).
+// Shown under AppHeader in the cabinet and on top of an unpublished board; the caller gives the container.
+defineProps<{
+  email: string
+}>()
+
 const auth = useAuthStore()
 const notification = useNotificationStore()
 const sending = ref(false)

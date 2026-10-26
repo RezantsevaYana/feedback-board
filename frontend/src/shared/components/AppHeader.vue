@@ -17,7 +17,9 @@
     </div>
   </header>
   <!-- the verify page says the same itself, with its own button -->
-  <VerifyEmailBanner v-if="auth.me && !auth.me.email_verified && route.name !== 'verify-email'" />
+  <div v-if="auth.me && !auth.me.email_verified && route.name !== 'verify-email'" class="container">
+    <VerifyEmailBanner :email="auth.me.email" />
+  </div>
 </template>
 
 <script setup lang="ts">

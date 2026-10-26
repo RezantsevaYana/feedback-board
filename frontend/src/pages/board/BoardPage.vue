@@ -7,6 +7,16 @@
       </div>
     </div>
 
+    <!-- 403 from the API: the owner hasn't confirmed the email yet; the owner gets in by logging in -->
+    <div v-else-if="board.unpublished" class="center-page">
+      <div>
+        <h1>Доска ещё не открыта</h1>
+        <p class="note">Её владелец заканчивает настройку. Загляните чуть позже.</p>
+        <p v-if="board.me" class="note">Вы вошли как {{ board.me.email }}, а доска принадлежит другому аккаунту.</p>
+        <p v-else class="note">Это ваша доска? <RouterLink :to="{ path: '/app/login', query: { next: route.fullPath } }">Войдите</RouterLink>, чтобы её увидеть.</p>
+      </div>
+    </div>
+
     <div v-else-if="!board.project && board.loadError" class="center-page">
       <div>
         <p class="note">Не получилось загрузить доску: {{ board.loadError }}</p>
@@ -85,6 +95,8 @@
         <div v-if="board.team" class="team-box">
           <span class="chip">режим команды</span>
           <span class="who-mail">{{ board.me?.email }}</span>
+          <!-- the way back to the cabinet (hub with all of this admin's boards) -->
+          <RouterLink to="/app/boards" class="link-btn team-box-back">← Мои доски</RouterLink>
           <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
           <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
           <RouterLink v-if="owned" :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
@@ -99,6 +111,8 @@
 
       <div class="board-main">
         <div v-if="refreshing" class="board-progress" role="progressbar" aria-label="Обновляем доску" />
+        <!-- the owner on an unpublished board (everyone else gets «Доска ещё не открыта») -->
+        <VerifyEmailBanner v-if="!board.project.published && board.me" :email="board.me.email" class="board-verify" />
         <TopPosts v-if="board.view.section === 'top'" @open="openPost" />
         <LeaderboardAuthors v-else-if="board.view.section === 'authors'" />
         <WeeklyWinners v-else-if="board.view.section === 'weekly'" @open="openPost" />
@@ -180,6 +194,7 @@ import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
+import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 import SearchComponent from '@/shared/ui/SearchComponent.vue'
 import BoardFilters from './components/BoardFilters.vue'
@@ -257,6 +272,7 @@ const switchBoards = computed(() => (board.team ? (board.me?.projects ?? []) : [
 const owned = computed(() => board.team && !!board.me?.boards.some((b) => b.slug === slug.value))
 const settingsLink = computed(() => `/app/boards/${slug.value}/settings`)
 const teamItems = computed<MenuItem[]>(() => [
+  { label: 'Мои доски', run: () => router.push('/app/boards') },
   { label: 'Категории', run: () => (editingCategories.value = true) },
   { label: 'Столбцы', run: () => (editingStatuses.value = true) },
   ...(owned.value ? [{ label: 'Настройки доски', run: () => router.push(settingsLink.value) }] : []),

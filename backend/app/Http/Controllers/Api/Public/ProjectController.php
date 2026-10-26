@@ -15,6 +15,8 @@ class ProjectController extends Controller
         return response()->json(['data' => [
             'name' => $project->name,
             'slug' => $project->slug,
+            // false only reaches the team: everyone else gets 403 from EnsureProjectPublished
+            'published' => $project->isPublished(),
             'categories' => $project->categories->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name, 'color' => $c->color]),
             'statuses' => $project->statuses->map(fn (Status $s) => [
                 'id' => $s->id,

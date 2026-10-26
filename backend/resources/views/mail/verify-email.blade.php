@@ -1,17 +1,16 @@
-{{-- Email confirmation (AppServiceProvider, VerifyEmail::toMailUsing). Own text instead of the stock
-     notification template, which adds English lines («Regards», «If you're having trouble…»). --}}
-<x-mail::message>
-# Здравствуйте, {{ $name }}!
+{{-- Email confirmation (AppServiceProvider, VerifyEmail::toMailUsing). Layout and theme: views/vendor/mail. --}}
+<x-mail::message preheader="Одна кнопка — и адрес подтверждён. Ссылка действует сутки.">
+# Подтвердите почту
 
-Подтвердите адрес почты для Feedback Board. На него придёт ссылка, если вы забудете пароль.
+{{ $name }}, спасибо за регистрацию в Feedback Board. Подтвердите, что этот адрес ваш: на него придёт ссылка, если вы забудете пароль.
 
 <x-mail::button :url="$url">
 Подтвердить почту
 </x-mail::button>
 
+<x-slot:subcopy>
 Ссылка действует сутки. Если вы не регистрировались в Feedback Board, просто удалите это письмо.
 
-<x-mail::subcopy>
-Если кнопка не открывается, скопируйте ссылку в браузер: <span class="break-all">[{{ $url }}]({{ $url }})</span>
-</x-mail::subcopy>
+Кнопка не открывается? Скопируйте ссылку в браузер: <span class="break-all">[{{ $url }}]({{ $url }})</span>
+</x-slot:subcopy>
 </x-mail::message>

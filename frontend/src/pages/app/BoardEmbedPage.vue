@@ -9,6 +9,11 @@
       <p v-if="loading" class="note">Загружаем…</p>
 
       <template v-else-if="info">
+        <!-- until the email is confirmed the API answers visitors 403 (EnsureProjectPublished); the banner above has the resend button -->
+        <p v-if="auth.me && !auth.me.email_verified" class="board-embed-warn">
+          Пока почта не подтверждена, виджет и ссылка не работают для посетителей: они увидят «Доска ещё не открыта».
+          Подтвердите почту по ссылке из письма, и доска откроется сама.
+        </p>
         <section class="board-settings-section board-embed-section">
           <div class="board-embed-section-head">
             <h2>Виджет на сайте</h2>
