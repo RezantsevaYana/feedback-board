@@ -1,0 +1,28 @@
+{
+  "id": "7c93de48",
+  "phase": "completed",
+  "pageUrl": "/testovaya-doska",
+  "sourceFile": "frontend/src/pages/board/BoardPage.vue",
+  "expectedVariants": 3,
+  "arrivedVariants": 3,
+  "visibleVariant": 1,
+  "paramValues": {
+    "density": 1
+  },
+  "pendingEventSeq": null,
+  "pendingEvent": null,
+  "deliveryLease": null,
+  "checkpointRevision": 11,
+  "activeOwner": "d68bd03e",
+  "sourceMarkers": {},
+  "fallbackMode": null,
+  "annotationArtifacts": [],
+  "diagnostics": [
+    {
+      "error": "carbonize_cleanup_required",
+      "file": "frontend/src/pages/board/BoardPage.vue",
+      "message": "Accepted variant still has carbonize markers that must be folded into source CSS."
+    }
+  ],
+  "updatedAt": "2026-10-26T12:53:28.167Z"
+}

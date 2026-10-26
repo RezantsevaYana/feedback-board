@@ -92,16 +92,21 @@
         <button type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
           <span class="cta-roll" aria-hidden="true"><span>Предложить</span><span>Есть идея?</span></span>
         </button>
+        <!-- three groups: who is logged in, this board's tools, and the way out (cabinet / logout) -->
         <div v-if="board.team" class="team-box">
-          <span class="chip">режим команды</span>
-          <span class="who-mail">{{ board.me?.email }}</span>
-          <!-- the way back to the cabinet (hub with all of this admin's boards) -->
-          <RouterLink to="/app/boards" class="link-btn team-box-back">← Мои доски</RouterLink>
-          <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
-          <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
-          <RouterLink v-if="owned" :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
-          <span class="team-box-sep" aria-hidden="true" />
-          <button type="button" class="link-btn link-btn-danger" @click="askLogout">Выйти</button>
+          <div class="team-box-who">
+            <span class="chip">режим команды</span>
+            <span class="who-mail" :title="board.me?.email">{{ board.me?.email }}</span>
+          </div>
+          <div class="team-box-tools">
+            <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
+            <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
+            <RouterLink v-if="owned" :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
+          </div>
+          <div class="team-box-foot">
+            <RouterLink to="/app/boards" class="link-btn team-box-back">← Мои доски</RouterLink>
+            <button type="button" class="link-btn link-btn-danger" @click="askLogout">Выйти</button>
+          </div>
         </div>
         <button v-else type="button" class="link-btn team-login" @click="loggingIn = true">Вход для команды</button>
         <ThemeToggle />

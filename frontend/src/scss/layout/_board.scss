@@ -291,38 +291,19 @@
         margin-top: 0;
     }
 }
+// Team box in the sidebar: three groups, tight inside and split by hairlines —
+// who is logged in, this board's tools (as rows), and the way out: «← Мои доски» and «Выйти» on one line
 .team-box {
     margin-top: 18px;
-    padding: 10px 12px;
+    padding: 12px 12px 8px;
     border-radius: var(--radius);
     background: var(--surface);
     border: 1px solid var(--line);
     display: grid;
-    gap: 4px;
-    justify-items: start;
     font-size: 13px;
 
-    .who-mail {
-        word-break: break-all;
-    }
     .link-btn {
         padding: 0;
-    }
-    // «← Мои доски»: navigation out of the board, so it reads as a link in the accent, not one more board action
-    .team-box-back {
-        margin: 2px 0 4px;
-        color: var(--accent-ink);
-        font-weight: 500;
-        text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
-    }
-    // горизонтальная линия перед «Выйти» — визуально отделяет разрушительное
-    // действие от «Категории»
-    .team-box-sep {
-        display: block;
-        width: 100%;
-        height: 1px;
-        background: var(--line);
-        margin: 4px 0 2px;
     }
     .link-btn-danger {
         color: var(--bug);
@@ -340,6 +321,54 @@
         // На узких экранах уводим её в собственную строку, чтобы не распирала nav
         flex: 1 1 100%;
     }
+}
+.team-box-who {
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+    padding-bottom: 12px;
+
+    // a long address stays on one line; the full one is in the title
+    .who-mail {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--muted);
+    }
+}
+// the board's tools read as rows with a sage hover, not as underlined links
+.team-box-tools {
+    display: grid;
+    gap: 2px;
+    padding: 8px 0;
+    border-top: 1px solid var(--line);
+
+    .link-btn {
+        text-align: left;
+        padding: 4px 6px;
+        margin: 0 -6px;
+        border-radius: 6px;
+        color: var(--fg);
+        text-decoration: none;
+
+        @include hover {
+            background: var(--surface-2);
+        }
+    }
+}
+.team-box-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+}
+// «← Мои доски»: navigation out of the board, so it reads as a link in the accent, not one more board action
+.team-box-back {
+    color: var(--accent-ink);
+    font-weight: 500;
+    text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
 }
 
 // a full-height line between the sidebar and the board; on tablet and below the nav sits on top
