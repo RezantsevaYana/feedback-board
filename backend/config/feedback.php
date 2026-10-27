@@ -9,7 +9,7 @@ return [
     | widget script src returned by the admin "how to embed" endpoint. Reuses
     | FRONTEND_URL (same value backs Sanctum stateful cookies).
     */
-    'public_url' => rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/'),
+    'public_url' => rtrim(env('FRONTEND_URL', 'http://localhost:5176'), '/'),
 
     /*
     |--------------------------------------------------------------------------

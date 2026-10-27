@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "georgia",
+        "createdAt": "2026-10-27T07:16:49.583Z",
+        "reason": "intentional hostile-host demo fixture: file comment states 'deliberately aggressive host styles: the widget must not inherit them'"
+      }
+    ]
+  }
+}

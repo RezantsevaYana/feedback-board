@@ -42,18 +42,18 @@ services:
       mailpit:
         condition: service_started
 
-  # Board (Vue) + /api proxy to Laravel + widget.js rebuilt on change. http://localhost:5173/demo
+  # Board (Vue) + /api proxy to Laravel + widget.js rebuilt on change. http://localhost:5176/demo
   frontend:
     image: node:24
     working_dir: /app
     command: >
       sh -c "npm install --no-audit --no-fund
       && (npm run widget:watch -- --logLevel warn &)
-      && npm run dev -- --host 0.0.0.0 --port 5173"
+      && npm run dev -- --host 0.0.0.0 --port 5176"
     environment:
       API_PROXY_TARGET: http://backend:8000
     ports:
-      - "5173:5173"
+      - "5176:5176"
     volumes:
       - ./frontend:/app
       # Linux node_modules inside the container, separate from the macOS ones on the host
@@ -61,11 +61,11 @@ services:
     depends_on:
       - backend
 
-  # Someone else's site with the widget installed, on another origin: http://localhost:5174
+  # Someone else's site with the widget installed, on another origin: http://localhost:5175
   demo-host:
     image: nginx:1.27-alpine
     ports:
-      - "5174:80"
+      - "5175:80"
     volumes:
       - ./frontend/demo:/usr/share/nginx/html:ro
 
