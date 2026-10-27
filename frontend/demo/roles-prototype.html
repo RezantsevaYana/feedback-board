@@ -1,0 +1,1821 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Роли и доступ — прототип</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --line: #d8e1db;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --accent-fg: #ffffff;
+            --focus: #1b7f41;
+            --like: #27ad5a;
+            --poo: #94603d;
+            --cat-blue: #c9dde6;
+            --cat-orange: #f6d8b3;
+            --cat-pink: #efccd4;
+            --s-new: #46575a;
+            --s-done: #14623a;
+            --sta-red: #8f3029;
+            --sta-blue: #2a4e6a;
+            --sta-orange: #7f4718;
+            --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background: #f3f6f4;
+            color: var(--fg);
+            margin: 0;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 80px;
+        }
+
+        header.page {
+            padding: 48px 0 24px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 40px;
+        }
+
+        header.page h1 {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 600;
+            margin: 0 0 8px;
+            letter-spacing: -0.02em;
+        }
+
+        header.page .lede {
+            font-size: 16px;
+            color: var(--muted);
+            max-width: 720px;
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            margin: 48px 0 8px;
+            letter-spacing: -0.01em;
+        }
+
+        h2 .num {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-size: 15px;
+            text-align: center;
+            line-height: 32px;
+            vertical-align: middle;
+            margin-right: 12px;
+            font-family: var(--font-body);
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin: 32px 0 8px;
+        }
+
+        .section-sub {
+            color: var(--muted);
+            margin: 0 0 24px;
+            max-width: 820px;
+        }
+
+        /* Scenario legend */
+        .scenarios {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 16px 0 32px;
+        }
+
+        .scenario-chip {
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .scenario-chip .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .scenario-chip .label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .scenario-chip .desc {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .sc-a .dot { background: var(--accent); }
+        .sc-a { border-left: 4px solid var(--accent); }
+        .sc-b .dot { background: #2a4e6a; }
+        .sc-b { border-left: 4px solid #2a4e6a; }
+        .sc-c .dot { background: #7f4718; }
+        .sc-c { border-left: 4px solid #7f4718; }
+        .sc-d .dot { background: #8a3059; }
+        .sc-d { border-left: 4px solid #8a3059; }
+
+        /* Mermaid */
+        .mermaid-wrap {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 24px;
+            overflow-x: auto;
+        }
+
+        .mermaid { font-family: var(--font-body) !important; }
+
+        /* Roles table */
+        .roles-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        .roles-table th,
+        .roles-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .roles-table th {
+            background: var(--surface-2);
+            font-weight: 600;
+        }
+
+        .roles-table .y {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .roles-table .n {
+            color: var(--muted);
+        }
+
+        .roles-table td:first-child {
+            font-weight: 600;
+        }
+
+        /* Screen pair: mockup + caption */
+        .screen {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 32px;
+            margin: 24px 0 48px;
+            align-items: start;
+        }
+
+        .screen.wide {
+            grid-template-columns: 540px 1fr;
+        }
+
+        .screen .mockup {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(16, 37, 40, 0.08);
+            overflow: hidden;
+        }
+
+        .mockup .browser-bar {
+            background: #f0f3f1;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--line);
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .mockup .browser-bar .dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .mockup .browser-bar .dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #d4d9d6;
+            display: inline-block;
+        }
+
+        .mockup .browser-bar .url {
+            background: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            flex: 1;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        .mockup .mail-bar {
+            background: var(--surface-2);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--line);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .mockup .mail-bar strong {
+            color: var(--fg);
+        }
+
+        .mockup .body {
+            padding: 24px;
+        }
+
+        .mockup h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+        }
+
+        .mockup .board-header {
+            padding: 14px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .mockup .board-header .title {
+            font-weight: 600;
+            font-family: var(--font-display);
+        }
+
+        .mockup .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .mockup .tabs {
+            padding: 0 20px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+        }
+
+        .mockup .tabs .tab {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .mockup .tabs .tab.active {
+            color: var(--fg);
+            border-bottom-color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Form controls */
+        .mockup label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .mockup .hint {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 4px 0 16px;
+        }
+
+        .mockup input[type=text],
+        .mockup input[type=email],
+        .mockup input[type=password],
+        .mockup textarea,
+        .mockup select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            margin-bottom: 2px;
+            background: #fff;
+            color: var(--fg);
+        }
+
+        .mockup textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .mockup .btn {
+            display: inline-block;
+            padding: 11px 18px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 999px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .mockup .btn.block {
+            display: block;
+            width: 100%;
+        }
+
+        .mockup .btn.ghost {
+            background: transparent;
+            color: var(--accent);
+            text-decoration: underline;
+            padding: 6px 0;
+            font-weight: 400;
+        }
+
+        .mockup .btn.danger {
+            background: #b0423a;
+        }
+
+        .mockup .btn.outline {
+            background: transparent;
+            color: var(--fg);
+            border: 1px solid var(--line);
+        }
+
+        .mockup .btn.sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Scenario tags on mockup header */
+        .mockup .scenario-tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            margin-top: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .mockup .scenario-tag.a { background: var(--active); color: #063f2c; }
+        .mockup .scenario-tag.b { background: var(--cat-blue); color: #2a4e6a; }
+        .mockup .scenario-tag.c { background: var(--cat-orange); color: #7f4718; }
+        .mockup .scenario-tag.d { background: var(--cat-pink); color: #8a3059; }
+
+        .mockup .code-input {
+            display: flex;
+            gap: 6px;
+            margin: 10px 0 16px;
+        }
+
+        .mockup .code-input .digit {
+            width: 42px;
+            height: 48px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            background: #fff;
+        }
+
+        /* Participants row */
+        .mockup .participants {
+            display: grid;
+            grid-template-columns: 1fr 110px 130px 30px;
+            gap: 0;
+            font-size: 13px;
+        }
+
+        .mockup .participants .row {
+            display: contents;
+        }
+
+        .mockup .participants .row > * {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .mockup .participants .head > * {
+            background: var(--surface-2);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--muted);
+        }
+
+        .mockup .role-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: var(--surface-2);
+            font-size: 12px;
+        }
+
+        .mockup .role-pill.owner { background: var(--active); color: #063f2c; font-weight: 600; }
+        .mockup .role-pill.admin { background: var(--cat-blue); color: #2a4e6a; font-weight: 600; }
+        .mockup .role-pill.manager { background: var(--cat-pink); color: #8a3059; }
+        .mockup .role-pill.voter { background: var(--cat-orange); color: #7f4718; }
+        .mockup .role-pill.reader { background: var(--surface-2); color: var(--muted); }
+
+        /* Team / external badge — derived from role */
+        .mockup .team-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .mockup .team-badge.team {
+            background: var(--active);
+            color: #063f2c;
+        }
+
+        .mockup .team-badge.team::before {
+            content: '●';
+            color: var(--accent);
+        }
+
+        .mockup .team-badge.external {
+            background: var(--surface-2);
+            color: var(--muted);
+        }
+
+        .mockup .team-badge.external::before {
+            content: '○';
+            color: var(--muted);
+        }
+
+        .mockup .team-badge.toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mockup .invite-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .mockup .invite-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            font-size: 13px;
+        }
+
+        .mockup .invite-row .email {
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        .mockup .team-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--muted);
+            cursor: pointer;
+            margin-bottom: 0;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .mockup .team-check input[type=checkbox] {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--accent);
+            margin: 0;
+        }
+
+        /* Hub (cabinet) */
+        .mockup .hub-header {
+            background: var(--surface);
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mockup .hub-header .brand {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .mockup .hub-header .right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mockup .alert-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-left: 4px solid #f0a854;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mockup .alert-card.incoming {
+            border-left-color: var(--accent);
+        }
+
+        .mockup .alert-card .main {
+            flex: 1;
+        }
+
+        .mockup .alert-card .title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .mockup .alert-card .meta {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .mockup .alert-card .actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mockup .section-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0 10px;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .mockup .section-head::before,
+        .mockup .section-head::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--line);
+        }
+
+        .mockup .board-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .mockup .board-card:hover {
+            border-color: var(--accent);
+        }
+
+        .mockup .board-card .name {
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mockup .board-card .vis {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .mockup .board-card .meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .mockup .board-card .right-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .mockup .req-card {
+            background: var(--surface-2);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .mockup .req-card .meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .mockup .req-card .msg {
+            font-size: 13px;
+            margin: 6px 0 10px;
+        }
+
+        .mockup .req-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .mockup .req-actions select {
+            width: auto;
+            margin: 0;
+        }
+
+        /* Caption */
+        .caption {
+            padding-top: 12px;
+        }
+
+        .caption h3 {
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+
+        .caption .screen-id {
+            display: inline-block;
+            background: var(--surface-2);
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .caption p {
+            margin: 8px 0;
+            color: #253a3d;
+        }
+
+        .caption ul {
+            margin: 8px 0;
+            padding-left: 18px;
+        }
+
+        .caption li {
+            margin-bottom: 4px;
+        }
+
+        .caption .note {
+            background: var(--surface-2);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 12px;
+        }
+
+        .caption .note strong {
+            color: var(--fg);
+        }
+
+        /* Mail content */
+        .mail-content {
+            padding: 20px 24px;
+        }
+
+        .mail-content h3 {
+            font-size: 20px;
+            margin: 0 0 12px;
+        }
+
+        .mail-content p {
+            color: var(--muted);
+            margin: 0 0 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .mail-content .signature {
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Posts preview */
+        .mockup .post-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .mockup .post-card .vote {
+            width: 42px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .mockup .post-card .vote strong {
+            color: var(--like);
+            display: block;
+            font-size: 16px;
+        }
+
+        .mockup .post-card .meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .mockup .tray {
+            background: #f1f5f3;
+            padding: 16px 20px;
+        }
+
+        .mockup .columns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mockup .columns .col {
+            background: var(--surface-2);
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 100px;
+        }
+
+        .mockup .columns .col .ch {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .mockup .mini-card {
+            background: #fff;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .toc {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin: 24px 0;
+        }
+
+        .toc h3 {
+            margin: 0 0 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+        }
+
+        .toc ol {
+            margin: 0;
+            padding-left: 24px;
+        }
+
+        .toc a {
+            color: var(--fg);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--muted);
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .decisions {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin: 16px 0 24px;
+        }
+
+        .decisions h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+        }
+
+        .decisions ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .decisions li {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .decisions .question {
+            background: #fff5e8;
+            border-left: 3px solid #f0a854;
+            padding: 10px 14px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .screen, .screen.wide { grid-template-columns: 1fr; }
+            .scenarios { grid-template-columns: 1fr 1fr; }
+            header.page h1 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header class="page">
+        <h1>Роли и доступ к доскам</h1>
+        <p class="lede">
+            Прототип флоу: как люди попадают на закрытую доску (приглашение, запрос доступа), какие роли бывают,
+            что видит админ, что видит участник. Решения, помеченные как «моё предложение», открыты для спора.
+        </p>
+    </header>
+
+    <section>
+        <h2><span class="num">1</span>Сценарии</h2>
+        <p class="section-sub">
+            Четыре флоу доступа. На схеме ниже они окрашены этими же цветами, экраны в разделе&nbsp;4
+            помечены тем же бейджем.
+        </p>
+        <div class="scenarios">
+            <div class="scenario-chip sc-a">
+                <div><span class="dot"></span> <span class="label">A — Приглашённый из команды</span></div>
+                <div class="desc">Админ отправил инвайт сотруднику. Тот открывает письмо, задаёт имя+пароль, попадает на доску.</div>
+            </div>
+            <div class="scenario-chip sc-b">
+                <div><span class="dot"></span> <span class="label">B — Приглашённый клиент</span></div>
+                <div class="desc">Тот же инвайт, но роль Голосующий или Читатель. Приглашает Owner/Admin вручную.</div>
+            </div>
+            <div class="scenario-chip sc-c">
+                <div><span class="dot"></span> <span class="label">C — Клиент по прямой ссылке</span></div>
+                <div class="desc">Увидел URL доски. Доска закрыта. Жмёт «Запросить доступ» → админ одобряет → письмо → вход.</div>
+            </div>
+            <div class="scenario-chip sc-d">
+                <div><span class="dot"></span> <span class="label">D — Повторный вход</span></div>
+                <div class="desc">Сессия истекла или человек с нового устройства. Пароль или magic-link.</div>
+            </div>
+        </div>
+
+        <div class="decisions">
+            <h3>Решения, зафиксированные в прототипе</h3>
+            <ul>
+                <li><strong>Доменов больше нет.</strong> Доступ в закрытую доску — только по инвайту или через апрув запроса. Для 15 коллег начальник использует bulk-инвайт (вводит список почт разом).</li>
+                <li><strong>Пять ролей:</strong> Владелец, Админ, <strong>Менеджер</strong> (двигает карточки, не настраивает доску), Голосующий, Читатель. Разделение «Голосующего» и «Читателя» даёт тонкую настройку для клиентов и наблюдателей.</li>
+                <li><strong>Роль задаётся на доску.</strong> Один человек на доске A — Менеджер, на доске B — Читатель. Хранится в <code>project_user.role</code>.</li>
+                <li><strong>Бейдж «команда / внешний»</strong> рядом с именем в списке участников. Два поля в БД, независимо от роли:
+                    <ul style="margin: 6px 0 0;">
+                        <li><code>project.team_domain</code> — одна plain-строка. При создании доски система кладёт туда домен владельца (ivan@rocont.ru → rocont.ru). Публичные домены (gmail, outlook и т.п.) → null. Владелец может поменять в настройках.</li>
+                        <li><code>project_user.is_team_member</code> — булев флаг на связке «человек × доска». При приглашении пред-заполняется автоматически (домен совпал с <code>team_domain</code> → true, иначе false). Можно переопределить в форме инвайта и позже в списке участников — не меняя роль.</li>
+                    </ul>
+                    Доступ на доску не зависит от домена, флаг влияет только на визуальную группировку.
+                </li>
+                <li><strong>Пароль задаётся на экране принятия приглашения</strong> (можно пропустить и ходить по ссылке). В письме пароля нет.</li>
+                <li><strong>Клиент по URL</strong> не видит содержимое доски до одобрения — только форму запроса и экран «Заявка отправлена, ждите письма». Админ выбирает роль при одобрении.</li>
+                <li><strong>Апрув заявки — inline</strong> в карточке запроса, без отдельного экрана.</li>
+                <li><strong>Один пользователь — множество ролей.</strong> Человек может быть Владельцем одной доски и Голосующим другой. В кабинете — две группы: «Я веду» (Owner/Admin) и «Я участник» (Менеджер/Голосующий/Читатель). См. экран 4.10.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">2</span>Блок-схема флоу</h2>
+        <p class="section-sub">
+            На одной схеме все четыре сценария (A — зелёный, B — синий, C — оранжевый, D — розовый). Цвет стрелки = сценарий.
+            Пересечения — там, где флоу сходятся на одном экране (например, Admin review обрабатывает одновременно и запросы по URL, и приглашения).
+        </p>
+        <div class="mermaid-wrap">
+<pre class="mermaid">
+flowchart TD
+    classDef sA fill:#cfe7d7,stroke:#1d8547,color:#063f2c,stroke-width:2px
+    classDef sB fill:#c9dde6,stroke:#2a4e6a,color:#2a4e6a,stroke-width:2px
+    classDef sC fill:#f6d8b3,stroke:#7f4718,color:#7f4718,stroke-width:2px
+    classDef sD fill:#efccd4,stroke:#8a3059,color:#8a3059,stroke-width:2px
+    classDef adminArea fill:#ffffff,stroke:#1d8547,color:#063f2c,stroke-dasharray:4 3,stroke-width:2px
+    classDef final fill:#1d8547,stroke:#1d8547,color:#ffffff,stroke-width:2px
+    classDef mail fill:#fff5e8,stroke:#7f4718,color:#7f4718,stroke-width:1px
+
+    %% Admin starts the invite
+    AdminInvite["Админ: кнопка Пригласить"]:::adminArea
+    AdminInvite --> FormInvite["Форма инвайта<br/>почты + роль"]:::adminArea
+    FormInvite --> SendMail["Отправка писем N→N"]:::adminArea
+    SendMail --> MailA["Письмо: Вас пригласили<br/>(команда)"]:::mail
+    SendMail --> MailB["Письмо: Вас пригласили<br/>(клиент)"]:::mail
+
+    %% Scenario A — team member invited
+    MailA --> ClickA["Клик по письму"]:::sA
+    ClickA --> Accept["Экран принятия<br/>инвайта"]:::sA
+    Accept --> HasAcc{"Аккаунт<br/>существует?"}:::sA
+    HasAcc -- Нет --> SetUp["Форма: имя + пароль<br/>+ Присоединиться"]:::sA
+    HasAcc -- "Да, залогинен<br/>не на эту почту" --> Relog["Войти под нужной<br/>почтой"]:::sA
+    HasAcc -- "Да, этой почтой" --> OneClick["Кнопка<br/>Присоединиться"]:::sA
+    SetUp --> JoinA(("На доске"))
+    OneClick --> JoinA
+    Relog --> OneClick
+    class JoinA final
+
+    %% Scenario B — client invited (same shape)
+    MailB --> ClickB["Клик по письму"]:::sB
+    ClickB --> AcceptB["Экран принятия<br/>инвайта"]:::sB
+    AcceptB -.-> Accept
+    AcceptB --> JoinB(("На доске"))
+    class JoinB final
+
+    %% Scenario C — client via URL
+    URL["Клиент открывает<br/>прямую ссылку"]:::sC --> IsOpen{"Доска<br/>публичная?"}:::sC
+    IsOpen -- Да --> JoinC(("На доске"))
+    IsOpen -- Нет --> ClosedScreen["Экран: Это закрытая<br/>доска"]:::sC
+    ClosedScreen --> ReqForm["Экран: Запросить<br/>доступ (имя+почта+зачем)"]:::sC
+    ReqForm --> Pending["Экран: Заявка<br/>отправлена, ждите"]:::sC
+    Pending --> AdminNotif["Админу: нотификация +<br/>письмо о запросе"]:::sC
+    AdminNotif --> AdminReview["Админ: раздел<br/>Запросы на доступ"]:::adminArea
+    AdminReview --> Decide{"Админ<br/>решает"}:::adminArea
+    Decide -- "Одобрить + роль" --> ApproveMail["Письмо: доступ одобрен<br/>+ одноразовая ссылка на вход"]:::mail
+    Decide -- "Отклонить" --> RejectMail["Письмо: доступ отклонён<br/>+ причина"]:::mail
+    ApproveMail --> LoginFlow
+    class JoinC final
+
+    %% Scenario D — login (fallback for all)
+    LoginFlow["Форма входа<br/>почта + пароль"]:::sD
+    LoginFlow -- "Войти по паролю" --> Session["Сессия создана"]:::sD
+    LoginFlow -- "Прислать ссылку" --> MagicMail["Письмо: вход по ссылке<br/>+ 6-значный код, 15 мин"]:::mail
+    MagicMail --> Session
+    Session --> JoinD(("На доске"))
+    class JoinD final
+
+    %% Edge: user already registered, invited to a new board
+    OneClick -.-> |"Уже залогинен<br/>на эту почту"| JoinA
+</pre>
+        </div>
+        <p class="section-sub" style="margin-top: 16px;">
+            Пунктирная рамка — админский флоу (видит только Owner или Admin доски). Жёлтые узлы — письма. Зелёный конечный кружок — успешно оказался на доске с нужной ролью.
+        </p>
+    </section>
+
+    <section>
+        <h2><span class="num">3</span>Роли и права</h2>
+        <p class="section-sub">
+            Пять уровней доступа. Назначается на конкретную доску при приглашении или апруве. Можно менять в любой момент из списка участников (сценарий 4.9).
+        </p>
+        <table class="roles-table">
+            <thead>
+            <tr>
+                <th>Роль</th>
+                <th>Читать</th>
+                <th>Голосовать</th>
+                <th>Писать посты</th>
+                <th>Двигать карточки <small>(триаж)</small></th>
+                <th>Настройки / инвайты</th>
+                <th>Удалить доску</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Владелец</td>
+                <td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td>
+            </tr>
+            <tr>
+                <td>Админ</td>
+                <td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td>
+            </tr>
+            <tr>
+                <td>Менеджер</td>
+                <td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td>
+            </tr>
+            <tr>
+                <td>Голосующий</td>
+                <td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td>
+            </tr>
+            <tr>
+                <td>Читатель</td>
+                <td class="y">✓</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="decisions" style="margin-top: 16px;">
+            <h3>Решения по ролям</h3>
+            <ul>
+                <li><strong>Менеджер vs Админ — обе роли.</strong> Менеджер двигает карточки и ставит статусы, но не трогает настройки и не зовёт людей. В клиентских проектах это та же роль, что у «джуниора команды», которому доверили разбор. Админ — редкая делегированная роль (например, старший PM на клиентском проекте), который может звать людей и менять настройки.</li>
+                <li><strong>Читатель — оставляем.</strong> Для наблюдателей: продакт соседней команды, стажёр, легал на ревью. Клиенту по умолчанию ставим Голосующий.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">4</span>Ключевые экраны</h2>
+        <p class="section-sub">
+            Группами по сценариям. Каждый экран подписан бейджем сценария и ID (4.N).
+        </p>
+
+        <!-- 4.1 Invite email -->
+        <h3 id="s41">4.1 — Письмо приглашения</h3>
+        <div class="screen">
+            <div class="mockup">
+                <div class="mail-bar">
+                    <strong>От:</strong> Feedback Board &lt;noreply@...&gt;<br>
+                    <strong>Кому:</strong> masha@rocont.ru<br>
+                    <strong>Тема:</strong> Вас пригласили в «Внутренний продукт X»
+                </div>
+                <div class="mail-content">
+                    <h3>Иван Иванов приглашает вас в доску</h3>
+                    <p>«Внутренний продукт X» как Менеджера.</p>
+                    <p>Это рабочая доска команды. Что в неё писать — решает команда: идеи, баги, запросы, обсуждения. Вы сможете создавать посты, голосовать и двигать карточки между статусами.</p>
+                    <a class="btn" style="margin: 8px 0;">Принять приглашение</a>
+                    <p style="font-size: 12px;">Ссылка действительна 7 дней. Если это не вы — просто проигнорируйте письмо.</p>
+                    <div class="signature">Feedback Board</div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">A/B · 4.1</div>
+                <h3>Письмо приглашения</h3>
+                <p>Одно письмо и для участника команды, и для клиента. Отличие — <strong>только роль в тексте</strong> («как Менеджера» / «как Голосующего» / «как Читателя»).</p>
+                <ul>
+                    <li>Токен в ссылке, живёт 7 дней, одноразовый.</li>
+                    <li>Пароля в письме <strong>нет</strong>: пользователь задаст сам на следующем экране.</li>
+                    <li><strong>Копирайт не фиксирует назначение доски.</strong> Разные команды пользуются по-разному: кто-то для багов, кто-то для идей, кто-то для внутренних обсуждений. Пишем «рабочая доска команды» + перечисление через запятую («идеи, баги, запросы, обсуждения»), чтобы ни один сценарий не казался главным.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 4.2 Accept — new user -->
+        <h3 id="s42">4.2 — Экран принятия приглашения (новый пользователь)</h3>
+        <div class="screen">
+            <div class="mockup">
+                <div class="browser-bar">
+                    <div class="dots"><span></span><span></span><span></span></div>
+                    <div class="url">feedback.rocont.ru/app/invite/8xA2kB...</div>
+                </div>
+                <div class="body">
+                    <div style="padding: 14px; background: var(--surface-2); border-radius: 10px; margin-bottom: 20px;">
+                        <div style="font-weight: 600; font-family: var(--font-display);">Внутренний продукт X</div>
+                        <div style="font-size: 13px; color: var(--muted);">rocont · 12 участников</div>
+                        <div style="margin-top: 10px; font-size: 13px;">Ваша роль: <span class="role-pill manager">Менеджер</span></div>
+                        <div style="font-size: 13px; color: var(--muted);">Пригласил: Иван Иванов</div>
+                    </div>
+                    <label>Как к вам обращаться?</label>
+                    <input type="text" value="Маша Петрова">
+                    <div class="hint">Это имя увидит команда рядом с вашими постами.</div>
+
+                    <label>Пароль для входа</label>
+                    <input type="password" placeholder="минимум 8 символов" value="••••••••">
+                    <div class="hint">Чтобы не ждать ссылку на почту каждый раз.</div>
+
+                    <a class="btn block" style="margin-top: 14px;">Присоединиться</a>
+                    <div style="text-align: center; margin-top: 12px;">
+                        <a class="btn ghost" style="font-size: 13px;">Пропустить пароль — буду заходить по ссылке</a>
+                    </div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">A/B · 4.2</div>
+                <h3>Принятие приглашения — новый пользователь</h3>
+                <p>Единственный одношаговый экран онбординга. После клика:</p>
+                <ul>
+                    <li>Создаётся аккаунт, почта помечена подтверждённой.</li>
+                    <li>Сохраняется имя и хэш пароля.</li>
+                    <li>Записывается в <code>project_user</code>: роль, invited_by, source=invite.</li>
+                    <li>Токен сжигается.</li>
+                    <li>Пользователь сразу залогинен и редиректится на доску.</li>
+                </ul>
+                <div class="note">
+                    <strong>Если «Пропустить пароль»:</strong> аккаунт создаётся без пароля, вход только по magic-link. Пароль можно задать позже в профиле.
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.3 Accept — existing user -->
+        <h3 id="s43">4.3 — Экран принятия приглашения (уже есть аккаунт)</h3>
+        <div class="screen">
+            <div class="mockup">
+                <div class="browser-bar">
+                    <div class="dots"><span></span><span></span><span></span></div>
+                    <div class="url">feedback.rocont.ru/app/invite/8xA2kB...</div>
+                </div>
+                <div class="body">
+                    <div style="padding: 14px; background: var(--surface-2); border-radius: 10px; margin-bottom: 20px;">
+                        <div style="font-weight: 600; font-family: var(--font-display);">Клиентский проект Y</div>
+                        <div style="font-size: 13px; color: var(--muted);">Studio · 4 участника</div>
+                        <div style="margin-top: 10px; font-size: 13px;">Ваша роль: <span class="role-pill manager">Менеджер</span></div>
+                        <div style="font-size: 13px; color: var(--muted);">Пригласил: Иван Иванов</div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 18px;">
+                        <div class="avatar">М</div>
+                        <div style="font-size: 14px;">
+                            <div>Вы вошли как <strong>Маша Петрова</strong></div>
+                            <div style="font-size: 12px; color: var(--muted);">masha@rocont.ru</div>
+                        </div>
+                    </div>
+                    <a class="btn block">Присоединиться к доске</a>
+                    <div style="text-align: center; margin-top: 12px;">
+                        <a class="btn ghost" style="font-size: 13px;">Это не моя почта — войти как другой</a>
+                    </div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">A/B · 4.3</div>
+                <h3>Принятие приглашения — существующий аккаунт</h3>
+                <p>Частый случай у команды студии: сотрудник уже зарегистрирован в системе (есть другие доски), владелец приглашает на новую доску.</p>
+                <ul>
+                    <li>Если залогинен и почта совпадает с инвайтом — одна кнопка.</li>
+                    <li>Если залогинен другой почтой — ссылка «войти как другой» переключает сессию.</li>
+                    <li>Пароль не трогаем, имя не трогаем — только добавляется запись в <code>project_user</code>.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 4.4 Closed board + request access -->
+        <h3 id="s44">4.4 — Клиент по прямой ссылке: закрытая доска</h3>
+        <div class="screen wide">
+            <div class="mockup">
+                <div class="browser-bar">
+                    <div class="dots"><span></span><span></span><span></span></div>
+                    <div class="url">feedback.rocont.ru/project-y</div>
+                </div>
+                <div class="body" style="text-align: center; padding: 40px 24px;">
+                    <div style="font-size: 42px; margin-bottom: 10px;">🔒</div>
+                    <h3 style="margin-bottom: 8px;">Это закрытая доска</h3>
+                    <p style="color: var(--muted); margin-bottom: 24px;">
+                        «Клиентский проект Y» виден только участникам. Запросите доступ — админ рассмотрит заявку.
+                    </p>
+                    <div style="text-align: left; max-width: 320px; margin: 0 auto;">
+                        <label>Ваше имя</label>
+                        <input type="text" value="Клиент Клиентов">
+                        <div class="hint">&nbsp;</div>
+                        <label>Почта</label>
+                        <input type="email" value="klient@externalcorp.com">
+                        <div class="hint">На неё придёт ответ от админа.</div>
+                        <label>Зачем нужен доступ (необязательно)</label>
+                        <textarea placeholder="Например: я продакт в externalcorp, хочу сообщать о багах">Представляю externalcorp, хотел бы следить за прогрессом</textarea>
+                        <div class="hint">Поможет админу принять решение быстрее.</div>
+                        <a class="btn block" style="margin-top: 10px;">Запросить доступ</a>
+                        <div style="text-align: center; margin-top: 10px;">
+                            <a class="btn ghost" style="font-size: 12px;">У меня уже есть аккаунт — войти</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">C · 4.4</div>
+                <h3>Закрытая доска: запрос доступа</h3>
+                <p>Клиент получил ссылку (от менеджера, из переписки, с сайта продукта) и открыл её. Доски не видит, вместо неё — экран-привратник.</p>
+                <ul>
+                    <li>Поле «Зачем нужен доступ» <strong>не обязательное</strong>, но повышает шанс одобрения — об этом подсказка.</li>
+                    <li>Если у клиента уже есть аккаунт в системе (бывает редко, но возможно): ссылка «войти» — на обычный логин, после входа сразу редирект на эту же доску, которая всё равно закрыта → всплывёт та же форма запроса, уже с подставленными имя/почта.</li>
+                    <li>Создаётся запись <code>access_request</code> (project_id, email, name, message, status=pending, created_at).</li>
+                </ul>
+                <div class="note">
+                    <strong>Что видит клиент сразу после отправки:</strong> короткий экран «Заявка отправлена, ответ придёт на klient@externalcorp.com». Содержимое доски по-прежнему скрыто.
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.5 Admin: pending requests -->
+        <h3 id="s45">4.5 — Админ: раздел «Запросы на доступ»</h3>
+        <div class="screen wide">
+            <div class="mockup">
+                <div class="board-header">
+                    <div class="title">Клиентский проект Y / Настройки</div>
+                    <div class="avatar">И</div>
+                </div>
+                <div class="tabs">
+                    <div class="tab">Общие</div>
+                    <div class="tab">Категории</div>
+                    <div class="tab active">Участники <span style="background: var(--sta-red); color: #fff; padding: 1px 7px; border-radius: 999px; font-size: 10px; margin-left: 4px;">3</span></div>
+                    <div class="tab">Виджет</div>
+                </div>
+                <div class="body">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <a class="btn">+ Пригласить</a>
+                        <a class="btn outline">Экспорт списка</a>
+                    </div>
+
+                    <h4 style="margin: 0 0 10px; font-size: 15px;">Запросы на доступ — 3</h4>
+
+                    <div class="req-card">
+                        <div class="meta">
+                            <strong>Клиент Клиентов</strong> · klient@externalcorp.com · 3 минуты назад
+                        </div>
+                        <div class="msg">«Представляю externalcorp, хотел бы следить за прогрессом»</div>
+                        <div class="req-actions">
+                            <select>
+                                <option>Голосующий</option>
+                                <option>Читатель</option>
+                                <option>Менеджер</option>
+                                <option>Админ</option>
+                            </select>
+                            <a class="btn sm">Одобрить</a>
+                            <a class="btn sm outline">Отклонить</a>
+                        </div>
+                    </div>
+
+                    <div class="req-card">
+                        <div class="meta">
+                            <strong>Петя Внешний</strong> · petya@random.io · 15 часов назад
+                        </div>
+                        <div class="msg">Пустое сообщение.</div>
+                        <div class="req-actions">
+                            <select>
+                                <option>Голосующий</option>
+                                <option>Читатель</option>
+                            </select>
+                            <a class="btn sm">Одобрить</a>
+                            <a class="btn sm outline">Отклонить</a>
+                        </div>
+                    </div>
+
+                    <div class="req-card">
+                        <div class="meta">
+                            <strong>Vasya spam</strong> · spam@spam.ru · 2 дня назад
+                        </div>
+                        <div class="msg">asdqwe123</div>
+                        <div class="req-actions">
+                            <a class="btn sm outline">Одобрить</a>
+                            <a class="btn sm danger">Отклонить и забанить</a>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--line);">
+
+                    <h4 style="margin: 0 0 10px; font-size: 15px;">Участники — 4</h4>
+                    <!-- participants list (shortened for this screen; full version is in 4.9) -->
+                    <div style="color: var(--muted); font-size: 13px;">см. экран 4.9 → полный список и управление ролями</div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">C · 4.5</div>
+                <h3>Раздел «Запросы на доступ»</h3>
+                <p>Приходит в раздел «Участники». Над списком участников — секция ожидающих запросов, с цифрой в табе.</p>
+                <ul>
+                    <li>Админ выбирает роль из дропдауна (дефолт — Голосующий, самое безопасное для нового клиента).</li>
+                    <li>«Одобрить» → запись переезжает в <code>project_user</code> с выбранной ролью, статус запроса меняется на approved, уходит письмо.</li>
+                    <li>«Отклонить» — просит причину (необязательно), уходит письмо.</li>
+                    <li>«Отклонить и забанить» для спама — почта попадает в чёрный список доски, повторные запросы автоматически блокируются.</li>
+                </ul>
+                <div class="note">
+                    <strong>Нотификация:</strong> письмо админу приходит сразу + индикатор в табе «Участники» на доске (красный бейдж с числом ожидающих).
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.6 Approval email -->
+        <h3 id="s46">4.6 — Письмо «Доступ одобрен»</h3>
+        <div class="screen">
+            <div class="mockup">
+                <div class="mail-bar">
+                    <strong>От:</strong> Feedback Board &lt;noreply@...&gt;<br>
+                    <strong>Кому:</strong> klient@externalcorp.com<br>
+                    <strong>Тема:</strong> Доступ к «Клиентскому проекту Y» одобрен
+                </div>
+                <div class="mail-content">
+                    <h3>Иван Иванов одобрил ваш запрос</h3>
+                    <p>Вы добавлены в доску «Клиентский проект Y» как <strong>Голосующий</strong> — можете читать посты, голосовать и писать свои.</p>
+                    <a class="btn" style="margin: 8px 0;">Открыть доску</a>
+                    <p style="font-size: 12px;">Ссылка автоматически залогинит вас в первый раз. Чтобы заходить дальше — задайте пароль в профиле (кнопка в правом верхнем углу).</p>
+                    <div class="signature">Feedback Board</div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">C · 4.6</div>
+                <h3>Письмо об одобрении</h3>
+                <p>Приходит клиенту сразу после одобрения.</p>
+                <ul>
+                    <li>Содержит одноразовую ссылку (как magic-link, 7 дней): клик → автоматический логин → доска.</li>
+                    <li>Прямо упоминается роль, чтобы клиент понял, что ему доступно.</li>
+                    <li>Напоминание задать пароль, чтобы потом не ходить за ссылкой.</li>
+                </ul>
+                <div class="note">
+                    <strong>Отказ:</strong> письмо «Доступ не одобрен». Без ссылок, с указанием причины (если админ ввёл). Не раскрывает, кто именно отклонил.
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.7 Admin invite form -->
+        <h3 id="s47">4.7 — Админ: форма приглашения (bulk)</h3>
+        <div class="screen wide">
+            <div class="mockup">
+                <div class="board-header">
+                    <div class="title">Внутренний продукт X / Пригласить</div>
+                    <div class="avatar">И</div>
+                </div>
+                <div class="body">
+                    <label>Почты</label>
+                    <textarea style="min-height: 90px;">masha@rocont.ru
+petya@rocont.ru
+alex@rocont.ru
+klient@externalcorp.com</textarea>
+                    <div class="hint">По одной на строке или через запятую. До 100 за раз.</div>
+
+                    <div style="margin-top: 14px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px;">
+                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 10px;">
+                            Распознано <strong>4 почты</strong>. Галочка «команда» ставится автоматически по домену <code style="background: #fff; padding: 1px 6px; border-radius: 4px;">rocont.ru</code> — можно переопределить.
+                        </div>
+                        <div class="invite-rows">
+                            <div class="invite-row">
+                                <span class="email">masha@rocont.ru</span>
+                                <label class="team-check"><input type="checkbox" checked> команда</label>
+                            </div>
+                            <div class="invite-row">
+                                <span class="email">petya@rocont.ru</span>
+                                <label class="team-check"><input type="checkbox" checked> команда</label>
+                            </div>
+                            <div class="invite-row">
+                                <span class="email">alex@rocont.ru</span>
+                                <label class="team-check"><input type="checkbox" checked> команда</label>
+                            </div>
+                            <div class="invite-row">
+                                <span class="email">klient@externalcorp.com</span>
+                                <label class="team-check"><input type="checkbox"> команда</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <label style="margin-top: 14px;">Роль для всех приглашённых</label>
+                    <select>
+                        <option>Менеджер — + двигать карточки</option>
+                        <option>Голосующий — читать + голосовать + писать посты</option>
+                        <option>Админ — + настройки, звать других</option>
+                        <option>Читатель — только читать</option>
+                    </select>
+                    <div class="hint">Роль можно будет изменить индивидуально в списке участников.</div>
+
+                    <label style="margin-top: 10px;">Сопроводительный текст (необязательно)</label>
+                    <textarea placeholder="Будет вставлен в письмо приглашения. Можно добавить контекст про доску, время запуска и т.п."></textarea>
+
+                    <a class="btn block" style="margin-top: 16px;">Отправить 4 приглашения</a>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">A/B · 4.7</div>
+                <h3>Форма приглашения</h3>
+                <p>Один флоу для одного человека и для 50 — просто пишешь список.</p>
+                <ul>
+                    <li><strong>Авто-определение «команда»:</strong> для каждой почты система сравнивает домен с <code>project.team_domain</code> (сюда записывается домен владельца при создании доски). Совпал — чекбокс пред-отмечен, иначе — нет. В обоих направлениях переопределяется.</li>
+                    <li>Валидация почт на лету; невалидные подсвечены красным, они не отправляются.</li>
+                    <li>Роль одна для всей пачки. Для микса — отправить отдельно (один инвайт с ролью Менеджер для команды, второй с Голосующим для клиента).</li>
+                    <li>Сопроводительный текст — опционально, идёт в тело письма дополнительным блоком.</li>
+                    <li>Кнопка показывает число — «Отправить 4 приглашения».</li>
+                </ul>
+                <div class="note">
+                    <strong>Если <code>team_domain = null</code></strong> (владелец доски на gmail или не вписал домен в настройках): все чекбоксы по умолчанию выключены, админ ставит руками. Подсказку о «домене команды» заменяем на «домен команды не задан — задайте в настройках, чтобы работало автоматически».
+                </div>
+                <div class="note">
+                    <strong>Что если такая почта уже на доске:</strong> подсветить в списке «уже участник, роль …», не отправлять ей инвайт.
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.8 Login form -->
+        <h3 id="s48">4.8 — Форма повторного входа</h3>
+        <div class="screen">
+            <div class="mockup">
+                <div class="browser-bar">
+                    <div class="dots"><span></span><span></span><span></span></div>
+                    <div class="url">feedback.rocont.ru/project-y</div>
+                </div>
+                <div class="body" style="padding: 30px 24px;">
+                    <h3>Войти в «Клиентский проект Y»</h3>
+                    <p class="hint">Закрытая доска — доступ только участникам.</p>
+
+                    <label>Почта</label>
+                    <input type="email" value="masha@rocont.ru">
+                    <div class="hint">&nbsp;</div>
+
+                    <label>Пароль</label>
+                    <input type="password" placeholder="••••••••">
+                    <div class="hint">&nbsp;</div>
+
+                    <a class="btn block" style="margin-top: 10px;">Войти</a>
+
+                    <div style="text-align: center; margin-top: 16px; font-size: 13px;">
+                        <a class="btn ghost">Прислать ссылку на почту</a>
+                        <span style="color: var(--muted);"> · </span>
+                        <a class="btn ghost">Забыли пароль?</a>
+                    </div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">D · 4.8</div>
+                <h3>Повторный вход</h3>
+                <p>Одна форма для всех ролей и для всех досок. Основной путь — пароль + «Войти».</p>
+                <ul>
+                    <li>«Прислать ссылку на почту» → magic-link флоу: 6-значный код + одноразовая ссылка, 15 мин.</li>
+                    <li>«Забыли пароль?» → отдельный флоу восстановления (письмо со ссылкой на смену пароля, 1 час).</li>
+                    <li>Если пароль неверный и у человека его в системе нет — сразу показываем «вы не задавали пароль, войдите по ссылке».</li>
+                    <li>Rate-limit: 5 попыток / 10 мин → пароль блокируется на 15 минут, magic-link продолжает работать.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 4.9 Participants management -->
+        <h3 id="s49">4.9 — Админ: управление участниками и ролями</h3>
+        <div class="screen wide">
+            <div class="mockup">
+                <div class="board-header">
+                    <div class="title">Клиентский проект Y / Участники</div>
+                    <div class="avatar">И</div>
+                </div>
+                <div class="body">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <a class="btn">+ Пригласить</a>
+                        <input type="text" placeholder="Поиск по имени или почте" style="flex: 1; max-width: 280px; margin: 0;">
+                    </div>
+
+                    <div class="participants">
+                        <div class="row head">
+                            <div>Имя</div>
+                            <div>Роль</div>
+                            <div>Добавлен</div>
+                            <div></div>
+                        </div>
+                        <div class="row">
+                            <div>
+                                <strong>Иван Иванов</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <span style="font-size: 12px; color: var(--muted);">ivan@rocont.ru</span>
+                            </div>
+                            <div><span class="role-pill owner">Владелец</span></div>
+                            <div style="color: var(--muted); font-size: 12px;">создал доску</div>
+                            <div></div>
+                        </div>
+                        <div class="row">
+                            <div>
+                                <strong>Пётр Сидоров</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <span style="font-size: 12px; color: var(--muted);">petya@rocont.ru</span>
+                            </div>
+                            <div>
+                                <select style="width: auto; padding: 4px 8px; font-size: 12px; margin: 0; background: var(--cat-blue); color: #2a4e6a; font-weight: 600; border: none; border-radius: 999px;">
+                                    <option>Админ</option>
+                                    <option>Менеджер</option>
+                                    <option>Голосующий</option>
+                                    <option>Читатель</option>
+                                </select>
+                            </div>
+                            <div style="color: var(--muted); font-size: 12px;">10 дней назад</div>
+                            <div style="color: var(--muted); cursor: pointer;">⋯</div>
+                        </div>
+                        <div class="row">
+                            <div>
+                                <strong>Маша Петрова</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <span style="font-size: 12px; color: var(--muted);">masha@rocont.ru</span>
+                            </div>
+                            <div>
+                                <select style="width: auto; padding: 4px 8px; font-size: 12px; margin: 0; background: var(--cat-pink); color: #8a3059; border: none; border-radius: 999px;">
+                                    <option>Менеджер</option>
+                                    <option>Голосующий</option>
+                                    <option>Читатель</option>
+                                    <option>Админ</option>
+                                </select>
+                            </div>
+                            <div style="color: var(--muted); font-size: 12px;">3 дня назад · по инвайту</div>
+                            <div style="color: var(--muted); cursor: pointer;">⋯</div>
+                        </div>
+                        <div class="row">
+                            <div>
+                                <strong>Клиент Клиентов</strong> <span class="team-badge external toggle" title="Клик — переключить на «команда»">внешний</span><br>
+                                <span style="font-size: 12px; color: var(--muted);">klient@externalcorp.com</span>
+                            </div>
+                            <div>
+                                <select style="width: auto; padding: 4px 8px; font-size: 12px; margin: 0; background: var(--cat-orange); color: #7f4718; border: none; border-radius: 999px;">
+                                    <option>Голосующий</option>
+                                    <option>Читатель</option>
+                                    <option>Менеджер</option>
+                                    <option>Админ</option>
+                                </select>
+                            </div>
+                            <div style="color: var(--muted); font-size: 12px;">только что · по запросу</div>
+                            <div style="color: var(--muted); cursor: pointer;">⋯</div>
+                        </div>
+                        <div class="row">
+                            <div>
+                                <strong>Алексей К.</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <span style="color: #f0a854; font-size: 12px;">⏳ приглашение отправлено, не принято</span>
+                            </div>
+                            <div><span class="role-pill manager">Менеджер</span></div>
+                            <div style="color: var(--muted); font-size: 12px;">2 дня назад</div>
+                            <div style="color: var(--muted); cursor: pointer;">⋯</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">A/B/C · 4.9</div>
+                <h3>Список участников и управление ролями</h3>
+                <p>Один экран для всех трёх сценариев: приглашённые команды, приглашённые клиенты, одобренные по запросу — все в одной таблице.</p>
+                <ul>
+                    <li><strong>Смена роли</strong> — дропдаун прямо в ячейке, без модалки. Клик → меняется мгновенно, подтверждение не нужно, но есть «отменить» в тосте 10 секунд.</li>
+                    <li><strong>Бейдж «команда / внешний»</strong> выводится из <code>is_team_member</code>, которое задаётся на инвайте и редактируется кликом по бейджу. Это <strong>не роль</strong> — сотрудник может быть Голосующим и оставаться «командой», клиент может быть Админом и оставаться «внешним».</li>
+                    <li><strong>Источник</strong> — короткая подпись под датой: «по инвайту», «по запросу», «создал доску». Нужна для аудита (кого откуда).</li>
+                    <li><strong>Ожидающие приглашения</strong> — с жёлтым статусом «не принято» в колонке имени. В меню «⋯» — переслать, отменить.</li>
+                    <li><strong>Меню «⋯» на строке:</strong> «Удалить из доски», «Переслать приглашение» (для не принятых), «Сбросить пароль» (прислать письмо восстановления).</li>
+                </ul>
+                <div class="note">
+                    <strong>Что видят не-админы:</strong> та же таблица, но без дропдаунов роли (только пилюля), без клика по бейджу (только отображение), без меню «⋯», без email (только имя + роль + бейдж). См. ветку доступа в <code>ROLES_PLAN.md</code>.
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.10 Hub / Cabinet -->
+        <h3 id="s410">4.10 — Кабинет: мои доски, разные роли</h3>
+        <div class="screen wide">
+            <div class="mockup">
+                <div class="browser-bar">
+                    <div class="dots"><span></span><span></span><span></span></div>
+                    <div class="url">feedback.rocont.ru/app</div>
+                </div>
+                <div class="hub-header">
+                    <div class="brand">Feedback Board</div>
+                    <div class="right">
+                        <a class="btn sm">+ Создать доску</a>
+                        <div class="avatar">М</div>
+                    </div>
+                </div>
+                <div class="body">
+                    <!-- Pending invitations -->
+                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                        <span>📬 Вас приглашают — 1</span>
+                    </div>
+                    <div class="alert-card incoming">
+                        <div class="main">
+                            <div class="title">Клиентский проект Z <span class="role-pill manager" style="margin-left: 6px;">Менеджер</span></div>
+                            <div class="meta">Пригласила Анна Семёнова, 5 часов назад</div>
+                        </div>
+                        <div class="actions">
+                            <a class="btn sm">Принять</a>
+                            <a class="btn sm outline">Отклонить</a>
+                        </div>
+                    </div>
+
+                    <!-- Pending access requests on my boards -->
+                    <div style="font-weight: 600; font-size: 13px; margin: 20px 0 8px; display: flex; justify-content: space-between;">
+                        <span>🔔 Ждут решения на ваших досках — 3</span>
+                    </div>
+                    <div class="alert-card">
+                        <div class="main">
+                            <div class="title">Клиентский проект Y</div>
+                            <div class="meta">3 запроса на доступ ожидают одобрения</div>
+                        </div>
+                        <div class="actions">
+                            <a class="btn sm outline">Открыть →</a>
+                        </div>
+                    </div>
+
+                    <!-- My boards grouped -->
+                    <div class="section-head">Я веду · 3</div>
+
+                    <div class="board-card">
+                        <div>
+                            <div class="name">Внутренний продукт X <span class="vis">· 🔒 закрытая</span></div>
+                            <div class="meta">12 участников · 2 новых поста · активно 20 мин. назад</div>
+                        </div>
+                        <div class="right-col">
+                            <span class="role-pill owner">Владелец</span>
+                        </div>
+                    </div>
+
+                    <div class="board-card">
+                        <div>
+                            <div class="name">Клиентский проект Y <span class="vis">· 🔒 закрытая</span></div>
+                            <div class="meta">4 участника · 3 запроса ожидают · вчера</div>
+                        </div>
+                        <div class="right-col">
+                            <span class="role-pill admin">Админ</span>
+                        </div>
+                    </div>
+
+                    <div class="board-card">
+                        <div>
+                            <div class="name">Публичный форум <span class="vis">· 🌐 открытая</span></div>
+                            <div class="meta">много авторов · 5 новых постов · сегодня</div>
+                        </div>
+                        <div class="right-col">
+                            <span class="role-pill owner">Владелец</span>
+                        </div>
+                    </div>
+
+                    <div class="section-head">Я участник · 2</div>
+
+                    <div class="board-card">
+                        <div>
+                            <div class="name">Доска Partner Corp <span class="vis">· 🔒 закрытая</span></div>
+                            <div class="meta">8 участников · 3 новых поста · сегодня</div>
+                        </div>
+                        <div class="right-col">
+                            <span class="role-pill manager">Менеджер</span>
+                            <span class="team-badge team">команда</span>
+                        </div>
+                    </div>
+
+                    <div class="board-card">
+                        <div>
+                            <div class="name">Доска Yandex Team <span class="vis">· 🔒 закрытая</span></div>
+                            <div class="meta">15 участников · ничего нового</div>
+                        </div>
+                        <div class="right-col">
+                            <span class="role-pill voter">Голосующий</span>
+                            <span class="team-badge external">внешний</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">Навигация · 4.10</div>
+                <h3>Кабинет: мои доски и разные роли</h3>
+                <p>Главный экран, куда попадает залогиненный пользователь. Один человек может быть владельцем на одних досках и просто участником на других — хаб показывает всё в одном месте.</p>
+                <ul>
+                    <li><strong>Группировка «Я веду / Я участник»</strong> — две разные ментальные модели. В верхней группе — доски, где я решаю (Owner или Admin). В нижней — куда меня пригласили просто участвовать.</li>
+                    <li><strong>Пилюля роли</strong> справа — моя роль именно на этой конкретной доске. Один и тот же человек на разных досках может иметь любую комбинацию.</li>
+                    <li><strong>Бейдж «команда / внешний»</strong> — только для досок из группы «Я участник». Он отвечает на вопрос: «эта доска моего работодателя (команда) или я туда зашёл как гость?». Для досок из группы «Я веду» бейджа нет, потому что ты и есть эта команда.</li>
+                    <li><strong>Нотификационные блоки сверху:</strong>
+                        <ul style="margin-top: 4px;">
+                            <li>📬 Инвайты, которые жду я (пригласили, но ещё не принял).</li>
+                            <li>🔔 Запросы на мои доски (где я Admin/Owner и кто-то ждёт одобрения).</li>
+                        </ul>
+                        Обе секции скрываются, если нулевые.
+                    </li>
+                    <li><strong>Иконки видимости</strong> (🔒 / 🌐) — открытая или закрытая доска. Нужно, потому что в кабинете у Owner обычно смесь.</li>
+                    <li><strong>Клик по карточке</strong> → страница самой доски (её URL).</li>
+                    <li><strong>«+ Создать доску»</strong> → короткая форма (название, видимость, slug). После создания — автоматически Владелец, попадает в раздел «Я веду».</li>
+                </ul>
+                <div class="note">
+                    <strong>Что про смену контекста:</strong> на самой доске сверху — тот же бренд «Feedback Board» слева, при клике — возврат в кабинет. Отдельного «переключателя досок» в хедере доски не делаем в V1 (достаточно вернуться в хаб). Если станет неудобно — добавим дропдаун.
+                </div>
+                <div class="note">
+                    <strong>Публичные доски:</strong> в кабинете видны только если ты их Owner/Admin. Как Голосующий/Читатель на публичной доске тебя не отслеживаем, туда ты заходишь просто по URL.
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <section>
+        <h2><span class="num">5</span>Решения по итогам обсуждения</h2>
+        <p class="section-sub">Эти развилки прошли через обсуждение и зафиксированы. При необходимости — возвращаемся.</p>
+        <div class="decisions">
+            <ul>
+                <li><strong>Пять ролей — оставляем.</strong> Менеджер (разбор без настроек) и Голосующий (без разбора) — разные кейсы, разделение полезно для клиентских проектов.</li>
+                <li><strong>Роль «Менеджер»</strong> — новое название вместо «Триажер». Короткое, понятное без контекста, в твоём направлении «менеджер доски».</li>
+                <li><strong>Читатель — оставляем.</strong> Отдельный уровень «только читать, без голоса» для наблюдателей.</li>
+                <li><strong>После запроса доступа клиент видит</strong> короткий экран «Заявка отправлена, ждите письма». Содержимое доски скрыто, превью нет.</li>
+                <li><strong>Админ одобряет inline</strong> — кнопка на карточке запроса, без отдельного экрана. Для спама — «Отклонить и забанить».</li>
+                <li><strong>Лимитов на число участников в V1 нет.</strong> Тарификация и платные планы — не раньше, чем появятся платящие.</li>
+                <li><strong>Бейдж «команда / внешний» в UI есть, независимо от роли.</strong> В БД два поля:
+                    <ul style="margin: 6px 0 0;">
+                        <li><code>project.team_domain</code> — одна строка, кладётся при создании доски из домена владельца (gmail-подобное → null). Правится в настройках.</li>
+                        <li><code>project_user.is_team_member</code> — булев флаг на каждой записи. При инвайте авто-пред-заполнение по совпадению домена; при любой заявке можно переопределить вручную в форме и в списке участников.</li>
+                    </ul>
+                    Доступ на доску от этих полей не зависит, они нужны только для группировки.
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">6</span>Следующие шаги</h2>
+        <p class="section-sub">Что надо решить до того, как брать первый PR в код.</p>
+        <div class="decisions">
+            <ul>
+                <li><strong>Переписать <code>docs/ROLES_PLAN.md</code> под пять ролей и без доменов.</strong> Текущий план ещё содержит четыре роли и доменный доступ — надо выровнять.</li>
+                <li><strong>Схема БД:</strong>
+                    <ul>
+                        <li>Расширить <code>project_user.role</code> до пяти значений: owner, admin, manager, voter, reader. Миграция: прежние Admin → admin, Team → manager, Member → voter (не теряем прав).</li>
+                        <li>Добавить <code>project_user.is_team_member</code> (bool, default false). Миграция: для существующих записей — выставить true (все уже члены команды того, кто их добавил).</li>
+                        <li>Добавить <code>project.team_domain</code> (nullable string). Миграция: для существующих — попытаться взять домен владельца, если это не публичный провайдер (gmail, outlook, yahoo и подобные).</li>
+                        <li>Новая таблица <code>access_requests</code> (project_id, email, name, message, status, created_at, decided_at, decided_by, role_on_approve).</li>
+                    </ul>
+                </li>
+                <li><strong>Решить порядок этапов.</strong> Моё предложение:
+                    <ol>
+                        <li>Этап 1: Пять ролей на существующих открытых досках + bulk-инвайты + экран участников со сменой роли. Доски пока все открытые.</li>
+                        <li>Этап 2: Закрытые доски (visibility=private) + magic-link + пароль на инвайте + сценарий 4.8.</li>
+                        <li>Этап 3: Запросы доступа через URL + апрув-флоу (сценарии 4.4–4.6).</li>
+                    </ol>
+                    Логика: этап 1 ценный сам по себе (студии станет легче управлять командой на уже работающих досках). Этап 3 — последний, он самый большой и зависит от 1 и 2.
+                </li>
+                <li><strong>Текст писем</strong> — я писал черновик, но нужен финальный проход (сам текст приглашения, одобрения, отказа, magic-link). Можно отдать копирайтеру.</li>
+                <li><strong>API кабинета</strong> — <code>GET /api/app/boards</code>: все доски, где текущий пользователь имеет <code>project_user</code>-запись. С группировкой по роли. Отдельные счётчики для входящих инвайтов (на мою почту с status=pending) и ждущих запросов (на мои доски с status=pending).</li>
+                <li><strong>Форма создания доски</strong> (отдельный мини-экран, кнопка «+ Создать доску» в хаб-хедере). Поля: название, slug, visibility, по умолчанию берётся <code>team_domain = домен владельца</code>. После клика «Создать» — редирект на доску с ролью Owner и подсказкой «У вас пока нет участников: пригласите».</li>
+            </ul>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        themeVariables: {
+            primaryColor: '#ffffff',
+            primaryTextColor: '#0f2224',
+            primaryBorderColor: '#d8e1db',
+            lineColor: '#4c5d60',
+            fontFamily: "'Onest', system-ui, sans-serif",
+            fontSize: '14px'
+        },
+        flowchart: {
+            curve: 'basis',
+            padding: 20,
+            nodeSpacing: 50,
+            rankSpacing: 60
+        }
+    });
+</script>
+
+</body>
+</html>
