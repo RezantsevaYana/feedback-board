@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\PostPriority;
+use App\Enums\ProjectRole;
 use App\Models\Post;
 use App\Models\Project;
 use App\Models\User;
@@ -34,7 +35,10 @@ class DatabaseSeeder extends Seeder
 
         $admin = User::create(['name' => 'Админ', 'email' => 'admin@example.com', 'password' => 'password']);
         $admin->markEmailAsVerified();
-        $admin->projects()->attach($project);
+        $admin->projects()->attach($project, [
+            'role' => ProjectRole::Admin->value,
+            'is_team_member' => true,
+        ]);
 
         $project->createDefaultCategories();
         $project->createDefaultStatuses();

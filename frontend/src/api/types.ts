@@ -72,6 +72,30 @@ export interface BoardSummary {
   id: number
   name: string
   slug: string
+  /** The current user's role on this board — slice 1 of roles. Null for legacy records. */
+  role?: ProjectRole | null
+  /** Team / external badge, independent from the role. */
+  is_team_member?: boolean
+}
+
+/**
+ * Levels on a board. Owner is one per board and never assignable via UI; the rest
+ * are chosen in participants / invitations screens. Keep in sync with
+ * backend/app/Enums/ProjectRole.php.
+ */
+export const PROJECT_ROLES = ['owner', 'admin', 'manager', 'voter', 'reader'] as const
+export type ProjectRole = (typeof PROJECT_ROLES)[number]
+
+/** Roles the UI lets admins pick. Owner isn't here — see docs/ROLES_PLAN.md §4. */
+export const ASSIGNABLE_ROLES: Exclude<ProjectRole, 'owner'>[] = ['admin', 'manager', 'voter', 'reader']
+
+/** Human-readable role names. */
+export const ROLE_LABELS: Record<ProjectRole, string> = {
+  owner: 'Владелец',
+  admin: 'Админ',
+  manager: 'Менеджер',
+  voter: 'Голосующий',
+  reader: 'Читатель',
 }
 
 export interface Me {

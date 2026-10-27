@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -48,7 +49,13 @@ class CreateAdmin extends Command
         ]);
         // the address comes from whoever runs the command, not from a stranger: nothing to confirm
         $user->markEmailAsVerified();
-        $user->projects()->sync(Project::whereIn('slug', $slugs)->pluck('id'));
+        // sync(assoc) sets the pivot columns for each id in one call — role=admin, team member by default
+        $pivot = ['role' => ProjectRole::Admin->value, 'is_team_member' => true];
+        $user->projects()->sync(
+            Project::whereIn('slug', $slugs)->pluck('id')
+                ->mapWithKeys(fn (int $id) => [$id => $pivot])
+                ->all(),
+        );
 
         $this->info("Админ {$user->email} создан, проекты: ".implode(', ', $slugs));
         $this->line("Пароль: <comment>{$password}</comment>");

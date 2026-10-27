@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProjectRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -33,15 +34,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Projects this admin manages — legacy pivot used by boards created via
-     * `admin:create` and `project:create` artisan commands. Still backs team-mode login
-     * on the public board. Self-serve boards use the owner_id column instead; see boards().
+     * Boards this user has any role on. After slice 1 of docs/ROLES_PLAN.md the pivot carries
+     * the role and the is_team_member flag — see Project::PIVOT_FIELDS. Legacy "team admins"
+     * created by admin:create / project:create live on the same pivot with role=admin.
      *
      * @return BelongsToMany<Project, $this>
      */
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class);
+        return $this->belongsToMany(Project::class)
+            ->withPivot(Project::PIVOT_FIELDS);
     }
 
     /**
@@ -54,10 +56,24 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Project::class, 'owner_id');
     }
 
+    /**
+     * This user's role on the given board, or null if they're not on it.
+     * Reads the pivot once per project; call sites that already loaded members get it for free.
+     */
+    public function roleOn(Project $project): ?ProjectRole
+    {
+        $pivot = $this->projects()->whereKey($project->getKey())->first()?->pivot;
+
+        return $pivot ? ProjectRole::from($pivot->role) : null;
+    }
+
+    /**
+     * Kept for the ~20 existing Gate::authorize('manage-project', …) call sites. Slice 1
+     * doesn't rewrite them — it preserves behaviour. Future slices split this into the five
+     * dedicated abilities (board.configure, board.triage, …).
+     */
     public function managesProject(Project $project): bool
     {
-        // self-serve owner (owner_id) or a legacy team member (project_user pivot)
-        return $project->owner_id === $this->id
-            || $this->projects()->whereKey($project->getKey())->exists();
+        return $this->roleOn($project) !== null;
     }
 }

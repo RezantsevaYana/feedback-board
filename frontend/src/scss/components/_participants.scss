@@ -1,0 +1,224 @@
+@use '../utils' as *;
+
+// BoardParticipantsPage.vue + ParticipantsTable.vue, PendingInvitationsList.vue, InviteModal.vue.
+// Frame reuses .board-settings-section — the page lives in BoardWorkspace, next to Settings and Connection.
+
+.participants-head {
+    .participants-head-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+
+        h2 {
+            margin: 0;
+        }
+    }
+}
+
+// --- Table of members ------------------------------------------------------
+.participants-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+
+    th,
+    td {
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--line);
+    }
+    th {
+        font-weight: 500;
+        color: var(--muted);
+        font-size: 13px;
+    }
+    tr:last-child td {
+        border-bottom: 0;
+    }
+    .participants-table-actions {
+        width: 44px;
+        text-align: right;
+    }
+
+    // the select inside a row sits flush with the text — no extra label slot
+    .field {
+        padding-bottom: 0;
+        margin: 0;
+    }
+
+    @media screen and (max-width: $mobile) {
+        th:nth-child(3),
+        td:nth-child(3) {
+            display: none;
+        }
+    }
+}
+
+.participants-person {
+    display: grid;
+    gap: 2px;
+}
+.participants-person-name {
+    font-weight: 500;
+}
+.participants-person-email {
+    color: var(--muted);
+    font-size: 13px;
+}
+.participants-you {
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 6px;
+}
+
+// Role pill for owner — matches the select's visual weight without being a control.
+.role-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--fg);
+    font-size: 13px;
+
+    &.owner {
+        background: var(--active);
+        color: var(--fg);
+        font-weight: 500;
+    }
+}
+
+// Toggle "команда / внешний" — a button that looks like a pill.
+.team-badge {
+    appearance: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--muted);
+
+    &.team {
+        background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+        border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+        color: var(--fg);
+    }
+    &.external {
+        background: var(--surface);
+    }
+    &.read-only {
+        cursor: default;
+    }
+    @include hover {
+        &:not(.read-only) {
+            border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+        }
+    }
+}
+
+// --- Pending invitations list ----------------------------------------------
+.pending-invites {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+}
+.pending-invite {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+
+    @media screen and (max-width: $mobile) {
+        flex-wrap: wrap;
+    }
+}
+.pending-invite-main {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+.pending-invite-email {
+    font-weight: 500;
+}
+.pending-invite-meta {
+    color: var(--muted);
+    font-size: 13px;
+}
+.pending-invite-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.btn.btn-small {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+.btn.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
+
+    @include hover {
+        color: var(--bug);
+        background: color-mix(in srgb, var(--bug) 10%, transparent);
+    }
+}
+
+// --- Invite modal ----------------------------------------------------------
+.invite-modal {
+    display: grid;
+    gap: 16px;
+    padding: 0 4px 4px;
+}
+.invite-step {
+    display: grid;
+    gap: 14px;
+}
+.invite-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+    max-height: 42vh;
+    overflow-y: auto;
+}
+.invite-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+.invite-row-email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+
+// Owner's untouchable row — subtle visual separation
+.participants-table tr:has(.role-chip.owner) {
+    background: color-mix(in srgb, var(--surface-2) 50%, transparent);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}

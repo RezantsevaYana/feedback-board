@@ -29,12 +29,21 @@ class ProjectFactory extends Factory
 
     /**
      * У каждого проекта всегда есть системные столбцы — без них Post::creating
-     * не может подобрать дефолт.
+     * не может подобрать дефолт. Если задан owner_id, он автоматически попадает
+     * в project_user с role=owner — та же инвариант, что держит ProjectService::create.
      */
     public function configure(): static
     {
         return $this->afterCreating(function (Project $project) {
             $project->createDefaultStatuses();
+            if ($project->owner_id !== null) {
+                $project->members()->syncWithoutDetaching([
+                    $project->owner_id => [
+                        'role' => \App\Enums\ProjectRole::Owner->value,
+                        'is_team_member' => true,
+                    ],
+                ]);
+            }
         });
     }
 }

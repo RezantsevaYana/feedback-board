@@ -23,7 +23,10 @@ class CategoriesTest extends TestCase
         $this->project = Project::factory()->create(['slug' => 'demo']);
         $this->project->createDefaultCategories();
         $this->admin = User::factory()->create();
-        $this->admin->projects()->attach($this->project);
+        $this->admin->projects()->attach($this->project, [
+            'role' => \App\Enums\ProjectRole::Admin->value,
+            'is_team_member' => true,
+        ]);
     }
 
     public function test_team_adds_renames_and_deletes_categories(): void

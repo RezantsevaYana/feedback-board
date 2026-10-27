@@ -26,6 +26,15 @@
       >
         Подключение
       </RouterLink>
+      <!-- participants: own page, after everything else -->
+      <RouterLink
+        v-if="item.hash === '#domains'"
+        :to="`/app/boards/${slug}/participants`"
+        class="settings-nav-item"
+        :aria-current="page === 'participants' ? 'page' : undefined"
+      >
+        Участники
+      </RouterLink>
     </template>
   </nav>
 </template>
@@ -40,7 +49,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 // Deletion isn't a section, so it's not here: it sits at the bottom of the settings page.
 const props = defineProps<{
   slug: string
-  page: 'settings' | 'embed'
+  page: 'settings' | 'embed' | 'participants'
 }>()
 const route = useRoute()
 const router = useRouter()

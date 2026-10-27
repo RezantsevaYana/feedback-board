@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\PostPriority;
+use App\Enums\ProjectRole;
 use App\Models\Post;
 use App\Models\Project;
 use App\Models\User;
@@ -24,7 +25,10 @@ class TeamModeTest extends TestCase
         parent::setUp();
         $this->project = Project::factory()->create(['slug' => 'demo']);
         $this->admin = User::factory()->create(['email' => 'anna@example.com', 'password' => 'secret-pass']);
-        $this->admin->projects()->attach($this->project);
+        $this->admin->projects()->attach($this->project, [
+            'role' => ProjectRole::Admin->value,
+            'is_team_member' => true,
+        ]);
     }
 
     private function statusId(string $slug): int

@@ -12,11 +12,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'slug', 'owner_id', 'allowed_origins', 'widget_color'])]
+#[Fillable(['name', 'slug', 'owner_id', 'team_domain', 'allowed_origins', 'widget_color'])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
     use HasFactory, SoftDeletes;
+
+    /**
+     * Pivot columns pulled by every members() query so role/is_team_member are available
+     * on $project->members->first()->pivot without an extra ->withPivot() per call site.
+     */
+    public const PIVOT_FIELDS = ['role', 'is_team_member'];
 
     /**
      * Get the attributes that should be cast.
@@ -92,13 +98,36 @@ class Project extends Model
     }
 
     /**
-     * Admins who manage this project.
+     * Legacy name — kept to avoid rewriting every call site in slice 1. Semantically the pivot
+     * now carries five roles, not just "admins"; prefer members() for new code.
      *
      * @return BelongsToMany<User, $this>
      */
     public function admins(): BelongsToMany
     {
-        return $this->belongsToMany(User::class);
+        return $this->members();
+    }
+
+    /**
+     * Everyone on this board: owner, admins, managers, voters, readers — all through project_user.
+     * The pivot exposes role (ProjectRole string) and is_team_member (team vs external badge).
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot(self::PIVOT_FIELDS);
+    }
+
+    /**
+     * Pending + historical invitations for this board. ->pending() scope filters live ones.
+     *
+     * @return HasMany<ProjectInvitation, $this>
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(ProjectInvitation::class);
     }
 
     /**

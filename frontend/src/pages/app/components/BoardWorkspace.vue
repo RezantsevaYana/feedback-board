@@ -31,7 +31,7 @@ import SettingsNav from './SettingsNav.vue'
 defineProps<{
   slug: string
   name: string
-  page: 'settings' | 'embed'
+  page: 'settings' | 'embed' | 'participants'
   // replaces the board's name in the heading (e.g. «Доска «…» готова» right after creating it)
   title?: string
 }>()

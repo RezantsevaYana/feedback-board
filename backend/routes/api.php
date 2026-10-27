@@ -39,6 +39,10 @@ Route::prefix('admin')->group(function () {
     Route::post('forgot-password', [Admin\PasswordResetController::class, 'send'])->middleware('throttle:password-reset');
     Route::post('reset-password', [Admin\PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
 
+    // Public invitation flow (no auth needed to read or accept — the token IS the credential).
+    Route::get('invitations/{token}', [Admin\InvitationController::class, 'show']);
+    Route::post('invitations/{token}/accept', [Admin\InvitationController::class, 'accept']);
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [Admin\AuthController::class, 'logout']);
         Route::get('me', [Admin\AuthController::class, 'me']);
@@ -53,6 +57,15 @@ Route::prefix('admin')->group(function () {
         Route::patch('boards/{board:slug}', [Admin\BoardController::class, 'update']);
         Route::delete('boards/{board:slug}', [Admin\BoardController::class, 'destroy']);
         Route::post('boards/{board:slug}/restore', [Admin\BoardController::class, 'restore'])->withTrashed();
+
+        // Team of a board: members pivot (role + is_team_member) and pending invitations.
+        Route::get('boards/{board:slug}/participants', [Admin\ParticipantController::class, 'index']);
+        Route::patch('boards/{board:slug}/participants/{user}', [Admin\ParticipantController::class, 'update']);
+        Route::delete('boards/{board:slug}/participants/{user}', [Admin\ParticipantController::class, 'destroy']);
+
+        Route::post('boards/{board:slug}/invitations', [Admin\InvitationController::class, 'store']);
+        Route::post('boards/{board:slug}/invitations/{invitation}/resend', [Admin\InvitationController::class, 'resend']);
+        Route::delete('boards/{board:slug}/invitations/{invitation}', [Admin\InvitationController::class, 'destroy']);
 
         Route::get('projects/{project:slug}/posts', [Admin\PostController::class, 'index']);
         Route::get('posts/{post}', [Admin\PostController::class, 'show']);

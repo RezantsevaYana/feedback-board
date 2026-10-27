@@ -36,4 +36,24 @@ return [
     | PurgeTrashedBoards command. Iteration 4.
     */
     'trash_retention_days' => (int) env('FEEDBACK_TRASH_RETENTION_DAYS', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public email domains
+    |--------------------------------------------------------------------------
+    | Addresses on these domains don't identify a company — the owner's inbox
+    | is personal, not corporate. For such owners we store project.team_domain
+    | as null (nobody auto-gets the "team" badge by matching domain). The list
+    | is intentionally conservative; adding a provider later is a one-liner.
+    */
+    'public_email_domains' => [
+        'gmail.com', 'googlemail.com',
+        'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
+        'yahoo.com', 'yahoo.ru',
+        'icloud.com', 'me.com', 'mac.com',
+        'mail.ru', 'inbox.ru', 'bk.ru', 'list.ru',
+        'yandex.ru', 'yandex.com', 'ya.ru',
+        'proton.me', 'protonmail.com',
+        'rambler.ru',
+    ],
 ];

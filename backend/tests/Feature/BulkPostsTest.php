@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProjectRole;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Project;
@@ -26,7 +27,10 @@ class BulkPostsTest extends TestCase
         parent::setUp();
         $this->project = Project::factory()->create(['slug' => 'demo']);
         $this->admin = User::factory()->create(['email' => 'anna@example.com', 'password' => 'secret-pass']);
-        $this->admin->projects()->attach($this->project);
+        $this->admin->projects()->attach($this->project, [
+            'role' => ProjectRole::Admin->value,
+            'is_team_member' => true,
+        ]);
     }
 
     private function statusId(string $slug): int
@@ -135,7 +139,10 @@ class BulkPostsTest extends TestCase
     public function test_admin_from_another_project_gets_403(): void
     {
         $outsider = User::factory()->create();
-        $outsider->projects()->attach(Project::factory()->create());
+        $outsider->projects()->attach(Project::factory()->create(), [
+            'role' => ProjectRole::Admin->value,
+            'is_team_member' => true,
+        ]);
 
         $this->actingAs($outsider)
             ->postJson('/api/admin/posts/bulk/hide', ['ids' => $this->makePosts(2), 'hidden' => true])
