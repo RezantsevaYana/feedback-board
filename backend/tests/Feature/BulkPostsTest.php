@@ -29,7 +29,6 @@ class BulkPostsTest extends TestCase
         $this->admin = User::factory()->create(['email' => 'anna@example.com', 'password' => 'secret-pass']);
         $this->admin->projects()->attach($this->project, [
             'role' => ProjectRole::Admin->value,
-            'is_team_member' => true,
         ]);
     }
 
@@ -141,7 +140,6 @@ class BulkPostsTest extends TestCase
         $outsider = User::factory()->create();
         $outsider->projects()->attach(Project::factory()->create(), [
             'role' => ProjectRole::Admin->value,
-            'is_team_member' => true,
         ]);
 
         $this->actingAs($outsider)

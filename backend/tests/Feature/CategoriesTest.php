@@ -25,7 +25,6 @@ class CategoriesTest extends TestCase
         $this->admin = User::factory()->create();
         $this->admin->projects()->attach($this->project, [
             'role' => \App\Enums\ProjectRole::Admin->value,
-            'is_team_member' => true,
         ]);
     }
 

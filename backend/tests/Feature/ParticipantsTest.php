@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Slice 2 of docs/ROLES_PLAN.md — GET participants, PATCH role / team-badge, DELETE.
+ * Slice 2 of docs/ROLES_PLAN.md — GET participants, PATCH role, DELETE.
  */
 class ParticipantsTest extends TestCase
 {
@@ -29,17 +29,17 @@ class ParticipantsTest extends TestCase
     {
         parent::setUp();
         $this->owner = User::factory()->create(['email' => 'owner@acme.com']);
-        $this->board = Project::factory()->create(['owner_id' => $this->owner->id, 'team_domain' => 'acme.com']);
+        $this->board = Project::factory()->create(['owner_id' => $this->owner->id]);
 
         $this->admin = User::factory()->create(['email' => 'anna@acme.com']);
         $this->manager = User::factory()->create(['email' => 'manager@acme.com']);
         $this->voter = User::factory()->create(['email' => 'voter@acme.com']);
-        $this->board->members()->attach($this->admin, ['role' => ProjectRole::Admin->value, 'is_team_member' => true]);
-        $this->board->members()->attach($this->manager, ['role' => ProjectRole::Manager->value, 'is_team_member' => true]);
-        $this->board->members()->attach($this->voter, ['role' => ProjectRole::Voter->value, 'is_team_member' => true]);
+        $this->board->members()->attach($this->admin, ['role' => ProjectRole::Admin->value]);
+        $this->board->members()->attach($this->manager, ['role' => ProjectRole::Manager->value]);
+        $this->board->members()->attach($this->voter, ['role' => ProjectRole::Voter->value]);
     }
 
-    public function test_owner_sees_everyone_with_role_and_team_flag(): void
+    public function test_owner_sees_everyone_with_role(): void
     {
         $response = $this->actingAs($this->owner)
             ->getJson("/api/admin/boards/{$this->board->slug}/participants")
@@ -51,7 +51,6 @@ class ParticipantsTest extends TestCase
             ['owner', 'admin', 'manager', 'voter'],
             $members->pluck('role')->all(),
         );
-        $this->assertTrue($members->firstWhere('email', 'owner@acme.com')['is_team_member']);
     }
 
     public function test_manager_cannot_configure_board(): void
@@ -61,16 +60,14 @@ class ParticipantsTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_can_change_role_and_team_flag(): void
+    public function test_admin_can_change_role(): void
     {
         $this->actingAs($this->admin)
             ->patchJson("/api/admin/boards/{$this->board->slug}/participants/{$this->voter->id}", [
                 'role' => 'reader',
-                'is_team_member' => false,
             ])
             ->assertOk()
-            ->assertJsonPath('data.role', 'reader')
-            ->assertJsonPath('data.is_team_member', false);
+            ->assertJsonPath('data.role', 'reader');
     }
 
     public function test_owner_row_is_untouchable(): void

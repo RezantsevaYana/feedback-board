@@ -472,54 +472,14 @@
         .mockup .role-pill.voter { background: var(--cat-orange); color: #7f4718; }
         .mockup .role-pill.reader { background: var(--surface-2); color: var(--muted); }
 
-        /* Team / external badge — derived from role */
-        .mockup .team-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-
-        .mockup .team-badge.team {
-            background: var(--active);
-            color: #063f2c;
-        }
-
-        .mockup .team-badge.team::before {
-            content: '●';
-            color: var(--accent);
-        }
-
-        .mockup .team-badge.external {
-            background: var(--surface-2);
-            color: var(--muted);
-        }
-
-        .mockup .team-badge.external::before {
-            content: '○';
-            color: var(--muted);
-        }
-
-        .mockup .team-badge.toggle {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .mockup .invite-rows {
+        /* Role hint under an option of the role select (4.7) */
+        .mockup .role-options {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .mockup .invite-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .mockup .role-option {
             background: #fff;
             padding: 8px 12px;
             border-radius: 8px;
@@ -527,29 +487,14 @@
             font-size: 13px;
         }
 
-        .mockup .invite-row .email {
-            font-family: var(--font-mono);
-            font-size: 13px;
+        .mockup .role-option.selected {
+            border-color: var(--accent);
         }
 
-        .mockup .team-check {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        .mockup .role-option small {
+            display: block;
             font-size: 12px;
             color: var(--muted);
-            cursor: pointer;
-            margin-bottom: 0;
-            font-weight: 400;
-            text-transform: none;
-            letter-spacing: 0;
-        }
-
-        .mockup .team-check input[type=checkbox] {
-            width: 14px;
-            height: 14px;
-            accent-color: var(--accent);
-            margin: 0;
         }
 
         /* Hub (cabinet) */
@@ -960,14 +905,8 @@
                 <li><strong>Доменов больше нет.</strong> Доступ в закрытую доску — только по инвайту или через апрув запроса. Для 15 коллег начальник использует bulk-инвайт (вводит список почт разом).</li>
                 <li><strong>Пять ролей:</strong> Владелец, Админ, <strong>Менеджер</strong> (двигает карточки, не настраивает доску), Голосующий, Читатель. Разделение «Голосующего» и «Читателя» даёт тонкую настройку для клиентов и наблюдателей.</li>
                 <li><strong>Роль задаётся на доску.</strong> Один человек на доске A — Менеджер, на доске B — Читатель. Хранится в <code>project_user.role</code>.</li>
-                <li><strong>Бейдж «команда / внешний»</strong> рядом с именем в списке участников. Два поля в БД, независимо от роли:
-                    <ul style="margin: 6px 0 0;">
-                        <li><code>project.team_domain</code> — одна plain-строка. При создании доски система кладёт туда домен владельца (ivan@rocont.ru → rocont.ru). Публичные домены (gmail, outlook и т.п.) → null. Владелец может поменять в настройках.</li>
-                        <li><code>project_user.is_team_member</code> — булев флаг на связке «человек × доска». При приглашении пред-заполняется автоматически (домен совпал с <code>team_domain</code> → true, иначе false). Можно переопределить в форме инвайта и позже в списке участников — не меняя роль.</li>
-                    </ul>
-                    Доступ на доску не зависит от домена, флаг влияет только на визуальную группировку.
-                </li>
-                <li><strong>Пароль задаётся на экране принятия приглашения</strong> (можно пропустить и ходить по ссылке). В письме пароля нет.</li>
+                <li><strong>Пометки «команда / внешний» нет</strong> (решено 28.10.2026). Всё, что человек может на доске, задаёт роль; отдельный флаг ничего не давал. Поля <code>is_team_member</code> и <code>team_domain</code> удалены.</li>
+                <li><strong>Пароль задаётся на экране принятия приглашения</strong> — для нового аккаунта обязателен (не меньше 8 символов). В письме пароля нет.</li>
                 <li><strong>Клиент по URL</strong> не видит содержимое доски до одобрения — только форму запроса и экран «Заявка отправлена, ждите письма». Админ выбирает роль при одобрении.</li>
                 <li><strong>Апрув заявки — inline</strong> в карточке запроса, без отдельного экрана.</li>
                 <li><strong>Один пользователь — множество ролей.</strong> Человек может быть Владельцем одной доски и Голосующим другой. В кабинете — две группы: «Я веду» (Owner/Admin) и «Я участник» (Менеджер/Голосующий/Читатель). См. экран 4.10.</li>
@@ -1402,43 +1341,18 @@ alex@rocont.ru
 klient@externalcorp.com</textarea>
                     <div class="hint">По одной на строке или через запятую. До 100 за раз.</div>
 
-                    <div style="margin-top: 14px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px;">
-                        <div style="font-size: 12px; color: var(--muted); margin-bottom: 10px;">
-                            Распознано <strong>4 почты</strong>. Галочка «команда» ставится автоматически по домену <code style="background: #fff; padding: 1px 6px; border-radius: 4px;">rocont.ru</code> — можно переопределить.
-                        </div>
-                        <div class="invite-rows">
-                            <div class="invite-row">
-                                <span class="email">masha@rocont.ru</span>
-                                <label class="team-check"><input type="checkbox" checked> команда</label>
-                            </div>
-                            <div class="invite-row">
-                                <span class="email">petya@rocont.ru</span>
-                                <label class="team-check"><input type="checkbox" checked> команда</label>
-                            </div>
-                            <div class="invite-row">
-                                <span class="email">alex@rocont.ru</span>
-                                <label class="team-check"><input type="checkbox" checked> команда</label>
-                            </div>
-                            <div class="invite-row">
-                                <span class="email">klient@externalcorp.com</span>
-                                <label class="team-check"><input type="checkbox"> команда</label>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="hint">Распознано <strong>4 почты</strong>. Кто уже на доске — пропускается.</div>
 
-                    <label style="margin-top: 14px;">Роль для всех приглашённых</label>
-                    <select>
-                        <option>Менеджер — + двигать карточки</option>
-                        <option>Голосующий — читать + голосовать + писать посты</option>
-                        <option>Админ — + настройки, звать других</option>
-                        <option>Читатель — только читать</option>
-                    </select>
+                    <label style="margin-top: 14px;">Роль для всей пачки</label>
+                    <div class="role-options">
+                        <div class="role-option">Админ<small>Всё, кроме удаления доски: настройки, категории, столбцы, участники</small></div>
+                        <div class="role-option">Менеджер<small>Разбирает посты: статусы, ответы, скрытие</small></div>
+                        <div class="role-option selected">Голосующий<small>Читает, голосует и предлагает</small></div>
+                        <div class="role-option">Читатель<small>Только читает</small></div>
+                    </div>
                     <div class="hint">Роль можно будет изменить индивидуально в списке участников.</div>
 
-                    <label style="margin-top: 10px;">Сопроводительный текст (необязательно)</label>
-                    <textarea placeholder="Будет вставлен в письмо приглашения. Можно добавить контекст про доску, время запуска и т.п."></textarea>
-
-                    <a class="btn block" style="margin-top: 16px;">Отправить 4 приглашения</a>
+                    <a class="btn block" style="margin-top: 16px;">Отправить 4 письма</a>
                 </div>
             </div>
             <div class="caption">
@@ -1446,15 +1360,11 @@ klient@externalcorp.com</textarea>
                 <h3>Форма приглашения</h3>
                 <p>Один флоу для одного человека и для 50 — просто пишешь список.</p>
                 <ul>
-                    <li><strong>Авто-определение «команда»:</strong> для каждой почты система сравнивает домен с <code>project.team_domain</code> (сюда записывается домен владельца при создании доски). Совпал — чекбокс пред-отмечен, иначе — нет. В обоих направлениях переопределяется.</li>
+                    <li><strong>Под каждой ролью в селекте</strong> — мелким шрифтом, что она может. По умолчанию — Голосующий.</li>
                     <li>Валидация почт на лету; невалидные подсвечены красным, они не отправляются.</li>
                     <li>Роль одна для всей пачки. Для микса — отправить отдельно (один инвайт с ролью Менеджер для команды, второй с Голосующим для клиента).</li>
-                    <li>Сопроводительный текст — опционально, идёт в тело письма дополнительным блоком.</li>
-                    <li>Кнопка показывает число — «Отправить 4 приглашения».</li>
+                    <li>Кнопка показывает число — «Отправить 4 письма». После отправки модалка закрывается, в тосте — сколько отправлено и сколько пропущено.</li>
                 </ul>
-                <div class="note">
-                    <strong>Если <code>team_domain = null</code></strong> (владелец доски на gmail или не вписал домен в настройках): все чекбоксы по умолчанию выключены, админ ставит руками. Подсказку о «домене команды» заменяем на «домен команды не задан — задайте в настройках, чтобы работало автоматически».
-                </div>
                 <div class="note">
                     <strong>Что если такая почта уже на доске:</strong> подсветить в списке «уже участник, роль …», не отправлять ей инвайт.
                 </div>
@@ -1526,7 +1436,7 @@ klient@externalcorp.com</textarea>
                         </div>
                         <div class="row">
                             <div>
-                                <strong>Иван Иванов</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <strong>Иван Иванов</strong><br>
                                 <span style="font-size: 12px; color: var(--muted);">ivan@rocont.ru</span>
                             </div>
                             <div><span class="role-pill owner">Владелец</span></div>
@@ -1535,7 +1445,7 @@ klient@externalcorp.com</textarea>
                         </div>
                         <div class="row">
                             <div>
-                                <strong>Пётр Сидоров</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <strong>Пётр Сидоров</strong><br>
                                 <span style="font-size: 12px; color: var(--muted);">petya@rocont.ru</span>
                             </div>
                             <div>
@@ -1546,12 +1456,12 @@ klient@externalcorp.com</textarea>
                                     <option>Читатель</option>
                                 </select>
                             </div>
-                            <div style="color: var(--muted); font-size: 12px;">10 дней назад</div>
+                            <div style="color: var(--muted); font-size: 12px;">добавлен вручную</div>
                             <div style="color: var(--muted); cursor: pointer;">⋯</div>
                         </div>
                         <div class="row">
                             <div>
-                                <strong>Маша Петрова</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <strong>Маша Петрова</strong><br>
                                 <span style="font-size: 12px; color: var(--muted);">masha@rocont.ru</span>
                             </div>
                             <div>
@@ -1562,12 +1472,12 @@ klient@externalcorp.com</textarea>
                                     <option>Админ</option>
                                 </select>
                             </div>
-                            <div style="color: var(--muted); font-size: 12px;">3 дня назад · по инвайту</div>
+                            <div style="color: var(--muted); font-size: 12px;">по приглашению</div>
                             <div style="color: var(--muted); cursor: pointer;">⋯</div>
                         </div>
                         <div class="row">
                             <div>
-                                <strong>Клиент Клиентов</strong> <span class="team-badge external toggle" title="Клик — переключить на «команда»">внешний</span><br>
+                                <strong>Клиент Клиентов</strong><br>
                                 <span style="font-size: 12px; color: var(--muted);">klient@externalcorp.com</span>
                             </div>
                             <div>
@@ -1583,7 +1493,7 @@ klient@externalcorp.com</textarea>
                         </div>
                         <div class="row">
                             <div>
-                                <strong>Алексей К.</strong> <span class="team-badge team toggle" title="Клик — переключить на «внешний»">команда</span><br>
+                                <strong>Алексей К.</strong><br>
                                 <span style="color: #f0a854; font-size: 12px;">⏳ приглашение отправлено, не принято</span>
                             </div>
                             <div><span class="role-pill manager">Менеджер</span></div>
@@ -1599,13 +1509,12 @@ klient@externalcorp.com</textarea>
                 <p>Один экран для всех трёх сценариев: приглашённые команды, приглашённые клиенты, одобренные по запросу — все в одной таблице.</p>
                 <ul>
                     <li><strong>Смена роли</strong> — дропдаун прямо в ячейке, без модалки. Клик → меняется мгновенно, подтверждение не нужно, но есть «отменить» в тосте 10 секунд.</li>
-                    <li><strong>Бейдж «команда / внешний»</strong> выводится из <code>is_team_member</code>, которое задаётся на инвайте и редактируется кликом по бейджу. Это <strong>не роль</strong> — сотрудник может быть Голосующим и оставаться «командой», клиент может быть Админом и оставаться «внешним».</li>
-                    <li><strong>Источник</strong> — короткая подпись под датой: «по инвайту», «по запросу», «создал доску». Нужна для аудита (кого откуда).</li>
+                    <li><strong>Колонка «Добавлен»</strong> — откуда человек на доске: «создал доску», «по приглашению», «добавлен вручную» (позже — «по запросу»). Нужна для аудита (кого откуда).</li>
                     <li><strong>Ожидающие приглашения</strong> — с жёлтым статусом «не принято» в колонке имени. В меню «⋯» — переслать, отменить.</li>
                     <li><strong>Меню «⋯» на строке:</strong> «Удалить из доски», «Переслать приглашение» (для не принятых), «Сбросить пароль» (прислать письмо восстановления).</li>
                 </ul>
                 <div class="note">
-                    <strong>Что видят не-админы:</strong> та же таблица, но без дропдаунов роли (только пилюля), без клика по бейджу (только отображение), без меню «⋯», без email (только имя + роль + бейдж). См. ветку доступа в <code>ROLES_PLAN.md</code>.
+                    <strong>Что видят не-админы:</strong> та же таблица, но без дропдаунов роли (только пилюля), без меню «⋯», без email (только имя + роль). См. ветку доступа в <code>ROLES_PLAN.md</code>.
                 </div>
             </div>
         </div>
@@ -1697,7 +1606,6 @@ klient@externalcorp.com</textarea>
                         </div>
                         <div class="right-col">
                             <span class="role-pill manager">Менеджер</span>
-                            <span class="team-badge team">команда</span>
                         </div>
                     </div>
 
@@ -1708,7 +1616,6 @@ klient@externalcorp.com</textarea>
                         </div>
                         <div class="right-col">
                             <span class="role-pill voter">Голосующий</span>
-                            <span class="team-badge external">внешний</span>
                         </div>
                     </div>
                 </div>
@@ -1720,16 +1627,15 @@ klient@externalcorp.com</textarea>
                 <ul>
                     <li><strong>Группировка «Я веду / Я участник»</strong> — две разные ментальные модели. В верхней группе — доски, где я решаю (Owner или Admin). В нижней — куда меня пригласили просто участвовать.</li>
                     <li><strong>Пилюля роли</strong> справа — моя роль именно на этой конкретной доске. Один и тот же человек на разных досках может иметь любую комбинацию.</li>
-                    <li><strong>Бейдж «команда / внешний»</strong> — только для досок из группы «Я участник». Он отвечает на вопрос: «эта доска моего работодателя (команда) или я туда зашёл как гость?». Для досок из группы «Я веду» бейджа нет, потому что ты и есть эта команда.</li>
                     <li><strong>Нотификационные блоки сверху:</strong>
                         <ul style="margin-top: 4px;">
-                            <li>📬 Инвайты, которые жду я (пригласили, но ещё не принял).</li>
+                            <li>📬 Инвайты, которые жду я (пригласили, но ещё не принял). После «Принять» остаёмся в кабинете: тост «Вы в доске «…» — она появилась в списке», доска открывается с карточки.</li>
                             <li>🔔 Запросы на мои доски (где я Admin/Owner и кто-то ждёт одобрения).</li>
                         </ul>
                         Обе секции скрываются, если нулевые.
                     </li>
                     <li><strong>Иконки видимости</strong> (🔒 / 🌐) — открытая или закрытая доска. Нужно, потому что в кабинете у Owner обычно смесь.</li>
-                    <li><strong>Клик по карточке</strong> → страница самой доски (её URL).</li>
+                    <li><strong>Клик по карточке</strong> → доска открывается в новой вкладке (стрелка ↗), кабинет остаётся открытым. Кнопки «Настройки / Участники / Как подключить» — только у Owner/Admin, в той же вкладке.</li>
                     <li><strong>«+ Создать доску»</strong> → короткая форма (название, видимость, slug). После создания — автоматически Владелец, попадает в раздел «Я веду».</li>
                 </ul>
                 <div class="note">
@@ -1754,11 +1660,8 @@ klient@externalcorp.com</textarea>
                 <li><strong>После запроса доступа клиент видит</strong> короткий экран «Заявка отправлена, ждите письма». Содержимое доски скрыто, превью нет.</li>
                 <li><strong>Админ одобряет inline</strong> — кнопка на карточке запроса, без отдельного экрана. Для спама — «Отклонить и забанить».</li>
                 <li><strong>Лимитов на число участников в V1 нет.</strong> Тарификация и платные планы — не раньше, чем появятся платящие.</li>
-                <li><strong>Бейдж «команда / внешний» в UI есть, независимо от роли.</strong> В БД два поля:
-                    <ul style="margin: 6px 0 0;">
-                        <li><code>project.team_domain</code> — одна строка, кладётся при создании доски из домена владельца (gmail-подобное → null). Правится в настройках.</li>
-                        <li><code>project_user.is_team_member</code> — булев флаг на каждой записи. При инвайте авто-пред-заполнение по совпадению домена; при любой заявке можно переопределить вручную в форме и в списке участников.</li>
-                    </ul>
+                <li><strong>Пометки «команда / внешний» нет.</strong> Сначала планировали бейдж и домен команды (<code>team_domain</code>, <code>is_team_member</code>), но он ничего не давал сверх роли — убрали (28.10.2026).</li>
+            </ul>
                     Доступ на доску от этих полей не зависит, они нужны только для группировки.
                 </li>
             </ul>
@@ -1774,8 +1677,6 @@ klient@externalcorp.com</textarea>
                 <li><strong>Схема БД:</strong>
                     <ul>
                         <li>Расширить <code>project_user.role</code> до пяти значений: owner, admin, manager, voter, reader. Миграция: прежние Admin → admin, Team → manager, Member → voter (не теряем прав).</li>
-                        <li>Добавить <code>project_user.is_team_member</code> (bool, default false). Миграция: для существующих записей — выставить true (все уже члены команды того, кто их добавил).</li>
-                        <li>Добавить <code>project.team_domain</code> (nullable string). Миграция: для существующих — попытаться взять домен владельца, если это не публичный провайдер (gmail, outlook, yahoo и подобные).</li>
                         <li>Новая таблица <code>access_requests</code> (project_id, email, name, message, status, created_at, decided_at, decided_by, role_on_approve).</li>
                     </ul>
                 </li>
@@ -1789,7 +1690,7 @@ klient@externalcorp.com</textarea>
                 </li>
                 <li><strong>Текст писем</strong> — я писал черновик, но нужен финальный проход (сам текст приглашения, одобрения, отказа, magic-link). Можно отдать копирайтеру.</li>
                 <li><strong>API кабинета</strong> — <code>GET /api/app/boards</code>: все доски, где текущий пользователь имеет <code>project_user</code>-запись. С группировкой по роли. Отдельные счётчики для входящих инвайтов (на мою почту с status=pending) и ждущих запросов (на мои доски с status=pending).</li>
-                <li><strong>Форма создания доски</strong> (отдельный мини-экран, кнопка «+ Создать доску» в хаб-хедере). Поля: название, slug, visibility, по умолчанию берётся <code>team_domain = домен владельца</code>. После клика «Создать» — редирект на доску с ролью Owner и подсказкой «У вас пока нет участников: пригласите».</li>
+                <li><strong>Форма создания доски</strong> (отдельный мини-экран, кнопка «+ Создать доску» в хаб-хедере). Поля: название, slug, visibility. После клика «Создать» — редирект на доску с ролью Owner и подсказкой «У вас пока нет участников: пригласите».</li>
             </ul>
         </div>
     </section>

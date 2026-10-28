@@ -4,7 +4,7 @@
       <tr>
         <th scope="col">Человек</th>
         <th scope="col">Роль</th>
-        <th scope="col">Статус</th>
+        <th scope="col">Добавлен</th>
         <th scope="col" class="participants-table-actions">
           <span class="visually-hidden">Действия</span>
         </th>
@@ -29,20 +29,7 @@
             @update:model-value="(next: string) => changeRole(m, next as AssignableRole)"
           />
         </td>
-        <td>
-          <!-- Click toggles team / external; the owner's badge is read-only, matches the role pill. -->
-          <button
-            v-if="m.role !== 'owner'"
-            type="button"
-            class="team-badge"
-            :class="{ team: m.is_team_member, external: !m.is_team_member }"
-            :aria-pressed="m.is_team_member"
-            @click="toggleTeam(m)"
-          >
-            {{ m.is_team_member ? 'команда' : 'внешний' }}
-          </button>
-          <span v-else class="team-badge team read-only">команда</span>
-        </td>
+        <td class="participants-source">{{ m.source ? SOURCE_LABELS[m.source] : '' }}</td>
         <td class="participants-table-actions">
           <button
             v-if="m.role !== 'owner' && m.user_id !== meId"
@@ -61,15 +48,15 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ParticipantsApi, type Participant } from '@/api/participants'
+import { ParticipantsApi, type Participant, type ParticipantSource } from '@/api/participants'
 import { ApiError, errorMessage } from '@/api/client'
-import { ASSIGNABLE_ROLES, ROLE_LABELS, type ProjectRole } from '@/api/types'
+import { ASSIGNABLE_ROLES, ROLE_HINTS, ROLE_LABELS, type ProjectRole } from '@/api/types'
 import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import SelectComponent from '@/shared/ui/SelectComponent.vue'
 
-// Members table. Each row's role select and team toggle PATCH optimistically — the row updates
+// Members table. Each row's role select PATCHes — the row updates
 // as soon as the server echoes back. The owner row is cosmetic-only; "yourself" row hides the
 // remove action, both guards are mirrored on the server.
 type AssignableRole = Exclude<ProjectRole, 'owner'>
@@ -86,7 +73,14 @@ const emit = defineEmits<{
 const notification = useNotificationStore()
 const confirm = useConfirmStore()
 
-const roleOptions = computed(() => ASSIGNABLE_ROLES.map((value) => ({ value, label: ROLE_LABELS[value] })))
+// where the person came from — for an audit of who got in how
+const SOURCE_LABELS: Record<ParticipantSource, string> = {
+  created: 'создал доску',
+  invitation: 'по приглашению',
+  manual: 'добавлен вручную',
+}
+
+const roleOptions = computed(() => ASSIGNABLE_ROLES.map((value) => ({ value, label: ROLE_LABELS[value], hint: ROLE_HINTS[value] })))
 
 async function changeRole(member: Participant, nextRole: AssignableRole) {
   if (member.role === nextRole) return
@@ -99,15 +93,6 @@ async function changeRole(member: Participant, nextRole: AssignableRole) {
   }
 }
 
-async function toggleTeam(member: Participant) {
-  const next = !member.is_team_member
-  try {
-    const res = await ParticipantsApi.update(props.slug, member.user_id, { is_team_member: next })
-    emit('changed', res.data)
-  } catch (e) {
-    notification.error(fieldOrGeneric(e))
-  }
-}
 
 async function askRemove(member: Participant) {
   const ok = await confirm.ask({

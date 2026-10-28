@@ -3,8 +3,7 @@
 namespace App\Enums;
 
 /**
- * A person's level on a single board. Independent from "team vs external"
- * (is_team_member on the pivot) — a client can be a Manager, a teammate can be a Reader.
+ * A person's level on a single board — the only thing access and rights depend on.
  * Stored in project_user.role as a string with a CHECK constraint; the enum guards
  * the PHP side.
  */

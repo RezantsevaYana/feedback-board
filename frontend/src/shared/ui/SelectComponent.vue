@@ -22,6 +22,7 @@
         v-if="open"
         :id="`${uid}-list`"
         class="select-list"
+        :class="{ 'with-hints': hasHints }"
         role="listbox"
         tabindex="-1"
         :aria-activedescendant="active >= 0 ? `${uid}-opt-${active}` : undefined"
@@ -38,6 +39,7 @@
           @mousedown.prevent="pick(i)"
         >
           {{ option.label }}
+          <small v-if="option.hint" class="select-option-hint">{{ option.hint }}</small>
         </li>
       </ul>
     </div>
@@ -51,6 +53,8 @@ import AppIcon from '@/shared/ui/AppIcon.vue'
 export interface SelectOption<V> {
   value: V
   label: string
+  /** small grey line under the label in the open list (e.g. what a role may do) */
+  hint?: string
 }
 
 defineOptions({ inheritAttrs: false })
@@ -68,6 +72,7 @@ const open = ref(false)
 const active = ref(-1)
 
 const current = computed(() => props.options.find((o) => o.value === model.value))
+const hasHints = computed(() => props.options.some((o) => o.hint))
 
 function toggle() {
   open.value ? close() : openList()

@@ -49,8 +49,8 @@ class CreateAdmin extends Command
         ]);
         // the address comes from whoever runs the command, not from a stranger: nothing to confirm
         $user->markEmailAsVerified();
-        // sync(assoc) sets the pivot columns for each id in one call — role=admin, team member by default
-        $pivot = ['role' => ProjectRole::Admin->value, 'is_team_member' => true];
+        // sync(assoc) sets the pivot columns for each id in one call — role=admin
+        $pivot = ['role' => ProjectRole::Admin->value];
         $user->projects()->sync(
             Project::whereIn('slug', $slugs)->pluck('id')
                 ->mapWithKeys(fn (int $id) => [$id => $pivot])

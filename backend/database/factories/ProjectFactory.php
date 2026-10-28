@@ -40,7 +40,6 @@ class ProjectFactory extends Factory
                 $project->members()->syncWithoutDetaching([
                     $project->owner_id => [
                         'role' => \App\Enums\ProjectRole::Owner->value,
-                        'is_team_member' => true,
                     ],
                 ]);
             }

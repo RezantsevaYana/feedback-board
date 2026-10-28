@@ -3,10 +3,11 @@ import { defineStore } from 'pinia'
 import { AuthApi } from '@/api/auth'
 import { type Board, BoardsApi, type TrashedBoard } from '@/api/boards'
 import { ApiError } from '@/api/client'
+import { type AcceptResult, type IncomingInvitation, MyInvitationsApi } from '@/api/participants'
 import type { BoardSummary, Me } from '@/api/types'
 
 /**
- * Global auth state for the admin app (/app/*): who's logged in and which boards they own.
+ * Global auth state for the admin app (/app/*): who's logged in, which boards they're on, who invites them.
  * Two sources for boards:
  *  - `me.boards` — short summaries from /me, powers the board switcher.
  *  - `boards`   — full rows with queue_count / last_post_at from /admin/boards, drives the hub;
@@ -24,6 +25,8 @@ export const useAuthStore = defineStore('auth', () => {
   const trashed = ref<TrashedBoard[]>([])
   const boardsLoaded = ref(false)
   const boardsLoading = ref(false)
+  /** «Вас приглашают» on the hub: invitations to my email, accepted or declined right there. */
+  const incoming = ref<IncomingInvitation[]>([])
 
   const isAuth = computed(() => !!me.value)
   /** Short summaries kept in sync with the server copy — used by the board switcher. */
@@ -61,11 +64,31 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function fetchIncoming(): Promise<void> {
+    const res = await MyInvitationsApi.list()
+    incoming.value = res.data
+  }
+
+  /** Join from the hub: the board appears in «Я участник» / «Я веду», /me learns the new role for the board itself. */
+  async function acceptIncoming(id: number): Promise<AcceptResult> {
+    const res = await MyInvitationsApi.accept(id)
+    incoming.value = incoming.value.filter((i) => i.id !== id)
+    await Promise.all([fetchBoards(), fetchMe(true)])
+    return res.data
+  }
+
+  async function declineIncoming(id: number): Promise<void> {
+    await MyInvitationsApi.decline(id)
+    incoming.value = incoming.value.filter((i) => i.id !== id)
+  }
+
   /** Merge a freshly created board into both the full list and the /me summaries. */
   function addBoard(board: Board): void {
     boards.value = [board, ...boards.value]
     if (me.value) {
-      me.value.boards = [{ id: board.id, name: board.name, slug: board.slug }, ...me.value.boards]
+      const brief = { id: board.id, name: board.name, slug: board.slug, role: board.role }
+      me.value.boards = [brief, ...me.value.boards]
+      me.value.projects = [brief, ...me.value.projects]
     }
   }
 
@@ -94,7 +117,8 @@ export const useAuthStore = defineStore('auth', () => {
     trashed.value = trashed.value.filter((b) => b.slug !== slug)
     boards.value = [res.data, ...boards.value.filter((b) => b.slug !== slug)]
     if (me.value) {
-      const brief = { id: res.data.id, name: res.data.name, slug: res.data.slug }
+      // the role matters: team mode on the board looks it up in me.projects
+      const brief = { id: res.data.id, name: res.data.name, slug: res.data.slug, role: res.data.role }
       const bySlug = (list: typeof me.value.boards) => [...list.filter((b) => b.slug !== slug), brief].sort((a, b) => a.name.localeCompare(b.name))
       me.value.boards = bySlug(me.value.boards)
       me.value.projects = bySlug(me.value.projects)
@@ -143,13 +167,14 @@ export const useAuthStore = defineStore('auth', () => {
     // next admin session starts clean
     boards.value = []
     trashed.value = []
+    incoming.value = []
     boardsLoaded.value = false
   }
 
   return {
     me, loaded, loading, isAuth, boardSummaries,
-    boards, trashed, boardsLoaded, boardsLoading,
-    fetchMe, fetchBoards, addBoard, renameBoard, trashBoard, restoreBoard,
+    boards, trashed, boardsLoaded, boardsLoading, incoming,
+    fetchMe, fetchBoards, fetchIncoming, acceptIncoming, declineIncoming, addBoard, renameBoard, trashBoard, restoreBoard,
     register, login, logout, verifyEmail, resendVerification, forgotPassword, resetPassword,
   }
 })

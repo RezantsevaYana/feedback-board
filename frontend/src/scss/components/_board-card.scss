@@ -1,7 +1,8 @@
 @use '../utils' as *;
 
 // BoardCard.vue — one card in the admin hub grid: name and slug with the queue badge on the right,
-// last activity under them, «Настройки» and «Как подключить» as compact buttons at the bottom.
+// people and last activity under them, my role on the board, and for owner / admin
+// «Настройки», «Участники», «Как подключить» as compact buttons at the bottom.
 .boards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -15,8 +16,9 @@
     grid-template-areas:
         'top status'
         'last last'
+        'role role'
         'actions actions';
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr;
     align-items: start;
     gap: 6px 12px;
     padding: 18px 20px;
@@ -145,6 +147,20 @@
     color: var(--muted);
     font-size: 12px;
 }
+// my role here (the pill from _participants.scss)
+.board-card-role {
+    grid-area: role;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+
+    .role-chip {
+        font-size: 12px;
+        padding: 2px 8px;
+    }
+}
 // align-self: end pins the buttons to the card's bottom when names wrap differently
 .board-card-actions {
     grid-area: actions;
@@ -179,8 +195,9 @@
     .board-card {
         grid-template-areas:
             'top status'
+            'role role'
             'actions actions';
-        grid-template-rows: auto auto;
+        grid-template-rows: auto auto auto;
         gap: 4px 12px;
         padding: 12px 14px;
         border: 0;

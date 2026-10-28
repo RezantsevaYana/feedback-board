@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -15,7 +16,7 @@ use Illuminate\Support\Str;
  * The flow is: created → letter sent → either accepted_at set + pivot row made,
  * or expires_at passed, or the admin cancels (row removed).
  */
-#[Fillable(['project_id', 'email', 'role', 'token', 'expires_at', 'invited_by', 'is_team_member'])]
+#[Fillable(['project_id', 'email', 'role', 'token', 'expires_at', 'invited_by'])]
 class ProjectInvitation extends Model
 {
     public const TTL_DAYS = 7;
@@ -25,7 +26,6 @@ class ProjectInvitation extends Model
         return [
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
-            'is_team_member' => 'boolean',
             'role' => ProjectRole::class,
         ];
     }
@@ -51,6 +51,21 @@ class ProjectInvitation extends Model
     public function isPending(): bool
     {
         return $this->accepted_at === null && $this->expires_at->isFuture();
+    }
+
+    /**
+     * Put the user on the board with the invited role and close the slot. Both entry points use it:
+     * the letter's link (InvitationController::accept) and «Принять» in the cabinet.
+     */
+    public function acceptFor(User $user): void
+    {
+        DB::transaction(function () use ($user) {
+            $this->project->members()->syncWithoutDetaching([
+                $user->id => ['role' => $this->role->value],
+            ]);
+            $this->accepted_at = now();
+            $this->save();
+        });
     }
 
     /**

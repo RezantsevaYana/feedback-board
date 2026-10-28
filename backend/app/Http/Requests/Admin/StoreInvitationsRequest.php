@@ -8,15 +8,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * Bulk invite: one role for the whole batch, each row optionally overriding the
- * "team member" auto-detection (by matching domain against projects.team_domain).
+ * Bulk invite: one role for the whole batch.
  *
  * Shape:
- *   { role: "manager",
- *     invitees: [
- *       { email: "a@acme.com" },                       // is_team_member computed from domain
- *       { email: "b@gmail.com", is_team_member: true } // explicit override
- *     ] }
+ *   { role: "manager", invitees: [{ email: "a@acme.com" }, { email: "b@gmail.com" }] }
  *
  * Owner isn't an assignable role — the board has one owner, set at creation and transferred
  * only via the backoffice (see docs/ROLES_PLAN.md §4).
@@ -36,7 +31,6 @@ class StoreInvitationsRequest extends FormRequest
             'role' => ['required', 'string', Rule::in($assignable)],
             'invitees' => ['required', 'array', 'min:1', 'max:'.self::MAX_INVITEES],
             'invitees.*.email' => ['required', 'email:rfc', 'max:190'],
-            'invitees.*.is_team_member' => ['sometimes', 'boolean'],
         ];
     }
 

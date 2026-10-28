@@ -7,8 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Change a participant's role or team-badge on the board.
- * At least one of role / is_team_member must be present — the request accepts partial updates.
+ * Change a participant's role on the board.
  * Owner isn't an assignable target (same reason as in StoreInvitationsRequest).
  */
 class UpdateParticipantRequest extends FormRequest
@@ -21,22 +20,15 @@ class UpdateParticipantRequest extends FormRequest
         ));
 
         return [
-            'role' => ['sometimes', 'string', Rule::in($assignable)],
-            'is_team_member' => ['sometimes', 'boolean'],
+            'role' => ['required', 'string', Rule::in($assignable)],
         ];
     }
 
     public function messages(): array
     {
         return [
+            'role.required' => 'Выберите роль.',
             'role.in' => 'Такой роли нет. Доступны: Админ, Менеджер, Голосующий, Читатель.',
         ];
-    }
-
-    protected function passedValidation(): void
-    {
-        if (! $this->has('role') && ! $this->has('is_team_member')) {
-            abort(response()->json(['message' => 'Нечего менять.'], 422));
-        }
     }
 }

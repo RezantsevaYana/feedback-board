@@ -35,7 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Boards this user has any role on. After slice 1 of docs/ROLES_PLAN.md the pivot carries
-     * the role and the is_team_member flag — see Project::PIVOT_FIELDS. Legacy "team admins"
+     * the role — see Project::PIVOT_FIELDS. Legacy "team admins"
      * created by admin:create / project:create live on the same pivot with role=admin.
      *
      * @return BelongsToMany<Project, $this>

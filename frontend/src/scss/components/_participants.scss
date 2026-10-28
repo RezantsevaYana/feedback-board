@@ -55,6 +55,11 @@
         }
     }
 }
+.participants-source {
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
 
 .participants-person {
     display: grid;
@@ -86,35 +91,6 @@
         background: var(--active);
         color: var(--fg);
         font-weight: 500;
-    }
-}
-
-// Toggle "команда / внешний" — a button that looks like a pill.
-.team-badge {
-    appearance: none;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-size: 13px;
-    cursor: pointer;
-    background: var(--surface);
-    color: var(--muted);
-
-    &.team {
-        background: color-mix(in srgb, var(--accent) 15%, var(--surface));
-        border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
-        color: var(--fg);
-    }
-    &.external {
-        background: var(--surface);
-    }
-    &.read-only {
-        cursor: default;
-    }
-    @include hover {
-        &:not(.read-only) {
-            border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
-        }
     }
 }
 
@@ -181,32 +157,6 @@
 .invite-step {
     display: grid;
     gap: 14px;
-}
-.invite-rows {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 6px;
-    max-height: 42vh;
-    overflow-y: auto;
-}
-.invite-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 8px 10px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: var(--surface);
-}
-.invite-row-email {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-    flex: 1;
 }
 
 // Owner's untouchable row — subtle visual separation

@@ -264,6 +264,23 @@ textarea.input {
         font-weight: 500;
     }
 }
+// options with a hint line: the list gets room for it, the hint wraps under the label
+.select-list.with-hints {
+    min-width: max(100%, 280px);
+
+    .select-option {
+        padding: 8px 10px;
+    }
+}
+.select-option-hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--muted);
+    white-space: normal;
+}
 // CheckboxComponent.vue — нативный input спрятан под appearance:none,
 // визуально нарисован квадрат с бренд-зелёной галочкой. Фокус-ring, hover,
 // disabled и клавиатура остаются от нативного элемента, доступность не ломается.

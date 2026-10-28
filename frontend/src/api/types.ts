@@ -74,8 +74,6 @@ export interface BoardSummary {
   slug: string
   /** The current user's role on this board — slice 1 of roles. Null for legacy records. */
   role?: ProjectRole | null
-  /** Team / external badge, independent from the role. */
-  is_team_member?: boolean
 }
 
 /**
@@ -88,6 +86,15 @@ export type ProjectRole = (typeof PROJECT_ROLES)[number]
 
 /** Roles the UI lets admins pick. Owner isn't here — see docs/ROLES_PLAN.md §4. */
 export const ASSIGNABLE_ROLES: Exclude<ProjectRole, 'owner'>[] = ['admin', 'manager', 'voter', 'reader']
+
+/** What each role may do — shown under the role in the role pickers. Mirrors docs/ROLES_PLAN.md §1. */
+export const ROLE_HINTS: Record<ProjectRole, string> = {
+  owner: 'Всё, включая удаление доски',
+  admin: 'Всё, кроме удаления доски: настройки, категории, столбцы, участники',
+  manager: 'Разбирает посты: статусы, ответы, скрытие',
+  voter: 'Читает, голосует и предлагает',
+  reader: 'Только читает',
+}
 
 /** Human-readable role names. */
 export const ROLE_LABELS: Record<ProjectRole, string> = {

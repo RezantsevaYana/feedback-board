@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Enums\ProjectRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateBoardRequest;
 use App\Http\Requests\Admin\UpdateBoardRequest;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * Self-serve boards owned by the current admin: list for the hub, create from the wizard,
+ * Boards in the cabinet: the hub list (every board the user is on), create from the wizard,
  * slug availability for the live check, embed payload for the "how to connect" screen,
  * delete to the trash and restore from it (PurgeTrashedBoards empties the trash).
  */
@@ -22,10 +23,13 @@ class BoardController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $boards = $request->user()->boards()
+        // every board the user is on (project_user), whatever the role: the hub groups them
+        // into «Я веду» (owner / admin) and «Я участник» by the role in the summary
+        $boards = $request->user()->projects()
             ->withCount([
                 // "в очереди" = posts whose status is the system "new" one; same slug drives the public widget.
                 'posts as queue_count' => fn ($q) => $q->whereHas('status', fn ($s) => $s->where('slug', 'new')),
+                'members',
             ])
             ->withMax('posts as last_post_at', 'created_at')
             ->orderByDesc('created_at')
@@ -51,7 +55,7 @@ class BoardController extends Controller
             $request->user(),
         );
 
-        return response()->json(['data' => $this->summary($board)], 201);
+        return response()->json(['data' => $this->summary($board->loadCount('members'))], 201);
     }
 
     /**
@@ -117,6 +121,7 @@ class BoardController extends Controller
 
         $board->loadCount([
             'posts as queue_count' => fn ($q) => $q->whereHas('status', fn ($s) => $s->where('slug', 'new')),
+            'members',
         ])->loadMax('posts as last_post_at', 'created_at');
 
         return response()->json(['data' => $this->summary($board)]);
@@ -176,6 +181,9 @@ class BoardController extends Controller
             'created_at' => $p->created_at,
             'queue_count' => (int) ($p->queue_count ?? 0),
             'last_post_at' => $p->last_post_at ?? null,
+            'members_count' => (int) ($p->members_count ?? 0),
+            // from the pivot when listed through projects(); a board just created or restored is the owner's
+            'role' => $p->pivot?->role ?? ProjectRole::Owner->value,
         ];
     }
 

@@ -58,7 +58,12 @@ Route::prefix('admin')->group(function () {
         Route::delete('boards/{board:slug}', [Admin\BoardController::class, 'destroy']);
         Route::post('boards/{board:slug}/restore', [Admin\BoardController::class, 'restore'])->withTrashed();
 
-        // Team of a board: members pivot (role + is_team_member) and pending invitations.
+        // Invitations addressed to me — «Вас приглашают» in the cabinet.
+        Route::get('me/invitations', [Admin\IncomingInvitationController::class, 'index']);
+        Route::post('me/invitations/{invitation}/accept', [Admin\IncomingInvitationController::class, 'accept']);
+        Route::delete('me/invitations/{invitation}', [Admin\IncomingInvitationController::class, 'destroy']);
+
+        // Team of a board: members pivot (role) and pending invitations.
         Route::get('boards/{board:slug}/participants', [Admin\ParticipantController::class, 'index']);
         Route::patch('boards/{board:slug}/participants/{user}', [Admin\ParticipantController::class, 'update']);
         Route::delete('boards/{board:slug}/participants/{user}', [Admin\ParticipantController::class, 'destroy']);

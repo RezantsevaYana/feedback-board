@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 
 /**
  * Board team: list + role changes + removal. Pending invitations live next to members
@@ -19,7 +20,7 @@ use Illuminate\Http\Response;
  *
  * Authorization: board.configure (owner / admin). The two special guardrails are enforced
  * in-controller because they aren't role-level rules — they're invariants:
- *   - Owner's row is immutable (role or team-badge).
+ *   - Owner's row is immutable.
  *   - You can't remove yourself (prevents a board losing its last admin by accident).
  */
 class ParticipantController extends Controller
@@ -31,6 +32,17 @@ class ParticipantController extends Controller
         $members = $board->members()->orderBy('name')->get();
         $invitations = $board->invitations()->with('inviter')->pending()
             ->orderByDesc('created_at')->get();
+
+        // «Добавлен» column: created the board / came by invitation / anything else (added before roles, by the CLI)
+        $invited = $board->invitations()->whereNotNull('accepted_at')->pluck('email')
+            ->map(fn (string $e) => Str::lower($e))->flip();
+        foreach ($members as $member) {
+            $member->setAttribute('source', match (true) {
+                $member->id === $board->owner_id => 'created',
+                $invited->has(Str::lower($member->email)) => 'invitation',
+                default => 'manual',
+            });
+        }
 
         return response()->json([
             'data' => [
@@ -46,14 +58,7 @@ class ParticipantController extends Controller
         $this->guardMembership($board, $user);
         $this->guardOwnerUntouchable($board, $user);
 
-        $payload = [];
-        if ($request->has('role')) {
-            $payload['role'] = $request->validated('role');
-        }
-        if ($request->has('is_team_member')) {
-            $payload['is_team_member'] = (bool) $request->validated('is_team_member');
-        }
-        $board->members()->updateExistingPivot($user->id, $payload);
+        $board->members()->updateExistingPivot($user->id, ['role' => $request->validated('role')]);
 
         $updated = $board->members()->whereKey($user->id)->first();
 

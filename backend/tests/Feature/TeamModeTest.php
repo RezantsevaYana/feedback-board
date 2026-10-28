@@ -27,7 +27,6 @@ class TeamModeTest extends TestCase
         $this->admin = User::factory()->create(['email' => 'anna@example.com', 'password' => 'secret-pass']);
         $this->admin->projects()->attach($this->project, [
             'role' => ProjectRole::Admin->value,
-            'is_team_member' => true,
         ]);
     }
 

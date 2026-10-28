@@ -49,7 +49,7 @@ class AuthController extends Controller
     /**
      * The board calls this on load: 401 means guest, 200 means team mode for the listed projects.
      * `projects` — every board this user sits on (project_user). After slice 1 of docs/ROLES_PLAN.md
-     *              the pivot carries role + is_team_member, and owners live there too, so the merge
+     *              the pivot carries the role, and owners live there too, so the merge
      *              with boards() dedupes on id.
      * `boards` — self-serve boards owned by this user, drives the admin hub.
      */
@@ -75,23 +75,19 @@ class AuthController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, slug: string, role: ?string, is_team_member: bool}
+     * @return array{id: int, name: string, slug: string, role: ?string}
      */
     private function brief(Project $p, User $user): array
     {
         // $p->pivot is set when the project came via $user->projects(). For boards() we fall back to Owner
         // because the user is on the owner_id column — see the factory / ProjectService invariant.
         $role = $p->pivot?->role ?? ($p->owner_id === $user->id ? 'owner' : null);
-        $isTeamMember = $p->pivot !== null
-            ? (bool) $p->pivot->is_team_member
-            : $p->owner_id === $user->id;
 
         return [
             'id' => $p->id,
             'name' => $p->name,
             'slug' => $p->slug,
             'role' => $role,
-            'is_team_member' => $isTeamMember,
         ];
     }
 }

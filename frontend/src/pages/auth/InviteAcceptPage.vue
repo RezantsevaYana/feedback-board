@@ -26,7 +26,6 @@
       <dl class="invite-accept-meta">
         <div><dt>Почта</dt><dd>{{ preview.email }}</dd></div>
         <div><dt>Роль</dt><dd>{{ roleLabel(preview.role) }}</dd></div>
-        <div><dt>Статус</dt><dd>{{ preview.is_team_member ? 'команда' : 'внешний' }}</dd></div>
       </dl>
 
       <!-- Залогинен и email совпал — одна кнопка. -->

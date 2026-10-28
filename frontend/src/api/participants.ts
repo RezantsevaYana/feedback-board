@@ -9,16 +9,17 @@ export interface Participant {
   name: string
   email: string
   role: ProjectRole
-  /** Team member vs external — the badge next to the role. */
-  is_team_member: boolean
+  /** How they got here: created the board, accepted an invitation, or added before roles (CLI). Null in PATCH echoes. */
+  source: ParticipantSource | null
 }
+
+export type ParticipantSource = 'created' | 'invitation' | 'manual'
 
 /** A pending or recently-accepted invitation. The token NEVER appears in API responses — it lives only in the letter. */
 export interface Invitation {
   id: number
   email: string
   role: Exclude<ProjectRole, 'owner'>
-  is_team_member: boolean
   invited_by: { id: number; name: string }
   expires_at: string
   accepted_at: string | null
@@ -31,10 +32,9 @@ export interface ParticipantsPayload {
   invitations: Invitation[]
 }
 
-/** One row of a bulk invite. is_team_member is optional — the server auto-fills it from the board's team_domain. */
+/** One row of a bulk invite. */
 export interface InviteRow {
   email: string
-  is_team_member?: boolean
 }
 
 /** Why an email in a batch didn't become an invitation (currently only "already_member"). */
@@ -54,8 +54,8 @@ export const ParticipantsApi = {
     return request<Item<ParticipantsPayload>>(`${BASE_URL}/${slug}/participants`)
   },
 
-  // change role and/or team flag; owner's row is immutable, see the controller
-  update(slug: string, userId: number, body: { role?: Exclude<ProjectRole, 'owner'>; is_team_member?: boolean }) {
+  // change the role; owner's row is immutable, see the controller
+  update(slug: string, userId: number, body: { role: Exclude<ProjectRole, 'owner'> }) {
     return request<Item<Participant>>(`${BASE_URL}/${slug}/participants/${userId}`, { method: 'PATCH', body })
   },
 
@@ -66,7 +66,7 @@ export const ParticipantsApi = {
 }
 
 export const InvitationsApi = {
-  // send the batch; the role is one for everyone, is_team_member can be overridden per email
+  // send the batch; the role is one for everyone
   create(slug: string, body: { role: Exclude<ProjectRole, 'owner'>; invitees: InviteRow[] }) {
     return request<BulkInviteResult>(`${BASE_URL}/${slug}/invitations`, { method: 'POST', body })
   },
@@ -86,7 +86,6 @@ export const InvitationsApi = {
 export interface InvitationPreview {
   email: string
   role: Exclude<ProjectRole, 'owner'>
-  is_team_member: boolean
   board: { slug: string; name: string }
   invited_by: { name: string | null }
   expires_at: string
@@ -105,9 +104,36 @@ export const InviteAcceptApi = {
     return request<Item<InvitationPreview>>(`/admin/invitations/${token}`)
   },
 
-  // public: accept. For a new account — name is required, password is optional.
+  // public: accept. For a new account — name and password are required.
   // 409 means an account already exists — the UI tells the person to log in and come back.
   accept(token: string, body: { name?: string; password?: string } = {}) {
     return request<Item<AcceptResult>>(`/admin/invitations/${token}/accept`, { method: 'POST', body })
+  },
+}
+
+/** An invitation addressed to the logged-in user — «Вас приглашают» in the cabinet. */
+export interface IncomingInvitation {
+  id: number
+  board: { slug: string; name: string }
+  role: Exclude<ProjectRole, 'owner'>
+  invited_by: { name: string | null }
+  created_at: string
+  expires_at: string
+}
+
+export const MyInvitationsApi = {
+  // pending invitations to my email (empty until the email is confirmed)
+  list() {
+    return request<Collection<IncomingInvitation>>('/admin/me/invitations')
+  },
+
+  // join the board with the invited role
+  accept(id: number) {
+    return request<Item<AcceptResult>>(`/admin/me/invitations/${id}/accept`, { method: 'POST' })
+  },
+
+  // decline: the invitation is removed, the board's admins can invite again
+  decline(id: number) {
+    return request<void>(`/admin/me/invitations/${id}`, { method: 'DELETE' })
   },
 }

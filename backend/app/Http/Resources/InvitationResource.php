@@ -20,7 +20,6 @@ class InvitationResource extends JsonResource
             'id' => $this->resource->id,
             'email' => $this->resource->email,
             'role' => $this->resource->role->value,
-            'is_team_member' => $this->resource->is_team_member,
             'invited_by' => [
                 'id' => $this->resource->invited_by,
                 'name' => $this->resource->inviter?->name,

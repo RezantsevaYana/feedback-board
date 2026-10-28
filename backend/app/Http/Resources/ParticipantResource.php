@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * One person on the board (project_user). Expects the User model to carry a pivot
- * with role + is_team_member — i.e. loaded through Project::members() / User::projects().
+ * with the role — i.e. loaded through Project::members() / User::projects().
  *
  * @property-read User $resource
  */
@@ -24,7 +24,8 @@ class ParticipantResource extends JsonResource
             'name' => $this->resource->name,
             'email' => $this->resource->email,
             'role' => $pivot?->role,
-            'is_team_member' => (bool) ($pivot?->is_team_member ?? false),
+            // set by ParticipantController::index: created | invitation | manual
+            'source' => $this->resource->getAttribute('source'),
         ];
     }
 }

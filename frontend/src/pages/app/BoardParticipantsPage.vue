@@ -10,7 +10,7 @@
             <h2>Участники</h2>
             <button type="button" class="btn btn-primary" @click="showInvite = true">+ Пригласить</button>
           </div>
-          <p class="note">Один человек — одна роль на доске. Бейдж «команда / внешний» живёт отдельно от роли.</p>
+          <p class="note">Один человек — одна роль на доске. Что может каждая роль, видно при выборе.</p>
         </section>
 
         <section v-if="payload.invitations.length" class="board-settings-section">
@@ -93,7 +93,8 @@ async function load() {
 
 function onMemberChanged(next: Participant) {
   if (!payload.value) return
-  payload.value.members = payload.value.members.map((m) => (m.user_id === next.user_id ? next : m))
+  // the PATCH echo doesn't know the source — keep the one from the list
+  payload.value.members = payload.value.members.map((m) => (m.user_id === next.user_id ? { ...next, source: next.source ?? m.source } : m))
 }
 
 function onMemberRemoved(userId: number) {

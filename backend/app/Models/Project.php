@@ -12,17 +12,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'slug', 'owner_id', 'team_domain', 'allowed_origins', 'widget_color'])]
+#[Fillable(['name', 'slug', 'owner_id', 'allowed_origins', 'widget_color'])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
     use HasFactory, SoftDeletes;
 
     /**
-     * Pivot columns pulled by every members() query so role/is_team_member are available
+     * Pivot columns pulled by every members() query so the role is available
      * on $project->members->first()->pivot without an extra ->withPivot() per call site.
      */
-    public const PIVOT_FIELDS = ['role', 'is_team_member'];
+    public const PIVOT_FIELDS = ['role'];
 
     /**
      * Get the attributes that should be cast.
@@ -110,7 +110,7 @@ class Project extends Model
 
     /**
      * Everyone on this board: owner, admins, managers, voters, readers — all through project_user.
-     * The pivot exposes role (ProjectRole string) and is_team_member (team vs external badge).
+     * The pivot exposes role (ProjectRole string).
      *
      * @return BelongsToMany<User, $this>
      */

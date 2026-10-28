@@ -26,8 +26,7 @@ use Illuminate\Support\Str;
 class InvitationController extends Controller
 {
     /**
-     * Bulk invite. The role is one for the batch; is_team_member is per-row
-     * (auto from domain when omitted). Already-member and already-pending-with-same-role
+     * Bulk invite. The role is one for the batch. Already-member and already-pending-with-same-role
      * emails are reported in "skipped" instead of failing the whole batch.
      */
     public function store(StoreInvitationsRequest $request, Project $board): JsonResponse
@@ -47,9 +46,6 @@ class InvitationController extends Controller
         DB::transaction(function () use ($board, $role, $invitees, $inviter, $existingMembers, $pendingByEmail, &$created, &$skipped) {
             foreach ($invitees as $row) {
                 $email = Str::lower($row['email']);
-                $isTeam = array_key_exists('is_team_member', $row)
-                    ? (bool) $row['is_team_member']
-                    : $this->guessTeamMember($board, $email);
 
                 if (in_array($email, $existingMembers, true)) {
                     $skipped[] = ['email' => $email, 'reason' => 'already_member'];
@@ -62,7 +58,6 @@ class InvitationController extends Controller
                     // same email, same board — reset the slot instead of creating a duplicate.
                     $existing->update([
                         'role' => $role,
-                        'is_team_member' => $isTeam,
                         'invited_by' => $inviter->id,
                         'token' => ProjectInvitation::newToken(),
                         'expires_at' => ProjectInvitation::defaultExpiry(),
@@ -76,7 +71,6 @@ class InvitationController extends Controller
                     'project_id' => $board->id,
                     'email' => $email,
                     'role' => $role,
-                    'is_team_member' => $isTeam,
                     'invited_by' => $inviter->id,
                     'token' => ProjectInvitation::newToken(),
                     'expires_at' => ProjectInvitation::defaultExpiry(),
@@ -144,7 +138,6 @@ class InvitationController extends Controller
         return response()->json(['data' => [
             'email' => $invitation->email,
             'role' => $invitation->role->value,
-            'is_team_member' => $invitation->is_team_member,
             'board' => ['slug' => $invitation->project->slug, 'name' => $invitation->project->name],
             'invited_by' => ['name' => $invitation->inviter?->name],
             'expires_at' => $invitation->expires_at,
@@ -215,16 +208,7 @@ class InvitationController extends Controller
             $user->markEmailAsVerified();
         }
 
-        DB::transaction(function () use ($invitation, $user) {
-            $invitation->project->members()->syncWithoutDetaching([
-                $user->id => [
-                    'role' => $invitation->role->value,
-                    'is_team_member' => $invitation->is_team_member,
-                ],
-            ]);
-            $invitation->accepted_at = now();
-            $invitation->save();
-        });
+        $invitation->acceptFor($user);
 
         // Session is present when the request came through Sanctum's stateful group (browser,
         // Origin matches). Direct API hits without a session still succeed and let the client
@@ -253,15 +237,5 @@ class InvitationController extends Controller
         if ($invitation->project_id !== $board->id) {
             abort(404, 'Это приглашение не из этой доски.');
         }
-    }
-
-    private function guessTeamMember(Project $board, string $email): bool
-    {
-        if ($board->team_domain === null) {
-            return false;
-        }
-        $domain = Str::lower((string) Str::after($email, '@'));
-
-        return $domain !== '' && $domain === Str::lower($board->team_domain);
     }
 }

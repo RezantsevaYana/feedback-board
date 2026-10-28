@@ -1,9 +1,9 @@
 import { request } from './client'
-import type { Collection, Item } from './types'
+import type { Collection, Item, ProjectRole } from './types'
 
 const BASE_URL = '/admin/boards'
 
-/** A board in the admin hub list — summary + metrics. */
+/** A board in the admin hub list — summary + metrics. Every board the user is on, not only their own. */
 export interface Board {
   id: number
   name: string
@@ -11,6 +11,9 @@ export interface Board {
   created_at: string
   queue_count: number
   last_post_at: string | null
+  members_count: number
+  /** the current user's role here: owner / admin go to «Я веду», the rest to «Я участник» */
+  role: ProjectRole
 }
 
 /** A board in the trash: listed on the hub until purge_at, then removed for good. */
@@ -51,7 +54,7 @@ export interface SlugCheck {
 }
 
 export const BoardsApi = {
-  // boards owned by the current admin, newest first, plus the ones in the trash
+  // every board the user is on with their role, newest first, plus their own ones in the trash
   list() {
     return request<Collection<Board> & { trashed: TrashedBoard[] }>(BASE_URL)
   },

@@ -37,7 +37,6 @@ class DatabaseSeeder extends Seeder
         $admin->markEmailAsVerified();
         $admin->projects()->attach($project, [
             'role' => ProjectRole::Admin->value,
-            'is_team_member' => true,
         ]);
 
         $project->createDefaultCategories();

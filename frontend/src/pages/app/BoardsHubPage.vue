@@ -1,6 +1,7 @@
 <template>
   <AppHeader />
   <main class="container base-page boards-hub">
+    <IncomingInvitations v-if="auth.incoming.length" :invitations="auth.incoming" />
     <section v-if="auth.boardsLoading && !auth.boardsLoaded" class="boards-hub-loading">
       <p class="note">Загружаем…</p>
     </section>
@@ -23,8 +24,14 @@
           <span class="cta-roll" aria-hidden="true"><span>+ Новая доска</span><span>Поехали →</span></span>
         </RouterLink>
       </div>
-      <div class="boards-grid">
-        <BoardCard v-for="b in auth.boards" :key="b.id" :board="b" />
+      <!-- the two groups get headings only when both exist: an owner with their own boards sees one plain grid -->
+      <h2 v-if="split" class="boards-hub-group">Я веду · {{ leading.length }}</h2>
+      <div v-if="leading.length" class="boards-grid">
+        <BoardCard v-for="b in leading" :key="b.id" :board="b" />
+      </div>
+      <h2 v-if="split" class="boards-hub-group">Я участник · {{ taking.length }}</h2>
+      <div v-if="taking.length" class="boards-grid">
+        <BoardCard v-for="b in taking" :key="b.id" :board="b" />
       </div>
     </template>
     <TrashSection v-if="auth.boardsLoaded && auth.trashed.length" :boards="auth.trashed" />
@@ -33,16 +40,25 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
+import { canConfigure } from '@/shared/utils/roles'
 import BoardCard from './components/BoardCard.vue'
+import IncomingInvitations from './components/IncomingInvitations.vue'
 import TrashSection from './components/TrashSection.vue'
 
 const auth = useAuthStore()
 
+// «Я веду» — where I decide (owner / admin), «Я участник» — where I was invited to take part
+const leading = computed(() => auth.boards.filter((b) => canConfigure(b.role)))
+const taking = computed(() => auth.boards.filter((b) => !canConfigure(b.role)))
+const split = computed(() => leading.value.length > 0 && taking.value.length > 0)
+
 onMounted(async () => {
+  // invitations are a bonus on top of the hub: a failure there must not break the boards
+  void auth.fetchIncoming().catch(() => undefined)
   if (!auth.boardsLoaded) await auth.fetchBoards()
 })
 </script>

@@ -5,7 +5,6 @@
         <div class="pending-invite-email">{{ invite.email }}</div>
         <div class="pending-invite-meta">
           {{ roleLabel(invite.role) }}
-          · {{ invite.is_team_member ? 'команда' : 'внешний' }}
           · истекает {{ fmtDate(invite.expires_at) }}
           <template v-if="invite.invited_by.name">· позвал {{ invite.invited_by.name }}</template>
         </div>

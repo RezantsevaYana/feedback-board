@@ -31,7 +31,7 @@ class RolePermissionsTest extends TestCase
 
         foreach ([ProjectRole::Admin, ProjectRole::Manager, ProjectRole::Voter, ProjectRole::Reader] as $role) {
             $this->users[$role->value] = User::factory()->create();
-            $this->board->members()->attach($this->users[$role->value], ['role' => $role->value, 'is_team_member' => true]);
+            $this->board->members()->attach($this->users[$role->value], ['role' => $role->value]);
         }
         $this->users['outsider'] = User::factory()->create();
     }
