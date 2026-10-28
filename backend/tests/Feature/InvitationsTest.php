@@ -193,6 +193,18 @@ class InvitationsTest extends TestCase
             ->assertJsonPath('errors.name.0', 'Введите имя.');
     }
 
+    public function test_accept_without_password_for_new_user_is_422(): void
+    {
+        $invitation = $this->makeInvite(['email' => 'nopass@acme.com']);
+
+        $this->postJson("/api/admin/invitations/{$invitation->token}/accept", ['name' => 'Без пароля'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.password.0', 'Придумайте пароль.');
+
+        $this->assertDatabaseMissing('users', ['email' => 'nopass@acme.com']);
+        $this->assertNull($invitation->fresh()->accepted_at);
+    }
+
     public function test_accept_as_logged_in_matching_user_just_adds_pivot(): void
     {
         $user = User::factory()->create(['email' => 'already@acme.com', 'name' => 'Уже тут']);
@@ -222,7 +234,7 @@ class InvitationsTest extends TestCase
     public function test_accept_410_after_first_accept(): void
     {
         $invitation = $this->makeInvite(['email' => 'once@acme.com']);
-        $this->postJson("/api/admin/invitations/{$invitation->token}/accept", ['name' => 'X'])->assertOk();
+        $this->postJson("/api/admin/invitations/{$invitation->token}/accept", ['name' => 'X', 'password' => 'strong-pass-123'])->assertOk();
         $this->assertNotNull($invitation->fresh()->accepted_at);
 
         $this->postJson("/api/admin/invitations/{$invitation->token}/accept", ['name' => 'Y'])

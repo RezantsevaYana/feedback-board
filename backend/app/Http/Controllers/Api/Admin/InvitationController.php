@@ -157,8 +157,8 @@ class InvitationController extends Controller
      *   1. Current user is logged in and their email matches — just make the pivot row.
      *   2. An account already exists for this email — tell the client to redirect to /app/login.
      *      (Password login is slice 2 of ROLES_PLAN, not slice 1 of invitations.)
-     *   3. No account yet — create one with the invitation email + the provided name,
-     *      optionally setting a password now. The email auto-counts as verified
+     *   3. No account yet — create one with the invitation email + the provided name
+     *      and password. The email auto-counts as verified
      *      (plan §: opening the letter is proof of ownership).
      */
     public function accept(AcceptInvitationRequest $request, string $token): JsonResponse
@@ -189,15 +189,24 @@ class InvitationController extends Controller
                 ], 409);
             }
 
+            // Password is required until magic-link login exists (slice 2) — without it a new user
+            // would have no way to sign in again.
             $name = $request->validated('name');
+            $password = $request->validated('password');
+            $errors = [];
             if (! is_string($name) || $name === '') {
+                $errors['name'] = ['Введите имя.'];
+            }
+            if (! is_string($password) || $password === '') {
+                $errors['password'] = ['Придумайте пароль.'];
+            }
+            if ($errors) {
                 return response()->json([
-                    'message' => 'Укажите, как к вам обращаться.',
-                    'errors' => ['name' => ['Введите имя.']],
+                    'message' => isset($errors['name']) ? 'Укажите, как к вам обращаться.' : 'Придумайте пароль.',
+                    'errors' => $errors,
                 ], 422);
             }
 
-            $password = $request->validated('password') ?? Str::password(32, symbols: false);
             $user = User::create([
                 'name' => $name,
                 'email' => $invitation->email,

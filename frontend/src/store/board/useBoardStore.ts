@@ -10,6 +10,7 @@ import { StatusesApi } from '@/api/statuses'
 import type { Category, PaletteColor, Me, Post, PostPriority, Project, Status, VoteState, VoteValue } from '@/api/types'
 import { WeeklyWinnersApi, type WeeklyWinnerEntry, type WeeklyWinnersMeta } from '@/api/weeklyWinners'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
+import { canConfigure, canTriage } from '@/shared/utils/roles'
 
 export type Section = 'posts' | 'top' | 'authors' | 'weekly'
 export type Layout = 'kanban' | 'list'
@@ -30,8 +31,12 @@ export const useBoardStore = defineStore('board', () => {
   /** 403 from EnsureProjectPublished: the owner hasn't confirmed the email yet, the board is closed to visitors. */
   const unpublished = ref(false)
   const me = ref<Me | null>(null)
-  /** Team mode: logged in and managing this project (the API checks it again on every call). */
-  const team = computed(() => !!me.value && !!project.value && me.value.projects.some((p) => p.slug === project.value?.slug))
+  /** The logged-in user's role on this board; null for guests and outsiders. */
+  const role = computed(() => me.value?.projects.find((p) => p.slug === project.value?.slug)?.role ?? null)
+  /** Team mode: owner / admin / manager on this board (the API checks it again on every call). */
+  const team = computed(() => canTriage(role.value))
+  /** Categories, columns and board settings: owner / admin. */
+  const configure = computed(() => canConfigure(role.value))
   const categories = computed<Category[]>(() => project.value?.categories ?? [])
   const statuses = computed<Status[]>(() => project.value?.statuses ?? [])
   const defaultStatus = computed<Status | undefined>(() => statuses.value.find((s) => s.slug === 'new'))
@@ -513,7 +518,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, unpublished, me, team, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
+    project, notFound, unpublished, me, role, team, configure, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
     open, refresh, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
     addStatus, updateStatus, deleteStatus,

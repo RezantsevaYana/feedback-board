@@ -11,6 +11,7 @@
         autocomplete="name"
         maxlength="80"
         :errors="v$.name"
+        validate-on-submit
         autofocus
       />
       <InputComponent
@@ -23,6 +24,7 @@
         autocomplete="email"
         maxlength="160"
         :errors="v$.email"
+        validate-on-submit
       />
       <InputComponent
         v-model="password"
@@ -32,6 +34,7 @@
         autocomplete="new-password"
         maxlength="72"
         :errors="v$.password"
+        validate-on-submit
       />
       <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">
         {{ sending ? 'Создаём…' : 'Создать доску' }}

@@ -57,6 +57,29 @@ body:has(.auth-page) {
         text-overflow: unset;
         overflow: visible;
         margin-top: 2px;
+        // in-flow error: the form also grows smoothly, not only the text fades in
+        max-height: 48px;
+    }
+    .field > .err.field-err-enter-active,
+    .field > .err.field-err-leave-active {
+        overflow: hidden;
+        transition:
+            opacity 180ms ease-out,
+            transform 180ms ease-out,
+            max-height 180ms ease-out,
+            margin-top 180ms ease-out;
+    }
+    .field > .err.field-err-enter-from,
+    .field > .err.field-err-leave-to {
+        max-height: 0;
+        // cancels the grid gap, so nothing jumps before the height starts growing
+        margin-top: -3px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .field > .err.field-err-enter-active,
+        .field > .err.field-err-leave-active {
+            transition: none;
+        }
     }
 }
 .auth-forgot {

@@ -45,7 +45,7 @@
         </RouterLink>
       </template>
 
-      <!-- Новый аккаунт — имя обязательно, пароль по желанию. -->
+      <!-- Новый аккаунт — имя и пароль обязательны (вход по ссылке появится в этапе 2). -->
       <form v-else class="auth-form" novalidate @submit.prevent="accept">
         <InputComponent
           v-model="name"
@@ -59,8 +59,9 @@
         <InputComponent
           v-model="password"
           label="Пароль"
-          hint="можно пропустить — потом войдёте по ссылке"
+          hint="не меньше 8 символов"
           type="password"
+          maxlength="72"
           autocomplete="new-password"
           :error="passwordError"
         />
@@ -87,7 +88,7 @@ import InputComponent from '@/shared/ui/InputComponent.vue'
 // Three UI branches, computed from the server's `account_exists` flag + the current user:
 //   current-user-matches → one button "Присоединиться"
 //   account-exists       → "войдите, чтобы принять" (redirects to /app/login with next=…)
-//   new-user             → name (required) + password (optional) → create + attach + session
+//   new-user             → name + password (both required) → create + attach + session
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -141,12 +142,12 @@ async function accept() {
   const body: { name?: string; password?: string } = {}
   if (scenario.value === 'new-user') {
     const trimmed = name.value.trim()
-    if (!trimmed) {
-      nameError.value = 'Введите имя.'
-      return
-    }
+    if (!trimmed) nameError.value = 'Введите имя.'
+    if (!password.value) passwordError.value = 'Придумайте пароль.'
+    else if (password.value.length < 8) passwordError.value = 'Пароль — хотя бы 8 символов.'
+    if (nameError.value || passwordError.value) return
     body.name = trimmed
-    if (password.value) body.password = password.value
+    body.password = password.value
   }
 
   sending.value = true

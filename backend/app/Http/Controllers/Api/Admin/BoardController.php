@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -54,19 +55,19 @@ class BoardController extends Controller
     }
 
     /**
-     * Settings screen: what the owner can edit (name, domains) plus the read-only slug.
+     * Settings screen: what owner / admin can edit (name, domains) plus the read-only slug.
      * Categories and statuses come with GET /public/projects/{slug}, as on the board.
      */
     public function show(Request $request, Project $board): JsonResponse
     {
-        $this->authorizeOwner($request, $board);
+        Gate::authorize('board.configure', $board);
 
         return response()->json(['data' => $this->settings($board)]);
     }
 
     public function update(UpdateBoardRequest $request, Project $board): JsonResponse
     {
-        $this->authorizeOwner($request, $board);
+        Gate::authorize('board.configure', $board);
 
         $data = $request->validated();
         $board->fill(array_filter([
@@ -144,11 +145,11 @@ class BoardController extends Controller
 
     /**
      * "How to connect" payload: ready-to-paste <script> for the widget and the direct board link.
-     * Owner-only; see routes/api.php for the scopeBindings on {slug}.
+     * Owner / admin (board.configure).
      */
     public function embed(Request $request, Project $board): JsonResponse
     {
-        $this->authorizeOwner($request, $board);
+        Gate::authorize('board.configure', $board);
 
         $publicUrl = (string) config('feedback.public_url');
         $widgetUrl = $publicUrl.'/widget.js';
@@ -208,6 +209,10 @@ class BoardController extends Controller
         ];
     }
 
+    /**
+     * Delete / restore stay with the creator (owner_id): a trashed board's pivot rows aren't reachable
+     * through roleOn() (the relation skips soft-deleted projects), so the role gate can't vouch for it.
+     */
     private function authorizeOwner(Request $request, Project $board): void
     {
         if ($board->owner_id !== $request->user()->id) {

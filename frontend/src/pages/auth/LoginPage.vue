@@ -13,6 +13,7 @@
         spellcheck="false"
         autocomplete="username"
         :errors="v$.email"
+        validate-on-submit
         autofocus
       />
       <InputComponent
@@ -21,6 +22,7 @@
         type="password"
         autocomplete="current-password"
         :errors="v$.password"
+        validate-on-submit
       />
       <RouterLink :to="{ path: '/app/forgot-password', query: email.trim() ? { email: email.trim() } : {} }" class="auth-forgot">
         Забыли пароль?

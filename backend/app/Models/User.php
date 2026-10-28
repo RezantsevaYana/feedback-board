@@ -68,9 +68,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Kept for the ~20 existing Gate::authorize('manage-project', …) call sites. Slice 1
-     * doesn't rewrite them — it preserves behaviour. Future slices split this into the five
-     * dedicated abilities (board.configure, board.triage, …).
+     * On the board with any role. Only lets members see a board that isn't published yet
+     * (EnsureProjectPublished); what they may do there is decided by the board.* gates.
      */
     public function managesProject(Project $project): bool
     {

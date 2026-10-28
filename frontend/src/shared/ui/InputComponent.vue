@@ -35,7 +35,9 @@
       v-bind="$attrs"
       @blur="onBlur"
     />
-    <span v-if="hasError" :id="errorId" class="err" role="alert">{{ errorMessage }}</span>
+    <Transition name="field-err">
+      <span v-if="hasError" :id="errorId" class="err" role="alert">{{ errorMessage }}</span>
+    </Transition>
   </label>
 </template>
 

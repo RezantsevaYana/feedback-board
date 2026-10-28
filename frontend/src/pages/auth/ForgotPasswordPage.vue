@@ -26,6 +26,7 @@
         autocomplete="username"
         maxlength="160"
         :errors="v$.email"
+        validate-on-submit
         autofocus
       />
       <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">

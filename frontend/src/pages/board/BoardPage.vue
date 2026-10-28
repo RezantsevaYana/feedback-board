@@ -98,10 +98,11 @@
             <span class="chip">режим команды</span>
             <span class="who-mail" :title="board.me?.email">{{ board.me?.email }}</span>
           </div>
-          <div class="team-box-tools">
+          <!-- managers triage only; categories, columns and settings are for owner / admin -->
+          <div v-if="board.configure" class="team-box-tools">
             <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
             <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
-            <RouterLink v-if="owned" :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
+            <RouterLink :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
           </div>
           <div class="team-box-foot">
             <RouterLink to="/app/boards" class="link-btn team-box-back">← Мои доски</RouterLink>
@@ -183,8 +184,8 @@
     <PostModal v-if="board.project && postId" :id="postId" @close="closePost" />
     <SubmitModal v-if="composing && board.project" :project="board.project.slug" :categories="board.categories" :title="composeTitle" @close="closeCompose" @sent="onSent" />
     <LoginModal v-if="loggingIn" @close="loggingIn = false" />
-    <CategoriesModal v-if="editingCategories && board.team" @close="editingCategories = false" />
-    <StatusesModal v-if="editingStatuses && board.team" @close="editingStatuses = false" />
+    <CategoriesModal v-if="editingCategories && board.configure" @close="editingCategories = false" />
+    <StatusesModal v-if="editingStatuses && board.configure" @close="editingStatuses = false" />
     <FiltersModal v-if="filtersOpen" @close="filtersOpen = false" @reset="resetFilters" />
     <WeeklyWinnersModal v-if="weeklyModalOpen" @close="dismissWeeklyModal" @open-section="openWeeklySection" />
   </main>
@@ -272,15 +273,18 @@ const activeFilters = computed(
       board.view.sort !== 'new',
     ].filter(Boolean).length,
 )
-// team mode: every board this admin manages is one click away; the owner also gets the settings page
+// team mode: every board this user is on is one click away; owner / admin also get the board's settings
 const switchBoards = computed(() => (board.team ? (board.me?.projects ?? []) : []))
-const owned = computed(() => board.team && !!board.me?.boards.some((b) => b.slug === slug.value))
 const settingsLink = computed(() => `/app/boards/${slug.value}/settings`)
 const teamItems = computed<MenuItem[]>(() => [
   { label: 'Мои доски', run: () => router.push('/app/boards') },
-  { label: 'Категории', run: () => (editingCategories.value = true) },
-  { label: 'Столбцы', run: () => (editingStatuses.value = true) },
-  ...(owned.value ? [{ label: 'Настройки доски', run: () => router.push(settingsLink.value) }] : []),
+  ...(board.configure
+    ? [
+        { label: 'Категории', run: () => (editingCategories.value = true) },
+        { label: 'Столбцы', run: () => (editingStatuses.value = true) },
+        { label: 'Настройки доски', run: () => router.push(settingsLink.value) },
+      ]
+    : []),
   { label: 'Выйти', danger: true, separated: true, run: askLogout },
 ])
 

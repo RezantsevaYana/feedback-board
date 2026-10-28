@@ -30,11 +30,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Legacy catch-all gate — still what every controller calls as of slice 1 of docs/ROLES_PLAN.md.
-        // The five role-aware gates below replace it slice by slice; keep this alias until the last
-        // call site migrates, so nothing breaks mid-flight.
-        Gate::define('manage-project', fn (User $user, Project $project) => $user->managesProject($project));
-
+        // Role-aware abilities on one board, see the table in docs/ROLES_PLAN.md §1.
+        // triage = posts, statuses of cards, hiding, replies; configure = categories, columns, settings, team.
         $roleOn = fn (User $user, Project $project) => $user->roleOn($project);
 
         Gate::define('board.configure', fn (User $user, Project $project) => (bool) $roleOn($user, $project)?->canConfigureBoard());

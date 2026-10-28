@@ -20,13 +20,13 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Team mode of the board. Every action checks that the admin manages the post's project.
+ * Team mode of the board. Every action needs board.triage (owner / admin / manager).
  */
 class PostController extends Controller
 {
     public function index(Request $request, Project $project): AnonymousResourceCollection
     {
-        Gate::authorize('manage-project', $project);
+        Gate::authorize('board.triage', $project);
 
         $filters = $request->validate([
             'category' => ['nullable', 'regex:/^(\d+|none)$/'],
@@ -58,7 +58,7 @@ class PostController extends Controller
 
     public function show(Request $request, Post $post): AdminPostResource
     {
-        Gate::authorize('manage-project', $post->project);
+        Gate::authorize('board.triage', $post->project);
 
         VoterToken::markVoted($request, collect([$post]));
 
@@ -67,7 +67,7 @@ class PostController extends Controller
 
     public function update(UpdatePostRequest $request, Post $post): AdminPostResource
     {
-        Gate::authorize('manage-project', $post->project);
+        Gate::authorize('board.triage', $post->project);
 
         $post->fill($request->validated())->save();
 
@@ -76,7 +76,7 @@ class PostController extends Controller
 
     public function destroy(Post $post): Response
     {
-        Gate::authorize('manage-project', $post->project);
+        Gate::authorize('board.triage', $post->project);
 
         Storage::disk('local')->deleteDirectory("attachments/{$post->id}");
         $post->delete();
@@ -183,7 +183,7 @@ class PostController extends Controller
         }
 
         $project = Project::findOrFail($projectIds->first());
-        Gate::authorize('manage-project', $project);
+        Gate::authorize('board.triage', $project);
 
         return [$posts, $project];
     }

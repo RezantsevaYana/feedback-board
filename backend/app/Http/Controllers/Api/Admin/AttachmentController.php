@@ -15,7 +15,7 @@ class AttachmentController extends Controller
      */
     public function show(Attachment $attachment): StreamedResponse
     {
-        Gate::authorize('manage-project', $attachment->post->project);
+        Gate::authorize('board.triage', $attachment->post->project);
 
         return AttachmentResponse::make($attachment);
     }

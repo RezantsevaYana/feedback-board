@@ -68,15 +68,17 @@ Route::prefix('admin')->group(function () {
         Route::delete('boards/{board:slug}/invitations/{invitation}', [Admin\InvitationController::class, 'destroy']);
 
         Route::get('projects/{project:slug}/posts', [Admin\PostController::class, 'index']);
-        Route::get('posts/{post}', [Admin\PostController::class, 'show']);
-        Route::patch('posts/{post}', [Admin\PostController::class, 'update']);
-        Route::delete('posts/{post}', [Admin\PostController::class, 'destroy']);
 
         // Пачкой: массовый триаж из списка (чекбоксы + плавающая панель).
+        // Выше posts/{post}, иначе DELETE posts/bulk уходит в destroy с {post}=bulk → 404.
         Route::post('posts/bulk/move', [Admin\PostController::class, 'bulkMove']);
         Route::post('posts/bulk/categorize', [Admin\PostController::class, 'bulkCategorize']);
         Route::post('posts/bulk/hide', [Admin\PostController::class, 'bulkHide']);
         Route::delete('posts/bulk', [Admin\PostController::class, 'bulkDelete']);
+
+        Route::get('posts/{post}', [Admin\PostController::class, 'show']);
+        Route::patch('posts/{post}', [Admin\PostController::class, 'update']);
+        Route::delete('posts/{post}', [Admin\PostController::class, 'destroy']);
 
         Route::get('attachments/{attachment}', [Admin\AttachmentController::class, 'show']);
 

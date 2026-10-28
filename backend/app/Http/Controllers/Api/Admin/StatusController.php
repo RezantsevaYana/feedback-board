@@ -23,7 +23,7 @@ class StatusController extends Controller
 {
     public function store(Request $request, Project $project): JsonResponse
     {
-        Gate::authorize('manage-project', $project);
+        Gate::authorize('board.configure', $project);
 
         if ($project->statuses()->count() >= Status::MAX_PER_PROJECT) {
             throw ValidationException::withMessages(['name' => 'Не больше '.Status::MAX_PER_PROJECT.' столбцов в проекте.']);
@@ -39,7 +39,7 @@ class StatusController extends Controller
         $status = $project->statuses()->create([
             'slug' => $this->uniqueSlug($project, $data['name']),
             'name' => $data['name'],
-            'color' => $data['color'],
+            'color' => $data['color'] ?? null,
             'position' => $position,
             'is_system' => false,
         ]);
@@ -49,7 +49,7 @@ class StatusController extends Controller
 
     public function update(Request $request, Status $status): JsonResponse
     {
-        Gate::authorize('manage-project', $status->project);
+        Gate::authorize('board.configure', $status->project);
 
         $status->update($this->validateFields($request, $status->project, $status));
 
@@ -62,7 +62,7 @@ class StatusController extends Controller
      */
     public function destroy(Status $status): Response
     {
-        Gate::authorize('manage-project', $status->project);
+        Gate::authorize('board.configure', $status->project);
 
         if ($status->is_system) {
             throw ValidationException::withMessages(['status' => 'Этот столбец нельзя удалить.']);

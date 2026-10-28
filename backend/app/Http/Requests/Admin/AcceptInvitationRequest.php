@@ -5,8 +5,9 @@ namespace App\Http\Requests\Admin;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Accepting an invitation. For a brand-new account, name is required and password is optional
- * (skip it → the user later signs in via magic-link; slice 3). For an already-registered user
+ * Accepting an invitation. For a brand-new account, name and password are required (the controller
+ * checks it — only it knows whether the account is new; password may become optional once
+ * magic-link login lands in slice 2). For an already-registered user
  * who happens to be logged in, both fields are ignored — the controller takes the current user.
  */
 class AcceptInvitationRequest extends FormRequest

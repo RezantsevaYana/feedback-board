@@ -319,6 +319,25 @@ textarea.input {
     color: var(--bug);
     font-size: 12px;
 }
+// ошибка под полем (InputComponent, TextAreaComponent) проявляется и чуть съезжает вниз;
+// off for users who asked for less motion
+.field-err-enter-active,
+.field-err-leave-active {
+    transition:
+        opacity 180ms ease-out,
+        transform 180ms ease-out;
+}
+.field-err-enter-from,
+.field-err-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+@media (prefers-reduced-motion: reduce) {
+    .field-err-enter-active,
+    .field-err-leave-active {
+        transition: none;
+    }
+}
 .note {
     margin: 0;
     font-size: 12px;

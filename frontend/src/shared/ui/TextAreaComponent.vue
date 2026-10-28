@@ -9,7 +9,9 @@
       :aria-describedby="error ? errorId : undefined"
       v-bind="$attrs"
     />
-    <span v-if="error" :id="errorId" class="err" role="alert">{{ error }}</span>
+    <Transition name="field-err">
+      <span v-if="error" :id="errorId" class="err" role="alert">{{ error }}</span>
+    </Transition>
   </label>
 </template>
 

@@ -19,7 +19,7 @@ class CategoryController extends Controller
 {
     public function store(Request $request, Project $project): JsonResponse
     {
-        Gate::authorize('manage-project', $project);
+        Gate::authorize('board.configure', $project);
 
         if ($project->categories()->count() >= Category::MAX_PER_PROJECT) {
             throw ValidationException::withMessages(['name' => 'Не больше '.Category::MAX_PER_PROJECT.' категорий в проекте.']);
@@ -37,7 +37,7 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category): JsonResponse
     {
-        Gate::authorize('manage-project', $category->project);
+        Gate::authorize('board.configure', $category->project);
 
         $category->update($this->validateFields($request, $category->project, $category));
 
@@ -49,7 +49,7 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category): Response
     {
-        Gate::authorize('manage-project', $category->project);
+        Gate::authorize('board.configure', $category->project);
 
         $category->delete();
 

@@ -27,8 +27,8 @@
           <SettingsDomains :settings="settings" @saved="onSaved" />
         </section>
 
-        <!-- not a section of the nav: an action on the whole board, set apart below everything -->
-        <div class="board-settings-delete">
+        <!-- not a section of the nav: an action on the whole board, set apart below everything; owner only -->
+        <div v-if="isOwner" class="board-settings-delete">
           <p class="note">Доска уйдёт в корзину, из списка досок её можно будет восстановить.</p>
           <button type="button" class="btn btn-danger" @click="deleteBoard(settings.slug, settings.name)">Удалить доску</button>
         </div>
@@ -67,6 +67,8 @@ const settings = ref<BoardSettings | null>(null)
 const loading = ref(true)
 const loadError = ref('')
 const projectReady = computed(() => board.project?.slug === slug.value)
+// admins open settings too, but deleting the board stays with its owner (the API checks owner_id)
+const isOwner = computed(() => auth.me?.projects.find((b) => b.slug === slug.value)?.role === 'owner')
 // the head shows the name from /me right away, before the settings arrive
 const boardName = computed(() => settings.value?.name ?? auth.boardSummaries.find((b) => b.slug === slug.value)?.name ?? slug.value)
 

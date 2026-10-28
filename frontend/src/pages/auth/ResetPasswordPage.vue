@@ -25,6 +25,7 @@
         autocomplete="new-password"
         maxlength="72"
         :errors="v$.password"
+        validate-on-submit
         autofocus
       />
       <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">

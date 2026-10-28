@@ -13,6 +13,7 @@
       spellcheck="false"
       autocomplete="username"
       :errors="v$.email"
+      validate-on-submit
       autofocus
     />
     <InputComponent
@@ -21,6 +22,7 @@
       type="password"
       autocomplete="current-password"
       :errors="v$.password"
+      validate-on-submit
     />
     <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">{{ sending ? 'Входим…' : 'Войти' }}</button>
     <p class="note">Только для тех, кто разбирает предложения. Аккаунты заводит разработчик, у каждого свой пароль.</p>
@@ -32,6 +34,7 @@ import { inject, ref, watch } from 'vue'
 import { useVuelidate } from '@vuelidate/core'
 import { email as emailRule, helpers, required } from '@vuelidate/validators'
 import { ApiError } from '@/api/client'
+import { ROLE_LABELS } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
@@ -89,7 +92,9 @@ async function submit() {
   try {
     await board.login(email.value.trim(), password.value)
     if (!board.team) {
-      emailServer.value = 'Вы вошли, но этот проект ведут другие админы.'
+      emailServer.value = board.role
+        ? `Вы вошли. Ваша роль на этой доске — «${ROLE_LABELS[board.role]}», режим команды есть у менеджеров и админов.`
+        : 'Вы вошли, но этот проект ведут другие админы.'
       v$.value.email.$touch()
       return
     }
