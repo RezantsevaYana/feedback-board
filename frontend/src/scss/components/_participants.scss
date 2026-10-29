@@ -158,6 +158,18 @@
     display: grid;
     gap: 14px;
 }
+// Hint under the textarea when some tokens didn't look like emails — the batch still goes through
+// with the valid ones, so this is a note, not an error (and not styled red).
+.invite-invalid-note {
+    margin: -8px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+
+    .mono {
+        font-family: var(--font-mono);
+        color: var(--fg);
+    }
+}
 
 // Owner's untouchable row — subtle visual separation
 .participants-table tr:has(.role-chip.owner) {

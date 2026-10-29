@@ -25,6 +25,8 @@ const router = createRouter({
     { path: '/app/reset-password/:token', name: 'reset-password', component: ResetPasswordPage },
     // the link from the confirmation letter; no meta: it opens with or without a session
     { path: '/app/verify-email/:id(\\d+)/:hash', name: 'verify-email', component: VerifyEmailPage },
+    // bare /app lands on the cabinet, otherwise /:slug below catches it as a board slug and 404s
+    { path: '/app', redirect: '/app/boards' },
     { path: '/app/boards', name: 'hub', component: BoardsHubPage, meta: { auth: true } },
     { path: '/app/boards/new', name: 'board-new', component: BoardNewPage, meta: { auth: true } },
     { path: '/app/boards/:slug/settings', name: 'board-settings', component: BoardSettingsPage, meta: { auth: true } },

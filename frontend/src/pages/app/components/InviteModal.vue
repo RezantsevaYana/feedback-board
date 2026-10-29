@@ -17,6 +17,10 @@
           autofocus
           @input="rawError = ''"
         />
+        <!-- Невалидные почты не блокируют отправку остальных — просто называем их, чтобы было видно, что их не отправили -->
+        <p v-if="parsed.invalid.length" class="invite-invalid-note">
+          Не распознано: <span class="mono">{{ parsed.invalid.join(', ') }}</span>
+        </p>
         <SelectComponent
           v-model="role"
           label="Роль для всей пачки"
@@ -24,8 +28,8 @@
         />
         <div class="confirm-actions">
           <button type="button" class="btn" :disabled="sending" @click="close">Отмена</button>
-          <button type="submit" class="btn btn-primary" :disabled="!parsed.length || sending" :aria-busy="sending">
-            {{ sending ? 'Отправляем…' : `Отправить ${parsed.length} ${plural(parsed.length, 'письмо', 'письма', 'писем')}` }}
+          <button type="submit" class="btn btn-primary" :disabled="!parsed.valid.length || sending" :aria-busy="sending">
+            {{ sending ? 'Отправляем…' : `Отправить ${parsed.valid.length} ${plural(parsed.valid.length, 'письмо', 'письма', 'писем')}` }}
           </button>
         </div>
       </section>
@@ -68,21 +72,31 @@ const rawError = ref('')
 const parsed = computed(() => parseEmails(raw.value))
 const sending = ref(false)
 
-function parseEmails(input: string): string[] {
+/**
+ * Split the textarea into valid emails + the tokens that don't look like one.
+ * Both lists come back so the UI can tell the user which pieces were ignored
+ * (бага «молча пропадает» в docs/BUGS.md).
+ */
+function parseEmails(input: string): { valid: string[]; invalid: string[] } {
   const seen = new Set<string>()
-  const result: string[] = []
+  const valid: string[] = []
+  const invalid: string[] = []
+  const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
   for (const part of input.split(/[,\s;]+/)) {
-    const email = part.trim().toLowerCase()
-    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || seen.has(email)) continue
+    const token = part.trim()
+    if (!token) continue
+    const email = token.toLowerCase()
+    if (seen.has(email)) continue
     seen.add(email)
-    result.push(email)
+    if (emailRe.test(email)) valid.push(email)
+    else invalid.push(token)
   }
-  return result
+  return { valid, invalid }
 }
 
 async function send() {
   if (sending.value) return
-  if (!parsed.value.length) {
+  if (!parsed.value.valid.length) {
     rawError.value = 'Добавьте хотя бы одну валидную почту.'
     return
   }
@@ -90,7 +104,7 @@ async function send() {
   try {
     const result = await InvitationsApi.create(props.slug, {
       role: role.value,
-      invitees: parsed.value.map((email) => ({ email })),
+      invitees: parsed.value.valid.map((email) => ({ email })),
     })
     const sentCount = result.data.length
     const skipped = result.skipped.length

@@ -92,10 +92,12 @@
         <button type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
           <span class="cta-roll" aria-hidden="true"><span>Предложить</span><span>Есть идея?</span></span>
         </button>
-        <!-- three groups: who is logged in, this board's tools, and the way out (cabinet / logout) -->
-        <div v-if="board.team" class="team-box">
+        <!-- three groups: who is logged in, this board's tools, and the way out (cabinet / logout).
+             Shown for every signed-in user — triagers get the triage chip + tools, voters / readers
+             get a role chip without tools, so no one sees "Вход для команды" after signing in. -->
+        <div v-if="board.me" class="team-box">
           <div class="team-box-who">
-            <span class="chip">режим команды</span>
+            <span class="chip">{{ board.team ? 'режим команды' : whoChip }}</span>
             <span class="who-mail" :title="board.me?.email">{{ board.me?.email }}</span>
           </div>
           <!-- managers triage only; categories, columns and settings are for owner / admin -->
@@ -111,8 +113,8 @@
         </div>
         <button v-else type="button" class="link-btn team-login" @click="loggingIn = true">Вход для команды</button>
         <ThemeToggle />
-        <!-- tablet and phone: the team box folds into one menu next to the theme switch -->
-        <MenuComponent v-if="board.team" :items="teamItems" class="team-menu" :title="board.me?.email" aria-label="Режим команды">Команда</MenuComponent>
+        <!-- tablet and phone: the box folds into one menu next to the theme switch -->
+        <MenuComponent v-if="board.me" :items="teamItems" class="team-menu" :title="board.me?.email" aria-label="Меню аккаунта">{{ board.team ? 'Команда' : 'Аккаунт' }}</MenuComponent>
       </nav>
 
       <div class="board-main">
@@ -195,6 +197,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/api/types'
+import { ROLE_LABELS } from '@/api/types'
 import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
@@ -276,6 +279,8 @@ const activeFilters = computed(
 // team mode: every board this user is on is one click away; owner / admin also get the board's settings
 const switchBoards = computed(() => (board.team ? (board.me?.projects ?? []) : []))
 const settingsLink = computed(() => `/app/boards/${slug.value}/settings`)
+// voter / reader (and anyone signed in but not on this board): show their role instead of «режим команды»
+const whoChip = computed(() => (board.role ? `роль ${ROLE_LABELS[board.role].toLowerCase()}` : 'вы вошли'))
 const teamItems = computed<MenuItem[]>(() => [
   { label: 'Мои доски', run: () => router.push('/app/boards') },
   ...(board.configure

@@ -27,16 +27,19 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
+        $admin = User::create(['name' => 'Админ', 'email' => 'admin@example.com', 'password' => 'password']);
+        $admin->markEmailAsVerified();
+
+        // owner_id so ParticipantController marks this row as «создал доску» (source = created),
+        // not «добавлен вручную». Pivot role must match: ProjectRole::Owner.
         $project = Project::create([
             'name' => 'Demo',
             'slug' => 'demo',
+            'owner_id' => $admin->id,
             'allowed_origins' => ['http://localhost:*', 'http://127.0.0.1:*'],
         ]);
-
-        $admin = User::create(['name' => 'Админ', 'email' => 'admin@example.com', 'password' => 'password']);
-        $admin->markEmailAsVerified();
         $admin->projects()->attach($project, [
-            'role' => ProjectRole::Admin->value,
+            'role' => ProjectRole::Owner->value,
         ]);
 
         $project->createDefaultCategories();

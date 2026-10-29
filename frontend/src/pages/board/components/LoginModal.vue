@@ -25,7 +25,7 @@
       validate-on-submit
     />
     <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">{{ sending ? 'Входим…' : 'Войти' }}</button>
-    <p class="note">Только для тех, кто разбирает предложения. Аккаунты заводит разработчик, у каждого свой пароль.</p>
+    <p class="note">Для участников доски. Аккаунт появляется из приглашения или регистрации.</p>
   </BaseModal>
 </template>
 
