@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\BoardVisibility;
 use App\Models\Attachment;
 use App\Models\Post;
 use App\Models\Project;
@@ -11,26 +12,52 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * A self-serve board opens to the public once its owner has confirmed the email (Project::isPublished).
- * Until then the board, its posts, votes and files answer 403 to everyone but the team, so the owner
- * can set it up and look at it, while unconfirmed accounts can't be used to put pages online.
- * Goes after AllowProjectOrigin on widget routes, so the widget still gets CORS headers and can read the message.
+ * Three gates, highest priority first:
+ *
+ *   1. Project exists but the self-serve owner hasn't confirmed the email → closed to everyone
+ *      but the team. The board can't be used to put a page online without a verified contact.
+ *   2. Project is marked `private` → open to project_user members only.
+ *   3. Everyone else sees the board.
+ *
+ * The 403 payload carries a stable `reason` ("owner_unverified" / "login_required" /
+ * "no_access") so the SPA can show a specific screen instead of a generic error toast.
+ * Goes after AllowProjectOrigin on widget routes, so the widget still gets CORS headers and reads the body.
  */
 class EnsureProjectPublished
 {
     public function handle(Request $request, Closure $next): Response
     {
         $project = $this->project($request);
+        if ($project === null) {
+            return $next($request);
+        }
 
-        if ($project !== null && ! $project->isPublished()) {
-            /** @var User|null $user */
-            $user = $request->user('sanctum');
-            if (! $user?->managesProject($project)) {
-                return response()->json(['message' => 'Доска ещё не опубликована.'], 403);
+        /** @var User|null $user */
+        $user = $request->user('sanctum');
+        $hasRole = $user?->roleOn($project) !== null;
+
+        // Owner hasn't confirmed the email yet — the board stays "ещё не опубликована".
+        if (! $project->isPublished()) {
+            if (! $hasRole) {
+                return $this->deny('owner_unverified', 'Доска ещё не опубликована.');
             }
+
+            return $next($request);
+        }
+
+        // Private boards: only members get through.
+        if ($project->visibility === BoardVisibility::Private && ! $hasRole) {
+            return $user === null
+                ? $this->deny('login_required', 'Это закрытая доска. Войдите, чтобы её увидеть.')
+                : $this->deny('no_access', 'У вас нет доступа к этой доске.');
         }
 
         return $next($request);
+    }
+
+    private function deny(string $reason, string $message): Response
+    {
+        return response()->json(['message' => $message, 'reason' => $reason], 403);
     }
 
     private function project(Request $request): ?Project

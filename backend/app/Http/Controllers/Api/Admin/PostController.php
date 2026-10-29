@@ -65,6 +65,39 @@ class PostController extends Controller
         return AdminPostResource::make($post->load('attachments', 'category', 'status'));
     }
 
+    /**
+     * Who voted for this post (team-only view). Signed-in voters appear by their account name;
+     * anonymous widget voters appear by whatever they typed into «Ваше имя» last — if they left
+     * it blank the row surfaces as «Аноним» so the list is countable at a glance. Dislikes mix
+     * with likes — the client splits them by `kind`.
+     */
+    public function voters(Request $request, Post $post): \Illuminate\Http\JsonResponse
+    {
+        Gate::authorize('board.triage', $post->project);
+
+        $rows = $post->votes()
+            ->leftJoin('users', 'users.id', '=', 'votes.user_id')
+            ->leftJoin('voters', 'voters.token', '=', 'votes.voter_token')
+            ->orderBy('votes.created_at', 'desc')
+            ->get([
+                'votes.id',
+                'votes.value',
+                'votes.created_at',
+                'votes.user_id',
+                'users.name as user_name',
+                'voters.display_name as voter_name',
+            ]);
+
+        return response()->json([
+            'data' => $rows->map(fn ($row) => [
+                'name' => $row->user_name ?? $row->voter_name ?? 'Аноним',
+                'kind' => (int) $row->value === 1 ? 'like' : 'dislike',
+                'account' => $row->user_id !== null,
+                'created_at' => $row->created_at,
+            ])->values(),
+        ]);
+    }
+
     public function update(UpdatePostRequest $request, Post $post): AdminPostResource
     {
         Gate::authorize('board.triage', $post->project);

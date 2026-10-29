@@ -17,6 +17,8 @@ class ProjectController extends Controller
             'slug' => $project->slug,
             // false only reaches the team: everyone else gets 403 from EnsureProjectPublished
             'published' => $project->isPublished(),
+            // the widget and the board check this to decide whether to show the login prompt
+            'visibility' => $project->visibility->value,
             // the widget paints its button and accents with it; null = the service's green
             'widget_color' => $project->widget_color,
             'categories' => $project->categories->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name, 'color' => $c->color]),

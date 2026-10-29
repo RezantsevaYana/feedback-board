@@ -56,7 +56,7 @@
       <span v-if="errors.files" class="err">{{ errors.files }}</span>
     </div>
 
-    <InputComponent v-model="form.name" label="Ваше имя" hint="по желанию" :error="errors.name" maxlength="80" placeholder="Можно оставить пустым" />
+    <InputComponent v-if="!hideAuthorField" v-model="form.name" label="Ваше имя" :hint="author ? 'из вашего аккаунта' : 'по желанию'" :error="errors.name" maxlength="80" :placeholder="author ? '' : 'Можно оставить пустым'" :disabled="!!author" />
 
     <div v-if="serverError" class="alert" role="alert">{{ serverError }}</div>
 
@@ -87,6 +87,10 @@ const props = defineProps<{
   origin?: string
   /** Title to start with (the board's «Предложить «…»» after a search found nothing). */
   title?: string
+  /** The signed-in user when the form is used on the board; the widget on someone else's site leaves it null. */
+  author?: { name: string } | null
+  /** On a private board the account is the only source of authorship — hide the «Ваше имя» input entirely. */
+  hideAuthorField?: boolean
 }>()
 const emit = defineEmits<{
   sent: [post: Post]
@@ -98,7 +102,7 @@ const MAX_BYTES = 5 * 1024 * 1024
 const IMAGE = /^image\/(png|jpeg|webp|gif)$/
 const NAME_KEY = 'fb-author-name'
 
-const form = reactive({ category: null as number | null, title: props.title ?? '', description: '', name: readName() })
+const form = reactive({ category: null as number | null, title: props.title ?? '', description: '', name: props.author?.name ?? readName() })
 const files = ref<Array<{ file: File; preview: string }>>([])
 const errors = reactive<Record<string, string>>({})
 const serverError = ref('')
@@ -116,6 +120,8 @@ function readName(): string {
   }
 }
 function saveName() {
+  // the signed-in author's name comes from the account, not the local cache: don't overwrite anonymous names
+  if (props.author) return
   try {
     localStorage.setItem(NAME_KEY, form.name.trim())
   } catch {

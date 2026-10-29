@@ -22,6 +22,11 @@
           <p v-else class="note">{{ board.loadError || 'Загружаем…' }}</p>
         </section>
 
+        <section id="access" class="board-settings-section">
+          <h2>Доступ</h2>
+          <SettingsAccess :settings="settings" @saved="onSaved" />
+        </section>
+
         <section id="domains" class="board-settings-section">
           <h2>Домены</h2>
           <SettingsDomains :settings="settings" @saved="onSaved" />
@@ -49,12 +54,13 @@ import AppHeader from '@/shared/components/AppHeader.vue'
 import CategoriesEditor from '@/shared/components/CategoriesEditor.vue'
 import StatusesEditor from '@/shared/components/StatusesEditor.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
+import SettingsAccess from './components/SettingsAccess.vue'
 import SettingsDomains from './components/SettingsDomains.vue'
 import SettingsGeneral from './components/SettingsGeneral.vue'
 import { boardLoadError } from './composables/boardLoadError'
 import { useDeleteBoard } from './composables/useDeleteBoard'
 
-// One page, sections with anchors (#general, #categories, #statuses, #domains); deletion sits below them (useDeleteBoard).
+// One page, sections with anchors (#general, #categories, #statuses, #access, #domains); deletion sits below them (useDeleteBoard).
 // Name and domains go through BoardsApi; categories and columns reuse the board's editors,
 // so the board store opens this project the same way BoardPage does.
 const route = useRoute()

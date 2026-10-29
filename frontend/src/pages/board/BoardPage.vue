@@ -17,6 +17,24 @@
       </div>
     </div>
 
+    <!-- 403 reason=login_required: private board, visitor not signed in -->
+    <div v-else-if="board.privateLocked" class="center-page">
+      <div>
+        <h1>Это закрытая доска</h1>
+        <p class="note">Её видят только участники. Если вас пригласили — войдите, чтобы продолжить.</p>
+        <RouterLink :to="{ path: '/app/login', query: { next: route.fullPath } }" class="btn btn-primary">Войти</RouterLink>
+      </div>
+    </div>
+
+    <!-- 403 reason=no_access: signed in, but not on this board -->
+    <div v-else-if="board.noAccess" class="center-page">
+      <div>
+        <h1>У вас нет доступа к этой доске</h1>
+        <p v-if="board.me" class="note">Вы вошли как {{ board.me.email }}. Попросите владельца прислать приглашение на этот адрес или зайдите другим аккаунтом.</p>
+        <RouterLink to="/app/boards" class="btn">← Мои доски</RouterLink>
+      </div>
+    </div>
+
     <div v-else-if="!board.project && board.loadError" class="center-page">
       <div>
         <p class="note">Не получилось загрузить доску: {{ board.loadError }}</p>
@@ -184,7 +202,8 @@
     </div>
 
     <PostModal v-if="board.project && postId" :id="postId" @close="closePost" />
-    <SubmitModal v-if="composing && board.project" :project="board.project.slug" :categories="board.categories" :title="composeTitle" @close="closeCompose" @sent="onSent" />
+    <SubmitModal v-if="composing && board.project" :project="board.project.slug" :categories="board.categories" :title="composeTitle" :author="board.me ? { name: board.me.name } : null" :hide-author-field="board.project.visibility === 'private'" @close="closeCompose" @sent="onSent" />
+    <VotersModal />
     <LoginModal v-if="loggingIn" @close="loggingIn = false" />
     <CategoriesModal v-if="editingCategories && board.configure" @close="editingCategories = false" />
     <StatusesModal v-if="editingStatuses && board.configure" @close="editingStatuses = false" />
@@ -217,6 +236,7 @@ import PostList from './components/PostList.vue'
 import PostModal from './components/PostModal.vue'
 import StatusesModal from './components/StatusesModal.vue'
 import SubmitModal from './components/SubmitModal.vue'
+import VotersModal from './components/VotersModal.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 import TopPosts from './components/TopPosts.vue'
 import WeeklyWinners from './components/WeeklyWinners.vue'

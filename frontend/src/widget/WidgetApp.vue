@@ -26,6 +26,12 @@
               <button type="button" class="btn" @click="again">Отправить ещё</button>
             </div>
           </div>
+          <!-- private board: anonymous submits aren't allowed; direct the person to the board to sign in -->
+          <div v-else-if="locked" class="done-box">
+            <h3>Это закрытая доска</h3>
+            <p class="note">Только участники могут отправлять. Войдите на доске и попробуйте ещё раз.</p>
+            <a class="btn btn-primary" :href="boardUrl" target="_blank" rel="noopener">Открыть доску ↗</a>
+          </div>
           <div v-else-if="loadError" class="done-box">
             <p class="alert">{{ loadError }}</p>
             <button type="button" class="btn" @click="loadCategories">Попробовать ещё раз</button>
@@ -62,7 +68,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { errorMessage } from '@/api/client'
+import { ApiError, errorMessage } from '@/api/client'
 import { ProjectsApi } from '@/api/projects'
 import type { Category, Post } from '@/api/types'
 import AppIcon from '@/shared/ui/AppIcon.vue'
@@ -89,6 +95,8 @@ const color = ref<string | null>(null)
 const ready = ref(false)
 const palette = computed(() => widgetPalette(color.value))
 const loadError = ref('')
+// private board + anonymous visitor → EnsureProjectPublished answers 403 with reason=login_required
+const locked = ref(false)
 const sent = ref<Post | null>(null)
 const copied = ref(false)
 
@@ -97,13 +105,18 @@ const postUrl = computed(() => (sent.value ? `${boardUrl.value}/posts/${sent.val
 
 async function loadCategories() {
   loadError.value = ''
+  locked.value = false
   try {
     const res = await ProjectsApi.get(props.project, props.origin)
     categories.value = res.data.categories
     projectName.value = res.data.name
     color.value = res.data.widget_color
   } catch (e) {
-    loadError.value = errorMessage(e)
+    if (e instanceof ApiError && e.status === 403 && e.reason === 'login_required') {
+      locked.value = true
+    } else {
+      loadError.value = errorMessage(e)
+    }
   } finally {
     ready.value = true
   }

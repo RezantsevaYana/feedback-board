@@ -4,7 +4,7 @@
       <h2>Новое предложение</h2>
       <button type="button" class="icon-btn" aria-label="Закрыть" @click="close()"><AppIcon name="close" /></button>
     </div>
-    <SubmitForm :project="project" :categories="categories" :title="title" @sent="emit('sent', $event)">
+    <SubmitForm :project="project" :categories="categories" :title="title" :author="author" :hide-author-field="hideAuthorField" @sent="emit('sent', $event)">
       <template #secondary>
         <button type="button" class="btn" @click="close()">Отмена</button>
       </template>
@@ -24,6 +24,10 @@ defineProps<{
   project: string
   categories: Category[]
   title?: string
+  /** Signed-in user — their name goes into the form as the author automatically. */
+  author?: { name: string } | null
+  /** On a private board the account is the only source of authorship — hide the «Ваше имя» input entirely. */
+  hideAuthorField?: boolean
 }>()
 const emit = defineEmits<{
   close: []

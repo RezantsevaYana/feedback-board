@@ -52,16 +52,22 @@ class PostController extends Controller
         // чтобы не форсить CORS-preflight. У «безтокенного» поста author_token останется null —
         // в лидерборде такой автор не светится.
         $authorToken = VoterToken::from($request);
-        $authorName = $request->validated('author_name');
+        // Залогиненный пишет под именем аккаунта: author_name от клиента игнорируем, чтобы нельзя было
+        // «подписаться» чужим именем. Аноним (виджет cross-origin) по-прежнему шлёт author_name полем.
+        $user = $request->user('sanctum');
+        $authorName = $user?->name ?? $request->validated('author_name');
 
-        $post = DB::transaction(function () use ($request, $project, $authorToken, $authorName) {
-            $attributes = $request->safe()->only(['category_id', 'title', 'description', 'author_name']);
+        $post = DB::transaction(function () use ($request, $project, $authorToken, $authorName, $user) {
+            $attributes = $request->safe()->only(['category_id', 'title', 'description']);
+            $attributes['author_name'] = $authorName;
             $attributes['author_token'] = $authorToken;
+            $attributes['author_user_id'] = $user?->id;
             $post = $project->posts()->create($attributes);
 
-            // Имя для лидерборда: держим актуальным последнее имя, которым подписался автор.
-            // Пустое имя не трогает справочник — автор остаётся в анонимусах.
-            if ($authorToken !== null && $authorName !== null && $authorName !== '') {
+            // Имя для анонимного лидерборда: держим актуальным последнее имя, которым подписался автор.
+            // Пустое имя не трогает справочник — автор остаётся в анонимусах. Залогиненные в этот
+            // справочник не попадают: их имя всегда есть в users.name и подтягивается напрямую.
+            if ($user === null && $authorToken !== null && $authorName !== null && $authorName !== '') {
                 Voter::updateOrCreate(['token' => $authorToken], ['display_name' => $authorName]);
             }
 

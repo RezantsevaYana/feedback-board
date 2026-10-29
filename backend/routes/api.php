@@ -82,6 +82,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('posts/bulk', [Admin\PostController::class, 'bulkDelete']);
 
         Route::get('posts/{post}', [Admin\PostController::class, 'show']);
+        Route::get('posts/{post}/voters', [Admin\PostController::class, 'voters']);
         Route::patch('posts/{post}', [Admin\PostController::class, 'update']);
         Route::delete('posts/{post}', [Admin\PostController::class, 'destroy']);
 

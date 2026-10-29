@@ -30,6 +30,10 @@ export const useBoardStore = defineStore('board', () => {
   const notFound = ref(false)
   /** 403 from EnsureProjectPublished: the owner hasn't confirmed the email yet, the board is closed to visitors. */
   const unpublished = ref(false)
+  /** 403 with reason=login_required — a private board, visitor isn't signed in; show the login prompt. */
+  const privateLocked = ref(false)
+  /** 403 with reason=no_access — signed-in, but not on this private board. */
+  const noAccess = ref(false)
   const me = ref<Me | null>(null)
   /** The logged-in user's role on this board; null for guests and outsiders. */
   const role = computed(() => me.value?.projects.find((p) => p.slug === project.value?.slug)?.role ?? null)
@@ -90,6 +94,8 @@ export const useBoardStore = defineStore('board', () => {
     if (project.value?.slug === slug) return
     notFound.value = false
     unpublished.value = false
+    privateLocked.value = false
+    noAccess.value = false
     loadError.value = ''
     project.value = null
     postsLoaded.value = false
@@ -102,9 +108,19 @@ export const useBoardStore = defineStore('board', () => {
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) notFound.value = true
       else if (e instanceof ApiError && e.status === 403) {
-        // the closed-board screen tells a guest to log in and a logged-in stranger whose board it is
-        unpublished.value = true
+        // the EnsureProjectPublished middleware carries a stable reason so the SPA can pick the right screen
         me.value = await user
+        switch (e.reason) {
+          case 'login_required':
+            privateLocked.value = true
+            break
+          case 'no_access':
+            noAccess.value = true
+            break
+          case 'owner_unverified':
+          default:
+            unpublished.value = true
+        }
       } else loadError.value = errorMessage(e)
     }
   }
@@ -518,7 +534,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, unpublished, me, role, team, configure, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
+    project, notFound, unpublished, privateLocked, noAccess, me, role, team, configure, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
     open, refresh, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
     addStatus, updateStatus, deleteStatus,

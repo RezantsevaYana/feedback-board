@@ -1,5 +1,5 @@
 import { request, type RequestOptions } from './client'
-import type { Item, Paginated, Post, VoteState, VoteValue } from './types'
+import type { Item, Paginated, Post, VoteState, VoteValue, Voter } from './types'
 
 /** Ответ bulk-эндпоинтов: массив обновлённых карточек (кроме delete — он возвращает 204). */
 type BulkResponse = { data: Post[] }
@@ -36,6 +36,11 @@ export const PostsApi = {
   // one post in team mode
   adminGet(id: number) {
     return request<Item<Post>>(`${ADMIN_URL}/posts/${id}`)
+  },
+
+  // who voted — triage team only; split into likes/dislikes by `kind` on the client
+  voters(id: number) {
+    return request<{ data: Voter[] }>(`${ADMIN_URL}/posts/${id}/voters`)
   },
 
   // new post from the form (multipart: screenshots); `origin` when sent from the widget

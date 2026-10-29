@@ -35,11 +35,15 @@ export interface EmbedInfo {
   widget_color: string | null
 }
 
+/** public → everyone with the URL. private → only project_user members. One-way flip in V1. */
+export type BoardVisibility = 'public' | 'private'
+
 /** GET/PATCH /boards/{slug} — what the settings page edits. Slug is read-only after creation. */
 export interface BoardSettings {
   id: number
   name: string
   slug: string
+  visibility: BoardVisibility
   allowed_origins: string[]
   widget_color: string | null
   /** how long a deleted board stays in the trash (feedback.trash_retention_days) */
@@ -69,8 +73,12 @@ export const BoardsApi = {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`)
   },
 
-  // rename the board, replace its widget domains or set the widget colour (null = default) — send only what the section changed
-  update(slug: string, body: { name?: string; origins?: string[]; widget_color?: string | null }) {
+  // rename the board, replace its widget domains, set the widget colour (null = default) or
+  // flip visibility (public → private only; private → public is 422) — send only what changed
+  update(
+    slug: string,
+    body: { name?: string; origins?: string[]; widget_color?: string | null; visibility?: BoardVisibility },
+  ) {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`, { method: 'PATCH', body })
   },
 

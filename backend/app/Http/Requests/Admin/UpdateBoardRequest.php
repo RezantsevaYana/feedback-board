@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\BoardVisibility;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Board settings: rename, the widget domains and the widget colour. Each field is optional so the
@@ -23,6 +25,9 @@ class UpdateBoardRequest extends FormRequest
             'origins.*' => ['string', 'distinct', 'regex:#^https?://[^/\s]+$#'],
             // #rrggbb after prepareForValidation; null brings back the service's own green
             'widget_color' => ['sometimes', 'nullable', 'string', 'regex:/^#[0-9a-f]{6}$/'],
+            // One-way flip in V1: private → public is rejected in passedValidation to keep the error
+            // specific; here we just restrict to the known values.
+            'visibility' => ['sometimes', 'string', Rule::in(array_map(fn (BoardVisibility $v) => $v->value, BoardVisibility::cases()))],
         ];
     }
 
@@ -38,7 +43,28 @@ class UpdateBoardRequest extends FormRequest
             'origins.*.distinct' => 'Этот домен уже есть в списке.',
             'origins.*.regex' => 'Домен — схема и хост без пути, например https://app.example.com',
             'widget_color.regex' => 'Цвет — HEX из 6 или 3 цифр, например #1d8547',
+            'visibility.in' => 'Неизвестный режим доступа.',
         ];
+    }
+
+    /**
+     * Private → public is explicitly out of V1 (docs/ROLES_PLAN.md §4). We check it here instead
+     * of in rules() so the message is specific instead of a generic "in" error, and so the gate
+     * applies only when the board is already private (public → public is a no-op, not an error).
+     */
+    protected function passedValidation(): void
+    {
+        $board = $this->route('board');
+        if (! $this->has('visibility') || ! $board instanceof \App\Models\Project) {
+            return;
+        }
+        if ($board->visibility === \App\Enums\BoardVisibility::Private
+            && $this->validated('visibility') === \App\Enums\BoardVisibility::Public->value) {
+            abort(response()->json([
+                'message' => 'Закрытую доску нельзя открыть обратно. Это ограничение первой версии.',
+                'errors' => ['visibility' => ['Закрытую доску нельзя открыть обратно.']],
+            ], 422));
+        }
     }
 
     protected function prepareForValidation(): void

@@ -58,6 +58,7 @@ const items = [
   { hash: '#general', label: 'Общее' },
   { hash: '#categories', label: 'Категории' },
   { hash: '#statuses', label: 'Столбцы' },
+  { hash: '#access', label: 'Доступ' },
   { hash: '#domains', label: 'Домены' },
 ]
 const current = ref(items.some((i) => i.hash === route.hash) ? route.hash : '#general')

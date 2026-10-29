@@ -18,6 +18,39 @@
             font-size: 14px;
         }
     }
+    &.sm .vote-count {
+        padding: 3px 6px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+}
+
+// VoteButtons.vue (team view): the number sits next to the vote button as its own control that
+// opens the «кто голосовал» modal; readers / voters see the number inside the vote button instead.
+.vote-pair {
+    display: inline-flex;
+    gap: 2px;
+    align-items: stretch;
+}
+.vote-count {
+    min-width: 32px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.12s, color 0.12s, background-color 0.12s;
+
+    @include hover {
+        color: var(--fg);
+        border-color: color-mix(in srgb, var(--fg) 25%, var(--line));
+    }
 }
 .vote {
     min-width: 56px;

@@ -77,6 +77,7 @@ class BoardController extends Controller
         $board->fill(array_filter([
             'name' => $data['name'] ?? null,
             'allowed_origins' => array_key_exists('origins', $data) ? array_values($data['origins']) : null,
+            'visibility' => $data['visibility'] ?? null,
         ], fn ($v) => $v !== null));
         // null is a real value here (back to the default green), so it can't go through the filter above
         if (array_key_exists('widget_color', $data)) {
@@ -210,6 +211,7 @@ class BoardController extends Controller
             'id' => $p->id,
             'name' => $p->name,
             'slug' => $p->slug,
+            'visibility' => $p->visibility->value,
             'allowed_origins' => $p->allowed_origins ?? [],
             'widget_color' => $p->widget_color,
             // the delete section says how long the board stays recoverable

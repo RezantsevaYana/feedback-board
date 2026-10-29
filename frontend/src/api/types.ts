@@ -61,6 +61,8 @@ export interface Project {
   slug: string
   /** false until the owner confirms the email; only the team ever gets it, everyone else gets 403 */
   published: boolean
+  /** public → anyone with the URL; private → только участники (project_user). V1 flip is one-way. */
+  visibility: 'public' | 'private'
   /** the widget's main colour, «#rrggbb»; null = the service's green (shared/utils/widgetColor) */
   widget_color: string | null
   categories: Category[]
@@ -103,6 +105,14 @@ export const ROLE_LABELS: Record<ProjectRole, string> = {
   manager: 'Менеджер',
   voter: 'Голосующий',
   reader: 'Читатель',
+}
+
+/** One row in the «кто голосовал» list (team-only). `account: true` = known user, `false` = anonymous widget vote. */
+export interface Voter {
+  name: string
+  kind: VoteValue
+  account: boolean
+  created_at: string
 }
 
 export interface Me {

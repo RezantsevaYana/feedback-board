@@ -6,6 +6,8 @@ export class ApiError extends Error {
     public status: number,
     message: string,
     public errors: Record<string, string[]> = {},
+    /** Stable server-side marker — e.g. "login_required" / "no_access" on 403, see EnsureProjectPublished. */
+    public reason: string | null = null,
   ) {
     super(message)
   }
@@ -81,7 +83,12 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
   if (!response.ok) {
     if (response.status === 419) csrf = null
     const fallback = TEXT.errors[response.status as keyof typeof TEXT.errors] ?? TEXT.errors.generic
-    throw new ApiError(response.status, response.status >= 500 ? fallback : (data.message ?? fallback), data.errors ?? {})
+    throw new ApiError(
+      response.status,
+      response.status >= 500 ? fallback : (data.message ?? fallback),
+      data.errors ?? {},
+      typeof data.reason === 'string' ? data.reason : null,
+    )
   }
   return data as T
 }

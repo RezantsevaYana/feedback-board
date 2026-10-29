@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['category_id', 'title', 'description', 'author_name', 'author_token', 'status_id', 'priority', 'team_comment', 'is_hidden'])]
+#[Fillable(['category_id', 'title', 'description', 'author_name', 'author_token', 'author_user_id', 'status_id', 'priority', 'team_comment', 'is_hidden'])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
@@ -93,6 +93,16 @@ class Post extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(Vote::class);
+    }
+
+    /**
+     * The signed-in author (null for anonymous widget submissions).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'author_user_id');
     }
 
     /**
