@@ -26,6 +26,8 @@ class VoteController extends Controller
     {
         abort_if($post->is_hidden, 404);
         $user = $request->user('sanctum');
+        // a member whose role can't vote (Читатель) is refused; taking a vote back stays open, see destroy()
+        abort_if($user?->roleOn($post->project)?->canVote() === false, 403, 'Читатель на этой доске не голосует — только читает.');
         // Signed-in users identify themselves by account, so the cookie is optional for them;
         // anonymous callers still need it (otherwise there's no way to deduplicate votes).
         $token = $user === null ? VoterToken::require($request) : VoterToken::from($request);

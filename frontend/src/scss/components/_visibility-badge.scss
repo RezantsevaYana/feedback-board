@@ -1,0 +1,25 @@
+@use '../utils' as *;
+
+// VisibilityBadge.vue — «Открытая» / «Закрытая» with an icon (BoardCard on the hub, the board's sidebar).
+// Neutral sage chip for both: it's a fact about the board, not an action or a selection, so no green.
+.visibility-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+
+    .ico {
+        flex: none;
+    }
+    // closed is the one worth noticing: ink text, so it reads before the open one does
+    &.private {
+        color: var(--fg);
+    }
+}

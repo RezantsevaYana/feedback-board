@@ -1,0 +1,12 @@
+@use '../utils' as *;
+
+// AccountPage.vue + AccountProfileForm.vue, AccountPasswordForm.vue.
+// Frame, nav and section cards come from _board-workspace.scss and _board-settings.scss.
+.account-form {
+    display: grid;
+    gap: 12px;
+
+    .note {
+        margin: 0;
+    }
+}

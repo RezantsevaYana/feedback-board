@@ -6,7 +6,8 @@
         class="vote"
         :aria-pressed="post.my_vote === 'like'"
         :aria-label="post.my_vote === 'like' ? 'Убрать лайк' : 'Нравится'"
-        title="Нравится"
+        :title="readOnly ? READ_ONLY : 'Нравится'"
+        :disabled="readOnly"
         @click.stop="board.vote(post, 'like')"
       >
         <span class="emo" aria-hidden="true">👍</span>
@@ -26,7 +27,8 @@
         class="vote dislike"
         :aria-pressed="post.my_vote === 'dislike'"
         :aria-label="post.my_vote === 'dislike' ? 'Убрать дизлайк' : 'Не нравится'"
-        title="Не нравится"
+        :title="readOnly ? READ_ONLY : 'Не нравится'"
+        :disabled="readOnly"
         @click.stop="board.vote(post, 'dislike')"
       >
         <span class="emo" aria-hidden="true">💩</span>
@@ -52,6 +54,7 @@ import { useVotersStore } from '@/store/modals/useVotersStore'
 // 👍 / 💩: one reaction per browser; clicking the active one cancels it, the other one switches.
 // For the triage team (owner / admin / manager) the counter is a separate button that opens
 // the «кто голосовал» modal; for everyone else it stays inside the vote button, as a number only.
+// A reader sees the counts but can't vote: the buttons are disabled, the title says why.
 const props = defineProps<{
   post: Post
   small?: boolean
@@ -60,6 +63,8 @@ const props = defineProps<{
 const board = useBoardStore()
 const voters = useVotersStore()
 
+const READ_ONLY = 'Ваша роль на доске — читатель: можно смотреть, голосовать нельзя'
+const readOnly = computed(() => board.role === 'reader')
 const canSeeVoters = computed(() => board.role === 'owner' || board.role === 'admin' || board.role === 'manager')
 
 function openVoters(kind: VoteValue) {

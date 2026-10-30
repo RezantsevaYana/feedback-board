@@ -1,0 +1,24 @@
+@use '../utils' as *;
+
+// AccessGate.vue — the gate of a private board. The card itself is .auth-form (_auth-pages.scss):
+// the same white card as the login page, on the sage ground, left-aligned inside the centred page.
+body:has(.access-gate-page) {
+    background: var(--surface-2);
+}
+.access-gate-page {
+    text-align: left;
+}
+.access-gate {
+    h1 {
+        overflow-wrap: anywhere;
+    }
+}
+// who the request goes from, for a logged-in visitor: a quiet line in place of the name and email fields
+.access-gate-who {
+    margin: 0 0 4px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}

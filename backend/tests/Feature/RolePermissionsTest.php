@@ -55,6 +55,26 @@ class RolePermissionsTest extends TestCase
         }
     }
 
+    public function test_voting_and_posting_are_for_everyone_but_the_reader(): void
+    {
+        $post = Post::factory()->for($this->board)->create();
+        $category = $this->board->categories()->first() ?? $this->board->categories()->create(['name' => 'Идея']);
+
+        foreach ($this->users as $role => $user) {
+            // the outsider is a visitor of this public board, like a guest
+            $allowed = $role !== 'reader';
+            // public endpoints read the user through the sanctum guard, which remembers the previous one
+            $this->app['auth']->forgetGuards();
+
+            $this->actingAs($user)
+                ->postJson("/api/public/posts/{$post->id}/vote", ['value' => 'like'])
+                ->assertStatus($allowed ? 200 : 403);
+            $this->actingAs($user)
+                ->postJson("/api/public/projects/{$this->board->slug}/posts", ['title' => "Идея от {$role}", 'description' => 'Описание идеи для проверки прав.', 'category_id' => $category->id])
+                ->assertStatus($allowed ? 201 : 403);
+        }
+    }
+
     public function test_configure_is_for_owner_admin(): void
     {
         foreach ($this->users as $role => $user) {

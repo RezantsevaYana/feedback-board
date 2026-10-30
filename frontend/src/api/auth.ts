@@ -41,6 +41,19 @@ export const AuthApi = {
     return request<Item<Me>>(`${BASE_URL}/reset-password`, { method: 'POST', body: { token, email, password } })
   },
 
+  // «Настройки аккаунта» → «Профиль»: the name; returns /me with it
+  updateProfile(name: string) {
+    return request<Item<Me>>(`${BASE_URL}/me`, { method: 'PATCH', body: { name } })
+  },
+
+  // «Сменить пароль» in the account settings; 422 on a wrong current password, then a «Пароль изменён» letter
+  changePassword(currentPassword: string, password: string) {
+    return request<void>(`${BASE_URL}/me/password`, {
+      method: 'PATCH',
+      body: { current_password: currentPassword, password },
+    })
+  },
+
   // send the confirmation letter again (6 per 10 minutes)
   resendVerification() {
     return request<void>(`${BASE_URL}/email/verification-notification`, { method: 'POST' })

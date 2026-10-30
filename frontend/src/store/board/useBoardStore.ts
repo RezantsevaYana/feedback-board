@@ -34,6 +34,8 @@ export const useBoardStore = defineStore('board', () => {
   const privateLocked = ref(false)
   /** 403 with reason=no_access — signed-in, but not on this private board. */
   const noAccess = ref(false)
+  /** The private board's name from the 403, so the gate can say which board it is; the board itself stays hidden. */
+  const gateName = ref('')
   const me = ref<Me | null>(null)
   /** The logged-in user's role on this board; null for guests and outsiders. */
   const role = computed(() => me.value?.projects.find((p) => p.slug === project.value?.slug)?.role ?? null)
@@ -96,6 +98,7 @@ export const useBoardStore = defineStore('board', () => {
     unpublished.value = false
     privateLocked.value = false
     noAccess.value = false
+    gateName.value = ''
     loadError.value = ''
     project.value = null
     postsLoaded.value = false
@@ -110,6 +113,8 @@ export const useBoardStore = defineStore('board', () => {
       else if (e instanceof ApiError && e.status === 403) {
         // the EnsureProjectPublished middleware carries a stable reason so the SPA can pick the right screen
         me.value = await user
+        const gate = e.body.board as { name?: unknown } | undefined
+        gateName.value = typeof gate?.name === 'string' ? gate.name : ''
         switch (e.reason) {
           case 'login_required':
             privateLocked.value = true
@@ -353,7 +358,7 @@ export const useBoardStore = defineStore('board', () => {
         return
       }
       const [a, b] = from < to ? [from, to] : [to, from]
-      for (let i = a; i <= b; i++) next.add(order[i])
+      for (const id of order.slice(a, b + 1)) next.add(id)
     })
     lastSelectedId.value = toId
   }
@@ -531,10 +536,15 @@ export const useBoardStore = defineStore('board', () => {
     await AuthApi.logout().catch(() => undefined)
     me.value = null
     if (view.sort === 'priority') view.sort = 'top'
+    // on a private board's gate the outsider becomes a guest: same gate, with name and email fields
+    if (noAccess.value) {
+      noAccess.value = false
+      privateLocked.value = true
+    }
   }
 
   return {
-    project, notFound, unpublished, privateLocked, noAccess, me, role, team, configure, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
+    project, notFound, unpublished, privateLocked, noAccess, gateName, me, role, team, configure, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
     open, refresh, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
     addStatus, updateStatus, deleteStatus,

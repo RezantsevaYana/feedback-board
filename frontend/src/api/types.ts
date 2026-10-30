@@ -76,6 +76,8 @@ export interface BoardSummary {
   slug: string
   /** The current user's role on this board — slice 1 of roles. Null for legacy records. */
   role?: ProjectRole | null
+  /** Access requests waiting on this board; 0 where the user doesn't decide (only owner / admin do). */
+  pending_requests?: number
 }
 
 /**

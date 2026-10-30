@@ -85,6 +85,23 @@
     &:active .emo {
         transform: scale(0.88);
     }
+    // a reader: the count is still readable, the button just doesn't react (VoteButtons.vue says why in the title)
+    &:disabled {
+        cursor: default;
+        color: var(--muted);
+        background: var(--surface-2);
+
+        @include hover {
+            border-color: var(--line);
+
+            .emo {
+                transform: none;
+            }
+        }
+        .emo {
+            opacity: 0.6;
+        }
+    }
     &[aria-pressed='true'] {
         background: color-mix(in srgb, var(--like) 14%, var(--surface));
         border-color: var(--like);
@@ -101,6 +118,13 @@
         @include hover {
             .emo {
                 transform: rotate(8deg) scale(1.1);
+            }
+        }
+        &:disabled {
+            @include hover {
+                .emo {
+                    transform: none;
+                }
             }
         }
         &[aria-pressed='true'] {

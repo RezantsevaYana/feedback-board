@@ -1,3 +1,4 @@
+import type { AccessRequest } from './accessRequests'
 import { request } from './client'
 import type { Collection, Item, ProjectRole } from './types'
 
@@ -13,7 +14,7 @@ export interface Participant {
   source: ParticipantSource | null
 }
 
-export type ParticipantSource = 'created' | 'invitation' | 'manual'
+export type ParticipantSource = 'created' | 'request' | 'invitation' | 'manual'
 
 /** A pending or recently-accepted invitation. The token NEVER appears in API responses — it lives only in the letter. */
 export interface Invitation {
@@ -26,10 +27,12 @@ export interface Invitation {
   is_pending: boolean
 }
 
-/** The participants screen pulls both lists in one call. */
+/** The participants screen pulls all three lists in one call. */
 export interface ParticipantsPayload {
   members: Participant[]
   invitations: Invitation[]
+  /** «Запросы на доступ» waiting for a decision, oldest first. */
+  requests: AccessRequest[]
 }
 
 /** One row of a bulk invite. */

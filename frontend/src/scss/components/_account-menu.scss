@@ -1,0 +1,74 @@
+@use '../utils' as *;
+
+// AccountMenu.vue — the name with a chevron on the right of AppHeader; reads as the board switcher's twin
+.menu-trigger.account-menu {
+    width: auto;
+    max-width: 240px;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: none;
+    color: var(--fg);
+    font-size: 14px;
+    font-weight: 500;
+
+    .ico {
+        flex: none;
+        width: 14px;
+        height: 14px;
+        transition: transform 0.12s;
+    }
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
+    @media (pointer: coarse) {
+        min-height: 44px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .ico {
+            transition: none;
+        }
+    }
+        // phone: initials in a sage circle instead of the name
+    @media screen and (max-width: $mobile) {
+        padding: 4px 6px 4px 4px;
+        gap: 4px;
+    }
+}
+.menu.open .account-menu {
+    background: var(--surface-2);
+    color: var(--fg);
+
+    .ico {
+        transform: rotate(180deg);
+    }
+}
+.account-menu-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media screen and (max-width: $mobile) {
+        display: none;
+    }
+}
+.account-menu-initials {
+    display: none;
+
+    @media screen and (max-width: $mobile) {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        // sage, not sprout: green is only for actions and selection (DESIGN.md, One Green Rule)
+        background: var(--surface-2);
+        color: var(--fg);
+        font-size: 13px;
+        font-weight: 600;
+    }
+}

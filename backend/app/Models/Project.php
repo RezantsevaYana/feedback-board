@@ -132,6 +132,17 @@ class Project extends Model
     }
 
     /**
+     * «Запросить доступ» on this private board; ->pending() for the ones waiting for a decision.
+     *
+     * @return HasMany<AccessRequest, $this>
+     */
+    public function accessRequests(): HasMany
+    {
+        return $this->hasMany(AccessRequest::class);
+    }
+
+
+    /**
      * Self-serve owner — the admin who created this board from the UI.
      * Null for legacy projects created via `project:create` artisan command.
      *

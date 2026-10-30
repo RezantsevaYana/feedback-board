@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\NoAccountMail;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -45,13 +47,39 @@ class PasswordResetTest extends TestCase
         );
     }
 
-    public function test_an_unknown_address_gets_the_same_answer_and_no_letter(): void
+    public function test_an_unknown_address_gets_the_same_answer_and_a_no_account_letter(): void
     {
         Notification::fake();
+        Mail::fake();
 
         $this->postJson('/api/admin/forgot-password', ['email' => 'nobody@example.com'])->assertNoContent();
 
         Notification::assertNothingSent();
+        Mail::assertSent(NoAccountMail::class, fn (NoAccountMail $mail) => $mail->hasTo('nobody@example.com'));
+    }
+
+    public function test_the_no_account_letter_goes_once_an_hour(): void
+    {
+        Mail::fake();
+
+        $this->postJson('/api/admin/forgot-password', ['email' => 'nobody@example.com'])->assertNoContent();
+        $this->postJson('/api/admin/forgot-password', ['email' => 'nobody@example.com'])->assertNoContent();
+        Mail::assertSentCount(1);
+
+        $this->travel(61)->minutes();
+        $this->postJson('/api/admin/forgot-password', ['email' => 'nobody@example.com'])->assertNoContent();
+        Mail::assertSentCount(2);
+    }
+
+    public function test_a_known_address_gets_no_no_account_letter(): void
+    {
+        Notification::fake();
+        Mail::fake();
+        User::factory()->create(['email' => 'anna@example.com']);
+
+        $this->postJson('/api/admin/forgot-password', ['email' => 'anna@example.com'])->assertNoContent();
+
+        Mail::assertNothingSent();
     }
 
     public function test_the_email_is_validated(): void

@@ -39,7 +39,12 @@
 @use 'components/board-embed';
 @use 'components/board-settings';
 @use 'components/participants';
+@use 'components/access-requests';
+@use 'components/access-gate';
+@use 'components/visibility-badge';
 @use 'components/invite-accept';
 @use 'components/board-switcher';
+@use 'components/account-menu';
+@use 'components/account-page';
 @use 'components/copy-button';
 @use 'components/home-page';

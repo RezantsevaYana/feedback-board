@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Enums\AccessRequestStatus;
 use App\Enums\ProjectRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateParticipantRequest;
+use App\Http\Resources\AccessRequestResource;
 use App\Http\Resources\InvitationResource;
 use App\Http\Resources\ParticipantResource;
 use App\Models\Project;
@@ -15,8 +17,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 /**
- * Board team: list + role changes + removal. Pending invitations live next to members
- * on the same screen, so the list endpoint returns both.
+ * Board team: list + role changes + removal. Pending invitations and access requests live next to members
+ * on the same screen, so the list endpoint returns all three.
  *
  * Authorization: board.configure (owner / admin). The two special guardrails are enforced
  * in-controller because they aren't role-level rules — they're invariants:
@@ -33,13 +35,21 @@ class ParticipantController extends Controller
         $invitations = $board->invitations()->with('inviter')->pending()
             ->orderByDesc('created_at')->get();
 
-        // «Добавлен» column: created the board / came by invitation / anything else (added before roles, by the CLI)
+        $requests = $board->accessRequests()->pending()->orderBy('created_at')->get();
+
+        // «Добавлен» column: created the board / asked by the URL and got approved / came by invitation /
+        // anything else (added before roles, by the CLI). An approved request also goes through an invitation,
+        // so it's checked first.
         $invited = $board->invitations()->whereNotNull('accepted_at')->pluck('email')
             ->map(fn (string $e) => Str::lower($e))->flip();
+        $approved = $board->accessRequests()->where('status', AccessRequestStatus::Approved->value)->pluck('email')
+            ->map(fn (string $e) => Str::lower($e))->flip();
         foreach ($members as $member) {
+            $email = Str::lower($member->email);
             $member->setAttribute('source', match (true) {
                 $member->id === $board->owner_id => 'created',
-                $invited->has(Str::lower($member->email)) => 'invitation',
+                $approved->has($email) && $invited->has($email) => 'request',
+                $invited->has($email) => 'invitation',
                 default => 'manual',
             });
         }
@@ -48,6 +58,7 @@ class ParticipantController extends Controller
             'data' => [
                 'members' => ParticipantResource::collection($members),
                 'invitations' => InvitationResource::collection($invitations),
+                'requests' => AccessRequestResource::collection($requests),
             ],
         ]);
     }

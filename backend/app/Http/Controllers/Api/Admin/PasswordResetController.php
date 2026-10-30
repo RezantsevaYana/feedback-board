@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NoAccountMail;
 use App\Models\User;
+use App\Services\LoginLockout;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -30,7 +34,13 @@ class PasswordResetController extends Controller
             'email.email' => 'Введите email в формате name@example.com.',
         ]);
 
-        rescue(fn () => Password::sendResetLink($request->only('email')));
+        $email = $request->string('email')->toString();
+        if (User::where('email', $email)->exists()) {
+            rescue(fn () => Password::sendResetLink(['email' => $email]));
+        } else {
+            // an unknown address hears it in its own mailbox; one letter an hour, so the form can't spam it
+            rescue(fn () => RateLimiter::attempt('no-account-letter:'.sha1($email), 1, fn () => Mail::send(new NoAccountMail($email)), 3600));
+        }
 
         return response()->noContent();
     }
@@ -39,7 +49,7 @@ class PasswordResetController extends Controller
      * A new password logs the user in right away: the link from the letter proves the address,
      * so it also counts as an email confirmation.
      */
-    public function reset(Request $request): JsonResponse
+    public function reset(Request $request, LoginLockout $lockout): JsonResponse
     {
         $request->merge(['email' => is_string($request->email) ? Str::lower(trim($request->email)) : $request->email]);
         $request->validate([
@@ -61,6 +71,11 @@ class PasswordResetController extends Controller
             $user->save();
             $resetUser = $user;
         });
+
+        if ($status === Password::PASSWORD_RESET) {
+            // the letter proves the address, so it also lifts the lock after wrong passwords
+            $lockout->clear($resetUser->email);
+        }
 
         if ($status !== Password::PASSWORD_RESET) {
             // unknown address and a stale or used token read the same to the visitor

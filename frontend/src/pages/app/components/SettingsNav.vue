@@ -33,15 +33,16 @@
         class="settings-nav-item"
         :aria-current="page === 'participants' ? 'page' : undefined"
       >
-        Участники
+        Участники<span v-if="pending" class="count-badge" :aria-label="`запросов на доступ: ${pending}`">{{ pending }}</span>
       </RouterLink>
     </template>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth/useAuthStore'
 
 // Side nav of a board's pages (BoardWorkspace). On the settings page the items are anchors to its sections
 // and the section at the top of the screen is marked current, like the active section on the board;
@@ -53,6 +54,9 @@ const props = defineProps<{
 }>()
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
+// access requests waiting on this board: a count on «Участники», where they're decided
+const pending = computed(() => auth.me?.projects.find((b) => b.slug === props.slug)?.pending_requests ?? 0)
 
 const items = [
   { hash: '#general', label: 'Общее' },

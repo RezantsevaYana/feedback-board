@@ -14,6 +14,8 @@ Route::prefix('public')->group(function () {
     Route::get('projects/{project:slug}', [Public\ProjectController::class, 'show'])->middleware([AllowProjectOrigin::class, EnsureProjectPublished::class]);
     Route::options('projects/{project:slug}/posts', fn (Project $project) => response()->noContent())->middleware(AllowProjectOrigin::class);
     Route::post('projects/{project:slug}/posts', [Public\PostController::class, 'store'])->middleware([AllowProjectOrigin::class, EnsureProjectPublished::class, 'throttle:posts']);
+    // the gate screen of a private board: outside EnsureProjectPublished on purpose, it's for those it keeps out
+    Route::post('projects/{project:slug}/access-requests', [Public\AccessRequestController::class, 'store'])->middleware('throttle:access-requests');
 
     Route::middleware(EnsureProjectPublished::class)->group(function () {
         Route::get('projects/{project:slug}/posts', [Public\PostController::class, 'index']);
@@ -46,6 +48,8 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [Admin\AuthController::class, 'logout']);
         Route::get('me', [Admin\AuthController::class, 'me']);
+        Route::patch('me', [Admin\AuthController::class, 'update']);
+        Route::patch('me/password', [Admin\PasswordController::class, 'update'])->middleware('throttle:password-change');
         Route::post('email/verification-notification', [Admin\EmailVerificationController::class, 'resend'])->middleware('throttle:verify-email');
 
         // Self-serve boards owned by the current admin — drives the hub, create wizard and embed screen.
@@ -71,6 +75,10 @@ Route::prefix('admin')->group(function () {
         Route::post('boards/{board:slug}/invitations', [Admin\InvitationController::class, 'store']);
         Route::post('boards/{board:slug}/invitations/{invitation}/resend', [Admin\InvitationController::class, 'resend']);
         Route::delete('boards/{board:slug}/invitations/{invitation}', [Admin\InvitationController::class, 'destroy']);
+
+        // «Запросы на доступ»: the pending list comes with participants
+        Route::post('boards/{board:slug}/access-requests/{accessRequest}/approve', [Admin\AccessRequestController::class, 'approve']);
+        Route::post('boards/{board:slug}/access-requests/{accessRequest}/reject', [Admin\AccessRequestController::class, 'reject']);
 
         Route::get('projects/{project:slug}/posts', [Admin\PostController::class, 'index']);
 

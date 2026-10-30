@@ -11,8 +11,7 @@
         </template>
       </div>
       <div v-if="auth.isAuth" class="app-shell-user">
-        <span class="app-shell-email">{{ auth.me?.email }}</span>
-        <button type="button" class="btn" :disabled="loggingOut" :aria-busy="loggingOut" @click="onLogout">Выход</button>
+        <AccountMenu />
       </div>
     </div>
   </header>
@@ -23,16 +22,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
+import AccountMenu from '@/shared/components/AccountMenu.vue'
 import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
 import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
-const router = useRouter()
-const loggingOut = ref(false)
 
 const brandTarget = computed(() => (auth.isAuth ? '/app/boards' : '/'))
 
@@ -44,15 +42,4 @@ const switchLink = computed(() => {
   const page = route.name === 'board-settings' ? 'settings' : route.name === 'board-embed' ? 'embed' : null
   return page ? (slug: string) => `/app/boards/${slug}/${page}` : undefined
 })
-
-async function onLogout() {
-  if (loggingOut.value) return
-  loggingOut.value = true
-  try {
-    await auth.logout()
-    router.push('/app/login')
-  } finally {
-    loggingOut.value = false
-  }
-}
 </script>

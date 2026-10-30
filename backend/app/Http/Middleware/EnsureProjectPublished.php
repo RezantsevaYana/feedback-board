@@ -45,19 +45,23 @@ class EnsureProjectPublished
             return $next($request);
         }
 
-        // Private boards: only members get through.
+        // Private boards: only members get through. The name goes along, so the gate screen can say
+        // which board it is (the visitor has its link anyway); nothing else of the board does.
         if ($project->visibility === BoardVisibility::Private && ! $hasRole) {
+            $board = ['name' => $project->name];
+
             return $user === null
-                ? $this->deny('login_required', 'Это закрытая доска. Войдите, чтобы её увидеть.')
-                : $this->deny('no_access', 'У вас нет доступа к этой доске.');
+                ? $this->deny('login_required', 'Это закрытая доска. Войдите, чтобы её увидеть.', $board)
+                : $this->deny('no_access', 'У вас нет доступа к этой доске.', $board);
         }
 
         return $next($request);
     }
 
-    private function deny(string $reason, string $message): Response
+    /** @param  array{name: string}|null  $board */
+    private function deny(string $reason, string $message, ?array $board = null): Response
     {
-        return response()->json(['message' => $message, 'reason' => $reason], 403);
+        return response()->json(array_filter(['message' => $message, 'reason' => $reason, 'board' => $board]), 403);
     }
 
     private function project(Request $request): ?Project

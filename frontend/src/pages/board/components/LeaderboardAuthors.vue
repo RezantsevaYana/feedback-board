@@ -20,9 +20,9 @@
   <div v-else class="leader">
     <article
       v-for="(entry, i) in board.leaderboard"
-      :key="entry.token"
+      :key="entry.key"
       class="leader-row"
-      :class="{ top: entry.place <= 3, me: entry.token === myToken }"
+      :class="{ top: entry.place <= 3, me: entry.me }"
       :style="{ '--i': i }"
     >
       <span class="rank-n" :aria-label="`Место ${entry.place}`">
@@ -32,7 +32,7 @@
       <div class="card-body">
         <h3>
           {{ entry.name }}
-          <span v-if="entry.token === myToken" class="you-chip">вы</span>
+          <span v-if="entry.me" class="you-chip">вы</span>
         </h3>
         <div class="meta">{{ metricLabel(entry.value) }}</div>
       </div>
@@ -48,7 +48,6 @@
 import { computed, onBeforeUnmount, watch } from 'vue'
 import type { LeaderboardEntry } from '@/api/leaderboard'
 import { fireConfetti } from '@/shared/utils/confetti'
-import { voterToken } from '@/shared/utils/voter'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import BoardSkeleton from './BoardSkeleton.vue'
 
@@ -57,7 +56,6 @@ import BoardSkeleton from './BoardSkeleton.vue'
 // топ-3 с медалями, рядом с местом — изменение с прошлого визита. Когда ты впервые
 // оказываешься на #1, один раз шелохнётся салют.
 const board = useBoardStore()
-const myToken = voterToken()
 
 const metricExplainer = computed(() =>
   board.view.leaderboardMetric === 'support'
@@ -94,7 +92,7 @@ function plural(n: number, one: string, few: string, many: string): string {
 }
 
 // --- Снапшот предыдущей выдачи для подсчёта Δ и триггера салюта ----------
-// {token: place} в localStorage отдельно по (проект, scope, metric), чтобы
+// {key: place} в localStorage отдельно по (проект, scope, metric), чтобы
 // переключение фильтра не плодило липовых «движений». Baseline фиксируем на
 // сессию — иначе Δ сразу схлопывалась бы в ноль, а салют стрелял при каждом
 // возврате на #1 во время пулинга.
@@ -114,7 +112,7 @@ function readSnapshot(key: string): Snapshot {
 function writeSnapshot(key: string, data: readonly LeaderboardEntry[]): void {
   if (!data.length) return
   try {
-    const snap: Snapshot = Object.fromEntries(data.map((e) => [e.token, e.place]))
+    const snap: Snapshot = Object.fromEntries(data.map((e) => [e.key, e.place]))
     localStorage.setItem(key, JSON.stringify(snap))
   } catch {
     // storage недоступен — живём без Δ
@@ -125,7 +123,7 @@ let baseline: Snapshot = readSnapshot(snapshotKey.value)
 const salutedKeys = new Set<string>()
 
 function deltaFor(entry: LeaderboardEntry): number | null {
-  const prev = baseline[entry.token]
+  const prev = baseline[entry.key]
   if (prev === undefined || prev === entry.place) return null
   return prev - entry.place
 }
@@ -145,9 +143,9 @@ watch(
   () => board.leaderboard,
   (data) => {
     if (!data.length) return
-    const me = data.find((e) => e.token === myToken)
+    const me = data.find((e) => e.me)
     const key = snapshotKey.value
-    if (me?.place === 1 && baseline[myToken] !== 1 && !salutedKeys.has(key)) {
+    if (me?.place === 1 && baseline[me.key] !== 1 && !salutedKeys.has(key)) {
       fireConfetti()
       salutedKeys.add(key)
     }

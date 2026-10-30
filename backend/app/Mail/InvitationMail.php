@@ -43,7 +43,13 @@ class InvitationMail extends Mailable
 
     private function roleLabel(): string
     {
-        return match ($this->invitation->role->value) {
+        return self::roleLabelFor($this->invitation->role);
+    }
+
+    /** Role names as the letters say them; AccessApprovedMail uses the same ones. */
+    public static function roleLabelFor(\App\Enums\ProjectRole $role): string
+    {
+        return match ($role->value) {
             'admin' => 'Админ',
             'manager' => 'Менеджер',
             'voter' => 'Голосующий',

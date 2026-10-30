@@ -44,7 +44,7 @@
         </RouterLink>
       </template>
 
-      <!-- Новый аккаунт — имя и пароль обязательны (вход по ссылке появится в этапе 2). -->
+      <!-- Новый аккаунт — имя и пароль обязательны: другого входа, кроме пароля, нет. -->
       <form v-else class="auth-form" novalidate @submit.prevent="accept">
         <InputComponent
           v-model="name"

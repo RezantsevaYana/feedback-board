@@ -7,9 +7,12 @@ export type LeaderboardMetric = 'posts' | 'support'
 
 export interface LeaderboardEntry {
   place: number
-  token: string
+  /** Stable id of the author: `u:{id}` for an account, an opaque `t:…` for a guest browser (the token itself never comes back). */
+  key: string
   name: string
   value: number
+  /** The current visitor, by account or by this browser's token. */
+  me: boolean
 }
 
 interface LeaderboardResponse {

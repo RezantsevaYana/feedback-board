@@ -76,4 +76,6 @@ docker compose exec frontend npm run lint
 ## Документы
 
 - `docs/TZ.md` — техническое задание на MVP
+- `docs/BACKLOG.md` — идеи и отложенные решения (что обсудить, прежде чем брать в работу)
 - `docs/prototype.html` — кликабельный прототип и схемы работы сервиса
+- `frontend/demo/roles-prototype.html` и `roles-checklist.html` — флоу ролей и чеклист их ручной проверки (http://localhost:5175/roles-checklist.html)

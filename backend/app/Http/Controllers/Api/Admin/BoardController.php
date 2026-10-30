@@ -179,6 +179,8 @@ class BoardController extends Controller
             'id' => $p->id,
             'name' => $p->name,
             'slug' => $p->slug,
+            // public | private: the hub card says which one, owners usually have both kinds
+            'visibility' => $p->visibility->value,
             'created_at' => $p->created_at,
             'queue_count' => (int) ($p->queue_count ?? 0),
             'last_post_at' => $p->last_post_at ?? null,

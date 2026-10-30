@@ -36,6 +36,32 @@
         margin: 2px 0 14px;
         text-decoration: none;
     }
+    // «Открытая / Закрытая» (VisibilityBadge) right under the brand tag, before the sections
+    .board-visibility {
+        justify-self: start;
+        margin: -6px 0 14px;
+
+        // tablet and phone: one more item in the row, right after the tag — just the icon, so the row
+        // keeps its controls on one line; the word stays for screen readers, the hint in the title
+        @media screen and (max-width: $tablet) {
+            margin: 0;
+            padding: 4px 6px;
+
+            .visibility-badge-label {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip-path: inset(50%);
+                white-space: nowrap;
+            }
+        }
+        // phone: it stays next to the tag and pushes the theme and team controls right, as the tag did
+        @media screen and (max-width: $mobile) {
+            order: 0;
+            margin-right: auto;
+        }
+    }
     // team mode with several boards: the brand tag is BoardSwitcher's trigger, the menu wrapper takes its place
     .menu:has(.board-switcher) {
         justify-self: start;
@@ -120,7 +146,6 @@
     @media screen and (max-width: $mobile) {
         .proj {
             order: 0;
-            margin-right: auto;
         }
         .theme-toggle,
         .team-login,

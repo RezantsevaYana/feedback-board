@@ -99,6 +99,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /** Boards where access requests wait for my decision — «Ждут решения на ваших досках» in the hub. */
+  const awaitingDecision = computed(() => (me.value?.projects ?? []).filter((b) => (b.pending_requests ?? 0) > 0))
+
+  /** The participants page knows the fresh count; the hub block and the «Участники» badge follow it. */
+  function setPendingRequests(slug: string, count: number): void {
+    for (const b of [...(me.value?.boards ?? []), ...(me.value?.projects ?? [])]) {
+      if (b.slug === slug) b.pending_requests = count
+    }
+  }
+
   /** Delete to the trash; the board disappears from the hub, the switcher and team mode at once. */
   async function trashBoard(slug: string, confirm: string): Promise<TrashedBoard> {
     const res = await BoardsApi.destroy(slug, confirm)
@@ -156,6 +166,17 @@ export const useAuthStore = defineStore('auth', () => {
     loaded.value = true
   }
 
+  /** «Профиль» in the account settings; the header menu shows the new name at once. */
+  async function updateName(name: string): Promise<void> {
+    const res = await AuthApi.updateProfile(name)
+    me.value = res.data
+  }
+
+  /** From the account settings; the session stays, so nothing else in the store changes. */
+  async function changePassword(currentPassword: string, password: string): Promise<void> {
+    await AuthApi.changePassword(currentPassword, password)
+  }
+
   async function resendVerification(): Promise<void> {
     await AuthApi.resendVerification()
   }
@@ -172,9 +193,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    me, loaded, loading, isAuth, boardSummaries,
+    me, loaded, loading, isAuth, boardSummaries, awaitingDecision, setPendingRequests,
     boards, trashed, boardsLoaded, boardsLoading, incoming,
     fetchMe, fetchBoards, fetchIncoming, acceptIncoming, declineIncoming, addBoard, renameBoard, trashBoard, restoreBoard,
-    register, login, logout, verifyEmail, resendVerification, forgotPassword, resetPassword,
+    register, login, logout, verifyEmail, resendVerification, forgotPassword, resetPassword, changePassword, updateName,
   }
 })

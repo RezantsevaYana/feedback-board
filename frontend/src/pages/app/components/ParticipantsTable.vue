@@ -76,6 +76,7 @@ const confirm = useConfirmStore()
 // where the person came from — for an audit of who got in how
 const SOURCE_LABELS: Record<ParticipantSource, string> = {
   created: 'создал доску',
+  request: 'по запросу',
   invitation: 'по приглашению',
   manual: 'добавлен вручную',
 }

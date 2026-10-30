@@ -55,6 +55,8 @@ class PostController extends Controller
         // Залогиненный пишет под именем аккаунта: author_name от клиента игнорируем, чтобы нельзя было
         // «подписаться» чужим именем. Аноним (виджет cross-origin) по-прежнему шлёт author_name полем.
         $user = $request->user('sanctum');
+        // a member whose role can't post (Читатель) is refused; guests and outsiders follow the board's visibility
+        abort_if($user?->roleOn($project)?->canSubmit() === false, 403, 'Читатель на этой доске не предлагает — только читает.');
         $authorName = $user?->name ?? $request->validated('author_name');
 
         $post = DB::transaction(function () use ($request, $project, $authorToken, $authorName, $user) {

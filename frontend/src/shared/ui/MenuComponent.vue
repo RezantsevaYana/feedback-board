@@ -14,7 +14,11 @@
     >
       <slot><AppIcon name="more" /></slot>
     </button>
-    <div v-if="open" :id="`${uid}-menu`" ref="list" class="menu-list" :class="{ left: align === 'left' }" role="menu" @keydown="onKey">
+    <div v-if="open" :id="`${uid}-menu`" ref="list" class="menu-list" :class="{ left: align === 'left' }" role="menu" :aria-label="caption" @keydown="onKey">
+      <template v-if="caption">
+        <span class="menu-caption" aria-hidden="true">{{ caption }}</span>
+        <span class="menu-sep" role="separator" />
+      </template>
       <template v-for="(item, i) in items" :key="item.label">
         <span v-if="item.separated && i > 0" class="menu-sep" role="separator" />
         <button
@@ -58,6 +62,8 @@ defineOptions({ inheritAttrs: false })
 defineProps<{
   items: MenuItem[]
   align?: 'left' | 'right'
+  /** a quiet line above the items, not a choice (the account menu shows the email there) */
+  caption?: string
 }>()
 
 const uid = useId()

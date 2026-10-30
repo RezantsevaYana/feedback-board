@@ -1,0 +1,81 @@
+@use '../utils' as *;
+
+// AccessRequestsList.vue — «Запросы на доступ» on BoardParticipantsPage, above the pending invitations.
+// Cards like .pending-invite, but taller: who asks, their message, then the decision row.
+.access-requests {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+}
+.access-request {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+.access-request-who {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+.access-request-name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.access-request-meta {
+    color: var(--muted);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+// what they wrote in «Зачем нужен доступ»: their words, on the sage step
+.access-request-message {
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--surface-2);
+    font-size: 14px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+.access-request-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.access-request-role {
+    width: 170px;
+    padding-bottom: 0;
+
+    @media screen and (max-width: $mobile) {
+        width: 100%;
+    }
+}
+.access-request-reject {
+    display: grid;
+    gap: 8px;
+
+    .field {
+        padding-bottom: 0;
+    }
+}
+// the count next to «Участники» (SettingsNav) and in the hub: how many wait for a decision
+.count-badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: 1px;
+}

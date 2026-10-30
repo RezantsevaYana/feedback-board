@@ -2,6 +2,7 @@
   <AppHeader />
   <main class="container base-page boards-hub">
     <IncomingInvitations v-if="auth.incoming.length" :invitations="auth.incoming" />
+    <AwaitingDecisions v-if="auth.awaitingDecision.length" :boards="auth.awaitingDecision" />
     <section v-if="auth.boardsLoading && !auth.boardsLoaded" class="boards-hub-loading">
       <p class="note">Загружаем…</p>
     </section>
@@ -45,6 +46,7 @@ import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import { canConfigure } from '@/shared/utils/roles'
+import AwaitingDecisions from './components/AwaitingDecisions.vue'
 import BoardCard from './components/BoardCard.vue'
 import IncomingInvitations from './components/IncomingInvitations.vue'
 import TrashSection from './components/TrashSection.vue'
@@ -59,6 +61,8 @@ const split = computed(() => leading.value.length > 0 && taking.value.length > 0
 onMounted(async () => {
   // invitations are a bonus on top of the hub: a failure there must not break the boards
   void auth.fetchIncoming().catch(() => undefined)
+  // the waiting-requests counts ride on /me; the hub is where they're looked at, so they're fetched fresh
+  void auth.fetchMe(true).catch(() => undefined)
   if (!auth.boardsLoaded) await auth.fetchBoards()
 })
 </script>

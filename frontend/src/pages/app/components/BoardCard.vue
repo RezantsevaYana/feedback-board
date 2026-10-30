@@ -17,9 +17,10 @@
       </span>
       <span class="board-card-last">{{ lastActivity }}</span>
     </div>
-    <!-- my role on this board -->
+    <!-- my role on this board, and whether it's open to anyone with the link -->
     <div class="board-card-role">
       <span class="role-chip" :class="board.role">{{ ROLE_LABELS[board.role] }}</span>
+      <VisibilityBadge :visibility="board.visibility" />
     </div>
     <div v-if="configure" class="board-card-actions">
       <RouterLink :to="`/app/boards/${board.slug}/settings`" class="btn">Настройки</RouterLink>
@@ -36,6 +37,7 @@ import type { Board } from '@/api/boards'
 import { ROLE_LABELS } from '@/api/types'
 import { fmtTimeAgo, plural } from '@/shared/utils/format'
 import { canConfigure } from '@/shared/utils/roles'
+import VisibilityBadge from '@/shared/components/VisibilityBadge.vue'
 
 const props = defineProps<{
   board: Board

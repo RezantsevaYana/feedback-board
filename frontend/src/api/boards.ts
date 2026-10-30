@@ -8,6 +8,7 @@ export interface Board {
   id: number
   name: string
   slug: string
+  visibility: BoardVisibility
   created_at: string
   queue_count: number
   last_post_at: string | null

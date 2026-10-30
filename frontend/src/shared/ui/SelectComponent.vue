@@ -75,7 +75,8 @@ const current = computed(() => props.options.find((o) => o.value === model.value
 const hasHints = computed(() => props.options.some((o) => o.hint))
 
 function toggle() {
-  open.value ? close() : openList()
+  if (open.value) close()
+  else openList()
 }
 function openList() {
   if (open.value) return
@@ -108,11 +109,11 @@ function onOutside(e: PointerEvent) {
   if (!root.value?.contains(e.target as Node)) close()
 }
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'ArrowDown') { e.preventDefault(); open.value ? move(1) : openList() }
-  else if (e.key === 'ArrowUp') { e.preventDefault(); open.value ? move(-1) : openList() }
+  if (e.key === 'ArrowDown') { e.preventDefault(); if (open.value) move(1); else openList() }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); if (open.value) move(-1); else openList() }
   else if (e.key === 'Home' && open.value) { e.preventDefault(); active.value = 0; nextTick(scrollActiveIntoView) }
   else if (e.key === 'End' && open.value) { e.preventDefault(); active.value = props.options.length - 1; nextTick(scrollActiveIntoView) }
-  else if (e.key === 'Enter' || (e.key === ' ' && open.value)) { e.preventDefault(); open.value ? pick(active.value) : openList() }
+  else if (e.key === 'Enter' || (e.key === ' ' && open.value)) { e.preventDefault(); if (open.value) pick(active.value); else openList() }
   else if (e.key === 'Escape' && open.value) { e.preventDefault(); close(); trigger.value?.focus() }
   else if (e.key === 'Tab') close()
 }

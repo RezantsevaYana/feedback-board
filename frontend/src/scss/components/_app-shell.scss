@@ -104,14 +104,6 @@
         }
     }
 }
-.app-shell-email {
-    color: var(--muted);
-    font-size: 14px;
-
-    @media screen and (max-width: $mobile) {
-        display: none;
-    }
-}
 
 @keyframes app-shell-lift {
     from {

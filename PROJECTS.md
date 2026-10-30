@@ -5,7 +5,7 @@
 ## Схема
 
 ```
-                 feedback.rocont.ru / localhost:5173
+                 feedback.rocont.ru / localhost:5176
                  ─────────────────────────────────────
                  один backend · одна БД · один widget.js
                                  │
@@ -21,14 +21,14 @@
          │ widget.js             │                       │
          │ data-project="demo"   │ data-project="kerr"   │ data-project="jlr"
          │                       │                       │
-    localhost:5174           localhost:1032          jlr.spb.ru
+    localhost:5175           localhost:1032          jlr.spb.ru
     (демо-сайт)              (сайт Kerr)             (сайт JLR)
 ```
 
 Виджет на сайте продукта — всегда одна и та же строка, меняется только `data-project`:
 
 ```html
-<script src="http://localhost:5173/widget.js" data-project="<slug>" defer></script>
+<script src="http://localhost:5176/widget.js" data-project="<slug>" defer></script>
 ```
 
 Бэкенд при приёме поста проверяет две вещи:
@@ -43,8 +43,8 @@
 
 | slug | Доска | Виджет разрешён на | Админ | Пароль |
 |---|---|---|---|---|
-| `demo` | http://localhost:5173/demo | `http://localhost:*`, `http://127.0.0.1:*` | `admin@example.com` | `password` |
-| `kerr` | http://localhost:5173/kerr | `http://localhost:1032` | `maria@kerr.local` | `password` |
+| `demo` | http://localhost:5176/demo | `http://localhost:*`, `http://127.0.0.1:*` | `admin@example.com` | `password` |
+| `kerr` | http://localhost:5176/kerr | `http://localhost:1032` | `maria@kerr.local` | `password` |
 
 ## Создать свой проект
 
@@ -73,7 +73,7 @@ docker compose exec backend php artisan admin:create ivan@rocont.ru \
 
 ## Что делает админ, когда входит
 
-- Открывает `http://localhost:5173/<slug>`, жмёт «Вход для команды», логинится.
+- Открывает `http://localhost:5176/<slug>`, жмёт «Вход для команды», логинится.
 - Видит **только посты своих проектов**. Если зайти на доску проекта, где его нет, — 404.
 - Может редактировать статусы, категории, посты (менять статус, писать команде, удалять). См. роуты `/api/admin/*` в `backend/routes/api.php`.
 
@@ -110,7 +110,7 @@ WHERE slug = 'kerr';
 
 Открой **две вкладки** и в DevTools Console каждой — свой инжект:
 
-**Вкладка 1 — http://localhost:5174 (демо-сайт):**
+**Вкладка 1 — http://localhost:5175 (демо-сайт):**
 ```js
 // там виджет и так уже вшит на demo, инжект не нужен
 ```
@@ -118,18 +118,18 @@ WHERE slug = 'kerr';
 **Вкладка 2 — http://localhost:1032 (Kerr):**
 ```js
 const s = document.createElement('script');
-s.src = 'http://localhost:5173/widget.js';
+s.src = 'http://localhost:5176/widget.js';
 s.dataset.project = 'kerr';
 s.defer = true;
 document.body.appendChild(s);
 ```
 
 Отправь по посту в каждой. Теперь:
-- http://localhost:5173/demo — только пост из `:5174`.
-- http://localhost:5173/kerr — только пост из `:1032`.
+- http://localhost:5176/demo — только пост из `:5175`.
+- http://localhost:5176/kerr — только пост из `:1032`.
 - В PhpStorm: `SELECT project_id, title FROM posts;` — увидишь разные `project_id`.
 
-Если попытаешься в вкладке Kerr вбить `data-project="demo"` — бэкенд ответит 403, потому что `localhost:1032` не в `allowed_origins` у `demo` (там только `localhost:*` → `localhost:1032` подходит, кстати, тоже подойдёт; попробуй наоборот — вбей `data-project="kerr"` на localhost:5174 → получишь 403, т.к. 5174 не в `kerr.allowed_origins`).
+Если попытаешься в вкладке Kerr вбить `data-project="demo"` — бэкенд ответит 403, потому что `localhost:1032` не в `allowed_origins` у `demo` (там только `localhost:*` → `localhost:1032` подходит, кстати, тоже подойдёт; попробуй наоборот — вбей `data-project="kerr"` на localhost:5175 → получишь 403, т.к. 5175 не в `kerr.allowed_origins`).
 
 ## Удалить проект
 

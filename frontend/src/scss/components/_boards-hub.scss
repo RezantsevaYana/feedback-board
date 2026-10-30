@@ -45,7 +45,8 @@
     }
 }
 
-// IncomingInvitations.vue — «Вас приглашают» on top of everything, gone when empty
+// IncomingInvitations.vue — «Вас приглашают» on top of everything, gone when empty;
+// AwaitingDecisions.vue («Ждут решения на ваших досках») uses the same blocks right below it
 .incoming-invites {
     margin-bottom: 28px;
 

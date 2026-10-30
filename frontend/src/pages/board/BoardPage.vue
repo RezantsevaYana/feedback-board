@@ -17,22 +17,9 @@
       </div>
     </div>
 
-    <!-- 403 reason=login_required: private board, visitor not signed in -->
-    <div v-else-if="board.privateLocked" class="center-page">
-      <div>
-        <h1>Это закрытая доска</h1>
-        <p class="note">Её видят только участники. Если вас пригласили — войдите, чтобы продолжить.</p>
-        <RouterLink :to="{ path: '/app/login', query: { next: route.fullPath } }" class="btn btn-primary">Войти</RouterLink>
-      </div>
-    </div>
-
-    <!-- 403 reason=no_access: signed in, but not on this board -->
-    <div v-else-if="board.noAccess" class="center-page">
-      <div>
-        <h1>У вас нет доступа к этой доске</h1>
-        <p v-if="board.me" class="note">Вы вошли как {{ board.me.email }}. Попросите владельца прислать приглашение на этот адрес или зайдите другим аккаунтом.</p>
-        <RouterLink to="/app/boards" class="btn">← Мои доски</RouterLink>
-      </div>
+    <!-- 403 reason=login_required (guest) or no_access (signed in, not on the board): the gate with «Запросить доступ» -->
+    <div v-else-if="board.privateLocked || board.noAccess" class="center-page access-gate-page">
+      <AccessGate :key="slug" :slug="slug" :name="board.gateName" :me="board.noAccess ? board.me : null" @logout="board.logout()" />
     </div>
 
     <div v-else-if="!board.project && board.loadError" class="center-page">
@@ -74,6 +61,7 @@
         <!-- team mode with several boards: the brand tag opens the switcher instead of reloading this board -->
         <BoardSwitcher v-if="switchBoards.length > 1" class="proj slant" :boards="switchBoards" :current="slug" :label="board.project.name" />
         <RouterLink v-else class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
+        <VisibilityBadge :visibility="board.project.visibility" class="board-visibility" />
         <div class="board-sections">
           <button
             v-for="s in primarySections"
@@ -107,7 +95,8 @@
           </MenuComponent>
         </div>
         <!-- hover rolls the label up to a question; screen readers always hear «Предложить» -->
-        <button type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
+        <!-- a reader only reads: no «Предложить» (the API refuses it too) -->
+        <button v-if="board.role !== 'reader'" type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
           <span class="cta-roll" aria-hidden="true"><span>Предложить</span><span>Есть идея?</span></span>
         </button>
         <!-- three groups: who is logged in, this board's tools, and the way out (cabinet / logout).
@@ -117,12 +106,16 @@
           <div class="team-box-who">
             <span class="chip">{{ board.team ? 'режим команды' : whoChip }}</span>
             <span class="who-mail" :title="board.me?.email">{{ board.me?.email }}</span>
+            <RouterLink to="/app/account" class="link-btn">Настройки аккаунта</RouterLink>
           </div>
           <!-- managers triage only; categories, columns and settings are for owner / admin -->
           <div v-if="board.configure" class="team-box-tools">
             <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
             <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
             <RouterLink :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
+            <RouterLink :to="`/app/boards/${slug}/participants`" class="link-btn">
+              Участники<span v-if="pendingRequests" class="count-badge" :aria-label="`запросов на доступ: ${pendingRequests}`">{{ pendingRequests }}</span>
+            </RouterLink>
           </div>
           <div class="team-box-foot">
             <RouterLink to="/app/boards" class="link-btn team-box-back">← Мои доски</RouterLink>
@@ -223,8 +216,10 @@ import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
 import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
+import VisibilityBadge from '@/shared/components/VisibilityBadge.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 import SearchComponent from '@/shared/ui/SearchComponent.vue'
+import AccessGate from './components/AccessGate.vue'
 import BoardFilters from './components/BoardFilters.vue'
 import BoardSkeleton from './components/BoardSkeleton.vue'
 import CategoriesModal from './components/CategoriesModal.vue'
@@ -258,6 +253,7 @@ const editingStatuses = ref(false)
 // «Предложить», optionally starting from what was searched for and not found
 const composeTitle = ref('')
 function compose(title = '') {
+  if (board.role === 'reader') return
   composeTitle.value = title
   composing.value = true
 }
@@ -299,6 +295,8 @@ const activeFilters = computed(
 // team mode: every board this user is on is one click away; owner / admin also get the board's settings
 const switchBoards = computed(() => (board.team ? (board.me?.projects ?? []) : []))
 const settingsLink = computed(() => `/app/boards/${slug.value}/settings`)
+// access requests waiting on this board (owner / admin only; /me sends 0 to everyone else)
+const pendingRequests = computed(() => board.me?.projects.find((p) => p.slug === slug.value)?.pending_requests ?? 0)
 // voter / reader (and anyone signed in but not on this board): show their role instead of «режим команды»
 const whoChip = computed(() => (board.role ? `роль ${ROLE_LABELS[board.role].toLowerCase()}` : 'вы вошли'))
 const teamItems = computed<MenuItem[]>(() => [
@@ -308,8 +306,13 @@ const teamItems = computed<MenuItem[]>(() => [
         { label: 'Категории', run: () => (editingCategories.value = true) },
         { label: 'Столбцы', run: () => (editingStatuses.value = true) },
         { label: 'Настройки доски', run: () => router.push(settingsLink.value) },
+        {
+          label: pendingRequests.value ? `Участники · ${pendingRequests.value} запр.` : 'Участники',
+          run: () => router.push(`/app/boards/${slug.value}/participants`),
+        },
       ]
     : []),
+  { label: 'Настройки аккаунта', separated: true, run: () => router.push('/app/account') },
   { label: 'Выйти', danger: true, separated: true, run: askLogout },
 ])
 

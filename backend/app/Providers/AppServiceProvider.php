@@ -54,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
             ->response($tooMany('Слишком много писем подряд. Подождите несколько минут.')));
         RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinutes(10, 6)->by($request->ip())
             ->response($tooMany('Слишком много попыток. Подождите несколько минут.')));
+        RateLimiter::for('access-requests', fn (Request $request) => Limit::perHour(5)->by($request->ip())
+            ->response($tooMany('Слишком много запросов доступа. Попробуйте позже.')));
+        // the current password is checked here too, so guessing it from an open session is limited
+        RateLimiter::for('password-change', fn (Request $request) => Limit::perMinutes(10, 5)->by($request->user()?->id ?: $request->ip())
+            ->response($tooMany('Слишком много попыток. Подождите несколько минут.')));
 
         // The letter links to the SPA page, not the API: /app/verify-email/{id}/{hash}?expires=…&signature=…
         // The page posts the same path and query to the API, which checks the signature (signed:relative).

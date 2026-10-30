@@ -12,6 +12,7 @@ import BoardEmbedPage from '@/pages/app/BoardEmbedPage.vue'
 import BoardSettingsPage from '@/pages/app/BoardSettingsPage.vue'
 import BoardParticipantsPage from '@/pages/app/BoardParticipantsPage.vue'
 import InviteAcceptPage from '@/pages/auth/InviteAcceptPage.vue'
+import AccountPage from '@/pages/account/AccountPage.vue'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 
 const router = createRouter({
@@ -20,7 +21,8 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomePage },
     { path: '/app/register', name: 'register', component: RegisterPage, meta: { guest: true } },
     { path: '/app/login', name: 'login', component: LoginPage, meta: { guest: true } },
-    { path: '/app/forgot-password', name: 'forgot-password', component: ForgotPasswordPage, meta: { guest: true } },
+    // no meta: the «Пароль изменён» letter links here, and the owner may still be logged in on this device
+    { path: '/app/forgot-password', name: 'forgot-password', component: ForgotPasswordPage },
     // the link from the reset letter; no meta: it works even if someone else is logged in on this device
     { path: '/app/reset-password/:token', name: 'reset-password', component: ResetPasswordPage },
     // the link from the confirmation letter; no meta: it opens with or without a session
@@ -28,6 +30,7 @@ const router = createRouter({
     // bare /app lands on the cabinet, otherwise /:slug below catches it as a board slug and 404s
     { path: '/app', redirect: '/app/boards' },
     { path: '/app/boards', name: 'hub', component: BoardsHubPage, meta: { auth: true } },
+    { path: '/app/account', name: 'account', component: AccountPage, meta: { auth: true } },
     { path: '/app/boards/new', name: 'board-new', component: BoardNewPage, meta: { auth: true } },
     { path: '/app/boards/:slug/settings', name: 'board-settings', component: BoardSettingsPage, meta: { auth: true } },
     { path: '/app/boards/:slug/embed', name: 'board-embed', component: BoardEmbedPage, meta: { auth: true } },

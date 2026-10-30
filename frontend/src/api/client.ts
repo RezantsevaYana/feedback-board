@@ -8,6 +8,8 @@ export class ApiError extends Error {
     public errors: Record<string, string[]> = {},
     /** Stable server-side marker — e.g. "login_required" / "no_access" on 403, see EnsureProjectPublished. */
     public reason: string | null = null,
+    /** The whole error body, for the few screens that read more than the message (the private board's gate: `board.name`). */
+    public body: Record<string, unknown> = {},
   ) {
     super(message)
   }
@@ -88,6 +90,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
       response.status >= 500 ? fallback : (data.message ?? fallback),
       data.errors ?? {},
       typeof data.reason === 'string' ? data.reason : null,
+      data,
     )
   }
   return data as T

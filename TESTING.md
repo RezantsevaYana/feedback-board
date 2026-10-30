@@ -8,11 +8,11 @@
 
 | | |
 |---|---|
-| Сайт с виджетом | http://localhost:5174 |
-| Доска для просмотра | http://localhost:5173/demo |
+| Сайт с виджетом | http://localhost:5175 |
+| Доска для просмотра | http://localhost:5176/demo |
 | Таблица в PhpStorm | `posts` (см. [DATABASE.md](DATABASE.md)) |
 
-Открыл **:5174** → справа внизу кнопка → отправил пост → на доске **:5173/demo** появится. В таблице `posts` в PhpStorm нажми Refresh (`Ctrl+F5`) — увидишь новую строку.
+Открыл **:5175** → справа внизу кнопка → отправил пост → на доске **:5176/demo** появится. В таблице `posts` в PhpStorm нажми Refresh (`Ctrl+F5`) — увидишь новую строку.
 
 ## 2. Виджет на твоём реальном локальном проекте (без правки его кода)
 
@@ -26,14 +26,14 @@
 
    ```js
    const s = document.createElement('script');
-   s.src = 'http://localhost:5173/widget.js';
+   s.src = 'http://localhost:5176/widget.js';
    s.dataset.project = 'demo';
    s.defer = true;
    document.body.appendChild(s);
    ```
 
 4. Через секунду появится кнопка «Обратная связь» в правом нижнем углу. Отправь пост.
-5. Посмотри результат на доске http://localhost:5173/demo или в `posts` в PhpStorm.
+5. Посмотри результат на доске http://localhost:5176/demo или в `posts` в PhpStorm.
 
 **Что это проверяет:**
 - Виджет не наследует стили хост-сайта (Shadow DOM работает).
@@ -54,7 +54,7 @@
 // ==/UserScript==
 
 const s = document.createElement('script');
-s.src = 'http://localhost:5173/widget.js';
+s.src = 'http://localhost:5176/widget.js';
 s.dataset.project = 'demo';
 s.defer = true;
 document.body.appendChild(s);
@@ -70,7 +70,7 @@ document.body.appendChild(s);
 docker compose exec backend php artisan project:create "Kerr" --slug=kerr --origin=http://localhost:1032
 ```
 
-Доска будет на http://localhost:5173/kerr. В инжекте замени `s.dataset.project = 'demo'` → `'kerr'`.
+Доска будет на http://localhost:5176/kerr. В инжекте замени `s.dataset.project = 'demo'` → `'kerr'`.
 
 Нужно добавить ещё один origin к существующему проекту (например, другой порт) — проще всего SQL-ом в PhpStorm:
 

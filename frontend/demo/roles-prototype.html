@@ -869,8 +869,8 @@
     <header class="page">
         <h1>Роли и доступ к доскам</h1>
         <p class="lede">
-            Прототип флоу: как люди попадают на закрытую доску (приглашение, запрос доступа), какие роли бывают,
-            что видит админ, что видит участник. Решения, помеченные как «моё предложение», открыты для спора.
+            Флоу ролей V1 в том виде, как он сделан: как люди попадают на закрытую доску (приглашение, запрос доступа), какие роли бывают,
+            что видит админ, что видит участник. Выровнен с реализацией 30.10.2026, чеклист — в <code>docs/ROLES_PLAN.md</code>.
         </p>
     </header>
 
@@ -891,11 +891,11 @@
             </div>
             <div class="scenario-chip sc-c">
                 <div><span class="dot"></span> <span class="label">C — Клиент по прямой ссылке</span></div>
-                <div class="desc">Увидел URL доски. Доска закрыта. Жмёт «Запросить доступ» → админ одобряет → письмо → вход.</div>
+                <div class="desc">Увидел URL доски. Доска закрыта. Жмёт «Запросить доступ» → админ одобряет с ролью → письмо с приглашением → пароль → доска.</div>
             </div>
             <div class="scenario-chip sc-d">
                 <div><span class="dot"></span> <span class="label">D — Повторный вход</span></div>
-                <div class="desc">Сессия истекла или человек с нового устройства. Пароль, при забытом — восстановление по письму.</div>
+                <div class="desc">Сессия (30 дней, продлевается) истекла или человек с нового устройства. Пароль, при забытом — восстановление по письму.</div>
             </div>
         </div>
 
@@ -909,6 +909,8 @@
                 <li><strong>Пароль задаётся на экране принятия приглашения</strong> — для нового аккаунта обязателен (не меньше 8 символов). В письме пароля нет.</li>
                 <li><strong>Клиент по URL</strong> не видит содержимое доски до одобрения — только форму запроса и экран «Заявка отправлена, ждите письма». Админ выбирает роль при одобрении.</li>
                 <li><strong>Апрув заявки — inline</strong> в карточке запроса, без отдельного экрана.</li>
+                <li><strong>Одобрение = приглашение</strong> (решено 30.10.2026). Magic-link убрали, поэтому одобренный получает обычное приглашение с выбранной ролью и проходит тот же экран принятия, что и сценарии A/B. Путь на доску один, второго способа входа нет. Вариант «сразу на доску» — в отложенном, см. <code>ROLES_PLAN.md</code>.</li>
+                <li><strong>Свой аккаунт</strong> — меню под именем справа в шапке кабинета: «Настройки аккаунта» (имя, смена пароля), «Мои доски», «Выйти». См. экран 4.11.</li>
                 <li><strong>Один пользователь — множество ролей.</strong> Человек может быть Владельцем одной доски и Голосующим другой. В кабинете — две группы: «Я веду» (Owner/Admin) и «Я участник» (Менеджер/Голосующий/Читатель). См. экран 4.10.</li>
             </ul>
         </div>
@@ -960,22 +962,29 @@ flowchart TD
     %% Scenario C — client via URL
     URL["Клиент открывает<br/>прямую ссылку"]:::sC --> IsOpen{"Доска<br/>публичная?"}:::sC
     IsOpen -- Да --> JoinC(("На доске"))
-    IsOpen -- Нет --> ClosedScreen["Экран: Это закрытая<br/>доска"]:::sC
-    ClosedScreen --> ReqForm["Экран: Запросить<br/>доступ (имя+почта+зачем)"]:::sC
+    IsOpen -- "Нет, участник" --> JoinC
+    IsOpen -- "Нет, не участник" --> ReqForm["Привратник: «… — закрытая доска»<br/>имя + почта + зачем<br/>(вошедшему — из аккаунта)"]:::sC
     ReqForm --> Pending["Экран: Заявка<br/>отправлена, ждите"]:::sC
-    Pending --> AdminNotif["Админу: нотификация +<br/>письмо о запросе"]:::sC
+    Pending --> Fresh{"Отказ этой почте<br/>на этой доске<br/>меньше суток назад?"}:::sC
+    Fresh -- "Да" --> Dropped["Заявка не записывается<br/>админам не пишем<br/>(экран тот же)"]:::sC
+    Fresh -- "Ждёт другая заявка" --> Updated["Обновляем ту же заявку<br/>писем не шлём"]:::sC
+    Fresh -- "Нет" --> AdminNotif["Владельцу и админам: письмо<br/>+ бейдж «Участники» + блок в кабинете"]:::sC
     AdminNotif --> AdminReview["Админ: раздел<br/>Запросы на доступ"]:::adminArea
     AdminReview --> Decide{"Админ<br/>решает"}:::adminArea
-    Decide -- "Одобрить + роль" --> ApproveMail["Письмо: доступ одобрен<br/>+ одноразовая ссылка на вход"]:::mail
-    Decide -- "Отклонить" --> RejectMail["Письмо: доступ отклонён<br/>+ причина"]:::mail
-    ApproveMail --> LoginFlow
+    Decide -- "Одобрить + роль" --> ApproveMail["Письмо: доступ открыт<br/>+ ссылка приглашения, 7 дней"]:::mail
+    Decide -- "Отклонить" --> RejectMail["Письмо: доступ не одобрен<br/>+ причина, если есть"]:::mail
+    RejectMail -. "через сутки можно снова" .-> ReqForm
+    ApproveMail --> Accept
     class JoinC final
 
     %% Scenario D — login (fallback for all)
     LoginFlow["Форма входа<br/>почта + пароль"]:::sD
-    LoginFlow -- "Войти по паролю" --> Session["Сессия создана"]:::sD
-    LoginFlow -- "Забыли пароль?" --> ResetMail["Письмо: ссылка на<br/>смену пароля, 1 час"]:::mail
-    ResetMail --> ResetForm["Экран: новый пароль"]:::sD
+    LoginFlow -- "Войти по паролю" --> Session["Сессия 30 дней<br/>со скользящим продлением"]:::sD
+    LoginFlow -- "5 неверных за 10 мин" --> Locked["Вход по паролю закрыт<br/>на 15 минут"]:::sD
+    Locked --> Forgot
+    LoginFlow -- "Забыли пароль?" --> Forgot["Экран: пришлём ссылку"]:::sD
+    Forgot --> ResetMail["Письмо: ссылка на<br/>новый пароль, 1 час<br/>(нет аккаунта — письмо об этом)"]:::mail
+    ResetMail --> ResetForm["Экран: новый пароль<br/>снимает блокировку"]:::sD
     ResetForm --> Session
     Session --> JoinD(("На доске"))
     class JoinD final
@@ -986,6 +995,7 @@ flowchart TD
         </div>
         <p class="section-sub" style="margin-top: 16px;">
             Пунктирная рамка — админский флоу (видит только Owner или Admin доски). Жёлтые узлы — письма. Зелёный конечный кружок — успешно оказался на доске с нужной ролью.
+            Одобренный запрос (C) вливается в тот же экран принятия приглашения, что и A/B.
         </p>
     </section>
 
@@ -1051,21 +1061,21 @@ flowchart TD
                 <div class="mail-bar">
                     <strong>От:</strong> Feedback Board &lt;noreply@...&gt;<br>
                     <strong>Кому:</strong> masha@rocont.ru<br>
-                    <strong>Тема:</strong> Вас пригласили в «Внутренний продукт X»
+                    <strong>Тема:</strong> Приглашение в доску «Внутренний продукт X»
                 </div>
                 <div class="mail-content">
-                    <h3>Иван Иванов приглашает вас в доску</h3>
-                    <p>«Внутренний продукт X» как Менеджера.</p>
-                    <p>Это рабочая доска команды. Что в неё писать — решает команда: идеи, баги, запросы, обсуждения. Вы сможете создавать посты, голосовать и двигать карточки между статусами.</p>
+                    <h3>Приглашение в доску «Внутренний продукт X»</h3>
+                    <p>Иван Иванов зовёт вас присоединиться к рабочей доске команды — месту, где собирают идеи, баги, запросы и обсуждения.</p>
+                    <p>Роль на доске: <strong>Менеджер</strong>.</p>
                     <a class="btn" style="margin: 8px 0;">Принять приглашение</a>
-                    <p style="font-size: 12px;">Ссылка действительна 7 дней. Если это не вы — просто проигнорируйте письмо.</p>
+                    <p style="font-size: 12px;">Ссылка одноразовая и действует 7 дней. Если вы не ждали этого письма, просто удалите его.</p>
                     <div class="signature">Feedback Board</div>
                 </div>
             </div>
             <div class="caption">
                 <div class="screen-id">A/B · 4.1</div>
                 <h3>Письмо приглашения</h3>
-                <p>Одно письмо и для участника команды, и для клиента. Отличие — <strong>только роль в тексте</strong> («как Менеджера» / «как Голосующего» / «как Читателя»).</p>
+                <p>Одно письмо и для участника команды, и для клиента. Отличие — <strong>только роль в тексте</strong> («Роль на доске: Менеджер / Голосующий / Читатель»).</p>
                 <ul>
                     <li>Токен в ссылке, живёт 7 дней, одноразовый.</li>
                     <li>Пароля в письме <strong>нет</strong>: пользователь задаст сам на следующем экране.</li>
@@ -1083,19 +1093,18 @@ flowchart TD
                     <div class="url">feedback.rocont.ru/app/invite/8xA2kB...</div>
                 </div>
                 <div class="body">
-                    <div style="padding: 14px; background: var(--surface-2); border-radius: 10px; margin-bottom: 20px;">
-                        <div style="font-weight: 600; font-family: var(--font-display);">Внутренний продукт X</div>
-                        <div style="font-size: 13px; color: var(--muted);">rocont · 12 участников</div>
-                        <div style="margin-top: 10px; font-size: 13px;">Ваша роль: <span class="role-pill manager">Менеджер</span></div>
-                        <div style="font-size: 13px; color: var(--muted);">Пригласил: Иван Иванов</div>
+                    <h3 style="margin-bottom: 6px;">Присоединиться к доске «Внутренний продукт X»</h3>
+                    <p class="hint" style="margin-bottom: 12px;">Иван Иванов зовёт вас в рабочую доску команды — место для идей, багов, запросов и обсуждений.</p>
+                    <div style="padding: 12px 14px; background: var(--surface-2); border-radius: 10px; margin-bottom: 16px; font-size: 13px;">
+                        <div>Почта: <strong>masha@rocont.ru</strong></div>
+                        <div>Роль: <span class="role-pill manager">Менеджер</span></div>
                     </div>
-                    <label>Как к вам обращаться?</label>
+                    <label>Как к вам обращаться</label>
                     <input type="text" value="Маша Петрова">
-                    <div class="hint">Это имя увидит команда рядом с вашими постами.</div>
+                    <div class="hint">&nbsp;</div>
 
-                    <label>Пароль для входа</label>
-                    <input type="password" placeholder="минимум 8 символов" value="••••••••">
-                    <div class="hint">Понадобится для повторных входов.</div>
+                    <label>Пароль <small style="color: var(--muted); font-weight: 400;">· не меньше 8 символов</small></label>
+                    <input type="password" value="••••••••">
 
                     <a class="btn block" style="margin-top: 14px;">Присоединиться</a>
                 </div>
@@ -1107,9 +1116,10 @@ flowchart TD
                 <ul>
                     <li>Создаётся аккаунт, почта помечена подтверждённой.</li>
                     <li>Сохраняется имя и хэш пароля.</li>
-                    <li>Записывается в <code>project_user</code>: роль, invited_by, source=invite.</li>
+                    <li>Записывается в <code>project_user</code> с ролью из приглашения; в участниках он «по приглашению» (или «по запросу», если это одобренный запрос доступа).</li>
                     <li>Токен сжигается.</li>
-                    <li>Пользователь сразу залогинен и редиректится на доску.</li>
+                    <li>Пользователь сразу залогинен и попадает на доску.</li>
+                    <li>Тот же экран открывает письмо «Доступ открыт» после одобрения запроса (4.6).</li>
                 </ul>
             </div>
         </div>
@@ -1123,23 +1133,14 @@ flowchart TD
                     <div class="url">feedback.rocont.ru/app/invite/8xA2kB...</div>
                 </div>
                 <div class="body">
-                    <div style="padding: 14px; background: var(--surface-2); border-radius: 10px; margin-bottom: 20px;">
-                        <div style="font-weight: 600; font-family: var(--font-display);">Клиентский проект Y</div>
-                        <div style="font-size: 13px; color: var(--muted);">Studio · 4 участника</div>
-                        <div style="margin-top: 10px; font-size: 13px;">Ваша роль: <span class="role-pill manager">Менеджер</span></div>
-                        <div style="font-size: 13px; color: var(--muted);">Пригласил: Иван Иванов</div>
+                    <h3 style="margin-bottom: 6px;">Присоединиться к доске «Клиентский проект Y»</h3>
+                    <p class="hint" style="margin-bottom: 12px;">Иван Иванов зовёт вас в рабочую доску команды — место для идей, багов, запросов и обсуждений.</p>
+                    <div style="padding: 12px 14px; background: var(--surface-2); border-radius: 10px; margin-bottom: 16px; font-size: 13px;">
+                        <div>Почта: <strong>masha@rocont.ru</strong></div>
+                        <div>Роль: <span class="role-pill manager">Менеджер</span></div>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 18px;">
-                        <div class="avatar">М</div>
-                        <div style="font-size: 14px;">
-                            <div>Вы вошли как <strong>Маша Петрова</strong></div>
-                            <div style="font-size: 12px; color: var(--muted);">masha@rocont.ru</div>
-                        </div>
-                    </div>
-                    <a class="btn block">Присоединиться к доске</a>
-                    <div style="text-align: center; margin-top: 12px;">
-                        <a class="btn ghost" style="font-size: 13px;">Это не моя почта — войти как другой</a>
-                    </div>
+                    <p class="hint">Вы уже вошли как <strong>masha@rocont.ru</strong>.</p>
+                    <a class="btn block">Присоединиться</a>
                 </div>
             </div>
             <div class="caption">
@@ -1147,8 +1148,9 @@ flowchart TD
                 <h3>Принятие приглашения — существующий аккаунт</h3>
                 <p>Частый случай у команды студии: сотрудник уже зарегистрирован в системе (есть другие доски), владелец приглашает на новую доску.</p>
                 <ul>
-                    <li>Если залогинен и почта совпадает с инвайтом — одна кнопка.</li>
-                    <li>Если залогинен другой почтой — ссылка «войти как другой» переключает сессию.</li>
+                    <li>Если залогинен и почта совпадает с инвайтом — одна кнопка «Присоединиться» (на мокапе).</li>
+                    <li>Если аккаунт на эту почту есть, но вход не выполнен — «На почту … уже есть аккаунт» и кнопка «Войти и принять»: вход, затем возврат на этот же экран.</li>
+                    <li>Ещё проще из кабинета: приглашение на мою почту ждёт в блоке «Вас приглашают» (4.10), там «Принять» без письма.</li>
                     <li>Пароль не трогаем, имя не трогаем — только добавляется запись в <code>project_user</code>.</li>
                 </ul>
             </div>
@@ -1162,25 +1164,21 @@ flowchart TD
                     <div class="dots"><span></span><span></span><span></span></div>
                     <div class="url">feedback.rocont.ru/project-y</div>
                 </div>
-                <div class="body" style="text-align: center; padding: 40px 24px;">
-                    <div style="font-size: 42px; margin-bottom: 10px;">🔒</div>
-                    <h3 style="margin-bottom: 8px;">Это закрытая доска</h3>
-                    <p style="color: var(--muted); margin-bottom: 24px;">
-                        «Клиентский проект Y» виден только участникам. Запросите доступ — админ рассмотрит заявку.
-                    </p>
-                    <div style="text-align: left; max-width: 320px; margin: 0 auto;">
-                        <label>Ваше имя</label>
+                <div class="body" style="padding: 32px 24px; background: var(--surface-2);">
+                    <div style="max-width: 340px; margin: 0 auto; padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 14px;">
+                        <h3 style="margin-bottom: 6px;">«Клиентский проект Y» — закрытая доска</h3>
+                        <p class="hint" style="margin-bottom: 14px;">
+                            Её видят только участники. Запросите доступ: команда доски рассмотрит заявку и ответит на почту.
+                        </p>
+                        <label>Имя</label>
                         <input type="text" value="Клиент Клиентов">
-                        <div class="hint">&nbsp;</div>
-                        <label>Почта</label>
+                        <label>Почта <small style="color: var(--muted); font-weight: 400;">· на неё придёт ответ</small></label>
                         <input type="email" value="klient@externalcorp.com">
-                        <div class="hint">На неё придёт ответ от админа.</div>
-                        <label>Зачем нужен доступ (необязательно)</label>
-                        <textarea placeholder="Например: я продакт в externalcorp, хочу сообщать о багах">Представляю externalcorp, хотел бы следить за прогрессом</textarea>
-                        <div class="hint">Поможет админу принять решение быстрее.</div>
+                        <label>Зачем нужен доступ <small style="color: var(--muted); font-weight: 400;">· по желанию, так заявку проще одобрить</small></label>
+                        <textarea>Представляю externalcorp, хотел бы следить за прогрессом</textarea>
                         <a class="btn block" style="margin-top: 10px;">Запросить доступ</a>
-                        <div style="text-align: center; margin-top: 10px;">
-                            <a class="btn ghost" style="font-size: 12px;">У меня уже есть аккаунт — войти</a>
+                        <div style="text-align: center; margin-top: 12px; font-size: 12px; color: var(--muted);">
+                            Уже участник? <a style="color: var(--accent); font-weight: 600;">Войти</a>
                         </div>
                     </div>
                 </div>
@@ -1188,14 +1186,15 @@ flowchart TD
             <div class="caption">
                 <div class="screen-id">C · 4.4</div>
                 <h3>Закрытая доска: запрос доступа</h3>
-                <p>Клиент получил ссылку (от менеджера, из переписки, с сайта продукта) и открыл её. Доски не видит, вместо неё — экран-привратник.</p>
+                <p>Клиент получил ссылку (от менеджера, из переписки, с сайта продукта) и открыл её. Доски не видит, вместо неё — экран-привратник с названием доски.</p>
                 <ul>
                     <li>Поле «Зачем нужен доступ» <strong>не обязательное</strong>, но повышает шанс одобрения — об этом подсказка.</li>
-                    <li>Если у клиента уже есть аккаунт в системе (бывает редко, но возможно): ссылка «войти» — на обычный логин, после входа сразу редирект на эту же доску, которая всё равно закрыта → всплывёт та же форма запроса, уже с подставленными имя/почта.</li>
-                    <li>Создаётся запись <code>access_request</code> (project_id, email, name, message, status=pending, created_at).</li>
+                    <li><strong>Вошедший не-участник</strong> видит тот же экран, но без полей имени и почты: строка «Запрос уйдёт от Анна · anna@…» и ссылка «Не тот аккаунт? Выйти». Сервер берёт имя и почту из аккаунта.</li>
+                    <li><strong>Ответ всегда одинаковый</strong>: и участнику, и тому, кому отказали меньше суток назад, и на открытой доске. По форме нельзя узнать, кто на доске. Повтор, пока первая заявка ждёт, обновляет её, а не плодит вторую. Не больше 5 заявок в час с одного IP.</li>
+                    <li>Создаётся запись <code>access_requests</code> (project_id, email, name, message, user_id, status=pending).</li>
                 </ul>
                 <div class="note">
-                    <strong>Что видит клиент сразу после отправки:</strong> короткий экран «Заявка отправлена, ответ придёт на klient@externalcorp.com». Содержимое доски по-прежнему скрыто.
+                    <strong>Что видит клиент сразу после отправки:</strong> короткий экран «Заявка отправлена. Ответ придёт на klient@externalcorp.com, когда команда доски её рассмотрит». Содержимое доски по-прежнему скрыто.
                 </div>
             </div>
         </div>
@@ -1209,24 +1208,25 @@ flowchart TD
                     <div class="avatar">И</div>
                 </div>
                 <div class="tabs">
-                    <div class="tab">Общие</div>
+                    <div class="tab">Общее</div>
                     <div class="tab">Категории</div>
-                    <div class="tab active">Участники <span style="background: var(--sta-red); color: #fff; padding: 1px 7px; border-radius: 999px; font-size: 10px; margin-left: 4px;">3</span></div>
-                    <div class="tab">Виджет</div>
+                    <div class="tab">Доступ</div>
+                    <div class="tab">Подключение</div>
+                    <div class="tab active">Участники <span style="background: var(--accent); color: #fff; padding: 1px 7px; border-radius: 999px; font-size: 10px; margin-left: 4px;">2</span></div>
                 </div>
                 <div class="body">
                     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                         <a class="btn">+ Пригласить</a>
-                        <a class="btn outline">Экспорт списка</a>
                     </div>
 
-                    <h4 style="margin: 0 0 10px; font-size: 15px;">Запросы на доступ — 3</h4>
+                    <h4 style="margin: 0 0 4px; font-size: 15px;">Запросы на доступ <span style="background: var(--accent); color: #fff; padding: 1px 7px; border-radius: 999px; font-size: 11px;">2</span></h4>
+                    <p class="hint" style="margin: 0 0 10px;">Открыли ссылку на закрытую доску и просят пустить. После одобрения человек получит письмо со ссылкой на вход.</p>
 
                     <div class="req-card">
                         <div class="meta">
                             <strong>Клиент Клиентов</strong> · klient@externalcorp.com · 3 минуты назад
                         </div>
-                        <div class="msg">«Представляю externalcorp, хотел бы следить за прогрессом»</div>
+                        <div class="msg">Представляю externalcorp, хотел бы следить за прогрессом</div>
                         <div class="req-actions">
                             <select>
                                 <option>Голосующий</option>
@@ -1241,67 +1241,55 @@ flowchart TD
 
                     <div class="req-card">
                         <div class="meta">
-                            <strong>Петя Внешний</strong> · petya@random.io · 15 часов назад
+                            <strong>Петя Внешний</strong> · petya@random.io · есть аккаунт · 15 часов назад
                         </div>
-                        <div class="msg">Пустое сообщение.</div>
+                        <div style="margin: 8px 0;">
+                            <label style="margin-top: 0;">Причина <small style="color: var(--muted); font-weight: 400;">· по желанию, её увидят в письме</small></label>
+                            <textarea style="min-height: 48px;">Доска только для команды проекта</textarea>
+                        </div>
                         <div class="req-actions">
-                            <select>
-                                <option>Голосующий</option>
-                                <option>Читатель</option>
-                            </select>
-                            <a class="btn sm">Одобрить</a>
-                            <a class="btn sm outline">Отклонить</a>
+                            <a class="btn sm danger">Отклонить</a>
+                            <a class="btn sm ghost">Отмена</a>
                         </div>
                     </div>
 
-                    <div class="req-card">
-                        <div class="meta">
-                            <strong>Vasya spam</strong> · spam@spam.ru · 2 дня назад
-                        </div>
-                        <div class="msg">asdqwe123</div>
-                        <div class="req-actions">
-                            <a class="btn sm outline">Одобрить</a>
-                            <a class="btn sm danger">Отклонить и забанить</a>
-                        </div>
-                    </div>
+                    <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--line);">
 
-                    <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--line);">
-
-                    <h4 style="margin: 0 0 10px; font-size: 15px;">Участники — 4</h4>
-                    <!-- participants list (shortened for this screen; full version is in 4.9) -->
-                    <div style="color: var(--muted); font-size: 13px;">см. экран 4.9 → полный список и управление ролями</div>
+                    <h4 style="margin: 0 0 10px; font-size: 15px;">Ждут приглашения</h4>
+                    <div style="color: var(--muted); font-size: 13px;">сюда переезжает одобренный запрос, пока человек не принял письмо; ниже — таблица участников (экран 4.9)</div>
                 </div>
             </div>
             <div class="caption">
                 <div class="screen-id">C · 4.5</div>
                 <h3>Раздел «Запросы на доступ»</h3>
-                <p>Приходит в раздел «Участники». Над списком участников — секция ожидающих запросов, с цифрой в табе.</p>
+                <p>Страница «Участники» в настройках доски. Над приглашениями и таблицей участников — секция ожидающих запросов, с цифрой на вкладке.</p>
                 <ul>
                     <li>Админ выбирает роль из дропдауна (дефолт — Голосующий, самое безопасное для нового клиента).</li>
-                    <li>«Одобрить» → запись переезжает в <code>project_user</code> с выбранной ролью, статус запроса меняется на approved, уходит письмо.</li>
-                    <li>«Отклонить» — просит причину (необязательно), уходит письмо.</li>
-                    <li>«Отклонить и забанить» для спама — почта попадает в чёрный список доски, повторные запросы автоматически блокируются.</li>
+                    <li>«Одобрить» → выдаётся приглашение с выбранной ролью, уходит письмо «Доступ открыт» (4.6), карточка переезжает в «Ждут приглашения». В <code>project_user</code> человек попадает, приняв приглашение; в таблице участников он «по запросу».</li>
+                    <li>«Отклонить» раскрывает в карточке поле причины (необязательно), уходит письмо «Доступ не одобрен». Попроситься снова с этой почты можно через сутки; раньше заявка молча отбрасывается и админам не пишут.</li>
+                    <li>Отдельного бана нет (решено 30.10.2026): пауза в сутки закрывает навязчивые повторы, блокировка почты — в отложенном.</li>
                 </ul>
                 <div class="note">
-                    <strong>Нотификация:</strong> письмо админу приходит сразу + индикатор в табе «Участники» на доске (красный бейдж с числом ожидающих).
+                    <strong>Нотификация:</strong> письмо каждому владельцу и админу доски сразу + зелёный бейдж с числом ждущих на «Участники» (в настройках и в блоке команды на самой доске) + блок «Ждут решения на ваших досках» в кабинете (4.10). Менеджеры решений не принимают и счётчика не видят.
                 </div>
             </div>
         </div>
 
         <!-- 4.6 Approval email -->
-        <h3 id="s46">4.6 — Письмо «Доступ одобрен»</h3>
+        <h3 id="s46">4.6 — Письмо «Доступ открыт»</h3>
         <div class="screen">
             <div class="mockup">
                 <div class="mail-bar">
                     <strong>От:</strong> Feedback Board &lt;noreply@...&gt;<br>
                     <strong>Кому:</strong> klient@externalcorp.com<br>
-                    <strong>Тема:</strong> Доступ к «Клиентскому проекту Y» одобрен
+                    <strong>Тема:</strong> Доступ к доске «Клиентский проект Y» открыт
                 </div>
                 <div class="mail-content">
-                    <h3>Иван Иванов одобрил ваш запрос</h3>
-                    <p>Вы добавлены в доску «Клиентский проект Y» как <strong>Голосующий</strong> — можете читать посты, голосовать и писать свои.</p>
-                    <a class="btn" style="margin: 8px 0;">Открыть доску</a>
-                    <p style="font-size: 12px;">Откройте ссылку, задайте пароль — и доска ваша.</p>
+                    <h3>Доступ к доске «Клиентский проект Y» открыт</h3>
+                    <p>Иван Иванов одобрил(а) ваш запрос. Это рабочая доска команды: здесь собирают идеи, баги, запросы и обсуждения.</p>
+                    <p>Ваша роль на доске: <strong>Голосующий</strong>.</p>
+                    <a class="btn" style="margin: 8px 0;">Открыть доступ</a>
+                    <p style="font-size: 12px;">По ссылке можно задать пароль для входа, а если аккаунт уже есть, присоединиться одной кнопкой. Ссылка одноразовая и действует 7 дней.</p>
                     <div class="signature">Feedback Board</div>
                 </div>
             </div>
@@ -1310,11 +1298,12 @@ flowchart TD
                 <h3>Письмо об одобрении</h3>
                 <p>Приходит клиенту сразу после одобрения.</p>
                 <ul>
-                    <li>Содержит одноразовую ссылку (7 дней): клик → экран принятия с паролем → доска.</li>
+                    <li>Ссылка — это приглашение (7 дней): клик → тот же экран принятия, что в 4.2 / 4.3 (новичку — имя и пароль, с аккаунтом — «Присоединиться») → доска.</li>
+                    <li>Если вошёл в кабинет под этой почтой, приглашение ждёт и в блоке «Вас приглашают» (4.10).</li>
                     <li>Прямо упоминается роль, чтобы клиент понял, что ему доступно.</li>
                 </ul>
                 <div class="note">
-                    <strong>Отказ:</strong> письмо «Доступ не одобрен». Без ссылок, с указанием причины (если админ ввёл). Не раскрывает, кто именно отклонил.
+                    <strong>Отказ:</strong> письмо «Доступ к доске … не одобрен». Без ссылок, с причиной (если админ ввёл). Не раскрывает, кто именно отклонил.
                 </div>
             </div>
         </div>
@@ -1371,34 +1360,32 @@ klient@externalcorp.com</textarea>
             <div class="mockup">
                 <div class="browser-bar">
                     <div class="dots"><span></span><span></span><span></span></div>
-                    <div class="url">feedback.rocont.ru/project-y</div>
+                    <div class="url">feedback.rocont.ru/app/login?next=/project-y</div>
                 </div>
                 <div class="body" style="padding: 30px 24px;">
-                    <h3>Войти в «Клиентский проект Y»</h3>
-                    <p class="hint">Закрытая доска — доступ только участникам.</p>
+                    <h3>Войти</h3>
+                    <p class="hint">Войдите, чтобы вернуться к своим доскам.</p>
 
-                    <label>Почта</label>
+                    <label>Email</label>
                     <input type="email" value="masha@rocont.ru">
                     <div class="hint">&nbsp;</div>
 
                     <label>Пароль</label>
                     <input type="password" placeholder="••••••••">
-                    <div class="hint">&nbsp;</div>
+                    <div class="hint" style="color: var(--sta-red);">Вход по паролю заблокирован на 15 минут после 5 неверных попыток. Чтобы войти раньше, задайте новый пароль по ссылке «Забыли пароль?».</div>
 
+                    <div style="text-align: right; font-size: 12px;"><a style="color: var(--accent); font-weight: 600;">Забыли пароль?</a></div>
                     <a class="btn block" style="margin-top: 10px;">Войти</a>
-
-                    <div style="text-align: center; margin-top: 16px; font-size: 13px;">
-                        <a class="btn ghost">Забыли пароль?</a>
-                    </div>
                 </div>
             </div>
             <div class="caption">
                 <div class="screen-id">D · 4.8</div>
                 <h3>Повторный вход</h3>
-                <p>Одна форма для всех ролей и для всех досок. Пароль + «Войти».</p>
+                <p>Одна форма <code>/app/login</code> для всех ролей и для всех досок. Закрытая доска шлёт сюда с <code>?next=</code> и после входа возвращает обратно.</p>
                 <ul>
-                    <li>«Забыли пароль?» → отдельный флоу восстановления (письмо со ссылкой на смену пароля, 1 час).</li>
-                    <li>Rate-limit: 5 попыток / 10 мин → пароль блокируется на 15 минут. Разблокировать можно через смену пароля по письму.</li>
+                    <li>«Забыли пароль?» переносит введённую почту на экран восстановления → письмо со ссылкой на новый пароль (1 час). Если аккаунта с такой почтой нет, экран отвечает так же, а на почту уходит письмо «У этой почты нет аккаунта» (не чаще раза в час).</li>
+                    <li>Блокировка: 5 неверных паролей за 10 минут → вход по этой почте закрыт на 15 минут, даже с верным паролем (на мокапе — сообщение под паролем). Незнакомая почта блокируется так же, чтобы не выдавать, есть ли аккаунт. Новый пароль по письму снимает блокировку.</li>
+                    <li>Сессия — 30 дней, продлевается при каждом заходе.</li>
                 </ul>
             </div>
         </div>
@@ -1478,16 +1465,7 @@ klient@externalcorp.com</textarea>
                                     <option>Админ</option>
                                 </select>
                             </div>
-                            <div style="color: var(--muted); font-size: 12px;">только что · по запросу</div>
-                            <div style="color: var(--muted); cursor: pointer;">⋯</div>
-                        </div>
-                        <div class="row">
-                            <div>
-                                <strong>Алексей К.</strong><br>
-                                <span style="color: #f0a854; font-size: 12px;">⏳ приглашение отправлено, не принято</span>
-                            </div>
-                            <div><span class="role-pill manager">Менеджер</span></div>
-                            <div style="color: var(--muted); font-size: 12px;">2 дня назад</div>
+                            <div style="color: var(--muted); font-size: 12px;">по запросу</div>
                             <div style="color: var(--muted); cursor: pointer;">⋯</div>
                         </div>
                     </div>
@@ -1498,13 +1476,13 @@ klient@externalcorp.com</textarea>
                 <h3>Список участников и управление ролями</h3>
                 <p>Один экран для всех трёх сценариев: приглашённые команды, приглашённые клиенты, одобренные по запросу — все в одной таблице.</p>
                 <ul>
-                    <li><strong>Смена роли</strong> — дропдаун прямо в ячейке, без модалки. Клик → меняется мгновенно, подтверждение не нужно, но есть «отменить» в тосте 10 секунд.</li>
-                    <li><strong>Колонка «Добавлен»</strong> — откуда человек на доске: «создал доску», «по приглашению», «добавлен вручную» (позже — «по запросу»). Нужна для аудита (кого откуда).</li>
-                    <li><strong>Ожидающие приглашения</strong> — с жёлтым статусом «не принято» в колонке имени. В меню «⋯» — переслать, отменить.</li>
-                    <li><strong>Меню «⋯» на строке:</strong> «Удалить из доски», «Переслать приглашение» (для не принятых), «Сбросить пароль» (прислать письмо восстановления).</li>
+                    <li><strong>Смена роли</strong> — дропдаун прямо в ячейке, без модалки. Выбор → роль меняется сразу, без подтверждения, в тосте «Анна теперь менеджер».</li>
+                    <li><strong>Колонка «Добавлен»</strong> — откуда человек на доске: «создал доску», «по запросу» (одобренный запрос доступа), «по приглашению», «добавлен вручную». Нужна для аудита (кого откуда).</li>
+                    <li><strong>Ожидающие приглашения</strong> — отдельной секцией «Ждут приглашения» над таблицей: почта, роль, срок, кто позвал; кнопки «Отправить ещё раз» и «Отменить». Ещё выше — «Запросы на доступ» (4.5).</li>
+                    <li><strong>На строке</strong> — удалить из доски (через подтверждение). Строку владельца не изменить и не удалить, себя удалить нельзя.</li>
                 </ul>
                 <div class="note">
-                    <strong>Что видят не-админы:</strong> та же таблица, но без дропдаунов роли (только пилюля), без меню «⋯», без email (только имя + роль). См. ветку доступа в <code>ROLES_PLAN.md</code>.
+                    <strong>Кто видит экран:</strong> только владелец и админы доски. Менеджеру, голосующему и читателю страница участников недоступна.
                 </div>
             </div>
         </div>
@@ -1518,16 +1496,15 @@ klient@externalcorp.com</textarea>
                     <div class="url">feedback.rocont.ru/app</div>
                 </div>
                 <div class="hub-header">
-                    <div class="brand">Feedback Board</div>
+                    <div class="brand">Feedback Board <span style="color: var(--muted); font-weight: 500;">/ Доски ▾</span></div>
                     <div class="right">
-                        <a class="btn sm">+ Создать доску</a>
-                        <div class="avatar">М</div>
+                        <span style="font-size: 13px; font-weight: 500;">Мария Петрова ▾</span>
                     </div>
                 </div>
                 <div class="body">
                     <!-- Pending invitations -->
                     <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between;">
-                        <span>📬 Вас приглашают — 1</span>
+                        <span>Вас приглашают · 1</span>
                     </div>
                     <div class="alert-card incoming">
                         <div class="main">
@@ -1542,19 +1519,23 @@ klient@externalcorp.com</textarea>
 
                     <!-- Pending access requests on my boards -->
                     <div style="font-weight: 600; font-size: 13px; margin: 20px 0 8px; display: flex; justify-content: space-between;">
-                        <span>🔔 Ждут решения на ваших досках — 3</span>
+                        <span>Ждут решения на ваших досках · 3</span>
                     </div>
                     <div class="alert-card">
                         <div class="main">
                             <div class="title">Клиентский проект Y</div>
-                            <div class="meta">3 запроса на доступ ожидают одобрения</div>
+                            <div class="meta">3 запроса на доступ</div>
                         </div>
                         <div class="actions">
-                            <a class="btn sm outline">Открыть →</a>
+                            <a class="btn sm">Рассмотреть</a>
                         </div>
                     </div>
 
                     <!-- My boards grouped -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                        <strong style="font-size: 18px;">Мои доски</strong>
+                        <a class="btn sm">+ Новая доска</a>
+                    </div>
                     <div class="section-head">Я веду · 3</div>
 
                     <div class="board-card">
@@ -1619,14 +1600,15 @@ klient@externalcorp.com</textarea>
                     <li><strong>Пилюля роли</strong> справа — моя роль именно на этой конкретной доске. Один и тот же человек на разных досках может иметь любую комбинацию.</li>
                     <li><strong>Нотификационные блоки сверху:</strong>
                         <ul style="margin-top: 4px;">
-                            <li>📬 Инвайты, которые жду я (пригласили, но ещё не принял). После «Принять» остаёмся в кабинете: тост «Вы в доске «…» — она появилась в списке», доска открывается с карточки.</li>
-                            <li>🔔 Запросы на мои доски (где я Admin/Owner и кто-то ждёт одобрения).</li>
+                            <li>Вас приглашают — инвайты, которые жду я (пригласили, но ещё не принял). После «Принять» остаёмся в кабинете: тост «Вы в доске «…» — она появилась в списке», доска открывается с карточки.</li>
+                            <li>Ждут решения на ваших досках — доски, где я Owner/Admin и кто-то просит доступ, с числом запросов; «Рассмотреть» ведёт на участников доски (4.5).</li>
                         </ul>
                         Обе секции скрываются, если нулевые.
                     </li>
-                    <li><strong>Иконки видимости</strong> (🔒 / 🌐) — открытая или закрытая доска. Нужно, потому что в кабинете у Owner обычно смесь.</li>
+                    <li><strong>Иконки видимости</strong> (🔒 / 🌐) — открытая или закрытая доска. Нужно, потому что в кабинете у Owner обычно смесь. В реализации — значок «Открытая / Закрытая» с иконкой глобуса или замка; тот же значок стоит под названием на самой доске.</li>
                     <li><strong>Клик по карточке</strong> → доска открывается в новой вкладке (стрелка ↗), кабинет остаётся открытым. Кнопки «Настройки / Участники / Как подключить» — только у Owner/Admin, в той же вкладке.</li>
-                    <li><strong>«+ Создать доску»</strong> → короткая форма (название, видимость, slug). После создания — автоматически Владелец, попадает в раздел «Я веду».</li>
+                    <li><strong>«+ Новая доска»</strong> → короткая форма (название, slug). Доска создаётся открытой, закрыть её можно в настройках → «Доступ». Создатель — Владелец, доска попадает в «Я веду».</li>
+                    <li><strong>Справа в шапке</strong> — меню аккаунта под именем (4.11), слева — переключатель досок.</li>
                 </ul>
                 <div class="note">
                     <strong>Что про смену контекста:</strong> на самой доске сверху — тот же бренд «Feedback Board» слева, при клике — возврат в кабинет. Отдельного «переключателя досок» в хедере доски не делаем в V1 (достаточно вернуться в хаб). Если станет неудобно — добавим дропдаун.
@@ -1634,6 +1616,60 @@ klient@externalcorp.com</textarea>
                 <div class="note">
                     <strong>Публичные доски:</strong> в кабинете видны только если ты их Owner/Admin. Как Голосующий/Читатель на публичной доске тебя не отслеживаем, туда ты заходишь просто по URL.
                 </div>
+            </div>
+        </div>
+
+        <!-- 4.11 Account menu + settings -->
+        <h3 id="s411">4.11 — Меню аккаунта и настройки аккаунта</h3>
+        <div class="screen wide">
+            <div class="mockup">
+                <div class="hub-header">
+                    <div class="brand">Feedback Board <span style="color: var(--muted); font-weight: 500;">/ Доски ▾</span></div>
+                    <div class="right" style="position: relative;">
+                        <span style="font-size: 13px; font-weight: 500; background: var(--surface-2); padding: 4px 8px; border-radius: 8px;">Мария Петрова ▴</span>
+                    </div>
+                </div>
+                <div class="body">
+                    <div class="req-card" style="font-size: 13px; max-width: 210px; margin: 0 0 18px auto;">
+                        <div style="color: var(--muted); padding-bottom: 6px; border-bottom: 1px solid var(--line);">masha@rocont.ru</div>
+                        <div style="padding: 6px 0; font-weight: 600;">Настройки аккаунта ✓</div>
+                        <div style="padding: 6px 0;">Мои доски</div>
+                        <div style="padding: 6px 0; border-top: 1px solid var(--line);">Выйти</div>
+                    </div>
+                    <strong style="font-size: 18px;">Настройки аккаунта</strong>
+                    <div style="display: flex; gap: 6px; margin: 8px 0 10px; font-size: 13px;">
+                        <span style="background: var(--active); color: var(--active-fg); border-radius: 8px; padding: 4px 10px; font-weight: 600;">Профиль</span>
+                        <span style="border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; color: var(--muted);">Пароль</span>
+                    </div>
+                    <div class="req-card">
+                        <strong>Профиль</strong>
+                        <label>Имя <small style="color: var(--muted); font-weight: 400;">· подписывает ваши предложения на досках</small></label>
+                        <input type="text" value="Мария Петрова">
+                        <label>Почта <small style="color: var(--muted); font-weight: 400;">· не меняется</small></label>
+                        <input type="email" value="masha@rocont.ru">
+                        <div style="text-align: right;"><a class="btn sm">Сохранить</a></div>
+                    </div>
+                    <div class="req-card">
+                        <strong>Пароль</strong>
+                        <label>Текущий пароль</label>
+                        <input type="password" placeholder="••••••••">
+                        <label>Новый пароль <small style="color: var(--muted); font-weight: 400;">· от 8 символов</small></label>
+                        <input type="password">
+                        <div style="text-align: right;"><a class="btn sm">Сменить пароль</a></div>
+                        <div class="hint">Не помните текущий? <a style="color: var(--accent); font-weight: 600;">Прислать ссылку на почту</a></div>
+                    </div>
+                </div>
+            </div>
+            <div class="caption">
+                <div class="screen-id">D · 4.11</div>
+                <h3>Свой аккаунт</h3>
+                <p>Справа в шапке кабинета — имя с шевроном, как переключатель досок слева. В меню: почта подписью, «Настройки аккаунта», «Мои доски», «Выйти». На телефоне вместо имени — инициалы.</p>
+                <ul>
+                    <li><strong><code>/app/account</code></strong> в рамке настроек доски: слева «Профиль · Пароль», справа карточки, у каждой своя кнопка.</li>
+                    <li><strong>Профиль</strong>: имя меняется, им подписаны посты и строка в лидерборде. Почта только для чтения.</li>
+                    <li><strong>Пароль</strong>: текущий + новый. Сессия остаётся, на почту уходит письмо «Пароль изменён» со ссылкой на сброс «если это были не вы». Пароля в письме нет.</li>
+                    <li>С самой доски сюда ведёт «Настройки аккаунта» в блоке «Вы вошли» и в мобильном меню «Аккаунт».</li>
+                </ul>
             </div>
         </div>
 
@@ -1648,39 +1684,25 @@ klient@externalcorp.com</textarea>
                 <li><strong>Роль «Менеджер»</strong> — новое название вместо «Триажер». Короткое, понятное без контекста, в твоём направлении «менеджер доски».</li>
                 <li><strong>Читатель — оставляем.</strong> Отдельный уровень «только читать, без голоса» для наблюдателей.</li>
                 <li><strong>После запроса доступа клиент видит</strong> короткий экран «Заявка отправлена, ждите письма». Содержимое доски скрыто, превью нет.</li>
-                <li><strong>Админ одобряет inline</strong> — кнопка на карточке запроса, без отдельного экрана. Для спама — «Отклонить и забанить».</li>
+                <li><strong>Админ одобряет inline</strong> — кнопка на карточке запроса, без отдельного экрана. Вместо бана — пауза в сутки после отказа.</li>
                 <li><strong>Лимитов на число участников в V1 нет.</strong> Тарификация и платные планы — не раньше, чем появятся платящие.</li>
                 <li><strong>Пометки «команда / внешний» нет.</strong> Сначала планировали бейдж и домен команды (<code>team_domain</code>, <code>is_team_member</code>), но он ничего не давал сверх роли — убрали (28.10.2026).</li>
-            </ul>
-                    Доступ на доску от этих полей не зависит, они нужны только для группировки.
-                </li>
+                <li><strong>Magic-link не делаем</strong> (29.10.2026). Вход один: почта + пароль, забытый пароль — по письму.</li>
+                <li><strong>Одобрение запроса = приглашение</strong> (30.10.2026). Одобренный проходит тот же экран принятия, что приглашённый. «Сразу на доску + одноразовая ссылка» отложено.</li>
+                <li><strong>Голоса и авторы закрытой доски — по аккаунту.</strong> Один человек — один голос и одна строка в лидерборде с любого устройства. Гость (виджет, открытая доска) по-прежнему считается по браузеру.</li>
             </ul>
         </div>
     </section>
 
     <section>
-        <h2><span class="num">6</span>Следующие шаги</h2>
-        <p class="section-sub">Что надо решить до того, как брать первый PR в код.</p>
+        <h2><span class="num">6</span>Статус</h2>
+        <p class="section-sub">Все три этапа V1 сделаны (30.10.2026). Подробный чеклист — <code>docs/ROLES_PLAN.md</code>.</p>
         <div class="decisions">
             <ul>
-                <li><strong>Переписать <code>docs/ROLES_PLAN.md</code> под пять ролей и без доменов.</strong> Текущий план ещё содержит четыре роли и доменный доступ — надо выровнять.</li>
-                <li><strong>Схема БД:</strong>
-                    <ul>
-                        <li>Расширить <code>project_user.role</code> до пяти значений: owner, admin, manager, voter, reader. Миграция: прежние Admin → admin, Team → manager, Member → voter (не теряем прав).</li>
-                        <li>Новая таблица <code>access_requests</code> (project_id, email, name, message, status, created_at, decided_at, decided_by, role_on_approve).</li>
-                    </ul>
-                </li>
-                <li><strong>Решить порядок этапов.</strong> Моё предложение:
-                    <ol>
-                        <li>Этап 1: Пять ролей на существующих открытых досках + bulk-инвайты + экран участников со сменой роли. Доски пока все открытые.</li>
-                        <li>Этап 2: Закрытые доски (visibility=private) + пароль на инвайте + сценарий 4.8.</li>
-                        <li>Этап 3: Запросы доступа через URL + апрув-флоу (сценарии 4.4–4.6).</li>
-                    </ol>
-                    Логика: этап 1 ценный сам по себе (студии станет легче управлять командой на уже работающих досках). Этап 3 — последний, он самый большой и зависит от 1 и 2.
-                </li>
-                <li><strong>Текст писем</strong> — я писал черновик, но нужен финальный проход (сам текст приглашения, одобрения, отказа, восстановления пароля). Можно отдать копирайтеру.</li>
-                <li><strong>API кабинета</strong> — <code>GET /api/app/boards</code>: все доски, где текущий пользователь имеет <code>project_user</code>-запись. С группировкой по роли. Отдельные счётчики для входящих инвайтов (на мою почту с status=pending) и ждущих запросов (на мои доски с status=pending).</li>
-                <li><strong>Форма создания доски</strong> (отдельный мини-экран, кнопка «+ Создать доску» в хаб-хедере). Поля: название, slug, visibility. После клика «Создать» — редирект на доску с ролью Owner и подсказкой «У вас пока нет участников: пригласите».</li>
+                <li><strong>Этап 1</strong> — пять ролей, bulk-инвайты, экран участников, кабинет «Я веду / Я участник». Сделан.</li>
+                <li><strong>Этап 2</strong> — закрытые доски, вход по паролю с блокировкой, голоса и авторы по аккаунту, настройки аккаунта. Сделан.</li>
+                <li><strong>Этап 3</strong> — запросы доступа по URL, решение админа, пауза в сутки после отказа, счётчики. Сделан.</li>
+                <li><strong>Отложено:</strong> пространства (workspace), вход через виджет для закрытых досок (SSO), передача владения, одобрение «сразу на доску», блокировка почты («Отклонить и забанить»).</li>
             </ul>
         </div>
     </section>

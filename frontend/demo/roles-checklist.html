@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Роли V1 — проверка</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap">
+    <style>
+        /* Same tokens as the board (frontend/src/scss/base/_tokens.scss): sage neutrals, one green. */
+        :root {
+            --bg: #f3f6f4;
+            --surface: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --active-fg: #063f2c;
+            --line: #d8e1db;
+            --control: #a9bcb0;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --accent-ink: #1b7f41;
+            --accent-fg: #ffffff;
+            --bug: #b0423a;
+            --bug-bg: #f7e4e1;
+            --radius: 10px;
+            --shadow: 0 10px 28px rgba(16, 37, 40, 0.12);
+            color-scheme: light;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #1f2524;
+                --surface: #3a4442;
+                --surface-2: #2c3433;
+                --active: #2f5a43;
+                --active-fg: #dff3e6;
+                --line: #4a5553;
+                --control: #6b7a77;
+                --fg: #e8eeea;
+                --muted: #a9b6b3;
+                --accent: #1d8547;
+                --accent-ink: #6fcf96;
+                --bug: #efb0a6;
+                --bug-bg: #4a2c28;
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                color-scheme: dark;
+            }
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font: 15px/1.5 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+        a { color: var(--accent-ink); }
+        code {
+            font: 13px ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+            background: var(--surface-2);
+            padding: 1px 5px;
+            border-radius: 5px;
+        }
+        button { font: inherit; color: inherit; }
+        :focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+
+        /* top bar: progress, filters, actions — stays while scrolling */
+        .bar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg);
+            border-bottom: 1px solid var(--line);
+        }
+        .bar-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 14px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 18px;
+        }
+        .bar h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        .progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 220px;
+            min-width: 200px;
+            font-size: 13px;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--surface-2);
+            overflow: hidden;
+            display: flex;
+        }
+        .progress-ok { background: var(--accent); transition: width 0.2s ease-out; }
+        .progress-bug { background: var(--bug); transition: width 0.2s ease-out; }
+        .filters { display: inline-flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .filters button {
+            border: 1px solid transparent;
+            background: none;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+        }
+        .filters button[aria-pressed='true'] {
+            background: var(--active);
+            color: var(--active-fg);
+            border-color: var(--accent);
+        }
+        .btn {
+            border: 1px solid var(--line);
+            background: var(--surface);
+            padding: 6px 12px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .btn:hover { border-color: var(--control); }
+        .btn.danger { color: var(--bug); }
+        .btn.armed { background: var(--bug); border-color: var(--bug); color: #fff; }
+
+        .layout {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px 24px 120px;
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 32px;
+            align-items: start;
+        }
+
+        /* side nav: blocks with their counts */
+        .nav {
+            position: sticky;
+            top: 84px;
+            display: grid;
+            gap: 2px;
+        }
+        .nav a {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .nav a:hover { background: var(--surface-2); color: var(--fg); }
+        .nav a.done { color: var(--accent-ink); }
+        .nav a.has-bug .nav-count { color: var(--bug); font-weight: 600; }
+        .nav-count { font-variant-numeric: tabular-nums; font-size: 12px; flex: none; }
+        .links {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+            display: grid;
+            gap: 4px;
+            font-size: 13px;
+        }
+        .links a { padding: 3px 10px; }
+
+        .intro { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+
+        section.block { margin-bottom: 36px; scroll-margin-top: 90px; }
+        section.block h2 {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin: 0 0 10px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .block-count { font-size: 13px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .block-note { color: var(--muted); font-size: 14px; margin: 0 0 12px; max-width: 75ch; }
+        .block-note p { margin: 0 0 8px; }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 4px 0 16px;
+            font-size: 13px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        th { background: var(--surface-2); font-weight: 600; }
+        tr:last-child td { border-bottom: 0; }
+        .table-wrap { overflow-x: auto; }
+
+        ul.items { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+        li.item {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 4px 12px;
+            align-items: start;
+            padding: 10px 12px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            transition: border-color 0.12s, background-color 0.12s;
+        }
+        li.item.ok { background: color-mix(in srgb, var(--active) 45%, var(--surface)); }
+        li.item.ok .item-text { color: var(--muted); }
+        li.item.bug { border-color: var(--bug); background: color-mix(in srgb, var(--bug-bg) 60%, var(--surface)); }
+        li.item[hidden] { display: none; }
+
+        .check {
+            width: 22px;
+            height: 22px;
+            margin-top: 1px;
+            border-radius: 6px;
+            border: 1.5px solid var(--control);
+            background: var(--surface);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            padding: 0;
+        }
+        .check svg { opacity: 0; }
+        li.ok .check { background: var(--accent); border-color: var(--accent); color: #fff; }
+        li.ok .check svg { opacity: 1; }
+
+        .item-body { min-width: 0; cursor: pointer; }
+        .item-id { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; margin-right: 6px; }
+        .item-title { font-weight: 600; }
+        .item-text { font-size: 14px; }
+        .item-text p { margin: 0; }
+
+        .flag {
+            border: 1px solid var(--line);
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 3px 9px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .flag:hover { border-color: var(--bug); color: var(--bug); }
+        li.bug .flag { background: var(--bug); border-color: var(--bug); color: #fff; }
+
+        .note {
+            grid-column: 2 / 4;
+            width: 100%;
+            min-height: 54px;
+            resize: vertical;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--fg);
+            font: 14px/1.45 inherit;
+            font-family: inherit;
+        }
+        .note:focus { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+
+        .empty-filter { color: var(--muted); font-size: 14px; padding: 8px 0; }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translate(-50%, 8px);
+            opacity: 0;
+            background: var(--fg);
+            color: var(--bg);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            box-shadow: var(--shadow);
+            transition: opacity 0.16s ease-out, transform 0.16s ease-out;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px 16px 100px; }
+            .nav {
+                position: static;
+                display: flex;
+                overflow-x: auto;
+                gap: 6px;
+                scrollbar-width: none;
+            }
+            .nav a { border: 1px solid var(--line); white-space: nowrap; flex: none; }
+            .links { display: none; }
+            .bar-inner { padding: 12px 16px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bar">
+    <div class="bar-inner">
+        <h1>Роли V1 — проверка</h1>
+        <div class="progress" aria-live="polite">
+            <div class="progress-track" aria-hidden="true"><div class="progress-ok" id="bar-ok"></div><div class="progress-bug" id="bar-bug"></div></div>
+            <span id="progress-text"></span>
+        </div>
+        <div class="filters" role="group" aria-label="Показать">
+            <button type="button" data-filter="all" aria-pressed="true">Все</button>
+            <button type="button" data-filter="todo" aria-pressed="false">Осталось</button>
+            <button type="button" data-filter="bug" aria-pressed="false">Проблемы</button>
+        </div>
+        <button type="button" class="btn" id="copy-bugs">Скопировать проблемы</button>
+        <button type="button" class="btn danger" id="reset">Сбросить</button>
+    </div>
+</div>
+
+<div class="layout">
+    <nav class="nav" id="nav" aria-label="Блоки"></nav>
+    <main>
+        <p class="intro" id="intro"></p>
+        <div id="blocks"></div>
+    </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/*
+ * Ручная проверка ролей V1. Отметки и заметки живут в localStorage этого браузера
+ * (ключ ниже): закрыла вкладку — открыла, всё на месте. Другой браузер — чистый лист.
+ * Пункты правятся прямо в DATA; id пункта — ключ отметки, поэтому id лучше не менять.
+ */
+const STORE_KEY = 'fb-roles-checklist-v1'
+const DATA = {
+ "intro": "Сквозной прогон всех экранов и флоу ролей и доступа. Идти по порядку: каждый блок готовит данные для следующего. Галочка — проверено, «Проблема» — что-то не так (опиши в заметке), потом «Скопировать проблемы» и вставь в <code>docs/BUGS.md</code>. Что не проверить руками за разумное время (блокировка 15 минут, пауза в сутки после отказа, срок приглашения 7 дней, сессия 30 дней), покрыто автотестами — здесь проверяем только то, что видно сразу.",
+ "blocks": [
+  {
+   "num": "0",
+   "title": "Подготовка",
+   "note": "",
+   "after": "<p>Тестовые люди (все пароли — один и тот же тестовый, например как у сидового админа):</p><div class=\"table-wrap\"><table><thead><tr><th>Кто</th><th>Почта</th><th>Роль на QA-доске</th><th>Как появится</th></tr></thead><tbody><tr><td>Владелец</td><td><code>qa-owner@example.com</code></td><td>Владелец</td><td>регистрация, блок 1</td></tr><tr><td>Админ</td><td><code>qa-admin@example.com</code></td><td>Админ</td><td>приглашение, блок 3</td></tr><tr><td>Менеджер</td><td><code>qa-manager@example.com</code></td><td>Менеджер</td><td>приглашение, блок 3</td></tr><tr><td>Голосующий</td><td><code>qa-voter@example.com</code></td><td>Голосующий</td><td>приглашение, блок 3</td></tr><tr><td>Читатель</td><td><code>qa-reader@example.com</code></td><td>Читатель</td><td>приглашение, блок 3</td></tr><tr><td>Клиент</td><td><code>qa-client@example.com</code></td><td>— → по запросу</td><td>запрос доступа, блок 7</td></tr><tr><td>Чужой</td><td><code>qa-outsider@example.com</code></td><td>никакой</td><td>регистрация, блок 7</td></tr></tbody></table></div>",
+   "items": [
+    {
+     "id": "0.1x",
+     "label": "",
+     "title": "",
+     "text": "<code>docker compose up -d</code>, всё отвечает: доска <a href=\"http://localhost:5176\" target=\"_blank\" rel=\"noopener\">http://localhost:5176</a>, демо-сайт с виджетом <a href=\"http://localhost:5175\" target=\"_blank\" rel=\"noopener\">http://localhost:5175</a>, письма <a href=\"http://localhost:8025\" target=\"_blank\" rel=\"noopener\">http://localhost:8025</a> (Mailpit)."
+    },
+    {
+     "id": "0.2x",
+     "label": "",
+     "title": "",
+     "text": "Mailpit открыт в отдельной вкладке. Любая почта <code>…@example.com</code> приходит туда; удобно очистить ящик (корзина справа вверху) перед началом."
+    },
+    {
+     "id": "0.3x",
+     "label": "",
+     "title": "",
+     "text": "Два окна браузера: <strong>обычное</strong> и <strong>инкогнито</strong> — это два независимых человека. Третьего можно сделать вторым браузером."
+    },
+    {
+     "id": "0.4x",
+     "label": "",
+     "title": "",
+     "text": "<em>По желанию, для чистого прогона:</em> <code>docker compose exec backend php artisan migrate:fresh --seed</code> — <strong>сотрёт всю локальную базу</strong> (Flow Test, Private Test, тестовые аккаунты), останется только доска Demo с <code>admin@example.com</code>."
+    }
+   ]
+  },
+  {
+   "num": "1",
+   "title": "Регистрация, почта, вход, пароль (сценарий D)",
+   "note": "<p>Окно: обычное, никто не вошёл.</p>",
+   "after": "",
+   "items": [
+    {
+     "id": "1.1",
+     "label": "1.1",
+     "title": "Регистрация.",
+     "text": "<code>/app/register</code> → имя, <code>qa-owner@example.com</code>, пароль → «Создать». Попадаешь в кабинет, тост «Аккаунт создан — создайте первую доску», сверху жёлтый баннер «Подтвердите почту…»."
+    },
+    {
+     "id": "1.2",
+     "label": "1.2",
+     "title": "Письмо подтверждения.",
+     "text": "В Mailpit «Подтвердите почту». Кнопка ведёт на <code>/app/verify-email/…</code> → «почта подтверждена», баннер в кабинете пропал."
+    },
+    {
+     "id": "1.3",
+     "label": "1.3",
+     "title": "Повторное письмо.",
+     "text": "(Если не подтверждала сразу.) В баннере «Отправить ещё раз» → тост «Письмо отправлено…», новое письмо в Mailpit."
+    },
+    {
+     "id": "1.4",
+     "label": "1.4",
+     "title": "Меню аккаунта.",
+     "text": "Справа в шапке — твоё имя с шевроном. Открывается: почта серым, «Настройки аккаунта», «Мои доски» (с галочкой на кабинете), «Выйти»."
+    },
+    {
+     "id": "1.5",
+     "label": "1.5",
+     "title": "Выход и вход.",
+     "text": "«Выйти» → <code>/app/login</code>. Войти с верным паролем → кабинет."
+    },
+    {
+     "id": "1.6",
+     "label": "1.6",
+     "title": "Неверный пароль.",
+     "text": "Неверный пароль → под почтой «Неверный email или пароль.» Та же фраза для несуществующей почты."
+    },
+    {
+     "id": "1.7",
+     "label": "1.7",
+     "title": "Забыли пароль.",
+     "text": "На <code>/app/login</code> ввести почту → «Забыли пароль?» → почта уже подставлена → «Прислать ссылку» → экран «Проверьте почту». В Mailpit «Сброс пароля»."
+    },
+    {
+     "id": "1.8",
+     "label": "1.8",
+     "title": "Новый пароль по письму.",
+     "text": "Ссылка из письма → «Новый пароль для …» → сохранить → сразу вошла, кабинет, тост «Пароль изменён.» Повторно открыть ту же ссылку → «Ссылка устарела» с кнопкой «Прислать новую ссылку»."
+    },
+    {
+     "id": "1.9",
+     "label": "1.9",
+     "title": "Почта без аккаунта.",
+     "text": "Выйти. «Забыли пароль?» с <code>nobody-qa@example.com</code> → экран тот же «Проверьте почту». В Mailpit письмо «У этой почты нет аккаунта» с кнопкой «Войти с другой почтой». Повторный запрос в течение часа нового письма <strong>не</strong> даёт."
+    },
+    {
+     "id": "1.10",
+     "label": "1.10",
+     "title": "Блокировка входа.",
+     "text": "На <code>/app/login</code> с <code>lock-qa@example.com</code> пять неверных паролей. Если на 5-й вылезло «Слишком много попыток входа. Подождите минуту» — это лимит по IP: подожди минуту и введи ещё раз. Дальше под паролем: «Вход по паролю заблокирован на 15 минут после 5 неверных попыток. Чтобы войти раньше, задайте новый пароль по ссылке «Забыли пароль?».»"
+    },
+    {
+     "id": "1.11",
+     "label": "1.11",
+     "title": "Гостевые страницы.",
+     "text": "Вошедшей открыть <code>/app/login</code> и <code>/app/register</code> → перекидывает в кабинет. <code>/app/forgot-password</code> открывается и у вошедшей (ссылка из письма «Пароль изменён» должна работать)."
+    }
+   ]
+  },
+  {
+   "num": "2",
+   "title": "Кабинет и настройки аккаунта",
+   "note": "<p>Окно: обычное, <code>qa-owner</code>.</p>",
+   "after": "",
+   "items": [
+    {
+     "id": "2.1",
+     "label": "2.1",
+     "title": "Пустой кабинет.",
+     "text": "Без досок — «Привет, …» и «Создать первую доску»."
+    },
+    {
+     "id": "2.2",
+     "label": "2.2",
+     "title": "Новая доска.",
+     "text": "«+ Новая доска» → название «QA Доска», адрес <code>qa</code> → «Создать доску» → экран подключения, тост «Доска «QA Доска» готова»."
+    },
+    {
+     "id": "2.3",
+     "label": "2.3",
+     "title": "Карточка доски.",
+     "text": "В кабинете карточка: «Владелец» и значок 🌐 «Открытая» (подсказка при наведении «видят все, у кого есть ссылка»), кнопки «Настройки», «Участники», «Как подключить». Клик по названию — доска в новой вкладке."
+    },
+    {
+     "id": "2.4",
+     "label": "2.4",
+     "title": "Переключатель досок.",
+     "text": "В шапке «Доски ▾» — список досок, «Все доски», «+ Новая доска»; текущая с галочкой."
+    },
+    {
+     "id": "2.5",
+     "label": "2.5",
+     "title": "Настройки аккаунта.",
+     "text": "Меню → «Настройки аккаунта» (<code>/app/account</code>). Слева «Профиль · Пароль», справа две карточки."
+    },
+    {
+     "id": "2.6",
+     "label": "2.6",
+     "title": "Имя.",
+     "text": "Поменять имя → «Сохранить» (до изменения кнопка неактивна) → тост «Имя сохранено», имя в шапке обновилось сразу. Пустое имя → ошибка у поля."
+    },
+    {
+     "id": "2.7",
+     "label": "2.7",
+     "title": "Смена пароля: ошибки.",
+     "text": "Неверный текущий → «Текущий пароль не подходит.» Новый короче 8 → «Пароль — хотя бы 8 символов.» Новый = текущий → «Новый пароль совпадает с текущим.»"
+    },
+    {
+     "id": "2.8",
+     "label": "2.8",
+     "title": "Смена пароля.",
+     "text": "Верный текущий + новый → поля очистились, тост «Пароль изменён. На почту ушло письмо об этом.» Ты по-прежнему в аккаунте."
+    },
+    {
+     "id": "2.9",
+     "label": "2.9",
+     "title": "Письмо «Пароль изменён».",
+     "text": "В Mailpit: текст про настройки аккаунта, <strong>пароля в письме нет</strong>, кнопка «Задать новый пароль» ведёт на «Забыли пароль?» с подставленной почтой — и открывается, хотя ты вошла."
+    },
+    {
+     "id": "2.10",
+     "label": "2.10",
+     "title": "«Не помните текущий?».",
+     "text": "«Прислать ссылку на почту» → строка «Ссылка для нового пароля отправлена на …», письмо «Сброс пароля» в Mailpit."
+    },
+    {
+     "id": "2.11",
+     "label": "2.11",
+     "title": "Верни пароль",
+     "text": ", который будешь использовать дальше."
+    }
+   ]
+  },
+  {
+   "num": "3",
+   "title": "Приглашения (сценарии A и B)",
+   "note": "<p>Окно: обычное, <code>qa-owner</code>, доска QA → «Участники».</p>",
+   "after": "",
+   "items": [
+    {
+     "id": "3.1",
+     "label": "3.1",
+     "title": "Экран участников.",
+     "text": "Ты одна: «Владелец», «создал доску», без кнопки удаления. Слева в навигации настроек пункт «Участники» активен."
+    },
+    {
+     "id": "3.2",
+     "label": "3.2",
+     "title": "Пачка с ошибкой.",
+     "text": "«+ Пригласить» → в поле <code>qa-admin@example.com, bad-email</code> → под полем «Не распознано: bad-email», кнопка «Отправить 1 письмо». Роль «Админ» (под каждой ролью в списке — что она может) → отправить."
+    },
+    {
+     "id": "3.3",
+     "label": "3.3",
+     "title": "Остальные роли.",
+     "text": "Ещё три приглашения, по одному: <code>qa-manager@example.com</code> — Менеджер, <code>qa-voter@example.com</code> — Голосующий, <code>qa-reader@example.com</code> — Читатель. Можно и пачкой из трёх почт, но тогда роль одна на всех."
+    },
+    {
+     "id": "3.4",
+     "label": "3.4",
+     "title": "Уже участник.",
+     "text": "Пригласить <code>qa-owner@example.com</code> → тост, что все уже на доске и ничего не отправлено."
+    },
+    {
+     "id": "3.5",
+     "label": "3.5",
+     "title": "Ждут приглашения.",
+     "text": "Секция «Ждут приглашения»: почта, роль, «истекает …», «позвал …», кнопки «Отправить ещё раз» и «Отменить»."
+    },
+    {
+     "id": "3.6",
+     "label": "3.6",
+     "title": "Ещё раз.",
+     "text": "«Отправить ещё раз» → тост, в Mailpit второе письмо. Ссылка из <strong>первого</strong> письма теперь «Ссылка не действует»."
+    },
+    {
+     "id": "3.7",
+     "label": "3.7",
+     "title": "Отменить.",
+     "text": "Пригласить <code>qa-cancel@example.com</code> → «Отменить» → подтверждение → строка пропала; ссылка из письма → «Ссылка не действует»."
+    },
+    {
+     "id": "3.8",
+     "label": "3.8",
+     "title": "Письмо приглашения.",
+     "text": "В Mailpit «Приглашение в доску «QA Доска»»: кто зовёт, роль, «идеи, баги, запросы и обсуждения», кнопка «Принять приглашение», срок 7 дней, пароля нет."
+    },
+    {
+     "id": "3.9",
+     "label": "3.9",
+     "title": "Принятие новичком.",
+     "text": "Окно инкогнито → ссылка из письма <code>qa-admin</code> → «Присоединиться к доске «QA Доска»», почта и роль; имя + пароль → «Присоединиться» → сразу на доске, тост «Вы в доске…». Пустые поля → ошибки у полей."
+    },
+    {
+     "id": "3.10",
+     "label": "3.10",
+     "title": "Принятие с аккаунтом, не вошла.",
+     "text": "Владелец создаёт вторую доску «QA 2» и приглашает туда <code>qa-admin</code> (Голосующий). Инкогнито: выйти → ссылка из письма → «На почту … уже есть аккаунт» → «Войти и принять» → вход → обратно на экран → «Присоединиться»."
+    },
+    {
+     "id": "3.10а",
+     "label": "3.10а",
+     "title": "Принятие вошедшей.",
+     "text": "Ещё одно приглашение на «QA 2» человеку, который сейчас вошёл в инкогнито → ссылка → «Вы уже вошли как …» → одна кнопка «Присоединиться»."
+    },
+    {
+     "id": "3.11",
+     "label": "3.11",
+     "title": "Принятие из кабинета.",
+     "text": "Пригласи на «QA 2» ещё одного уже зарегистрированного человека → у него, когда он вошёл, в кабинете сверху блок «Вас приглашают · 1» → «Принять» → тост, доска в «Я участник». Ещё одно приглашение → «Отклонить» → подтверждение → блок исчез."
+    },
+    {
+     "id": "3.12",
+     "label": "3.12",
+     "title": "Остальные приглашённые.",
+     "text": "Прими приглашения <code>qa-voter</code>, <code>qa-reader</code>, <code>qa-manager</code> (по ссылкам из писем, в инкогнито, каждый раз выходя из предыдущего аккаунта)."
+    }
+   ]
+  },
+  {
+   "num": "4",
+   "title": "Участники и роли",
+   "note": "<p>Окно: обычное, <code>qa-owner</code>, QA → «Участники».</p>",
+   "after": "",
+   "items": [
+    {
+     "id": "4.1",
+     "label": "4.1",
+     "title": "Таблица.",
+     "text": "Все пятеро. Колонка «Добавлен»: у тебя «создал доску», у остальных «по приглашению». Роль — выпадающий список, у владельца — просто метка."
+    },
+    {
+     "id": "4.2",
+     "label": "4.2",
+     "title": "Смена роли.",
+     "text": "Поменять <code>qa-reader</code> на Голосующий → тост «… теперь голосующий», без подтверждения. Вернуть Читатель."
+    },
+    {
+     "id": "4.3",
+     "label": "4.3",
+     "title": "Удаление.",
+     "text": "На «QA 2» у любого участника «Удалить» → подтверждение «Удалить … с доски?» → строка пропала, у человека «QA 2» исчезла из кабинета."
+    },
+    {
+     "id": "4.4",
+     "label": "4.4",
+     "title": "Свою строку не удалить",
+     "text": ", строку владельца не изменить."
+    },
+    {
+     "id": "4.5",
+     "label": "4.5",
+     "title": "Админ видит участников.",
+     "text": "Инкогнито под <code>qa-admin</code>: кабинет → QA в «Я веду», «Участники» открываются, может приглашать и менять роли; строку владельца менять не может."
+    },
+    {
+     "id": "4.6",
+     "label": "4.6",
+     "title": "Остальным участники закрыты.",
+     "text": "Под <code>qa-manager</code> / <code>qa-voter</code> / <code>qa-reader</code> в кабинете QA в «Я участник», без кнопок «Настройки / Участники / Как подключить». Прямой адрес <code>/app/boards/qa/participants</code> → ошибка доступа, не список."
+    }
+   ]
+  },
+  {
+   "num": "5",
+   "title": "Права ролей на доске",
+   "note": "<p>Открыть <code>/qa</code> под каждой ролью (инкогнито, выходя между ролями). Сначала владелец создаёт 2–3 поста (разные категории), чтобы было что двигать.</p><div class=\"table-wrap\"><table><thead><tr><th>Что проверить</th><th>Владелец</th><th>Админ</th><th>Менеджер</th><th>Голосующий</th><th>Читатель</th><th>Гость</th></tr></thead><tbody><tr><td>Видит доску (открытую)</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>Кнопка «Предложить»</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>✓</td></tr><tr><td>Голосовать 👍 / 💩</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>кнопки неактивны, подсказка про роль</td><td>✓ (по браузеру)</td></tr><tr><td>Счётчик голосов — отдельная кнопка «кто голосовал»</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr><tr><td>Режим команды: перетаскивать карточки, статусы, скрыть, приоритет, ответ команды, клавиши J/K/1–9/H</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr><tr><td>Блок слева: «режим команды» / «роль …»</td><td>режим команды</td><td>режим команды</td><td>режим команды</td><td>роль голосующий</td><td>роль читатель</td><td>«Вход для команды»</td></tr><tr><td>«Категории», «Столбцы», «Настройки доски», «Участники» в блоке слева</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr><td>«Удалить доску» внизу настроек</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></tbody></table></div>",
+   "after": "",
+   "items": [
+    {
+     "id": "5.1x",
+     "label": "",
+     "title": "",
+     "text": "<strong>5.1</strong> Владелец — вся строка таблицы."
+    },
+    {
+     "id": "5.2x",
+     "label": "",
+     "title": "",
+     "text": "<strong>5.2</strong> Админ."
+    },
+    {
+     "id": "5.3x",
+     "label": "",
+     "title": "",
+     "text": "<strong>5.3</strong> Менеджер."
+    },
+    {
+     "id": "5.4x",
+     "label": "",
+     "title": "",
+     "text": "<strong>5.4</strong> Голосующий."
+    },
+    {
+     "id": "5.5x",
+     "label": "",
+     "title": "",
+     "text": "<strong>5.5</strong> Читатель: «Предложить» нет нигде (и на телефоне внизу), голосовать нельзя, счёт виден."
+    },
+    {
+     "id": "5.6x",
+     "label": "",
+     "title": "",
+     "text": "<strong>5.6</strong> Гость (никто не вошёл)."
+    },
+    {
+     "id": "5.7",
+     "label": "5.7",
+     "title": "Кто голосовал.",
+     "text": "Под менеджером клик по числу у 👍 → окно «Нравится / Не нравится»: имена аккаунтов и «Аноним» для гостей."
+    },
+    {
+     "id": "5.8",
+     "label": "5.8",
+     "title": "Блок «Вы вошли».",
+     "text": "У каждого вошедшего: почта, «Настройки аккаунта», «← Мои доски», «Выйти» (с подтверждением). На планшете/телефоне это меню «Команда» / «Аккаунт»."
+    },
+    {
+     "id": "5.9",
+     "label": "5.9",
+     "title": "Удаление доски и корзина.",
+     "text": "Создай под владельцем доску-черновик → настройки → «Удалить доску» → подтверждение → в кабинете внизу «Корзина» → «Восстановить» → тост «… снова работает»."
+    }
+   ]
+  },
+  {
+   "num": "6",
+   "title": "Закрытая доска",
+   "note": "",
+   "after": "",
+   "items": [
+    {
+     "id": "6.1",
+     "label": "6.1",
+     "title": "Переключатель.",
+     "text": "Владелец: QA → Настройки → «Доступ»: «Открытая — любой по ссылке» / «Закрытая — только участники». Выбрать закрытую → подтверждение «Сделать доску закрытой?… вернуть обратно нельзя» → «Сделать закрытой»."
+    },
+    {
+     "id": "6.2",
+     "label": "6.2",
+     "title": "Обратно нельзя.",
+     "text": "Вариант «Открытая» больше не выбирается, есть объяснение."
+    },
+    {
+     "id": "6.3",
+     "label": "6.3",
+     "title": "Значок.",
+     "text": "В кабинете у QA 🔒 «Закрытая»; на доске под названием тоже; на узком экране — только иконка (замок), подсказка при наведении."
+    },
+    {
+     "id": "6.4",
+     "label": "6.4",
+     "title": "Участник.",
+     "text": "Под <code>qa-voter</code> доска открывается как обычно; в форме «Предложить» <strong>нет поля «Ваше имя»</strong>, автор — имя аккаунта."
+    },
+    {
+     "id": "6.5",
+     "label": "6.5",
+     "title": "Один голос с двух устройств.",
+     "text": "<code>qa-voter</code> голосует 👍 в обычном окне; в инкогнито тоже под <code>qa-voter</code> → видит свой 👍 нажатым, счётчик не удвоился."
+    },
+    {
+     "id": "6.6",
+     "label": "6.6",
+     "title": "Рейтинг авторов.",
+     "text": "«Авторы»: посты одного аккаунта — одна строка с именем из профиля; своя строка с пометкой «вы». Поменяй имя в настройках аккаунта → в рейтинге новое имя."
+    },
+    {
+     "id": "6.7",
+     "label": "6.7",
+     "title": "Гость.",
+     "text": "Выйти → <code>/qa</code> → экран «QA Доска — закрытая доска», доски не видно (см. блок 7)."
+    },
+    {
+     "id": "6.8",
+     "label": "6.8",
+     "title": "Виджет.",
+     "text": "Демо-сайт <a href=\"http://localhost:5175\" target=\"_blank\" rel=\"noopener\">http://localhost:5175</a> с виджетом на <code>qa</code> (в <code>TESTING.md</code> — как подставить проект) → «Это закрытая доска», отправить нельзя. На открытой Demo виджет работает как раньше."
+    },
+    {
+     "id": "6.9",
+     "label": "6.9",
+     "title": "Открытая доска не изменилась.",
+     "text": "<code>/demo</code> гостем: всё видно, голосовать и предлагать можно, поле «Ваше имя» есть; у вошедшего оно заполнено и заблокировано."
+    }
+   ]
+  },
+  {
+   "num": "7",
+   "title": "Запрос доступа по ссылке (сценарий C)",
+   "note": "<p>QA уже закрытая.</p>",
+   "after": "",
+   "items": [
+    {
+     "id": "7.1",
+     "label": "7.1",
+     "title": "Экран-привратник гостю.",
+     "text": "Инкогнито, никто не вошёл → <code>/qa</code>: заголовок с названием доски, поля «Имя», «Почта · на неё придёт ответ», «Зачем нужен доступ · по желанию…», «Запросить доступ», внизу «Уже участник? Войти»."
+    },
+    {
+     "id": "7.2",
+     "label": "7.2",
+     "title": "Ошибки формы.",
+     "text": "Пусто / кривая почта → ошибки у полей."
+    },
+    {
+     "id": "7.3",
+     "label": "7.3",
+     "title": "Отправка.",
+     "text": "<code>qa-client@example.com</code> + пояснение → «Заявка отправлена. Ответ придёт на qa-client@…». Обновить страницу → снова форма (доска так и скрыта)."
+    },
+    {
+     "id": "7.4",
+     "label": "7.4",
+     "title": "Письмо админам.",
+     "text": "В Mailpit «Запрос доступа к доске «QA Доска»» — <strong>владельцу и админу</strong>, менеджеру нет. В письме имя, почта, пояснение, «Открыть запросы»."
+    },
+    {
+     "id": "7.5",
+     "label": "7.5",
+     "title": "Повтор, пока ждёт.",
+     "text": "Ещё раз с той же почтой и другим текстом → тот же экран; у админа одна карточка с новым текстом, новых писем нет."
+    },
+    {
+     "id": "7.6",
+     "label": "7.6",
+     "title": "Счётчики.",
+     "text": "Владелец: кабинет → блок «Ждут решения на ваших досках · 1» с «Рассмотреть»; настройки QA → «Участники» с зелёным бейджем; на доске в блоке слева «Участники» с бейджем; на телефоне в меню «Участники · 1 запр.». У менеджера счётчиков нет."
+    },
+    {
+     "id": "7.7",
+     "label": "7.7",
+     "title": "Раздел «Запросы на доступ».",
+     "text": "Над «Ждут приглашения»: имя, почта, «есть аккаунт» (если просил вошедший), время, пояснение на сером фоне, роль (по умолчанию «Голосующий»), «Одобрить», «Отклонить»."
+    },
+    {
+     "id": "7.8",
+     "label": "7.8",
+     "title": "Одобрить.",
+     "text": "Роль «Читатель» → «Одобрить» → тост «… получит письмо со ссылкой. Роль: Читатель», карточка ушла в «Ждут приглашения», бейджи обновились."
+    },
+    {
+     "id": "7.9",
+     "label": "7.9",
+     "title": "Письмо «Доступ к доске … открыт».",
+     "text": "Кто одобрил, роль, «Открыть доступ», срок 7 дней, пароля нет."
+    },
+    {
+     "id": "7.10",
+     "label": "7.10",
+     "title": "Клиент принимает.",
+     "text": "Инкогнито → ссылка → экран принятия → имя + пароль → на доске, роль читатель (голосовать нельзя). У владельца в участниках клиент «по запросу»."
+    },
+    {
+     "id": "7.11",
+     "label": "7.11",
+     "title": "Вошедший чужой.",
+     "text": "Зарегистрируй <code>qa-outsider@example.com</code> → <code>/qa</code> → тот же привратник, но вместо полей строка «Запрос уйдёт от … · qa-outsider@…», внизу «Не тот аккаунт? Выйти · Мои доски». Отправить. «Выйти» на привратнике → тот же экран уже с полями имени и почты."
+    },
+    {
+     "id": "7.12",
+     "label": "7.12",
+     "title": "Отклонить.",
+     "text": "Владелец: у заявки <code>qa-outsider</code> «Отклонить» → в карточке поле «Причина · по желанию…» → ввести → «Отклонить» → тост «… получит письмо. Повторно попроситься можно через сутки». «Отмена» сворачивает поле обратно."
+    },
+    {
+     "id": "7.13",
+     "label": "7.13",
+     "title": "Письмо «Доступ … не одобрен».",
+     "text": "Причина есть, ссылок нет, <strong>кто отклонил — не сказано</strong>."
+    },
+    {
+     "id": "7.14",
+     "label": "7.14",
+     "title": "Повтор после отказа.",
+     "text": "Сразу же снова отправить заявку от <code>qa-outsider</code> → экран «Заявка отправлена», но у админа заявки нет и письма нет (пауза сутки; «через сутки можно» покрыто автотестом)."
+    },
+    {
+     "id": "7.15",
+     "label": "7.15",
+     "title": "Участник не может «попроситься».",
+     "text": "Под <code>qa-voter</code> на <code>/qa</code> — сама доска, привратника нет."
+    }
+   ]
+  },
+  {
+   "num": "8",
+   "title": "Все письма — сводка",
+   "note": "<p>Пройдено по ходу блоков; здесь — финальный взгляд в Mailpit на каждое: тема, кнопка, ссылка рабочая, нет пароля, нейтральный текст («рабочая доска команды…», без «обратной связи по продукту»).</p>",
+   "after": "",
+   "items": [
+    {
+     "id": "8.1x",
+     "label": "",
+     "title": "",
+     "text": "«Подтвердите почту» (1.2)"
+    },
+    {
+     "id": "8.2x",
+     "label": "",
+     "title": "",
+     "text": "«Сброс пароля» (1.7, 2.10)"
+    },
+    {
+     "id": "8.3x",
+     "label": "",
+     "title": "",
+     "text": "«У этой почты нет аккаунта» (1.9)"
+    },
+    {
+     "id": "8.4x",
+     "label": "",
+     "title": "",
+     "text": "«Пароль изменён» (2.9)"
+    },
+    {
+     "id": "8.5x",
+     "label": "",
+     "title": "",
+     "text": "«Приглашение в доску «…»» (3.8)"
+    },
+    {
+     "id": "8.6x",
+     "label": "",
+     "title": "",
+     "text": "«Запрос доступа к доске «…»» (7.4)"
+    },
+    {
+     "id": "8.7x",
+     "label": "",
+     "title": "",
+     "text": "«Доступ к доске «…» открыт» (7.9)"
+    },
+    {
+     "id": "8.8x",
+     "label": "",
+     "title": "",
+     "text": "«Доступ к доске «…» не одобрен» (7.13)"
+    },
+    {
+     "id": "8.9x",
+     "label": "",
+     "title": "",
+     "text": "Тёмная тема почтового клиента: письма читаются (в Mailpit — вкладка HTML)."
+    }
+   ]
+  },
+  {
+   "num": "9",
+   "title": "Телефон",
+   "note": "<p>DevTools → режим устройства (ширина 390) или настоящий телефон по IP машины.</p>",
+   "after": "",
+   "items": [
+    {
+     "id": "9.1x",
+     "label": "",
+     "title": "",
+     "text": "Шапка кабинета: инициалы вместо имени, меню аккаунта открывается."
+    },
+    {
+     "id": "9.2x",
+     "label": "",
+     "title": "",
+     "text": "Настройки аккаунта: разделы чипсами сверху."
+    },
+    {
+     "id": "9.3x",
+     "label": "",
+     "title": "",
+     "text": "Участники: карточки запросов, роль на всю ширину, кнопки переносятся без наложений."
+    },
+    {
+     "id": "9.4x",
+     "label": "",
+     "title": "",
+     "text": "Доска: строка «название · значок видимости · тема · Команда/Аккаунт» в одну линию; «Предложить» прибит снизу (у читателя его нет)."
+    },
+    {
+     "id": "9.5x",
+     "label": "",
+     "title": "",
+     "text": "Привратник и экран «Заявка отправлена» помещаются без горизонтальной прокрутки."
+    },
+    {
+     "id": "9.6x",
+     "label": "",
+     "title": "",
+     "text": "Экран принятия приглашения."
+    }
+   ]
+  }
+ ],
+ "links": "<a href=\"http://localhost:5176/app/boards\" target=\"_blank\" rel=\"noopener\">Кабинет ↗</a><a href=\"http://localhost:5175\" target=\"_blank\" rel=\"noopener\">Демо-сайт с виджетом ↗</a><a href=\"http://localhost:8025\" target=\"_blank\" rel=\"noopener\">Mailpit ↗</a><a href=\"roles-prototype.html\" target=\"_blank\" rel=\"noopener\">Прототип и блок-схема ↗</a>"
+}
+
+const CHECK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>'
+
+let state = {}
+try { state = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {} } catch { state = {} }
+let filter = 'all'
+
+function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)) } catch { /* private mode: works until the tab closes */ }
+}
+function statusOf(id) { return state[id]?.s || '' }
+function setStatus(id, s) {
+    const cur = state[id] || {}
+    cur.s = s
+    if (!cur.s && !cur.note) delete state[id]
+    else state[id] = cur
+    save()
+}
+function setNote(id, note) {
+    const cur = state[id] || {}
+    cur.note = note
+    if (!cur.s && !cur.note) delete state[id]
+    else state[id] = cur
+    save()
+}
+
+function render() {
+    document.getElementById('intro').innerHTML = DATA.intro
+    const nav = document.getElementById('nav')
+    const blocks = document.getElementById('blocks')
+    nav.innerHTML = ''
+    blocks.innerHTML = ''
+
+    for (const block of DATA.blocks) {
+        const a = document.createElement('a')
+        a.href = '#b' + block.num
+        a.dataset.block = block.num
+        a.innerHTML = `<span>${block.num}. ${block.title}</span><span class="nav-count"></span>`
+        nav.appendChild(a)
+
+        const sec = document.createElement('section')
+        sec.className = 'block'
+        sec.id = 'b' + block.num
+        sec.innerHTML = `<h2>${block.num}. ${block.title}<span class="block-count"></span></h2>` +
+            (block.note ? `<div class="block-note">${block.note}</div>` : '')
+        const ul = document.createElement('ul')
+        ul.className = 'items'
+        for (const item of block.items) ul.appendChild(renderItem(item))
+        sec.appendChild(ul)
+        if (block.after) {
+            const after = document.createElement('div')
+            after.className = 'block-note'
+            after.innerHTML = block.after
+            sec.appendChild(after)
+        }
+        const empty = document.createElement('p')
+        empty.className = 'empty-filter'
+        empty.hidden = true
+        sec.appendChild(empty)
+        blocks.appendChild(sec)
+    }
+    const links = document.createElement('div')
+    links.className = 'links'
+    links.innerHTML = DATA.links
+    nav.appendChild(links)
+    refresh()
+}
+
+function renderItem(item) {
+    const li = document.createElement('li')
+    li.className = 'item'
+    li.dataset.id = item.id
+    li.innerHTML = `
+        <button type="button" class="check" aria-label="Проверено: ${item.id}">${CHECK_SVG}</button>
+        <div class="item-body">
+            <div>${item.label ? `<span class="item-id">${item.label}</span>` : ''}${item.title ? `<span class="item-title">${item.title}</span> ` : ''}<span class="item-text">${item.text}</span></div>
+        </div>
+        <button type="button" class="flag">Проблема</button>`
+    const note = document.createElement('textarea')
+    note.className = 'note'
+    note.placeholder = 'Что не так: шаги, что ждала, что получилось'
+    note.value = state[item.id]?.note || ''
+    note.hidden = statusOf(item.id) !== 'bug' && !note.value
+    note.addEventListener('input', () => { setNote(item.id, note.value); refresh(false) })
+    li.appendChild(note)
+
+    const toggleOk = () => { setStatus(item.id, statusOf(item.id) === 'ok' ? '' : 'ok'); refresh() }
+    li.querySelector('.check').addEventListener('click', toggleOk)
+    // a click on the text checks it too, but not when the click was on a link or a selection
+    li.querySelector('.item-body').addEventListener('click', (e) => {
+        if (e.target.closest('a') || String(window.getSelection())) return
+        toggleOk()
+    })
+    li.querySelector('.flag').addEventListener('click', () => {
+        const isBug = statusOf(item.id) === 'bug'
+        setStatus(item.id, isBug ? '' : 'bug')
+        note.hidden = isBug && !note.value
+        refresh()
+        if (!isBug) note.focus()
+    })
+    return li
+}
+
+function refresh() {
+    let total = 0, ok = 0, bug = 0
+    for (const block of DATA.blocks) {
+        let bTotal = 0, bOk = 0, bBug = 0, shown = 0
+        for (const item of block.items) {
+            const s = statusOf(item.id)
+            bTotal++
+            if (s === 'ok') bOk++
+            if (s === 'bug') bBug++
+            const li = document.querySelector(`li.item[data-id="${CSS.escape(item.id)}"]`)
+            li.classList.toggle('ok', s === 'ok')
+            li.classList.toggle('bug', s === 'bug')
+            li.querySelector('.check').setAttribute('aria-pressed', String(s === 'ok'))
+            li.querySelector('.flag').setAttribute('aria-pressed', String(s === 'bug'))
+            const visible = filter === 'all' || (filter === 'todo' && !s) || (filter === 'bug' && s === 'bug')
+            li.hidden = !visible
+            if (visible) shown++
+        }
+        total += bTotal; ok += bOk; bug += bBug
+        const sec = document.getElementById('b' + block.num)
+        const done = bOk + bBug
+        sec.querySelector('.block-count').textContent = `${done} / ${bTotal}`
+        const empty = sec.querySelector('.empty-filter')
+        empty.hidden = shown > 0
+        empty.textContent = filter === 'bug' ? 'Проблем нет.' : 'В этом блоке всё пройдено.'
+        const a = document.querySelector(`.nav a[data-block="${block.num}"]`)
+        a.querySelector('.nav-count').textContent = bBug ? `${done}/${bTotal} · ${bBug}!` : `${done}/${bTotal}`
+        a.classList.toggle('done', bOk === bTotal)
+        a.classList.toggle('has-bug', bBug > 0)
+    }
+    document.getElementById('bar-ok').style.width = (ok / total * 100) + '%'
+    document.getElementById('bar-bug').style.width = (bug / total * 100) + '%'
+    document.getElementById('progress-text').textContent = `${ok + bug} из ${total}` + (bug ? ` · проблем: ${bug}` : '')
+}
+
+document.querySelectorAll('.filters button').forEach((b) => b.addEventListener('click', () => {
+    filter = b.dataset.filter
+    document.querySelectorAll('.filters button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+    refresh()
+}))
+
+function toast(text) {
+    const t = document.getElementById('toast')
+    t.textContent = text
+    t.classList.add('show')
+    clearTimeout(toast.timer)
+    toast.timer = setTimeout(() => t.classList.remove('show'), 2200)
+}
+
+// «Скопировать проблемы»: markdown in the shape of docs/BUGS.md, ready to paste there
+document.getElementById('copy-bugs').addEventListener('click', async () => {
+    const lines = []
+    for (const block of DATA.blocks) {
+        for (const item of block.items) {
+            if (statusOf(item.id) !== 'bug') continue
+            const plain = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent.trim() }
+            lines.push(`- [ ] **${item.label ? item.label + ' ' : ''}${plain(item.title || item.text).replace(/\.$/, '')}**`)
+            lines.push(`  Проверка: ${plain(item.text)}`)
+            lines.push(`  Что не так: ${(state[item.id]?.note || '—').replace(/\n/g, ' ')}`)
+            lines.push('')
+        }
+    }
+    if (!lines.length) { toast('Пока ни одной проблемы'); return }
+    const md = '## Ручная проверка ролей (' + new Date().toLocaleDateString('ru-RU') + ')\n\n' + lines.join('\n')
+    try {
+        await navigator.clipboard.writeText(md)
+        toast('Скопировано — вставь в docs/BUGS.md')
+    } catch {
+        toast('Не вышло скопировать — браузер не дал доступ к буферу')
+    }
+})
+
+// «Сбросить»: two clicks, the first one arms the button
+const reset = document.getElementById('reset')
+reset.addEventListener('click', () => {
+    if (!reset.classList.contains('armed')) {
+        reset.classList.add('armed')
+        reset.textContent = 'Точно сбросить всё?'
+        setTimeout(() => { reset.classList.remove('armed'); reset.textContent = 'Сбросить' }, 3000)
+        return
+    }
+    state = {}
+    save()
+    reset.classList.remove('armed')
+    reset.textContent = 'Сбросить'
+    render()
+    toast('Все отметки сброшены')
+})
+
+render()
+</script>
+</body>
+</html>

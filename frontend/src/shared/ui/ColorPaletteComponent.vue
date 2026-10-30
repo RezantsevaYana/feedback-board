@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { type ComponentPublicInstance, computed, nextTick, ref } from 'vue'
 import { PALETTE_COLORS, type PaletteColor } from '@/api/types'
 
 type Variant = 'category' | 'status'
@@ -49,7 +49,8 @@ const LABELS: Record<PaletteColor, string> = {
 const titleFor = (c: Choice) => (c === null ? 'Без цвета' : LABELS[c])
 
 const refs = ref<HTMLButtonElement[]>([])
-function bindRef(el: Element | null, idx: number) {
+// a function ref gets the element, or a component instance in general; only the swatch buttons matter here
+function bindRef(el: Element | ComponentPublicInstance | null, idx: number) {
   if (el instanceof HTMLButtonElement) refs.value[idx] = el
 }
 
@@ -79,6 +80,7 @@ function onKey(e: KeyboardEvent) {
     default: return
   }
   e.preventDefault()
-  select(list[next], next)
+  // `next` is always inside the list: the switch above wraps it around
+  select(list[next]!, next)
 }
 </script>

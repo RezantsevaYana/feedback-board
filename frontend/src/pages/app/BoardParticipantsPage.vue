@@ -13,6 +13,12 @@
           <p class="note">Один человек — одна роль на доске. Что может каждая роль, видно при выборе.</p>
         </section>
 
+        <section v-if="payload.requests.length" class="board-settings-section">
+          <h2>Запросы на доступ<span class="count-badge">{{ payload.requests.length }}</span></h2>
+          <p class="note">Открыли ссылку на закрытую доску и просят пустить. После одобрения человек получит письмо со ссылкой на вход.</p>
+          <AccessRequestsList :key="slug" :slug="slug" :requests="payload.requests" @decided="onRequestDecided" />
+        </section>
+
         <section v-if="payload.invitations.length" class="board-settings-section">
           <h2>Ждут приглашения</h2>
           <PendingInvitationsList
@@ -56,6 +62,7 @@ import { ParticipantsApi, type Invitation, type Participant, type ParticipantsPa
 import { errorMessage } from '@/api/client'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
+import AccessRequestsList from './components/AccessRequestsList.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
 import ParticipantsTable from './components/ParticipantsTable.vue'
 import PendingInvitationsList from './components/PendingInvitationsList.vue'
@@ -84,6 +91,8 @@ async function load() {
   try {
     const res = await ParticipantsApi.list(slug.value)
     payload.value = res.data
+    // the page has the fresh count, the badges may be a few minutes old
+    auth.setPendingRequests(slug.value, res.data.requests.length)
   } catch (e) {
     loadError.value = boardLoadError(e) || errorMessage(e)
   } finally {
@@ -111,6 +120,15 @@ function onInviteResent(id: number) {
 function onInviteCancelled(id: number) {
   if (!payload.value) return
   payload.value.invitations = payload.value.invitations.filter((i) => i.id !== id)
+}
+
+// an approved request turns into a pending invitation (it's the letter's link), a rejected one just goes;
+// the badge on «Участники» and in the hub follows the list
+function onRequestDecided(id: number, invitation: Invitation | null) {
+  if (!payload.value) return
+  payload.value.requests = payload.value.requests.filter((r) => r.id !== id)
+  if (invitation) onInvitesSent([invitation])
+  auth.setPendingRequests(slug.value, payload.value.requests.length)
 }
 
 function onInvitesSent(created: Invitation[]) {

@@ -51,7 +51,8 @@ const close = inject<() => void>('baseModal:close', () => emit('close'))
 
 const ask = computed(() => STATUS_REPLY[props.status.slug as SystemStatusSlug]!)
 const isBulk = computed(() => props.posts.length > 1)
-const first = computed(() => props.posts[0])
+// the modal opens for one card or a selection, never for none
+const first = computed(() => props.posts[0]!)
 
 const title = computed(() => isBulk.value
   ? `${ask.value.title}: ${props.posts.length} карточек`
