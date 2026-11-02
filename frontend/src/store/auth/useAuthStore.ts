@@ -19,6 +19,9 @@ import type { BoardSummary, Me } from '@/api/types'
 export const useAuthStore = defineStore('auth', () => {
   const me = ref<Me | null>(null)
   const loaded = ref(false)
+  // the board last open in the cabinet: the side menu keeps it on «Настройки аккаунта», so the account isn't
+  // a separate place you have to find your way back from
+  const lastBoardSlug = ref<string | null>(null)
   const loading = ref(false)
 
   const boards = ref<Board[]>([])
@@ -109,6 +112,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /** The board was opened or closed: the side menu switches its «Доступ» sections and the hub card its chip right away. */
+  function setVisibility(slug: string, visibility: 'public' | 'private'): void {
+    for (const b of [...(me.value?.boards ?? []), ...(me.value?.projects ?? []), ...boards.value]) {
+      if (b.slug === slug) b.visibility = visibility
+    }
+  }
+
   /** Delete to the trash; the board disappears from the hub, the switcher and team mode at once. */
   async function trashBoard(slug: string, confirm: string): Promise<TrashedBoard> {
     const res = await BoardsApi.destroy(slug, confirm)
@@ -159,6 +169,10 @@ export const useAuthStore = defineStore('auth', () => {
     await AuthApi.forgotPassword(email)
   }
 
+  async function checkResetToken(token: string, email: string): Promise<void> {
+    await AuthApi.checkResetToken(token, email)
+  }
+
   /** The server logs in with the new password, so the page goes straight to the hub. */
   async function resetPassword(token: string, email: string, password: string): Promise<void> {
     const res = await AuthApi.resetPassword(token, email, password)
@@ -185,6 +199,7 @@ export const useAuthStore = defineStore('auth', () => {
     await AuthApi.logout().catch(() => undefined)
     me.value = null
     loaded.value = true
+    lastBoardSlug.value = null
     // next admin session starts clean
     boards.value = []
     trashed.value = []
@@ -193,9 +208,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    me, loaded, loading, isAuth, boardSummaries, awaitingDecision, setPendingRequests,
+    me, loaded, loading, isAuth, lastBoardSlug, boardSummaries, awaitingDecision, setPendingRequests, setVisibility,
     boards, trashed, boardsLoaded, boardsLoading, incoming,
     fetchMe, fetchBoards, fetchIncoming, acceptIncoming, declineIncoming, addBoard, renameBoard, trashBoard, restoreBoard,
-    register, login, logout, verifyEmail, resendVerification, forgotPassword, resetPassword, changePassword, updateName,
+    register, login, logout, verifyEmail, resendVerification, forgotPassword, checkResetToken, resetPassword, changePassword, updateName,
   }
 })

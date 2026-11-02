@@ -1,12 +1,149 @@
 @use '../utils' as *;
 
-// AccountPage.vue + AccountProfileForm.vue, AccountPasswordForm.vue.
-// Frame, nav and section cards come from _board-workspace.scss and _board-settings.scss.
-.account-form {
+// AccountPage.vue + AccountProfileForm.vue, AccountPasswordForm.vue (prototype frontend/demo/account-prototype.html).
+// Frame and section cards come from _board-workspace.scss (.app-page) and _board-settings.scss.
+// A phone gets the same layout, tighter: a smaller circle, buttons stay beside / under the fields at their own width.
+.account-profile {
     display: grid;
-    gap: 12px;
+    gap: 14px;
 
     .note {
         margin: 0;
     }
+    @media screen and (max-width: $mobile) {
+        gap: 12px;
+    }
+}
+.account-who {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+
+    @media screen and (max-width: $mobile) {
+        gap: 12px;
+        padding-bottom: 12px;
+    }
+}
+.account-avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    font-size: 17px;
+    font-weight: 600;
+
+    @media screen and (max-width: $mobile) {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+}
+.account-who-text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+.account-who-name {
+    font-size: 18px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+
+    @media screen and (max-width: $mobile) {
+        font-size: 16px;
+    }
+}
+.account-who-mail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    color: var(--muted);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+
+    @media screen and (max-width: $mobile) {
+        font-size: 13px;
+    }
+}
+// confirmed: the selection's pale green; not confirmed: the amber of «Закрытая», and the banner below says why it matters
+.account-mail-status {
+    padding: 1px 8px;
+    border-radius: 6px;
+    background: var(--active);
+    color: var(--active-fg);
+    font-size: 12px;
+    font-weight: 600;
+
+    &.unconfirmed {
+        background: color-mix(in srgb, var(--sta-orange) 14%, var(--surface));
+        color: var(--sta-orange);
+    }
+}
+.account-verify {
+    margin: 0;
+
+    // a phone: the resend button at its own width, not across the banner
+    @media screen and (max-width: $mobile) {
+        .btn {
+            width: auto;
+            justify-self: start;
+            align-self: flex-start;
+        }
+    }
+}
+// the name with «Сохранить» beside it once changed; a phone keeps them in one row too, the button compact
+.account-name-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+
+    .field {
+        flex: 1;
+        min-width: 0;
+    }
+    .btn {
+        flex: none;
+    }
+}
+
+// «Пароль» folded into a row; the form when opened
+.account-password-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+
+    h2 {
+        margin: 0 0 2px;
+    }
+    .note {
+        max-width: 380px;
+        margin: 0;
+    }
+}
+.account-form {
+    display: grid;
+    gap: 12px;
+
+    h2 {
+        margin: 0;
+    }
+    .note {
+        margin: 0;
+    }
+    @media screen and (max-width: $mobile) {
+        gap: 10px;
+    }
+}
+.account-password-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+
 }

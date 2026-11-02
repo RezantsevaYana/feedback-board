@@ -4,8 +4,6 @@
     position: relative;
     display: grid;
     gap: 4px;
-    // резерв под ошибку — чтобы её появление не раздвигало форму
-    padding-bottom: 20px;
 
     > span {
         font-size: 13px;
@@ -16,16 +14,10 @@
         font-size: 12px;
         font-weight: 400;
     }
+    // the error takes its own line under the field and wraps; no empty slot reserved under every field,
+    // so a form's spacing is just its own gap (the slot used to double it, and every short form switched it off)
     > .err {
-        position: absolute;
-        bottom: 0;
-        left: 2px;
-        right: 2px;
-        margin: 0;
-        pointer-events: none;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        margin: 2px 2px 0;
     }
 }
 .input {
@@ -36,6 +28,11 @@
     border-radius: 10px;
     padding: 9px 12px;
     font: inherit;
+
+    // touch screens: iOS Safari zooms the page into any field under 16px on focus
+    @media (pointer: coarse) {
+        font-size: 16px;
+    }
 
     &:focus-visible {
         border-color: var(--focus);
@@ -265,6 +262,10 @@ textarea.input {
     }
 }
 // options with a hint line: the list gets room for it, the hint wraps under the label
+.select-list.up {
+    top: auto;
+    bottom: calc(100% + 4px);
+}
 .select-list.with-hints {
     min-width: max(100%, 280px);
 

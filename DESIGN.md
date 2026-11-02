@@ -202,7 +202,16 @@ The system is flat. Depth comes from tonal layering: white surfaces on a white p
 Calm and precise: hairline edges, 10px corners, one green fill per view.
 
 ### Buttons
-- **Shape:** gently rounded (10px), 1px Sage Line edge, 8px × 16px padding, Onest 500.
+- **Shape:** gently rounded (10px), 1px Sage Line edge, Onest 500.
+- **Sizes — three, set only in `_buttons.scss`:** `.btn` 40px tall (phone: 14px label, 14px sides) for forms and page heads; `.btn-sm` 32px (36px on touch), 13px, for rows, cards and lists; `.btn-lg` 48px, 16px, for the one big call to action. Components give a button its layout (width, flex, alignment), never its size. All of them side by side: `/dev/ui`.
+- **Which button for what (02.11.2026, the table is also on `/dev/ui`):**
+  - **Primary** (`.btn-primary`, Rocont Green fill) — the block's or dialog's commit: Сохранить, Отправить, Войти, Предложить, Одобрить, + Новая доска. One per block.
+  - **Перейти на доску →** on the board's cabinet pages is also `.btn-primary` (02.11.2026): the way to the board must not get lost, so it is the one allowed second green fill in the page head.
+  - **Secondary** (`.btn`) — neutral: Отмена, navigation (Настройки, Доступ, Рассмотреть), copying, the rest.
+  - **Add** (`.btn-add`, green ink and edge) — adding an item inside a block: + Добавить домен, + Пригласить, + Добавить в команду, Добавить категорию / столбец.
+  - **Danger** (`.btn-danger`, clay red outline) — a refusal or a removal that still asks: Отклонить, Удалить пост, Отменить приглашение.
+  - **Danger, filled** — only the armed «yes» of a destructive dialog, and «Удалить доску».
+  - **Link** (`.link-btn`) — small actions in a row: Переименовать, Выбрать карточки, Вернуть стандартный.
 - **Primary:** Rocont Green fill, white text, 600 weight. One per view: the action the screen exists for.
 - **Secondary:** white with a Sage Line edge and Deep Ink text. Hover darkens the edge toward ink.
 - **Danger:** white with Clay Red text at rest; inside a dialog, once armed, filled Clay Red with white text. Disabled stays the quiet outline at 60% opacity.

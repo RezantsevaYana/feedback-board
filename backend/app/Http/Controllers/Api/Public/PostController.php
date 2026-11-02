@@ -28,22 +28,29 @@ class PostController extends Controller
             'status_id' => ['nullable', 'integer', Rule::exists('statuses', 'id')->where('project_id', $project->id)],
             'q' => ['nullable', 'string', 'max:120'],
             'sort' => ['nullable', Rule::in(['top', 'new'])],
+            'new_first' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $posts = $project->posts()
+        $filtered = $project->posts()
             ->listedOnBoard()
             ->inCategory($filters['category'] ?? null)
             ->when($filters['status_id'] ?? null, fn ($q, $statusId) => $q->where('status_id', $statusId))
-            ->search($filters['q'] ?? null)
+            ->search($filters['q'] ?? null);
+        // the list view: «Новое» on top, and how many of them there are, so the page can draw the line after them
+        $newStatusId = ($filters['new_first'] ?? false) ? $project->defaultStatus()?->id : null;
+
+        $posts = (clone $filtered)
             ->with(['category', 'status'])
             ->withCount('attachments')
+            ->newFirst($newStatusId)
             ->sorted($filters['sort'] ?? 'top')
             ->paginate($filters['per_page'] ?? 20);
 
         VoterToken::markVoted($request, $posts->getCollection());
 
-        return PostResource::collection($posts);
+        return PostResource::collection($posts)
+            ->additional($newStatusId !== null ? ['new_count' => (clone $filtered)->where('status_id', $newStatusId)->count()] : []);
     }
 
     public function store(StorePostRequest $request, Project $project): JsonResponse
@@ -55,8 +62,9 @@ class PostController extends Controller
         // Залогиненный пишет под именем аккаунта: author_name от клиента игнорируем, чтобы нельзя было
         // «подписаться» чужим именем. Аноним (виджет cross-origin) по-прежнему шлёт author_name полем.
         $user = $request->user('sanctum');
-        // a member whose role can't post (Читатель) is refused; guests and outsiders follow the board's visibility
-        abort_if($user?->roleOn($project)?->canSubmit() === false, 403, 'Читатель на этой доске не предлагает — только читает.');
+        // Читатель only reads on a closed board; on an open one they're a guest like anyone with the link.
+        // Guests and outsiders follow the board's visibility
+        abort_if($project->isPrivate() && $user?->roleOn($project)?->canSubmit() === false, 403, 'Читатель на этой доске не предлагает — только читает.');
         $authorName = $user?->name ?? $request->validated('author_name');
 
         $post = DB::transaction(function () use ($request, $project, $authorToken, $authorName, $user) {

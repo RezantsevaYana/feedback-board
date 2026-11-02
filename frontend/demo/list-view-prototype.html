@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вид «Список» — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --surface: #fff; --surface-2: #e8eee9; --active: #cfe7d7; --active-fg: #063f2c; --active-line: #1d8547; --line: #d8e1db; --control: #a9bcb0;
+            --fg: #0f2224; --muted: #4c5d60; --accent: #1d8547; --accent-ink: #1b7f41; --poo: #94603d; --page: #f3f6f4; --radius: 10px;
+            --s-new: #46575a; --s-done: #14623a; --s-rej: #8f3029; --s-blue: #2a4e6a;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif; --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        .doc { max-width: 1280px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 800px; margin: 0 0 24px; }
+        .controls { display: flex; gap: 24px; align-items: center; margin-bottom: 16px; position: sticky; top: 0; z-index: 5; padding: 12px 0; background: var(--page); font-size: 13px; color: var(--muted); }
+        .seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .seg button { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .seg button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+        .stage { display: flex; justify-content: center; }
+        .app { width: 100%; max-width: 1000px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px 28px; }
+        .app.phone { width: 390px; padding: 16px; }
+        .app h3 { margin: 0 0 14px; font-size: 24px; }
+        .toolbar { display: flex; gap: 8px; margin-bottom: 14px; font-size: 13px; }
+        .toolbar span { padding: 6px 12px; border: 1px solid var(--line); border-radius: 10px; }
+
+        .tag { font-size: 12px; font-weight: 600; padding: 2px 10px 2px 12px; border-radius: 4px 10px 10px 4px; background: #c9dde6; }
+        .tag.bug { background: #f3cfc8; }
+        .chip { font-size: 12px; font-weight: 500; padding: 1px 8px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
+        .chip.crit { background: color-mix(in srgb, #b0423a 12%, #fff); color: #b0423a; }
+        .pill { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, #fff); }
+        .vote { display: inline-flex; align-items: center; gap: 6px; justify-content: center; min-width: 50px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 500; }
+        .vote.on { background: var(--active); border-color: var(--active-line); box-shadow: inset 0 0 0 1px var(--active-line); color: var(--active-fg); font-weight: 700; }
+
+        /* groups by column, in the board's order: «Новое» first */
+        .group { margin-top: 18px; }
+        .group:first-of-type { margin-top: 0; }
+        .group-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+        .group-head .pill { font-size: 13px; padding: 3px 10px; }
+        .group-head .count { color: var(--muted); font-size: 13px; font-weight: 600; }
+        .group-head .rule { flex: 1; height: 1px; background: var(--line); }
+        .rows { display: grid; gap: 6px; }
+        .row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+        .row:hover { border-color: var(--control); }
+        .row .votes { display: grid; gap: 4px; }
+        .row .body { display: grid; gap: 3px; min-width: 0; }
+        .row .tags { display: flex; gap: 6px; }
+        .row h4 { margin: 0; font-size: 15px; }
+        .row .ex { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .row .meta { font-size: 12px; color: var(--muted); display: flex; gap: 10px; }
+        .menu { width: 30px; height: 30px; border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; font-size: 14px; color: var(--muted); }
+        .app.phone .row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'body menu' 'votes votes'; gap: 8px; padding: 12px; }
+        .app.phone .row .body { grid-area: body; }
+        .app.phone .row .menu { grid-area: menu; }
+        .app.phone .row .votes { grid-area: votes; display: flex; gap: 6px; }
+        .app.phone .row .ex { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .group-head .show { font-size: 13px; font-weight: 600; color: var(--accent-ink); cursor: pointer; white-space: nowrap; }
+        /* «Готово» and «Отклонено» fold into one line until opened: they rarely need attention */
+        .folded { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px dashed transparent; border-radius: 12px; background: var(--surface-2); font-size: 13px; color: var(--muted); cursor: pointer; }
+        .folded b { color: var(--fg); font-weight: 600; }
+
+        /* before: today's card */
+        .before .row { grid-template-columns: auto minmax(0, 1fr) auto; }
+        .before .side { display: grid; gap: 8px; justify-items: end; }
+        .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 40px; }
+        .note-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+        .note-card h3 { margin: 0 0 8px; font-size: 16px; }
+        .note-card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Вид «Список»</h1>
+    <p class="lede">
+        Список делится на группы по столбцам в порядке доски: сначала «Новое», дальше столбцы команды, в конце «Готово» и «Отклонено».
+        Новые карточки всегда сверху, статус виден заголовком группы, а не плашкой на каждой карточке. Внутри группы — выбранная сортировка.
+    </p>
+    <div class="controls">
+        <span class="seg" data-ctl="state"><button aria-pressed="false" data-v="before">Сейчас</button><button aria-pressed="true" data-v="after">Предлагаю</button></span>
+        <span class="seg" data-ctl="device"><button aria-pressed="true" data-v="desktop">Десктоп</button><button aria-pressed="false" data-v="phone">Телефон</button></span>
+        <span class="seg" data-ctl="fold"><button aria-pressed="true" data-v="fold">«Готово» и «Отклонено» свёрнуты</button><button aria-pressed="false" data-v="open">развёрнуты</button></span>
+    </div>
+    <div class="stage"><div class="app" id="app"></div></div>
+    <div class="notes">
+        <div class="note-card"><h3>Порядок</h3><ul>
+            <li>Группы — в порядке столбцов доски: «Новое» → столбцы команды → «Готово» → «Отклонено».</li>
+            <li>Внутри группы — выбранная сортировка («Сначала новые», «Популярные», «По приоритету»).</li>
+            <li>Фильтр «Все столбцы → один» оставляет одну группу.</li>
+        </ul></div>
+        <div class="note-card"><h3>Карточка</h3><ul>
+            <li>Нет плашки статуса — её заменяет заголовок группы; меньше шума справа.</li>
+            <li>Описание — одна строка (на телефоне две), карточка ниже — больше видно за раз.</li>
+            <li>На телефоне голоса строкой внизу, меню «…» справа сверху.</li>
+        </ul></div>
+        <div class="note-card"><h3>Готово и отклонено</h3><ul>
+            <li>Предлагаю сворачивать их до заголовка «Готово 12 · показать»: они редко требуют внимания и иначе отодвигают остальное. Запоминается, что развернули.</li>
+            <li>Переключатель сверху показывает оба варианта.</li>
+        </ul></div>
+    </div>
+</div>
+<script>
+const POSTS = [
+    { s: 'new', tag: 'Идея', t: 'Тёмная тема в виджете', ex: 'Сайт клиента тёмный, светлая форма выглядит чужой.', a: 'Аноним · вчера', l: 2, d: 0 },
+    { s: 'new', tag: 'Баг', crit: true, t: 'Сбивается часовой пояс в календаре', ex: 'Встречи, созданные из Новосибирска, у коллег в Москве показываются на час раньше.', a: 'Игорь Н. · 21 сент. · ответ команды', l: 11, d: 1, on: true },
+    { s: 'new', tag: 'Идея', t: 'Отложенная отправка сообщений', ex: 'Иногда пишу коллегам вечером и не хочу их будить.', a: 'Денис П. · 19 окт.', l: 6, d: 0 },
+    { s: 'work', tag: 'Баг', t: 'Не прикрепляется файл больше 20 МБ', ex: 'Пытаюсь отправить презентацию 24 МБ: крутится загрузка и пропадает.', a: 'Денис П. · 19 окт.', l: 6, d: 0 },
+    { s: 'done', tag: 'Идея', t: 'Статус «в отпуске» с датой возвращения', ex: 'Чтобы при упоминании человека сразу было видно, что он в отпуске.', a: 'Марина К. · 20 окт.', l: 4, d: 0 },
+    { s: 'rej', tag: 'Идея', t: 'Реакции эмодзи на сообщения', ex: 'Чтобы не писать «ок» и «спасибо» отдельными сообщениями.', a: 'Аноним из маркетинга · 11 сент.', l: 3, d: 6 },
+]
+const GROUPS = [{ s: 'new', n: 'Новое', c: 'var(--s-new)' }, { s: 'work', n: 'В работе', c: 'var(--s-blue)' }, { s: 'done', n: 'Готово', c: 'var(--s-done)' }, { s: 'rej', n: 'Отклонено', c: 'var(--s-rej)' }]
+const state = { state: 'after', device: 'desktop', fold: 'fold' }
+const tags = (p) => `<span class="tags"><span class="tag ${p.tag === 'Баг' ? 'bug' : ''}">${p.tag}</span>${p.crit ? '<span class="chip crit">Критический</span>' : ''}</span>`
+const votes = (p) => `<span class="votes"><span class="vote ${p.on ? 'on' : ''}">👍 ${p.l}</span><span class="vote">💩 ${p.d}</span></span>`
+const row = (p, withPill) => `<div class="row">${votes(p)}<div class="body">${tags(p)}<h4>${p.t}</h4><span class="ex">${p.ex}</span><span class="meta">${p.a}</span></div>${withPill ? `<span class="side"><span class="pill" style="--c:${GROUPS.find((g) => g.s === p.s).c}">${GROUPS.find((g) => g.s === p.s).n}</span><span class="menu">•••</span></span>` : '<span class="menu">•••</span>'}</div>`
+function render() {
+    const app = document.getElementById('app'); app.classList.toggle('phone', state.device === 'phone'); app.classList.toggle('before', state.state === 'before')
+    let html = '<h3>Предложения</h3><div class="toolbar"><span>Столбцы</span><span style="background:var(--active);border-color:var(--active-line)">Список</span><span>Сначала новые ⌄</span></div>'
+    if (state.state === 'before') {
+        const order = [0, 4, 5, 1, 3, 2]
+        html += `<div class="rows">${order.map((i) => row(POSTS[i], true)).join('')}</div>`
+    } else {
+        for (const g of GROUPS) {
+            const items = POSTS.filter((p) => p.s === g.s)
+            if (!items.length) continue
+            const folded = state.fold === 'fold' && (g.s === 'done' || g.s === 'rej')
+            html += `<section class="group"><div class="group-head"><span class="pill" style="--c:${g.c}">${g.n}</span><span class="count">${items.length}</span><span class="rule"></span>${folded ? '<span class="show">показать ⌄</span>' : (g.s === 'done' || g.s === 'rej' ? '<span class="show">свернуть ⌃</span>' : '')}</div>
+                ${folded ? '' : `<div class="rows">${items.map((p) => row(p, false)).join('')}</div>`}</section>`
+        }
+    }
+    app.innerHTML = html
+    document.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(state[seg.dataset.ctl] === b.dataset.v))))
+}
+document.addEventListener('click', (e) => { const b = e.target.closest('.seg button'); if (b) { state[b.closest('.seg').dataset.ctl] = b.dataset.v; render() } })
+render()
+</script>
+</body>
+</html>

@@ -7,15 +7,15 @@
           <div class="incoming-invite-board">{{ invite.board.name }}</div>
           <div class="incoming-invite-meta">
             {{ ROLE_LABELS[invite.role] }}
-            <template v-if="invite.invited_by.name">· пригласил(а) {{ invite.invited_by.name }}</template>
+            <template v-if="invite.invited_by.name">· пригласил {{ invite.invited_by.name }}</template>
             · {{ fmtTimeAgo(invite.created_at) }}
           </div>
         </div>
         <div class="incoming-invite-actions">
-          <button type="button" class="btn btn-primary" :disabled="busyId === invite.id" @click="accept(invite)">
+          <button type="button" class="btn btn-sm btn-primary" :disabled="busyId === invite.id" @click="accept(invite)">
             Принять
           </button>
-          <button type="button" class="btn" :disabled="busyId === invite.id" @click="decline(invite)">
+          <button type="button" class="btn btn-sm btn-danger" :disabled="busyId === invite.id" @click="decline(invite)">
             Отклонить
           </button>
         </div>

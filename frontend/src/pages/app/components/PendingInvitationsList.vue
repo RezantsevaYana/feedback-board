@@ -5,15 +5,15 @@
         <div class="pending-invite-email">{{ invite.email }}</div>
         <div class="pending-invite-meta">
           {{ roleLabel(invite.role) }}
-          · истекает {{ fmtDate(invite.expires_at) }}
+          · приглашение действует до {{ fmtDate(invite.expires_at) }}
           <template v-if="invite.invited_by.name">· позвал {{ invite.invited_by.name }}</template>
         </div>
       </div>
       <div class="pending-invite-actions">
-        <button type="button" class="btn btn-small" :disabled="busyId === invite.id" @click="resend(invite)">
+        <button type="button" class="btn btn-sm" :disabled="busyId === invite.id" @click="resend(invite)">
           Отправить ещё раз
         </button>
-        <button type="button" class="btn btn-small btn-ghost" :disabled="busyId === invite.id" @click="cancel(invite)">
+        <button type="button" class="btn btn-sm btn-danger" :disabled="busyId === invite.id" @click="cancel(invite)">
           Отменить
         </button>
       </div>

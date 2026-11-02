@@ -1,6 +1,6 @@
 <template>
-  <section class="board-settings-section board-embed-section widget-color">
-    <div class="board-embed-section-head">
+  <section class="board-settings-section board-access-section widget-color">
+    <div class="board-access-section-head">
       <h2>Цвет виджета</h2>
       <p class="note">Основной цвет кнопки и акцентов в форме. Меняется сразу на всех сайтах, код вставлять заново не нужно.</p>
     </div>
@@ -47,7 +47,7 @@ import AppIcon from '@/shared/ui/AppIcon.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 import { DEFAULT_WIDGET_COLOR, normalizeHex, textOn, widgetPalette } from '@/shared/utils/widgetColor'
 
-// The widget's main colour on the «Подключение» page. Stored on the board (PATCH /boards/{slug}),
+// The widget's main colour on the «Доступ» page (open boards). Stored on the board (PATCH /boards/{slug}),
 // the widget reads it with the project; the preview uses the same palette function as the widget.
 const props = defineProps<{
   slug: string

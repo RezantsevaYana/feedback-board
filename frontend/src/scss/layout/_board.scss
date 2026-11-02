@@ -15,7 +15,7 @@
     }
     // room under the list for the pinned «Предложить» on a phone
     @media screen and (max-width: $mobile) {
-        padding-bottom: 64px;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -41,26 +41,21 @@
         justify-self: start;
         margin: -6px 0 14px;
 
-        // tablet and phone: one more item in the row, right after the tag — just the icon, so the row
-        // keeps its controls on one line; the word stays for screen readers, the hint in the title
+        // tablet and phone: one more item in the row, right after the tag, with its word — «Закрытая» is short
+        // and the icon alone said too little; it pushes the controls after it to the right. A long board name
+        // gives way first (the switcher ellipsizes), so the tag, the chip and «Меню» stay on one line
         @media screen and (max-width: $tablet) {
-            margin: 0;
-            padding: 4px 6px;
+            order: 0;
+            margin: 0 auto 0 0;
+            // the hint hangs from the whole row, not from the chip, so it never runs off the screen
+            position: static;
 
-            .visibility-badge-label {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                overflow: hidden;
-                clip-path: inset(50%);
-                white-space: nowrap;
+            .visibility-badge-hint {
+                top: calc(100% + 4px);
+                max-width: 100%;
             }
         }
-        // phone: it stays next to the tag and pushes the theme and team controls right, as the tag did
-        @media screen and (max-width: $mobile) {
-            order: 0;
-            margin-right: auto;
-        }
+
     }
     // team mode with several boards: the brand tag is BoardSwitcher's trigger, the menu wrapper takes its place
     .menu:has(.board-switcher) {
@@ -78,12 +73,19 @@
         @media screen and (max-width: $tablet) {
             margin: 0;
         }
-        // phone: stays first in the top row, like the plain tag (the generic `.menu` rule below sends menus right)
-        // and takes only what the theme and team controls leave in that row
+        // phone: stays first in the top row, like the plain tag (the generic `.menu` rule below sends menus right);
+        // it takes only its own width and may shrink, the visibility chip right after it takes the free space
         @media screen and (max-width: $mobile) {
             order: 0;
-            flex: 1 1 0;
-            margin-right: auto;
+            flex: 0 1 auto;
+            min-width: 0;
+            // a wrapping row wraps before it shrinks: leave room for «Закрытая» and the menu square, so a long
+            // name ellipsizes instead of pushing the menu onto its own line
+            max-width: calc(100% - 164px);
+
+            .proj {
+                max-width: 100%;
+            }
         }
     }
     .proj.board-switcher {
@@ -107,7 +109,9 @@
     }
 
     @media screen and (max-width: $tablet) {
-        position: static;
+        // relative (not sticky): the visibility hint hangs from the row; no offset from the sticky top
+        position: relative;
+        top: auto;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -127,16 +131,18 @@
         }
     }
 
-    // tablet and phone: the team box becomes the «Команда» menu (MenuComponent) next to the theme switch
-    .menu:has(.team-menu) {
+    // tablet and phone: the tools and the account go into the drawer behind «Меню» next to the theme switch
+    .team-menu-btn {
         display: none;
 
         @media screen and (max-width: $tablet) {
-            display: block;
+            display: inline-flex;
         }
     }
     @media screen and (max-width: $tablet) {
-        .team-box {
+        .board-tools-side,
+        .board-account,
+        .board-theme-side {
             display: none;
         }
     }
@@ -149,6 +155,7 @@
         }
         .theme-toggle,
         .team-login,
+        .team-menu-btn,
         .menu {
             order: 1;
         }
@@ -184,11 +191,25 @@
         }
     }
 }
-.menu-trigger.team-menu {
-    width: auto;
-    padding: 0 12px;
+.team-menu-btn {
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 6px 12px;
     font-size: 14px;
-    font-weight: 500;
+
+    // phone: a square with just the icon, like the cabinet's header, so the tag and «Закрытая» keep the row
+    @media screen and (max-width: $mobile) {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        justify-content: center;
+    }
+}
+.team-menu-label {
+    @media screen and (max-width: $mobile) {
+        display: none;
+    }
 }
 
 // Группа табов «Предложения / Топ» — всегда идёт одним блоком
@@ -316,87 +337,77 @@
         margin-top: 0;
     }
 }
-// Team box in the sidebar: three groups, tight inside and split by hairlines —
-// who is logged in, this board's tools (as rows), and the way out: «← Мои доски» and «Выйти» on one line
-.team-box {
-    margin-top: 18px;
-    padding: 12px 12px 8px;
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--line);
+// BoardTools.vue — owner / admin: the board's tools as rows, under «Предложить»
+.board-tools {
     display: grid;
-    font-size: 13px;
+    gap: 1px;
 
-    .link-btn {
-        padding: 0;
+    .count-badge {
+        margin-left: 6px;
     }
-    .link-btn-danger {
-        color: var(--bug);
-        text-decoration-color: color-mix(in srgb, var(--bug) 40%, transparent);
-
-        @include hover {
-            color: var(--bug);
-            text-decoration-color: currentColor;
-        }
-    }
+}
+.board-tools-side {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+// SidebarAccount.vue at the bottom of the board's sidebar: the same block as in the cabinet's menu
+.board-account {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+}
+.board-nav .theme-toggle {
+    margin-top: 10px;
 
     @media screen and (max-width: $tablet) {
         margin-top: 0;
-        // плашка одинаковая на всех разрешениях — вертикальный grid, не ряд.
-        // На узких экранах уводим её в собственную строку, чтобы не распирала nav
-        flex: 1 1 100%;
     }
-}
-.team-box-who {
-    display: grid;
-    gap: 4px;
-    justify-items: start;
-    padding-bottom: 12px;
-
-    // a long address stays on one line; the full one is in the title
-    .who-mail {
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        color: var(--muted);
-    }
-}
-// the board's tools read as rows with a sage hover, not as underlined links
-.team-box-tools {
-    display: grid;
-    gap: 2px;
-    padding: 8px 0;
-    border-top: 1px solid var(--line);
-
-    .link-btn {
-        text-align: left;
-        padding: 4px 6px;
-        margin: 0 -6px;
-        border-radius: 6px;
-        color: var(--fg);
-        text-decoration: none;
-
-        @include hover {
-            background: var(--surface-2);
+    // phone: just the icon, so the tag, «Открытая / Закрытая» and the login keep one row (the title says the theme)
+    @media screen and (max-width: $mobile) {
+        .theme-toggle-label {
+            display: none;
         }
     }
 }
-.team-box-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 8px;
-    border-top: 1px solid var(--line);
+// a guest's «Вход для команды»: «Войти» on a phone, the same reason
+.team-login-short {
+    display: none;
 }
-// «← Мои доски»: navigation out of the board, so it reads as a link in the accent, not one more board action
-.team-box-back {
-    color: var(--accent-ink);
-    font-weight: 500;
-    text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
+@media screen and (max-width: $mobile) {
+    .team-login-full {
+        display: none;
+    }
+    .team-login-short {
+        display: inline;
+    }
+    // the plain tag (a guest, or a single board) ellipsizes a long name too, like the switcher above
+    .board-nav > .proj {
+        min-width: 0;
+        max-width: calc(100% - 190px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+// inside the drawer: the board's name, its tools, the account at the bottom of the panel
+.board-drawer-title {
+    margin: 0;
+    padding: 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+}
+.board-drawer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .sidebar-account {
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+    }
 }
 
-// a full-height line between the sidebar and the board; on tablet and below the nav sits on top
 .board-main {
     min-width: 0;
     align-self: stretch;
@@ -478,12 +489,6 @@
     gap: 10px;
     align-items: center;
     margin-bottom: 14px;
-
-    // в фильтрах нет валидации — резерв под ошибкой у .field не нужен,
-    // иначе из-за дополнительной высоты .field селект уплывает вверх при align:center
-    > .field {
-        padding-bottom: 0;
-    }
 
     // phone: only the view switch and «Фильтры · N»; the filters open in FiltersModal
     @media screen and (max-width: $mobile) {
@@ -574,11 +579,6 @@
 .board-filters {
     display: contents;
 
-    // no validation here: the error reserve under .field would push the selects off the row's centre
-    > .field {
-        padding-bottom: 0;
-    }
-
     @media screen and (max-width: $mobile) {
         display: none;
     }
@@ -601,7 +601,6 @@
 }
 .btn.filters-toggle {
     display: none;
-    padding: 6px 12px;
 
     &[aria-expanded='true'] {
         background: var(--active);

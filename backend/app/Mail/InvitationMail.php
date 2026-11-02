@@ -52,7 +52,7 @@ class InvitationMail extends Mailable
         return match ($role->value) {
             'admin' => 'Админ',
             'manager' => 'Менеджер',
-            'voter' => 'Голосующий',
+            'voter' => 'Участник',
             'reader' => 'Читатель',
             default => 'Участник',
         };

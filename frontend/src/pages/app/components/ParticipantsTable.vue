@@ -50,7 +50,7 @@
 import { computed } from 'vue'
 import { ParticipantsApi, type Participant, type ParticipantSource } from '@/api/participants'
 import { ApiError, errorMessage } from '@/api/client'
-import { ASSIGNABLE_ROLES, ROLE_HINTS, ROLE_LABELS, type ProjectRole } from '@/api/types'
+import { ASSIGNABLE_ROLES, ROLE_HINTS, ROLE_LABELS, TEAM_ROLES, type ProjectRole } from '@/api/types'
 import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
@@ -65,6 +65,8 @@ const props = defineProps<{
   slug: string
   members: Participant[]
   meId: number
+  /** an open board: roles only of the team (Админ, Менеджер) */
+  teamOnly?: boolean
 }>()
 const emit = defineEmits<{
   changed: [member: Participant]
@@ -81,7 +83,7 @@ const SOURCE_LABELS: Record<ParticipantSource, string> = {
   manual: 'добавлен вручную',
 }
 
-const roleOptions = computed(() => ASSIGNABLE_ROLES.map((value) => ({ value, label: ROLE_LABELS[value], hint: ROLE_HINTS[value] })))
+const roleOptions = computed(() => (props.teamOnly ? TEAM_ROLES : ASSIGNABLE_ROLES).map((value) => ({ value, label: ROLE_LABELS[value], hint: ROLE_HINTS[value] })))
 
 async function changeRole(member: Participant, nextRole: AssignableRole) {
   if (member.role === nextRole) return

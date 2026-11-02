@@ -2,6 +2,8 @@
 
 // App.vue, store/modals/useNotificationStore.ts
 // A floating panel on the surface (not an ink pill); the action is a text button in the accent.
+// White on a white page got lost: a sprout tint (the same one as a selection) and an icon say
+// «something happened» at a glance. No side stripe (DESIGN.md).
 // Desktop: bottom right, out of the way of the board. Phone: full width above the pinned «Предложить».
 .toast {
     position: fixed;
@@ -10,30 +12,48 @@
     z-index: 60;
     display: flex;
     align-items: center;
-    gap: 14px;
-    background: var(--surface);
-    color: var(--fg);
-    border: 1px solid var(--line);
+    gap: 10px;
+    background: var(--active);
+    color: var(--active-fg);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
     box-shadow: var(--shadow); // taste-skill-ignore floats over the page
-    padding: 9px 10px 9px 16px;
+    padding: 12px 12px 12px 14px;
     border-radius: 10px;
-    font-size: 14px;
-    max-width: calc(100vw - 32px);
+    font-size: 15px;
+    font-weight: 500;
+    max-width: min(440px, calc(100vw - 32px));
 
     @include rise(0.18s);
 
+    // phone: at the bottom, by the thumb; above the pinned «Предложить» / «+ Новая доска» only when the page has one
     @media screen and (max-width: $mobile) {
         right: 16px;
         left: 16px;
-        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
         justify-content: space-between;
+
+        body:has(.board-cta, .boards-hub-new) & {
+            bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        }
     }
 
     &.error {
         background: color-mix(in srgb, var(--bug) 10%, var(--surface));
         border-color: color-mix(in srgb, var(--bug) 35%, var(--line));
         color: var(--bug);
+
+        .toast-icon {
+            color: var(--bug);
+        }
     }
+}
+.toast-icon {
+    flex: none;
+    color: var(--accent-ink);
+}
+.toast-message {
+    flex: 1;
+    min-width: 0;
 }
 .toast-action {
     flex: none;
@@ -46,8 +66,9 @@
     font-weight: 600;
     cursor: pointer;
 
+    // the toast itself sits on --active, so the action lifts to the surface on hover
     @include hover {
-        background: var(--active);
-        color: var(--active-fg);
+        background: var(--surface);
+        color: var(--accent-ink);
     }
 }

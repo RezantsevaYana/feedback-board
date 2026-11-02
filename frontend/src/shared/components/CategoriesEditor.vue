@@ -29,7 +29,7 @@
   <form class="cat-edit" @submit.prevent="add">
     <div class="cat-row">
       <InputComponent v-model="newName" maxlength="40" placeholder="Новая категория, например «Доставка»" aria-label="Новая категория" @input="addError = ''" />
-      <button class="btn btn-primary" type="submit" :disabled="!newName.trim()">Добавить</button>
+      <button class="btn btn-add" type="submit" :disabled="!newName.trim()">Добавить</button>
     </div>
     <ColorPaletteComponent v-model="newColor" label="Цвет новой категории" variant="category" />
     <div v-if="newName.trim()" class="cat-preview">

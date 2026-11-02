@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\AdminPostResource;
 use App\Models\Post;
 use App\Models\Project;
+use App\Support\VoterPreview;
 use App\Support\VoterToken;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -35,25 +36,33 @@ class PostController extends Controller
             'hidden' => ['nullable', Rule::in(['include', 'exclude'])],
             'q' => ['nullable', 'string', 'max:120'],
             'sort' => ['nullable', Rule::in(['top', 'new', 'priority'])],
+            'new_first' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $posts = $project->posts()
+        $filtered = $project->posts()
             ->when(($filters['hidden'] ?? 'include') === 'exclude', fn ($q) => $q->where('is_hidden', false))
             ->inCategory($filters['category'] ?? null)
             ->when($filters['status_id'] ?? null, fn ($q, $statusId) => $q->where('status_id', $statusId))
             ->when($filters['priority'] ?? null, fn ($q, $priority) => $priority === 'none'
                 ? $q->whereNull('priority')
                 : $q->where('priority', $priority))
-            ->search($filters['q'] ?? null)
+            ->search($filters['q'] ?? null);
+        // the list view: «Новое» on top, and how many of them there are, so the page can draw the line after them
+        $newStatusId = ($filters['new_first'] ?? false) ? $project->defaultStatus()?->id : null;
+
+        $posts = (clone $filtered)
             ->with(['category', 'status'])
             ->withCount('attachments')
+            ->newFirst($newStatusId)
             ->sorted($filters['sort'] ?? 'new')
             ->paginate($filters['per_page'] ?? 20);
 
         VoterToken::markVoted($request, $posts->getCollection());
+        VoterPreview::attach($request, $posts->getCollection());
 
-        return AdminPostResource::collection($posts);
+        return AdminPostResource::collection($posts)
+            ->additional($newStatusId !== null ? ['new_count' => (clone $filtered)->where('status_id', $newStatusId)->count()] : []);
     }
 
     public function show(Request $request, Post $post): AdminPostResource
@@ -61,6 +70,7 @@ class PostController extends Controller
         Gate::authorize('board.triage', $post->project);
 
         VoterToken::markVoted($request, collect([$post]));
+        VoterPreview::attach($request, collect([$post]));
 
         return AdminPostResource::make($post->load('attachments', 'category', 'status'));
     }

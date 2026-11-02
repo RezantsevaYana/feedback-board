@@ -66,6 +66,23 @@ class VoterListTest extends TestCase
         $this->assertSame('like', $byName['Аноним']['kind']);
     }
 
+    public function test_the_team_list_carries_the_latest_three_voters_for_the_faces(): void
+    {
+        foreach (['Анна', 'Борис', 'Вера', 'Глеб'] as $i => $name) {
+            $user = User::factory()->create(['name' => $name]);
+            $this->post->votes()->create(['user_id' => $user->id, 'value' => Vote::LIKE, 'ip_hash' => str_repeat('a', 64), 'created_at' => now()->addMinutes($i)]);
+        }
+        $other = Post::factory()->for($this->project)->create();
+
+        $posts = collect($this->actingAs($this->owner)->getJson("/api/admin/projects/{$this->project->slug}/posts")
+            ->assertOk()->json('data'))->keyBy('id');
+
+        // newest first, three at most; the card says «+1» from likes_count
+        $this->assertSame(['Глеб', 'Вера', 'Борис'], array_column($posts[$this->post->id]['voters_preview'], 'name'));
+        $this->assertTrue($posts[$this->post->id]['voters_preview'][0]['account']);
+        $this->assertSame([], $posts[$other->id]['voters_preview']);
+    }
+
     public function test_endpoint_is_denied_for_voters_and_readers(): void
     {
         $voter = User::factory()->create();

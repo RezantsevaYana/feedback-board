@@ -16,10 +16,10 @@
       <h1>Присоединиться к доске «{{ preview.board.name }}»</h1>
       <p class="auth-intro">
         <template v-if="preview.invited_by.name">
-          {{ preview.invited_by.name }} зовёт вас в рабочую доску команды — место для идей, багов, запросов и обсуждений.
+          {{ preview.invited_by.name }} зовёт вас присоединиться к доске обратной связи.
         </template>
         <template v-else>
-          Вас зовут в рабочую доску команды — место для идей, багов, запросов и обсуждений.
+          Вас зовут присоединиться к доске обратной связи.
         </template>
       </p>
 
@@ -48,7 +48,7 @@
       <form v-else class="auth-form" novalidate @submit.prevent="accept">
         <InputComponent
           v-model="name"
-          label="Как к вам обращаться"
+          label="Ваше имя"
           type="text"
           maxlength="80"
           autocomplete="name"

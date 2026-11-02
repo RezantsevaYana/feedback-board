@@ -7,11 +7,15 @@
     padding-left: 16px;
 }
 
+// Buttons have three sizes, and only here: .btn (the default), .btn-sm (rows, cards, lists), .btn-lg (the one big
+// call to action). Components choose a size by the class and set only layout (width, flex, alignment) themselves,
+// so the same button looks the same on every screen — compare them on /dev/ui.
 .btn {
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--fg);
-    padding: 8px 16px;
+    min-height: 40px;
+    padding: 0 16px;
     border-radius: 10px;
     font: inherit;
     font-weight: 500;
@@ -29,9 +33,9 @@
         opacity: 0.6;
         cursor: default;
     }
-    // phone: a smaller button (36px tall, 14px label), so a form's actions don't outweigh its fields
+    // phone: the same 40px for the thumb, a 14px label and tighter sides, so a form's actions don't outweigh its fields
     @media screen and (max-width: $mobile) {
-        padding: 7px 12px;
+        padding: 0 14px;
         font-size: 14px;
     }
     // working (saving, sending): a spinner before the label; the button stays at full strength
@@ -59,6 +63,30 @@
         transform: rotate(360deg);
     }
 }
+.btn-sm {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+
+    // touch screens: still a comfortable target for a finger
+    @media (pointer: coarse) {
+        min-height: 36px;
+    }
+    @media screen and (max-width: $mobile) {
+        padding: 0 12px;
+        font-size: 13px;
+    }
+}
+.btn-lg {
+    min-height: 48px;
+    padding: 0 24px;
+    font-size: 16px;
+
+    @media screen and (max-width: $mobile) {
+        padding: 0 20px;
+        font-size: 15px;
+    }
+}
 .btn-primary {
     background: var(--accent);
     border-color: var(--accent);
@@ -72,6 +100,26 @@
 }
 .btn-danger {
     color: var(--bug);
+    border-color: color-mix(in srgb, var(--bug) 40%, var(--line));
+
+    @include hover {
+        background: color-mix(in srgb, var(--bug) 8%, var(--surface));
+        border-color: var(--bug);
+        color: var(--bug);
+    }
+}
+// «+ Добавить …» (a domain, a person, the team): one look for every add action — green ink and a green edge,
+// no fill, so it reads as «add here» without competing with the screen's one filled button
+.btn-add {
+    color: var(--accent-ink);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    font-weight: 600;
+
+    @include hover {
+        background: var(--active);
+        border-color: var(--active-line);
+        color: var(--active-fg);
+    }
 }
 .link-btn {
     border: 0;

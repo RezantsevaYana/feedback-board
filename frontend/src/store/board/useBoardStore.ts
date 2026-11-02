@@ -9,6 +9,8 @@ import { ProjectsApi } from '@/api/projects'
 import { StatusesApi } from '@/api/statuses'
 import type { Category, PaletteColor, Me, Post, PostPriority, Project, Status, VoteState, VoteValue } from '@/api/types'
 import { WeeklyWinnersApi, type WeeklyWinnerEntry, type WeeklyWinnersMeta } from '@/api/weeklyWinners'
+import { useAuthStore } from '@/store/auth/useAuthStore'
+import { useVotersStore } from '@/store/modals/useVotersStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { canConfigure, canTriage } from '@/shared/utils/roles'
 
@@ -43,6 +45,8 @@ export const useBoardStore = defineStore('board', () => {
   const team = computed(() => canTriage(role.value))
   /** Categories, columns and board settings: owner / admin. */
   const configure = computed(() => canConfigure(role.value))
+  // Читатель only reads on a closed board; on an open one they're a guest by the link like anyone (the API agrees)
+  const readOnly = computed(() => role.value === 'reader' && project.value?.visibility === 'private')
   const categories = computed<Category[]>(() => project.value?.categories ?? [])
   const statuses = computed<Status[]>(() => project.value?.statuses ?? [])
   const defaultStatus = computed<Status | undefined>(() => statuses.value.find((s) => s.slug === 'new'))
@@ -81,6 +85,9 @@ export const useBoardStore = defineStore('board', () => {
   const posts = ref<Post[]>([])
   const page = ref(1)
   const lastPage = ref(1)
+  // the list view: how many posts match in all, and how many of them are still in «Новое» (they come first)
+  const postsTotal = ref(0)
+  const newCount = ref<number | null>(null)
   const loading = ref(false)
   /** The first page of posts has arrived: until then the board shows skeletons, not empty columns. */
   const postsLoaded = ref(false)
@@ -146,6 +153,8 @@ export const useBoardStore = defineStore('board', () => {
         status_id: view.layout === 'list' ? view.status : '',
         q: view.search.trim(),
         sort: !team.value && view.sort === 'priority' ? 'top' : view.sort,
+        // the list view without a column filter: «Новое» first, a line before the rest (PostList)
+        new_first: view.layout === 'list' && !view.status ? 1 : undefined,
         page: nextPage,
         per_page: view.layout === 'kanban' ? KANBAN_LIMIT : LIST_PAGE,
       }
@@ -156,6 +165,8 @@ export const useBoardStore = defineStore('board', () => {
       postsLoaded.value = true
       page.value = res.meta.current_page
       lastPage.value = res.meta.last_page
+      postsTotal.value = res.meta.total
+      newCount.value = res.new_count ?? null
     } catch (e) {
       if (!silent) loadError.value = errorMessage(e)
     } finally {
@@ -285,6 +296,9 @@ export const useBoardStore = defineStore('board', () => {
       const res = cancel ? await PostsApi.unvote(post.id) : await PostsApi.vote(post.id, value)
       Object.assign(post, res.data)
       patchLocal(post.id, res.data)
+      // the team's «кто голосовал» list of this post is out of date now, and so are the card's faces
+      useVotersStore().forget(post.id)
+      if (team.value) void refresh(true)
     } catch (e) {
       Object.assign(post, was)
       patchLocal(post.id, was)
@@ -533,7 +547,8 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   async function logout() {
-    await AuthApi.logout().catch(() => undefined)
+    // through the cabinet store, so /app/* doesn't keep the session it cached
+    await useAuthStore().logout()
     me.value = null
     if (view.sort === 'priority') view.sort = 'top'
     // on a private board's gate the outsider becomes a guest: same gate, with name and email fields
@@ -544,7 +559,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, unpublished, privateLocked, noAccess, gateName, me, role, team, configure, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
+    project, notFound, unpublished, privateLocked, noAccess, gateName, me, role, team, configure, readOnly, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, postsTotal, newCount, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
     open, refresh, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
     addStatus, updateStatus, deleteStatus,

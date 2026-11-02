@@ -18,38 +18,152 @@
             font-size: 14px;
         }
     }
-    &.sm .vote-count {
-        padding: 3px 6px;
-        font-size: 13px;
-        border-radius: 8px;
-    }
 }
 
-// VoteButtons.vue (team view): the number sits next to the vote button as its own control that
-// opens the «кто голосовал» modal; readers / voters see the number inside the vote button instead.
-.vote-pair {
-    display: inline-flex;
-    gap: 2px;
-    align-items: stretch;
-}
-.vote-count {
-    min-width: 32px;
-    padding: 4px 10px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--muted);
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
+// VoteButtons.vue, team view: the latest voters as faces in front of the buttons — one tap target, opens the list
+.voter-faces {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    transition: border-color 0.12s, color 0.12s, background-color 0.12s;
+    flex: none;
+    padding: 2px 6px 2px 2px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    font: inherit;
+    cursor: pointer;
 
     @include hover {
-        color: var(--fg);
-        border-color: color-mix(in srgb, var(--fg) 25%, var(--line));
+        background: var(--surface-2);
+    }
+    &:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
+}
+// a face: initials in a circle, the category pastels in turn so neighbours differ; a nameless guest is «?»
+.voter-face {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin-left: -7px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--cat-green);
+    color: var(--fg);
+    font-size: 9.5px;
+    font-weight: 600;
+    line-height: 1;
+
+    &:first-child {
+        margin-left: 0;
+    }
+    &.tone-1 {
+        background: var(--cat-blue);
+    }
+    &.tone-2 {
+        background: var(--cat-orange);
+    }
+    &.guest {
+        background: var(--surface-2);
+        color: var(--muted);
+    }
+}
+.voter-faces-rest {
+    margin-left: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+.votes.sm .voter-face {
+    width: 22px;
+    height: 22px;
+    font-size: 9px;
+}
+
+// a vote button with its hover list (team, with a mouse)
+.vote-wrap {
+    position: relative;
+    display: inline-flex;
+}
+.voters-pop {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 30;
+    display: grid;
+    gap: 3px;
+    width: 220px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow); // taste-skill-ignore floats over the board
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+
+    @include rise(0.12s);
+
+    // an invisible bridge over the gap to the button, so moving onto the list doesn't close it
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        height: 10px;
+    }
+    &.below::after {
+        top: auto;
+        bottom: 100%;
+    }
+
+    // near the top of the screen: under the button
+    &.below {
+        top: calc(100% + 8px);
+        bottom: auto;
+    }
+}
+.voters-pop-title {
+    margin-bottom: 2px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+.voters-pop-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    overflow-wrap: anywhere;
+}
+.voters-pop-guest {
+    flex: none;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 11px;
+}
+.voters-pop-note {
+    color: var(--muted);
+}
+.voters-pop-all {
+    justify-self: start;
+    margin-top: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-ink);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    @include hover {
+        text-decoration: underline;
+        text-underline-offset: 3px;
     }
 }
 .vote {
@@ -102,10 +216,13 @@
             opacity: 0.6;
         }
     }
+    // your vote: the selection's green, a heavier edge and a bold count, so it reads at a glance
     &[aria-pressed='true'] {
-        background: color-mix(in srgb, var(--like) 14%, var(--surface));
-        border-color: var(--like);
-        color: var(--accent-ink);
+        background: var(--active);
+        border-color: var(--active-line);
+        box-shadow: inset 0 0 0 1px var(--active-line);
+        color: var(--active-fg);
+        font-weight: 700;
 
         .emo {
             @media (prefers-reduced-motion: no-preference) {
@@ -128,8 +245,9 @@
             }
         }
         &[aria-pressed='true'] {
-            background: color-mix(in srgb, var(--poo) 16%, var(--surface));
+            background: color-mix(in srgb, var(--poo) 26%, var(--surface));
             border-color: var(--poo);
+            box-shadow: inset 0 0 0 1px var(--poo);
             color: var(--fg);
         }
     }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BoardVisibility;
 use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\User;
@@ -29,7 +30,8 @@ class ParticipantsTest extends TestCase
     {
         parent::setUp();
         $this->owner = User::factory()->create(['email' => 'owner@acme.com']);
-        $this->board = Project::factory()->create(['owner_id' => $this->owner->id]);
+        // a closed board: there every role is on the list (the open one shows only the team, OpenBoardTeamTest)
+        $this->board = Project::factory()->create(['owner_id' => $this->owner->id, 'visibility' => BoardVisibility::Private]);
 
         $this->admin = User::factory()->create(['email' => 'anna@acme.com']);
         $this->manager = User::factory()->create(['email' => 'manager@acme.com']);

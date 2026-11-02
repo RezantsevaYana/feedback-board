@@ -39,7 +39,7 @@ class AccessRequestController extends Controller
             'role' => ['required', 'string', Rule::in($this->assignable())],
         ], [
             'role.required' => 'Выберите роль.',
-            'role.in' => 'Такой роли нет. Доступны: Админ, Менеджер, Голосующий, Читатель.',
+            'role.in' => 'Такой роли нет. Доступны: Админ, Менеджер, Участник, Читатель.',
         ])['role']);
 
         $invitation = DB::transaction(function () use ($request, $board, $accessRequest, $role) {

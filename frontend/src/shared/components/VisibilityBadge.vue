@@ -1,7 +1,9 @@
 <template>
-  <span class="visibility-badge" :class="visibility" :title="hint">
-    <AppIcon :name="visibility === 'private' ? 'lock' : 'globe'" :size="13" />
+  <!-- focusable, so a tap on a phone and Tab on a keyboard open the hint too, not only the mouse -->
+  <span class="visibility-badge" :class="visibility" tabindex="0">
+    <AppIcon :name="visibility === 'private' ? 'lock' : 'globe'" :size="14" />
     <span class="visibility-badge-label">{{ visibility === 'private' ? 'Закрытая' : 'Открытая' }}</span>
+    <span class="visibility-badge-hint" role="tooltip">{{ hint }}</span>
   </span>
 </template>
 

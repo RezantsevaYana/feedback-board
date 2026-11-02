@@ -132,6 +132,8 @@ class AuthController extends Controller
             'name' => $p->name,
             'slug' => $p->slug,
             'role' => $role,
+            // the cabinet's side menu lists the «Доступ» sections of this mode
+            'visibility' => $p->visibility->value,
             'pending_requests' => $decides ? (int) ($pending[$p->id] ?? 0) : 0,
         ];
     }

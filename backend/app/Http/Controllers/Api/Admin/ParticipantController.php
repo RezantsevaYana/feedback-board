@@ -34,6 +34,13 @@ class ParticipantController extends Controller
         $members = $board->members()->orderBy('name')->get();
         $invitations = $board->invitations()->with('inviter')->pending()
             ->orderByDesc('created_at')->get();
+        // an open board shows only its team: Участник / Читатель stay in the pivot (for when it's closed again),
+        // but there they'd be guests anyway
+        if (! $board->isPrivate()) {
+            $team = [ProjectRole::Owner->value, ...ProjectRole::openBoardAssignable()];
+            $members = $members->filter(fn ($m) => in_array($m->pivot->role, $team, true))->values();
+            $invitations = $invitations->filter(fn ($i) => in_array($i->role->value, $team, true))->values();
+        }
 
         $requests = $board->accessRequests()->pending()->orderBy('created_at')->get();
 

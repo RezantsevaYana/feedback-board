@@ -8,56 +8,14 @@
 }
 .board-new-form {
     width: 100%;
-    max-width: 980px;
-    // the must-haves (name, address, create) on the left, the optional domains as their own column on the right
+    // name, address, create — domains moved out to the settings and the «Как подключить» screen
+    max-width: 560px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
-    grid-template-areas:
-        'head head'
-        'name origins'
-        'slug origins'
-        'actions origins';
-    gap: 16px 40px;
+    gap: 16px;
     align-items: start;
 
-    > .board-new-head {
-        grid-area: head;
-    }
-    > .field {
-        grid-area: name;
-    }
-    > .board-new-slug {
-        grid-area: slug;
-    }
-    > .board-new-origins {
-        grid-area: origins;
-    }
-    > .board-new-actions {
-        grid-area: actions;
-    }
-
-    @media screen and (max-width: $tablet) {
-        max-width: 560px;
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-areas:
-            'head'
-            'name'
-            'slug'
-            'origins'
-            'actions';
-    }
-
-    // Same tight-field override as auth-pages: this is a short self-contained form.
     .field {
-        padding-bottom: 0;
         gap: 3px;
-    }
-    .field > .err {
-        position: static;
-        white-space: normal;
-        text-overflow: unset;
-        overflow: visible;
-        margin-top: 2px;
     }
 }
 // the board's name is the hero field of the wizard: bigger type, taller box
@@ -86,64 +44,6 @@
     &.err { color: var(--bug); }
     &.muted { color: var(--muted); }
 }
-// optional domains: a sage tray beside the form (not a bordered box)
-.board-new-origins {
-    border: 0;
-    border-radius: 14px;
-    background: var(--surface-2);
-    padding: 16px 18px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 0;
-
-    legend {
-        float: left;            // a floated legend sits inside the tray like a heading instead of cutting its edge
-        width: 100%;
-        padding: 0;
-        margin-bottom: 6px;
-        font-size: 13px;
-        font-weight: 500;
-
-        small {
-            color: var(--muted);
-            font-weight: 400;
-        }
-    }
-}
-.board-new-origins-note {
-    margin: 0 0 2px;
-}
-.board-new-origin-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .field {
-        flex: 1;
-    }
-    .icon-btn {
-        width: 40px;
-        height: 40px;
-        border: 1px solid var(--line);
-        background: var(--surface);
-        border-radius: 10px;
-        display: grid;
-        place-items: center;
-        color: var(--muted);
-        flex: none;
-
-        @include hover {
-            color: var(--bug);
-            border-color: color-mix(in srgb, var(--bug) 40%, var(--line));
-        }
-    }
-}
-.board-new-add-origin {
-    align-self: flex-start;
-    font-size: 13px;
-    padding: 6px 12px 6px 10px;
-}
 .board-new-actions {
     display: flex;
     justify-content: flex-start;
@@ -151,6 +51,5 @@
 
     .btn-primary {
         min-width: 180px;
-        min-height: 44px;
     }
 }

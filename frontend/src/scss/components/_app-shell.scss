@@ -97,12 +97,6 @@
     flex: none;
     gap: 12px;
 
-    @media screen and (max-width: $mobile) {
-        .btn {
-            padding: 6px 10px;
-            font-size: 13px;
-        }
-    }
 }
 
 @keyframes app-shell-lift {
@@ -111,5 +105,27 @@
     }
     to {
         box-shadow: var(--shadow); // taste-skill-ignore floats over the scrolled page
+    }
+}
+
+// «Меню» inside the cabinet (AppShell): opens the side menu as a panel on tablet and phone; on a phone just the icon
+.btn.app-shell-menu {
+    display: none;
+    align-items: center;
+    gap: 6px;
+
+    @media screen and (max-width: $tablet) {
+        display: inline-flex;
+    }
+    @media screen and (max-width: $mobile) {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        justify-content: center;
+    }
+}
+.app-shell-menu-label {
+    @media screen and (max-width: $mobile) {
+        display: none;
     }
 }

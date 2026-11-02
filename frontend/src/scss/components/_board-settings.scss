@@ -1,8 +1,8 @@
 @use '../utils' as *;
 
-// BoardSettingsPage.vue + SettingsNav.vue, SettingsGeneral.vue, SettingsDomains.vue (frame: _board-workspace.scss).
+// BoardSettingsPage.vue + SettingsGeneral.vue, SettingsDomains.vue (frame: _app-sidebar.scss).
 // Categories and columns reuse CategoriesEditor / StatusesEditor (styles in _categories-modal.scss).
-// .board-settings-section is also the card of BoardEmbedPage's blocks.
+// .board-settings-section is also the card of BoardAccessPage's blocks.
 .board-settings-section {
     display: grid;
     gap: 12px;
@@ -10,95 +10,35 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    // anchor jumps land below the sticky AppHeader bar (~76px), and on tablet and phone below the sticky tabs too
-    scroll-margin-top: 96px;
+    // anchor jumps leave a little air above the card; on tablet and phone, room for the sticky top bar
+    scroll-margin-top: 24px;
 
     h2 {
         font-size: 16px;
         margin: 0;
     }
     @media screen and (max-width: $tablet) {
-        scroll-margin-top: 136px;
+        scroll-margin-top: 72px;
     }
     // phone: no card around each section, the screen is the card. Sections part with a hairline,
     // and the rows inside (categories, columns, domains) keep their own outlines without a box around a box
     @media screen and (max-width: $mobile) {
-        scroll-margin-top: 124px;
-        padding: 0;
+        scroll-margin-top: 68px;
+        gap: 10px;
+        padding-block: 0;
         background: none;
         border: 0;
         border-radius: 0;
+        // the hairline between sections runs to the screen's edges, not to the gutter
+        @include bleed;
 
         & + & {
-            padding-top: 20px;
+            padding-top: 16px;
             border-top: 1px solid var(--line);
         }
         h2 {
-            font-size: 18px;
+            font-size: 16px;
         }
-    }
-}
-
-// SettingsNav.vue — sticky column on desktop, a scrollable row of chips on tablet and below.
-// The row bleeds through the container's side gutter (24px tablet, 16px phone) to the screen edges, so the chips
-// scroll off-screen instead of being cut at the content line; the padding brings the first chip back in line.
-// No visible scrollbar: the chip cut at the edge already says the row scrolls.
-// The row sticks under the AppHeader bar (74px on tablet, 64px on phone) on the page ground, so the sections
-// stay one tap away on a long page.
-.settings-nav {
-    position: sticky;
-    top: 92px;              // under the sticky AppHeader bar
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    @media screen and (max-width: $tablet) {
-        top: 74px;
-        z-index: 10;
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 6px;
-        margin: -8px -24px;
-        padding: 8px 24px;
-        background: var(--bg);
-        scroll-padding-inline: 24px;
-        scrollbar-width: none;
-
-        &::-webkit-scrollbar {
-            display: none;
-        }
-    }
-    @media screen and (max-width: $mobile) {
-        top: 64px;
-        margin: -8px -16px;
-        padding: 8px 16px;
-        scroll-padding-inline: 16px;
-    }
-}
-.settings-nav-item {
-    padding: 7px 10px;
-    border-radius: 8px;
-    color: var(--muted);
-    font-size: 14px;
-    text-decoration: none;
-    white-space: nowrap;
-
-    @include hover {
-        color: var(--fg);
-        background: var(--surface-2);
-    }
-
-    // the section on screen (or the page, for «Подключение»), same look as the current section on the board
-    &[aria-current='location'],
-    &[aria-current='page'] {
-        background: var(--active);
-        color: var(--active-fg);
-        font-weight: 600;
-    }
-    @media screen and (max-width: $tablet) {
-        border: 1px solid var(--line);
-        font-size: 13px;
-        padding: 5px 10px;
     }
 }
 
@@ -112,17 +52,6 @@
         background: var(--surface-2);
         color: var(--muted);
         font-family: var(--font-mono);
-    }
-    // short self-contained form: the error goes on its own line instead of the reserved slot
-    .field {
-        padding-bottom: 0;
-    }
-    .field > .err {
-        position: static;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: unset;
-        margin-top: 2px;
     }
 }
 .settings-domains-row {
@@ -188,5 +117,15 @@
 
     .spacer {
         flex: 1;
+    }
+    // phone: the buttons share the row evenly; when they don't fit, each takes the full width, one under the other
+    @media screen and (max-width: $mobile) {
+        .spacer {
+            display: none;
+        }
+        .btn {
+            flex: 1 1 auto;
+            white-space: nowrap;
+        }
     }
 }

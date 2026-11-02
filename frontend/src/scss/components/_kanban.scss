@@ -13,6 +13,10 @@
     scroll-padding-left: 4px;
     @include thin-scrollbar;
 
+    // tablet: columns keep a card-friendly width and the row scrolls, instead of squeezing three into the screen
+    @media screen and (max-width: $tablet) {
+        grid-auto-columns: minmax(260px, 1fr);
+    }
     @media screen and (max-width: $mobile-mini) {
         // одна колонка на экран, со «подсматривающей» следующей — пальцем листаем по статусам
         grid-auto-columns: calc(100vw - 56px);

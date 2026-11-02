@@ -1,8 +1,8 @@
-{{-- The access request was approved (AccessApprovedMail). Neutral copy: the board may hold ideas, bugs, requests, discussions. --}}
+{{-- The access request was approved (AccessApprovedMail). No list of what the board holds: each board has its own categories. --}}
 <x-mail::message preheader="Ваш запрос одобрен. Ссылка действует {{ $expiresInDays }} дней.">
 # Доступ к доске «{{ $boardName }}» открыт
 
-{{ $approverName }} одобрил(а) ваш запрос. Это рабочая доска команды: здесь собирают идеи, баги, запросы и обсуждения.
+{{ $approverName }} одобрил ваш запрос на доступ к доске.
 
 Ваша роль на доске: **{{ $roleLabel }}**.
 

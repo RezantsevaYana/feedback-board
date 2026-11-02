@@ -11,12 +11,18 @@
         </template>
       </div>
       <div v-if="auth.isAuth" class="app-shell-user">
-        <AccountMenu />
+        <!-- inside the cabinet «Выйти» is at the bottom of the side menu; the pages around it keep it here -->
+        <AccountMenu :with-logout="!menu" />
+        <!-- tablet and phone, inside the cabinet: the side menu opens as a panel -->
+        <button v-if="menu" type="button" class="btn app-shell-menu" aria-label="Меню" @click="emit('menu')">
+          <BurgerIcon /><span class="app-shell-menu-label">Меню</span>
+        </button>
       </div>
     </div>
   </header>
   <!-- the verify page says the same itself, with its own button -->
-  <div v-if="auth.me && !auth.me.email_verified && route.name !== 'verify-email'" class="container">
+  <!-- «Настройки аккаунта» shows it inside the profile, next to the address it's about -->
+  <div v-if="auth.me && !auth.me.email_verified && route.name !== 'verify-email' && route.name !== 'account'" class="container">
     <VerifyEmailBanner :email="auth.me.email" />
   </div>
 </template>
@@ -28,18 +34,31 @@ import { useAuthStore } from '@/store/auth/useAuthStore'
 import AccountMenu from '@/shared/components/AccountMenu.vue'
 import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
 import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
+import BurgerIcon from '@/shared/ui/BurgerIcon.vue'
+import { canConfigure } from '@/shared/utils/roles'
 
+// Top bar of every /app/* page: the board switcher and the account. Inside the cabinet (AppShell) the side menu
+// sits under it with the board's places; `menu` adds the button that opens that menu on tablet and phone.
+defineProps<{
+  menu?: boolean
+}>()
+const emit = defineEmits<{
+  menu: []
+}>()
 const auth = useAuthStore()
 const route = useRoute()
 
 const brandTarget = computed(() => (auth.isAuth ? '/app/boards' : '/'))
 
-// on a board's settings or embed page the switcher names that board and keeps the same page for the next one;
-// elsewhere (hub, new board) it reads «Доски» and opens the chosen board
+// on a board's page the switcher names that board and keeps the same page for the next one (access →
+// access); elsewhere it reads «Доски» and opens the chosen board's settings (TEST.md п. 17).
+// A board the user can't configure opens as the board itself.
+const PLACES: Record<string, string> = { 'board-settings': 'settings', 'board-access': 'access' }
 const currentSlug = computed(() => (route.params.slug ? String(route.params.slug) : null))
 const switcherLabel = computed(() => auth.boardSummaries.find((b) => b.slug === currentSlug.value)?.name ?? 'Доски')
-const switchLink = computed(() => {
-  const page = route.name === 'board-settings' ? 'settings' : route.name === 'board-embed' ? 'embed' : null
-  return page ? (slug: string) => `/app/boards/${slug}/${page}` : undefined
-})
+function switchLink(slug: string) {
+  const board = auth.boardSummaries.find((b) => b.slug === slug)
+  if (!canConfigure(board?.role)) return `/${slug}`
+  return `/app/boards/${slug}/${PLACES[String(route.name)] ?? 'settings'}`
+}
 </script>

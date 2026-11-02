@@ -8,6 +8,13 @@
     padding: 0;
     display: grid;
     gap: 10px;
+
+    @media screen and (max-width: $mobile) {
+        gap: 0;
+        border-bottom: 1px solid var(--line);
+        @include bleed;
+        padding-inline: 0;
+    }
 }
 .access-request {
     display: grid;
@@ -16,6 +23,15 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
+
+    // phone: a list row to the screen's edges, not a box in a box
+    @media screen and (max-width: $mobile) {
+        gap: 8px;
+        // the list already runs to the edges (.access-requests), the row only pads its content back in
+        padding: 12px 16px;
+        border-width: 1px 0 0;
+        border-radius: 0;
+    }
 }
 .access-request-who {
     display: grid;
@@ -49,21 +65,29 @@
 }
 .access-request-role {
     width: 170px;
-    padding-bottom: 0;
 
     @media screen and (max-width: $mobile) {
         width: 100%;
     }
 }
+// «Отклонить» / «Одобрить» next to the role; a phone: under it, two equal compact buttons
+.access-request-answers {
+    display: flex;
+    gap: 6px;
+
+    @media screen and (max-width: $mobile) {
+        width: 100%;
+
+        .btn {
+            flex: 1 1 0;
+        }
+    }
+}
 .access-request-reject {
     display: grid;
     gap: 8px;
-
-    .field {
-        padding-bottom: 0;
-    }
 }
-// the count next to «Участники» (SettingsNav) and in the hub: how many wait for a decision
+// the count next to «Участники и доступ» (side menus) and in the hub: how many wait for a decision
 .count-badge {
     display: inline-grid;
     place-items: center;

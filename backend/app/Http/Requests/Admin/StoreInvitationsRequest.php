@@ -26,6 +26,10 @@ class StoreInvitationsRequest extends FormRequest
             array_map(fn (ProjectRole $r) => $r->value, ProjectRole::cases()),
             fn (string $v) => $v !== ProjectRole::Owner->value,
         ));
+        // an open board has only a team: everyone else is a guest by the link
+        if ($this->openBoard()) {
+            $assignable = ProjectRole::openBoardAssignable();
+        }
 
         return [
             'role' => ['required', 'string', Rule::in($assignable)],
@@ -38,7 +42,9 @@ class StoreInvitationsRequest extends FormRequest
     {
         return [
             'role.required' => 'Выберите роль для приглашённых.',
-            'role.in' => 'Такой роли нет. Доступны: Админ, Менеджер, Голосующий, Читатель.',
+            'role.in' => $this->openBoard()
+                ? 'На открытой доске только команда: Админ или Менеджер. Остальным приглашение не нужно — доска открыта по ссылке.'
+                : 'Такой роли нет. Доступны: Админ, Менеджер, Участник, Читатель.',
             'invitees.required' => 'Добавьте хотя бы одну почту.',
             'invitees.min' => 'Добавьте хотя бы одну почту.',
             'invitees.max' => 'За раз — не больше '.self::MAX_INVITEES.' приглашений.',
@@ -85,5 +91,12 @@ class StoreInvitationsRequest extends FormRequest
         }
 
         return $result;
+    }
+
+    private function openBoard(): bool
+    {
+        $board = $this->route('board');
+
+        return $board instanceof \App\Models\Project && ! $board->isPrivate();
     }
 }

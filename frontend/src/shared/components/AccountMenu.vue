@@ -7,38 +7,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
+import { useLogout } from '@/shared/composables/useLogout'
+import { initials as toInitials } from '@/shared/utils/format'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 
-// The right side of the /app/* header: the name opens the account's places and the way out.
+// The right side of the /app/* header: the name opens the account's places. «Выйти» is here only on the pages
+// around the cabinet (login, invitation…); inside it the way out sits at the bottom of the side menu.
 // On a phone the name gives way to initials, the header row is already taken by the board switcher.
+const props = defineProps<{
+  withLogout?: boolean
+}>()
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
-const loggingOut = ref(false)
+const { logout, busy } = useLogout()
 
-const initials = computed(() => {
-  const words = (auth.me?.name ?? '').trim().split(/\s+/).filter(Boolean)
-  return words.slice(0, 2).map((w) => w[0]!.toUpperCase()).join('') || (auth.me?.email[0] ?? '?').toUpperCase()
-})
+const initials = computed(() => toInitials(auth.me?.name, auth.me?.email))
 
 const items = computed<MenuItem[]>(() => [
   { label: 'Настройки аккаунта', current: route.name === 'account', run: () => router.push('/app/account') },
   { label: 'Мои доски', current: route.name === 'hub', run: () => router.push('/app/boards') },
-  { label: 'Выйти', separated: true, disabled: loggingOut.value, run: logout },
+  ...(props.withLogout ? [{ label: 'Выйти', separated: true, disabled: busy.value, run: logout }] : []),
 ])
-
-async function logout() {
-  if (loggingOut.value) return
-  loggingOut.value = true
-  try {
-    await auth.logout()
-    router.push('/app/login')
-  } finally {
-    loggingOut.value = false
-  }
-}
 </script>

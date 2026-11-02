@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BoardVisibility;
 use App\Enums\ProjectRole;
 use App\Mail\InvitationMail;
 use App\Models\Project;
@@ -30,6 +31,8 @@ class InvitationsTest extends TestCase
         $this->board = Project::factory()->create([
             'owner_id' => $this->owner->id,
             'slug' => 'acme-feedback',
+            // every role is invited only to a closed board; the open one has just a team (OpenBoardTeamTest)
+            'visibility' => BoardVisibility::Private,
         ]);
     }
 

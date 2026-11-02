@@ -15,7 +15,8 @@ h3 {
 
 .fbw {
     position: fixed;
-    bottom: 18px;
+    // above the iPhone's home indicator
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
     z-index: 2147483000;
     display: grid;
     gap: 10px;
@@ -101,6 +102,9 @@ h3 {
         border-radius: 0;
         border: 0;
         transform-origin: center;
+        // full screen: the form's last buttons stay clear of the notch and the home indicator
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 }
 .fbw.left .fbw-panel {

@@ -28,3 +28,8 @@ export function fmtTimeAgo(iso: string | null | undefined): string {
   if (day < 7) return `${day} ${plural(day, 'день', 'дня', 'дней')} назад`
   return fmtDate(iso)
 }
+/** Two initials for the account's circle (header menu, «Настройки аккаунта»); the email's first letter if no name. */
+export function initials(name: string | null | undefined, email: string | null | undefined): string {
+  const words = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  return words.slice(0, 2).map((w) => w[0]!.toUpperCase()).join('') || (email?.[0] ?? '?').toUpperCase()
+}

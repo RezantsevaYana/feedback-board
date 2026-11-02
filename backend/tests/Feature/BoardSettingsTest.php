@@ -28,6 +28,16 @@ class BoardSettingsTest extends TestCase
         $this->board->createDefaultCategories();
     }
 
+    public function test_created_board_comes_back_with_its_summary(): void
+    {
+        // a fresh model had no visibility until re-read: the board was saved, the response was a 500
+        $this->actingAs($this->owner)
+            ->postJson('/api/admin/boards', ['name' => 'Новая доска', 'slug' => 'new-board'])
+            ->assertCreated()
+            ->assertJsonPath('data.slug', 'new-board')
+            ->assertJsonPath('data.visibility', 'public');
+    }
+
     public function test_owner_reads_and_updates_settings(): void
     {
         $this->actingAs($this->owner);

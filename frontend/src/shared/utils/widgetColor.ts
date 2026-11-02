@@ -1,5 +1,5 @@
 // The widget's main colour: one HEX from the owner becomes the handful of tokens the widget paints with.
-// Used by the widget itself and by the preview on the «Подключение» page, so both show the same thing.
+// Used by the widget itself and by the preview on the «Доступ» page, so both show the same thing.
 
 /** The service's own green (--accent in base/_tokens.scss): what the widget uses when no colour is set. */
 export const DEFAULT_WIDGET_COLOR = '#1d8547'

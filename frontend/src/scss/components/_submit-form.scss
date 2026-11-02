@@ -5,16 +5,6 @@
     display: grid;
     gap: 12px;
 
-    // compact: no reserved line under every field, an error simply takes its own line
-    .field {
-        padding-bottom: 0;
-
-        > .err {
-            position: static;
-            white-space: normal;
-        }
-    }
-
     // grid items default to min-width: auto, and a long placeholder would push the form wider than a phone
     > *,
     .field {
@@ -214,8 +204,6 @@
         color: var(--muted);
     }
     .btn {
-        padding: 4px 10px;
-        font-size: 12px;
         flex: none;
     }
 }

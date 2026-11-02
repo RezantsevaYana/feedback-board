@@ -1,31 +1,37 @@
 <template>
   <article class="board-card">
-    <!-- the board opens in a new tab, the cabinet stays where it was; the arrow slides in on hover -->
-    <a :href="`/${board.slug}`" class="board-card-top" target="_blank" rel="noopener" :aria-label="`${board.name} — открыть доску в новой вкладке`">
-      <span class="board-card-name-row">
-        <h3 class="board-card-name">{{ board.name }}</h3>
-        <span class="board-card-go" aria-hidden="true">↗</span>
-      </span>
-      <code class="board-card-slug">/{{ board.slug }}</code>
-    </a>
-    <div class="board-card-meta">
-      <span class="board-card-queue" :class="{ pending: board.queue_count > 0 }">
-        <template v-if="board.queue_count > 0">
-          {{ board.queue_count }} новых
-        </template>
-        <template v-else>Пусто</template>
-      </span>
-      <span class="board-card-last">{{ lastActivity }}</span>
+    <!-- the whole card opens the board (a stretched link under everything); the chips and the cabinet's buttons sit above it -->
+    <RouterLink :to="`/${board.slug}`" class="board-card-link" :aria-label="`Перейти на доску ${board.name}`" />
+
+    <div class="board-card-top">
+      <h3 class="board-card-name">{{ board.name }}</h3>
+      <!-- what needs attention comes first: people waiting for access, posts waiting for triage -->
+      <div class="board-card-needs">
+        <RouterLink
+          v-if="pending"
+          :to="`/app/boards/${board.slug}/access#requests`"
+          class="board-card-need requests"
+          :title="`Открыть запросы на доступ`"
+        >
+          {{ pending }} {{ plural(pending, 'запрос', 'запроса', 'запросов') }} доступа
+        </RouterLink>
+        <span v-if="board.queue_count > 0" class="board-card-need fresh">{{ board.queue_count }} новых</span>
+        <span v-if="!pending && board.queue_count === 0" class="board-card-calm">{{ board.last_post_at ? 'всё разобрано' : 'постов пока нет' }}</span>
+      </div>
     </div>
-    <!-- my role on this board, and whether it's open to anyone with the link -->
-    <div class="board-card-role">
-      <span class="role-chip" :class="board.role">{{ ROLE_LABELS[board.role] }}</span>
+
+    <div class="board-card-who">
       <VisibilityBadge :visibility="board.visibility" />
+      <span class="board-card-role">{{ ROLE_LABELS[board.role] }}</span>
     </div>
-    <div v-if="configure" class="board-card-actions">
-      <RouterLink :to="`/app/boards/${board.slug}/settings`" class="btn">Настройки</RouterLink>
-      <RouterLink :to="`/app/boards/${board.slug}/participants`" class="btn">Участники</RouterLink>
-      <RouterLink :to="`/app/boards/${board.slug}/embed`" class="btn">Как подключить</RouterLink>
+    <p class="board-card-stats">{{ stats }}</p>
+
+    <div class="board-card-foot">
+      <span class="board-card-open" aria-hidden="true">Перейти на доску <span class="board-card-arrow">→</span></span>
+      <div v-if="configure" class="board-card-actions">
+        <RouterLink :to="`/app/boards/${board.slug}/settings`" class="btn btn-sm">Настройки</RouterLink>
+        <RouterLink :to="`/app/boards/${board.slug}/access`" class="btn btn-sm">Доступ</RouterLink>
+      </div>
     </div>
   </article>
 </template>
@@ -35,18 +41,23 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { Board } from '@/api/boards'
 import { ROLE_LABELS } from '@/api/types'
+import { useAuthStore } from '@/store/auth/useAuthStore'
 import { fmtTimeAgo, plural } from '@/shared/utils/format'
 import { canConfigure } from '@/shared/utils/roles'
 import VisibilityBadge from '@/shared/components/VisibilityBadge.vue'
 
+// A board on «Мои доски» (prototype frontend/demo/boards-hub-prototype.html): the card opens the board in this tab,
+// «Настройки» and «Доступ» are its own buttons for owner / admin. What needs attention is the loudest thing on it.
 const props = defineProps<{
   board: Board
 }>()
+const auth = useAuthStore()
 
 const configure = computed(() => canConfigure(props.board.role))
-const lastActivity = computed(() => {
+// access requests ride on /me, and only those who decide get a count
+const pending = computed(() => auth.me?.projects.find((b) => b.slug === props.board.slug)?.pending_requests ?? 0)
+const stats = computed(() => {
   const people = `${props.board.members_count} ${plural(props.board.members_count, 'участник', 'участника', 'участников')}`
-  const last = props.board.last_post_at ? `посл. пост ${fmtTimeAgo(props.board.last_post_at)}` : 'постов ещё нет'
-  return `${people} · ${last}`
+  return props.board.last_post_at ? `${people} · пост ${fmtTimeAgo(props.board.last_post_at)}` : people
 })
 </script>

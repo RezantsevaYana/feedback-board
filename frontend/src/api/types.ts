@@ -54,6 +54,8 @@ export interface Post {
   // team mode only
   priority?: PostPriority | null
   is_hidden?: boolean
+  /** team only: the latest voters (up to three) for the card's faces */
+  voters_preview?: VoterPreview[]
 }
 
 export interface Project {
@@ -78,6 +80,8 @@ export interface BoardSummary {
   role?: ProjectRole | null
   /** Access requests waiting on this board; 0 where the user doesn't decide (only owner / admin do). */
   pending_requests?: number
+  /** open or closed: the side menu lists the «Доступ» sections of this mode */
+  visibility?: 'public' | 'private'
 }
 
 /**
@@ -90,6 +94,9 @@ export type ProjectRole = (typeof PROJECT_ROLES)[number]
 
 /** Roles the UI lets admins pick. Owner isn't here — see docs/ROLES_PLAN.md §4. */
 export const ASSIGNABLE_ROLES: Exclude<ProjectRole, 'owner'>[] = ['admin', 'manager', 'voter', 'reader']
+
+/** An open board has only a team: anyone by the link is a guest there (backend ProjectRole::openBoardAssignable). */
+export const TEAM_ROLES: Exclude<ProjectRole, 'owner'>[] = ['admin', 'manager']
 
 /** What each role may do — shown under the role in the role pickers. Mirrors docs/ROLES_PLAN.md §1. */
 export const ROLE_HINTS: Record<ProjectRole, string> = {
@@ -105,8 +112,14 @@ export const ROLE_LABELS: Record<ProjectRole, string> = {
   owner: 'Владелец',
   admin: 'Админ',
   manager: 'Менеджер',
-  voter: 'Голосующий',
+  voter: 'Участник',
   reader: 'Читатель',
+}
+
+/** A face on the team's card: one of the latest voters (backend VoterPreview); name is null for a nameless guest. */
+export interface VoterPreview {
+  name: string | null
+  account: boolean
 }
 
 /** One row in the «кто голосовал» list (team-only). `account: true` = known user, `false` = anonymous widget vote. */
@@ -132,6 +145,8 @@ export interface Me {
 export interface Paginated<T> {
   data: T[]
   meta: { current_page: number; last_page: number; per_page: number; total: number }
+  /** posts list with new_first=1: how many of the matching posts are still in «Новое» */
+  new_count?: number
 }
 
 export interface Item<T> {

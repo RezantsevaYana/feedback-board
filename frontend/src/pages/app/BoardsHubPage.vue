@@ -1,6 +1,5 @@
 <template>
-  <AppHeader />
-  <main class="container base-page boards-hub">
+  <div class="boards-hub">
     <IncomingInvitations v-if="auth.incoming.length" :invitations="auth.incoming" />
     <AwaitingDecisions v-if="auth.awaitingDecision.length" :boards="auth.awaitingDecision" />
     <section v-if="auth.boardsLoading && !auth.boardsLoaded" class="boards-hub-loading">
@@ -12,7 +11,7 @@
       <p class="boards-hub-hello-lead">Создайте первую доску: сюда ваш продукт будет присылать баги и идеи.</p>
       <p class="note">Подключите виджет на сайт или просто поделитесь ссылкой на доску.</p>
       <!-- hover rolls the label into «Поехали →», same as «Предложить» on the board -->
-      <RouterLink to="/app/boards/new" class="btn btn-primary" aria-label="Создать первую доску">
+      <RouterLink to="/app/boards/new" class="btn btn-lg btn-primary" aria-label="Создать первую доску">
         <span class="cta-roll" aria-hidden="true"><span>Создать первую доску</span><span>Поехали →</span></span>
       </RouterLink>
     </section>
@@ -36,15 +35,15 @@
       </div>
     </template>
     <TrashSection v-if="auth.boardsLoaded && auth.trashed.length" :boards="auth.trashed" />
-  </main>
+  </div>
 
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import type { Board } from '@/api/boards'
 import { useAuthStore } from '@/store/auth/useAuthStore'
-import AppHeader from '@/shared/components/AppHeader.vue'
 import { canConfigure } from '@/shared/utils/roles'
 import AwaitingDecisions from './components/AwaitingDecisions.vue'
 import BoardCard from './components/BoardCard.vue'
@@ -53,9 +52,16 @@ import TrashSection from './components/TrashSection.vue'
 
 const auth = useAuthStore()
 
-// «Я веду» — where I decide (owner / admin), «Я участник» — where I was invited to take part
-const leading = computed(() => auth.boards.filter((b) => canConfigure(b.role)))
-const taking = computed(() => auth.boards.filter((b) => !canConfigure(b.role)))
+// «Я веду» — where I decide (owner / admin), «Я участник» — where I was invited to take part.
+// Inside each group what needs attention comes first (access requests, then posts in «Новое»), then the latest activity
+const pendingOf = (slug: string) => auth.me?.projects.find((p) => p.slug === slug)?.pending_requests ?? 0
+function byAttention(a: Board, b: Board): number {
+  return pendingOf(b.slug) - pendingOf(a.slug)
+    || b.queue_count - a.queue_count
+    || (b.last_post_at ?? '').localeCompare(a.last_post_at ?? '')
+}
+const leading = computed(() => auth.boards.filter((b) => canConfigure(b.role)).sort(byAttention))
+const taking = computed(() => auth.boards.filter((b) => !canConfigure(b.role)).sort(byAttention))
 const split = computed(() => leading.value.length > 0 && taking.value.length > 0)
 
 onMounted(async () => {

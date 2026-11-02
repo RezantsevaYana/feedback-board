@@ -67,6 +67,26 @@ class PublicPostsTest extends TestCase
         $this->getJson('/api/public/projects/demo/posts?status_id=999999')->assertUnprocessable();
     }
 
+    public function test_the_list_view_puts_new_posts_first_and_counts_them(): void
+    {
+        $done = Post::factory()->for($this->project)->status('done')->create(['likes_count' => 9]);
+        $fresh = Post::factory()->for($this->project)->create(['likes_count' => 1]);
+        $older = Post::factory()->for($this->project)->create(['likes_count' => 0]);
+
+        // «Популярные» inside each part: the new ones first even though «Готово» has more likes
+        $this->getJson('/api/public/projects/demo/posts?sort=top&new_first=1')
+            ->assertOk()
+            ->assertJsonPath('new_count', 2)
+            ->assertJsonPath('data.0.id', $fresh->id)
+            ->assertJsonPath('data.1.id', $older->id)
+            ->assertJsonPath('data.2.id', $done->id);
+
+        // without the flag the order is the sort alone, and there's no count
+        $this->getJson('/api/public/projects/demo/posts?sort=top')
+            ->assertJsonPath('data.0.id', $done->id)
+            ->assertJsonMissingPath('new_count');
+    }
+
     public function test_creates_post_with_screenshots(): void
     {
         $response = $this->post('/api/public/projects/demo/posts', $this->validPayload([

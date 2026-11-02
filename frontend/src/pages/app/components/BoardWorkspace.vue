@@ -1,38 +1,41 @@
 <template>
-  <div class="board-workspace">
-    <SettingsNav :slug="slug" :page="page" />
-    <div class="board-workspace-main">
-      <div class="page-head board-workspace-head">
-        <nav class="page-crumbs" aria-label="Путь">
-          <RouterLink to="/app/boards">Мои доски</RouterLink>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">{{ name }}</span>
-        </nav>
-        <!-- on a phone the button shrinks to a 40px square arrow, centred against the name; the label stays for screen readers -->
-        <div class="board-workspace-title">
-          <h1>{{ title ?? name }}</h1>
-          <a :href="`/${slug}`" class="btn btn-primary board-workspace-open" target="_blank" rel="noopener" aria-label="Открыть доску в новой вкладке">
-            <span class="board-workspace-open-full" aria-hidden="true">Открыть доску ↗</span><span class="board-workspace-open-short" aria-hidden="true">↗</span>
-          </a>
+  <div class="app-page">
+    <div class="app-page-head">
+      <div class="app-page-title">
+        <h1>{{ title ?? PAGE_TITLES[page] }}</h1>
+        <div class="app-page-actions">
+          <!-- «Доступ» has the link as a block of its own, with its own copy button -->
+          <CopyButton v-if="page !== 'access'" :value="boardUrl" label="Скопировать ссылку" />
+          <!-- on a phone a 40px square with just the arrow; the label stays for screen readers -->
+          <RouterLink :to="`/${slug}`" class="btn btn-primary app-page-open" aria-label="Перейти на доску">
+            <span class="app-page-open-full" aria-hidden="true">Перейти на доску →</span><span class="app-page-open-short" aria-hidden="true">→</span>
+          </RouterLink>
         </div>
-        <p v-if="$slots.lead" class="page-lead"><slot name="lead" /></p>
       </div>
-      <slot />
+      <p v-if="$slots.lead" class="page-lead"><slot name="lead" /></p>
     </div>
+    <slot />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import SettingsNav from './SettingsNav.vue'
+import CopyButton from '@/shared/ui/CopyButton.vue'
 
-// Frame of a board's own pages in the cabinet (settings, connection): breadcrumbs, the board's name,
-// «Открыть доску» and the same side nav, so moving between them feels like tabs of one place.
-defineProps<{
+// Head of a board's two pages in the cabinet («Настройки», «Доступ»): the page's name, the board's link to share
+// and «Перейти на доску» (same tab). The switch between the pages is the side menu.
+const props = defineProps<{
   slug: string
-  name: string
-  page: 'settings' | 'embed' | 'participants'
-  // replaces the board's name in the heading (e.g. «Доска «…» готова» right after creating it)
+  page: 'settings' | 'access'
+  // replaces the page's name in the heading (e.g. «Доска «…» готова» right after creating it)
   title?: string
 }>()
+
+const PAGE_TITLES = {
+  settings: 'Настройки',
+  access: 'Доступ',
+}
+// the board lives in this same app, at /<slug>
+const boardUrl = computed(() => `${window.location.origin}/${props.slug}`)
 </script>

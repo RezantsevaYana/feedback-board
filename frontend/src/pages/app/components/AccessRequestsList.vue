@@ -21,7 +21,7 @@
           <button type="button" class="btn btn-danger" :disabled="busyId === req.id" :aria-busy="busyId === req.id" @click="reject(req)">
             Отклонить
           </button>
-          <button type="button" class="btn btn-ghost" :disabled="busyId === req.id" @click="rejecting = null">Отмена</button>
+          <button type="button" class="btn" :disabled="busyId === req.id" @click="rejecting = null">Отмена</button>
         </div>
       </div>
 
@@ -30,10 +30,13 @@
           :model-value="roles[req.id] ?? 'voter'"
           :options="roleOptions"
           @update:model-value="(role) => (roles[req.id] = role as Assignable)" class="access-request-role" aria-label="Роль на доске" />
-        <button type="button" class="btn btn-primary" :disabled="busyId === req.id" :aria-busy="busyId === req.id" @click="approve(req)">
-          Одобрить
-        </button>
-        <button type="button" class="btn" :disabled="busyId === req.id" @click="startReject(req)">Отклонить</button>
+        <!-- the answers: «Отклонить» in clay red, «Одобрить» filled; on a phone one row of two equal buttons -->
+        <div class="access-request-answers">
+          <button type="button" class="btn btn-danger" :disabled="busyId === req.id" @click="startReject(req)">Отклонить</button>
+          <button type="button" class="btn btn-primary" :disabled="busyId === req.id" :aria-busy="busyId === req.id" @click="approve(req)">
+            Одобрить
+          </button>
+        </div>
       </div>
     </li>
   </ul>
@@ -50,7 +53,7 @@ import { fmtTimeAgo } from '@/shared/utils/format'
 import SelectComponent from '@/shared/ui/SelectComponent.vue'
 import TextAreaComponent from '@/shared/ui/TextAreaComponent.vue'
 
-// «Запросы на доступ»: approve inline with a role (Голосующий by default, the usual one for someone from outside),
+// «Запросы на доступ»: approve inline with a role (Участник by default, the usual one for someone from outside),
 // or reject with an optional reason that goes into the letter (the address then can't ask again for a day).
 // The parent drops the card on `decided`; an approval also hands over the invitation it produced.
 const props = defineProps<{

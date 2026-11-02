@@ -32,9 +32,43 @@
     display: grid;
     gap: 10px;
 
+    // a list card is a row to scan: the description on one line (two on a phone), the card opens for the rest
+    .card .excerpt {
+        @include lineClamp(1);
+
+        @media screen and (max-width: $mobile) {
+            @include lineClamp(2);
+        }
+    }
     @media screen and (max-width: $mobile) {
         gap: 8px;
     }
+}
+// PostList.vue — the heads over the posts still in «Новое» and over the rest: the status pill, the count, a line
+.list-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 2px;
+
+    &:first-child {
+        margin-top: 0;
+    }
+    .pill {
+        font-size: 13px;
+        padding: 3px 10px;
+    }
+    &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+    }
+}
+.list-divider-count {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
 }
 .card {
     display: grid;

@@ -130,6 +130,19 @@ class Post extends Model
     }
 
     /**
+     * The list view: posts still in «Новое» first, the rest after them; the chosen sort applies inside both parts.
+     * Null leaves the order to sorted() alone.
+     *
+     * @param  Builder<Post>  $query
+     */
+    public function scopeNewFirst(Builder $query, ?int $newStatusId): void
+    {
+        if ($newStatusId !== null) {
+            $query->orderByRaw('case when posts.status_id = ? then 0 else 1 end', [$newStatusId]);
+        }
+    }
+
+    /**
      * @param  Builder<Post>  $query
      */
     public function scopeSorted(Builder $query, string $sort): void

@@ -1,0 +1,122 @@
+@use '../utils' as *;
+
+// NavDrawer.vue — the side menu as a panel from the left on tablet and phone (AppShell, BoardPage)
+.nav-drawer-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: var(--overlay);
+}
+.nav-drawer {
+    // under the header: --drawer-top is the bottom edge of the «Меню» button (set by NavDrawer), a little air after it
+    position: absolute;
+    top: var(--drawer-top, calc(64px + env(safe-area-inset-top, 0px)));
+    left: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - var(--drawer-top, 64px) - 16px - env(safe-area-inset-bottom, 0px));
+    padding: 12px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow); // taste-skill-ignore floats over the page
+
+    &:focus {
+        outline: none;
+    }
+    // a tablet doesn't need the full width for five rows
+    @media screen and (min-width: $mobile + 1) {
+        left: auto;
+        width: 360px;
+    }
+}
+// the close button: exactly over the «Меню» button that opened the drawer (placed by NavDrawer), the same frame,
+// so its lines simply fold into a cross; without an anchor it waits in the top right corner
+.nav-drawer-close {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: 16px;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+    // the folding lines are the feedback; no flash of the browser's own tap highlight on top of them
+    -webkit-tap-highlight-color: transparent;
+
+    &.anchored {
+        right: auto;
+    }
+    &:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
+}
+
+.nav-drawer-enter-active,
+.nav-drawer-leave-active {
+    transition: opacity 0.2s ease;
+
+    .nav-drawer {
+        transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+.nav-drawer-enter-from,
+.nav-drawer-leave-to {
+    opacity: 0;
+
+    .nav-drawer {
+        transform: translateY(-8px);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .nav-drawer-enter-active,
+    .nav-drawer-leave-active {
+        transition: none;
+
+        .nav-drawer {
+            transition: none;
+        }
+    }
+}
+
+// inside the drop-down the cabinet's menu is compact: the board's pages first, then the cabinet and the account,
+// «Выйти» and the theme in one last row; the sections of a page stay on the desktop's side menu
+.nav-drawer .app-sidebar {
+    min-height: 0;
+    gap: 8px;
+
+    // the board's two pages on top, then «Мои доски» and «Настройки аккаунта» as one group under a line
+    .app-sidebar-board:not(.app-sidebar-account) {
+        order: -1;
+        padding-top: 0;
+        border-top: 0;
+    }
+    > .app-sidebar-nav {
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+    }
+    .app-sidebar-account {
+        margin-top: -8px;
+        padding-top: 0;
+        border-top: 0;
+    }
+    .app-sidebar-sub {
+        display: none;
+    }
+    .app-sidebar-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 0;
+        padding-top: 8px;
+    }
+}

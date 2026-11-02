@@ -1,65 +1,28 @@
 @use '../utils' as *;
 
-// BoardWorkspace.vue — frame of a board's pages in the cabinet (BoardSettingsPage, BoardEmbedPage).
-// Like the board itself: the side nav from the top, a full-height line, and the page (crumbs, heading,
-// content) to the right of it across the rest of the container.
-.board-workspace-page {
-    padding-top: 24px;
-}
-.board-workspace {
-    display: grid;
-    grid-template-columns: 200px minmax(0, 1fr);
-    gap: 32px;
-    align-items: start;
-    // the line runs to the bottom of the screen even when the page is short (minus the header bar)
-    min-height: calc(100vh - 120px);
-
-    @media screen and (max-width: $tablet) {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 16px;
-        min-height: 0;
-    }
-}
-// same line as .board-main on the board. On tablet and below the main column dissolves (display: contents),
-// so its head, the nav and the sections become one stack: heading first, then the tabs, then the content
-.board-workspace-main {
+// BoardWorkspace.vue (a board's pages in the cabinet) and AccountPage.vue — one column of cards under the
+// page's heading, inside AppShell's main column. The side menu says where you are, so no crumbs here.
+.app-page {
     display: flex;
     flex-direction: column;
     gap: 16px;
     min-width: 0;
-    align-self: stretch;
-    border-left: 1px solid var(--line);
-    padding-left: 32px;
 
     // cards keep a readable width instead of stretching across a wide screen
-    > :not(.board-workspace-head) {
+    > * {
         max-width: 680px;
     }
-
-    @media screen and (max-width: $tablet) {
-        display: contents;
-
-        // one column of the screen's width: cards line up with the heading and «Открыть доску»
-        > :not(.board-workspace-head) {
-            max-width: none;
-        }
-    }
 }
-.board-workspace-head {
+.app-page-head {
+    display: grid;
+    gap: 4px;
     margin-bottom: 8px;
 
     @media screen and (max-width: $tablet) {
-        order: -1;
         margin-bottom: 0;
     }
-    // phone: the header's switcher already names the board and the brand tag leads to «Мои доски»
-    @media screen and (max-width: $mobile) {
-        .page-crumbs {
-            display: none;
-        }
-    }
 }
-.board-workspace-title {
+.app-page-title {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -68,25 +31,22 @@
 
     h1 {
         min-width: 0;
+        margin: 0;
         overflow-wrap: anywhere;
-    }
 
-    // phone: one row — a long name wraps beside the button instead of pushing it onto its own line,
-    // the arrow stays centred against the whole name
-    @media screen and (max-width: $mobile) {
-        flex-wrap: nowrap;
-        align-items: center;
-        gap: 10px;
-
-        h1 {
-            flex: 1;
+        @media screen and (max-width: $mobile) {
+            font-size: 24px;
         }
     }
 }
-// «Открыть доску ↗»; on a phone a 40px square with just the arrow
-.board-workspace-open {
+.app-page-actions {
+    display: flex;
     flex: none;
-
+    align-items: center;
+    gap: 8px;
+}
+// «Перейти на доску»; on a phone a 40px square with just the arrow
+.app-page-open {
     @media screen and (max-width: $mobile) {
         width: 40px;
         height: 40px;
@@ -94,14 +54,14 @@
         font-size: 17px;
     }
 }
-.board-workspace-open-short {
+.app-page-open-short {
     display: none;
 }
 @media screen and (max-width: $mobile) {
-    .board-workspace-open-full {
+    .app-page-open-full {
         display: none;
     }
-    .board-workspace-open-short {
+    .app-page-open-short {
         display: inline;
     }
 }

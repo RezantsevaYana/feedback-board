@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Голосование — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --surface: #ffffff; --surface-2: #e8eee9; --active: #cfe7d7; --active-fg: #063f2c; --active-line: #1d8547;
+            --line: #d8e1db; --control: #a9bcb0; --fg: #0f2224; --muted: #4c5d60; --accent: #1d8547; --accent-ink: #1b7f41;
+            --like: #27ad5a; --poo: #94603d; --page: #f3f6f4; --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif; --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 800px; margin: 0 0 24px; }
+        .doc h2 { font-size: 20px; margin: 44px 0 6px; }
+        .doc h2 + p { color: var(--muted); max-width: 800px; margin: 0 0 16px; }
+        .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+        .label { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+
+        /* a post card as on the board */
+        .post { width: 300px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px; display: grid; gap: 8px; }
+        .tag { justify-self: start; font-size: 12px; font-weight: 600; padding: 2px 10px 2px 12px; border-radius: 4px 10px 10px 4px; background: #c9dde6; }
+        .post h3 { margin: 0; font-size: 15px; }
+        .post p { margin: 0; font-size: 13px; color: var(--muted); }
+        .post-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
+        .post-meta { font-size: 12px; color: var(--muted); }
+
+        /* the two vote buttons: the same for everyone, the count inside */
+        .votes { display: inline-flex; gap: 6px; }
+        .vote-wrap { position: relative; }
+        .vote { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; min-width: 56px; justify-content: center; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; font-variant-numeric: tabular-nums; }
+        .vote:hover { border-color: var(--control); }
+        .vote[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+        .vote.dislike[aria-pressed='true'] { background: color-mix(in srgb, var(--poo) 16%, #fff); border-color: var(--poo); color: #5a3a24; }
+
+        /* who voted: a small popover above the button, after a short pause on hover (team only) */
+        .voters-pop { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 3; width: 220px; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--line); box-shadow: 0 10px 28px rgba(16, 37, 40, 0.12); display: grid; gap: 4px; font-size: 13px; }
+        .voters-pop b { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+        .voters-pop ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+        .voters-pop li { display: flex; justify-content: space-between; gap: 8px; }
+        .guest { font-size: 11px; color: var(--muted); background: var(--surface-2); padding: 0 6px; border-radius: 4px; }
+        .more { color: var(--muted); }
+        .hidden { display: none; }
+
+        /* the post card (modal) for the team: the votes block lists the voters in place */
+        .modal { width: 420px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 12px; box-shadow: 0 10px 28px rgba(16, 37, 40, 0.12); }
+        .modal h3 { margin: 0; font-size: 18px; }
+        .votes-block { background: var(--surface-2); border-radius: 10px; padding: 12px 14px; display: grid; gap: 10px; }
+        .votes-block-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .votes-block-head span { font-size: 13px; font-weight: 600; }
+        .voters-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .voters-col b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+        .voters-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 13px; }
+        .voters-col li { display: flex; justify-content: space-between; gap: 6px; }
+        .phone-frame { width: 360px; border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 14px; }
+        .phone-frame .modal { width: auto; border: 0; box-shadow: none; padding: 0; }
+        .phone-frame .voters-cols { grid-template-columns: 1fr; }
+        .note { font-size: 13px; color: var(--muted); margin: 0; }
+        .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+        .note-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+        .note-card h3 { margin: 0 0 8px; font-size: 16px; }
+        .note-card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+
+        /* phone variants */
+        .variants { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+        .phone { position: relative; width: 340px; height: 620px; border: 1px solid var(--line); border-radius: 22px; background: #fff; overflow: hidden; }
+        .phone-body { padding: 16px; display: grid; gap: 12px; }
+        .phone-body h3 { margin: 0; font-size: 17px; }
+        .summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px; background: #fff; font: inherit; font-size: 13px; color: var(--fg); cursor: pointer; }
+        .summary span:last-child { color: var(--muted); }
+        .faces { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+        .faces .face { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 2px solid var(--surface-2); font-size: 10px; font-weight: 600; margin-left: -8px; }
+        .faces .face:first-child { margin-left: 0; }
+        .faces small { font-size: 12px; color: var(--muted); }
+        .hint { font-size: 12px; color: var(--muted); margin: 0; }
+        .sheet-bg { position: absolute; inset: 0; background: rgba(8, 24, 26, 0.45); }
+        .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 10px 16px 18px; display: grid; gap: 10px; }
+        .grip { justify-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
+        .sheet h4 { margin: 0; font-size: 16px; }
+        .tabs { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .tabs span { padding: 5px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted); }
+        .tabs span.on { background: var(--active); color: var(--active-fg); font-weight: 600; border: 1px solid var(--active-line); }
+        .sheet ul { list-style: none; margin: 0; padding: 0; display: grid; }
+        .sheet li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+        .sheet li:last-child { border-bottom: 0; }
+        .rec { color: var(--accent-ink); font-weight: 600; }
+
+        /* who-voted chip: the team's entry to the list, next to the vote buttons everywhere */
+        .who-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .who-chip svg { width: 15px; height: 15px; }
+        .who-chip.tapped { background: var(--surface-2); border-color: var(--control); color: var(--fg); }
+        .mbar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+        .mtag { padding: 3px 9px 3px 12px; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 12px; font-weight: 600; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%); }
+        .mseg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); font-size: 12px; }
+        .mseg span { padding: 3px 9px; border-radius: 7px; color: var(--muted); }
+        .mseg span.on { background: var(--active); color: var(--active-fg); font-weight: 600; }
+        .mlist { padding: 12px; display: grid; gap: 8px; background: #fff; }
+        .mcard { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 6px; background: #fff; }
+        .mcard h5 { margin: 0; font-size: 14px; }
+        .mcard p { margin: 0; font-size: 12px; color: var(--muted); }
+        .mfoot { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .mfoot .votes { gap: 4px; }
+        .mfoot .vote { min-width: 0; padding: 3px 8px; font-size: 13px; }
+        .mvotes { display: inline-flex; gap: 4px; align-items: center; }
+        .vote, .who-chip { white-space: nowrap; }
+        /* «Кто голосовал ›»: says what it opens, in words; green ink like the board's other links */
+        .who-link { justify-self: end; display: inline-flex; align-items: center; gap: 2px; padding: 4px 2px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--accent-ink); cursor: pointer; white-space: nowrap; }
+        .who-link.tapped { text-decoration: underline; text-underline-offset: 3px; }
+        .votes-block .who-link { justify-self: start; }
+        /* a narrow column: author and date on their own line, the buttons under them */
+        .mkanban .mfoot { flex-direction: column; align-items: flex-start; gap: 6px; }
+        .mkanban { padding: 12px; background: #fff; display: grid; grid-template-columns: 86% 86%; gap: 8px; overflow: hidden; }
+        .mcol { background: var(--surface-2); border-radius: 10px; padding: 8px; display: grid; gap: 8px; align-content: start; }
+        .mcol-h { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); }
+        .pair { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-bottom: 28px; }
+        .pair-title { width: 100%; margin: 0; font-size: 15px; font-weight: 600; }
+        .ring { outline: 2px dashed var(--accent); outline-offset: 3px; border-radius: 10px; }
+
+        /* who voted as faces: up to three initials stacked, «+N» for the rest; the stack is one tap target */
+        .mfoot .post-meta, .votes-block-head > span:first-child { white-space: nowrap; }
+        .mfoot { flex-wrap: wrap; row-gap: 6px; }
+        .faces-btn { display: inline-flex; align-items: center; padding: 2px 4px 2px 2px; border: 0; border-radius: 999px; background: none; cursor: pointer; font: inherit; }
+        .faces-btn .face { width: 24px; height: 24px; margin-left: -7px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #fff; background: var(--surface-2); color: var(--fg); font-size: 9.5px; font-weight: 600; }
+        .faces-btn .face:first-child { margin-left: 0; }
+        .faces-btn .face.g { background: #fff; color: var(--muted); border-color: #fff; box-shadow: inset 0 0 0 1px var(--line); }
+        .faces-btn .face.c1 { background: #cce4d1; } .faces-btn .face.c2 { background: #c9dde6; } .faces-btn .face.c3 { background: #f6d8b3; }
+        .faces-btn .rest { margin-left: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+        .faces-btn.ring { outline: 2px dashed var(--accent); outline-offset: 3px; }
+        .sheet li .who { display: flex; align-items: center; gap: 10px; }
+        .sheet li .face { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 600; background: var(--surface-2); }
+        .sheet li .face.c1 { background: #cce4d1; } .sheet li .face.c2 { background: #c9dde6; } .sheet li .face.c3 { background: #f6d8b3; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Голосование и «кто голосовал»</h1>
+    <p class="lede">
+        Сейчас у команды четыре кнопки: 👍, число, 💩, число — и непонятно, что на что нажимать; число открывает отдельную модалку.
+        Предлагаю две кнопки как у всех (число внутри, клик — голос), а список голосовавших — всплывающий при наведении
+        на кнопку (только команде), на телефоне — прямо в карточке поста.
+    </p>
+
+    <h2>1. Сейчас и предлагаемое</h2>
+    <p>Слева — как сейчас у команды, справа — предлагаемое. Голосующие и гости видят то же, что справа, только без списка.</p>
+    <div class="row">
+        <div>
+            <p class="label">Сейчас (команда)</p>
+            <div class="post">
+                <span class="tag">Идея</span>
+                <h3>Статус «в отпуске» с датой возвращения</h3>
+                <p>Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+                <div class="post-foot">
+                    <span class="post-meta">Марина К. · 20 окт.</span>
+                    <span class="votes">
+                        <span class="vote" style="min-width:auto;padding:4px 8px">👍</span><span class="vote" style="min-width:auto;padding:4px 8px">4</span>
+                        <span class="vote" style="min-width:auto;padding:4px 8px">💩</span><span class="vote" style="min-width:auto;padding:4px 8px">1</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div>
+            <p class="label">Предлагаю — наведите на 👍 или 💩 (задержка 0,3 с)</p>
+            <div class="post" style="margin-top:0">
+                <span class="tag">Идея</span>
+                <h3>Статус «в отпуске» с датой возвращения</h3>
+                <p>Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+                <div class="post-foot">
+                    <span class="post-meta">Марина К. · 20 окт.</span>
+                    <span class="votes">
+                        <span class="vote-wrap" data-pop="like">
+                            <button class="vote" aria-pressed="true">👍 4</button>
+                            <div class="voters-pop hidden" role="tooltip">
+                                <b>Нравится · 4</b>
+                                <ul><li>Анна Петрова</li><li>Тест Менеджер <span class="guest">вы</span></li><li>Игорь Н.</li><li>Без имени <span class="guest">гость</span></li></ul>
+                            </div>
+                        </span>
+                        <span class="vote-wrap" data-pop="dislike">
+                            <button class="vote dislike" aria-pressed="false">💩 1</button>
+                            <div class="voters-pop hidden" role="tooltip">
+                                <b>Не нравится · 1</b>
+                                <ul><li>Ольга <span class="guest">гость</span></li></ul>
+                            </div>
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div>
+            <p class="label">Много голосов</p>
+            <div class="post">
+                <span class="tag">Идея</span>
+                <h3>Реакции эмодзи на сообщения</h3>
+                <div class="post-foot">
+                    <span class="post-meta">Аноним · 11 сент.</span>
+                    <span class="votes">
+                        <span class="vote-wrap" data-pop="like">
+                            <button class="vote" aria-pressed="false">👍 23</button>
+                            <div class="voters-pop hidden" role="tooltip">
+                                <b>Нравится · 23</b>
+                                <ul><li>Анна Петрова</li><li>Игорь Н.</li><li>Марина К.</li><li>Ольга</li><li>Сергей</li><li>Без имени <span class="guest">гость</span></li><li>Пётр</li><li>Вика</li></ul>
+                                <span class="more">и ещё 15 — весь список в карточке поста</span>
+                            </div>
+                        </span>
+                        <span class="vote-wrap"><button class="vote dislike" aria-pressed="false">💩 0</button></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2>2. В карточке поста (и на телефоне)</h2>
+    <p>Наведения на телефоне нет, поэтому полный список — в открытой карточке поста, в блоке «Голоса», сразу раскрытый. Модалка «Кто голосовал» больше не нужна.</p>
+    <div class="row">
+        <div>
+            <p class="label">Десктоп — карточка поста, команда</p>
+            <div class="modal">
+                <span class="tag">Идея</span>
+                <h3>Статус «в отпуске» с датой возвращения</h3>
+                <div class="votes-block">
+                    <div class="votes-block-head"><span>Голоса · рейтинг +3</span><span class="votes"><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike" aria-pressed="false">💩 1</button></span></div>
+                    <div class="voters-cols">
+                        <div class="voters-col"><b>👍 Нравится · 4</b><ul><li>Анна Петрова</li><li>Тест Менеджер <span class="guest">вы</span></li><li>Игорь Н.</li><li>Без имени <span class="guest">гость</span></li></ul></div>
+                        <div class="voters-col"><b>💩 Не нравится · 1</b><ul><li>Ольга <span class="guest">гость</span></li></ul></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <p class="label">Телефон — карточка поста, команда</p>
+            <div class="phone-frame">
+                <div class="modal">
+                    <span class="tag">Идея</span>
+                    <h3>Статус «в отпуске» с датой возвращения</h3>
+                    <div class="votes-block">
+                        <div class="votes-block-head"><span>Голоса · +3</span><span class="votes"><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike" aria-pressed="false">💩 1</button></span></div>
+                        <div class="voters-cols">
+                            <div class="voters-col"><b>👍 Нравится · 4</b><ul><li>Анна Петрова</li><li>Тест Менеджер <span class="guest">вы</span></li><li>Игорь Н.</li><li>Без имени <span class="guest">гость</span></li></ul></div>
+                            <div class="voters-col"><b>💩 Не нравится · 1</b><ul><li>Ольга <span class="guest">гость</span></li></ul></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <p class="label">Пока никто не голосовал</p>
+            <div class="modal" style="width:320px">
+                <div class="votes-block">
+                    <div class="votes-block-head"><span>Голоса</span><span class="votes"><button class="vote">👍 0</button><button class="vote dislike">💩 0</button></span></div>
+                    <p class="note">Пока никто не голосовал.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <h2>3. Телефон: варианты вместо раскрытого списка</h2>
+    <p>Карточка поста у команды на телефоне. Во всех вариантах полный список открывается нижней шторкой (как остальные окна на телефоне), а в карточке остаётся одна компактная строка.</p>
+    <div class="variants">
+        <div>
+            <p class="label"><span class="rec">A · Мой вариант:</span> строка-сводка → шторка</p>
+            <div class="phone"><div class="phone-body"><span class="tag">Идея</span><h3>Статус «в отпуске» с датой возвращения</h3><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+                <div class="votes-block"><div class="votes-block-head"><span>Голоса · +3</span><span class="votes"><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike">💩 1</button></span></div>
+                <button class="summary"><span>Кто голосовал</span><span>👍 4 · 💩 1 ›</span></button></div>
+            </div></div>
+        </div>
+        <div>
+            <p class="label">A · после тапа по строке</p>
+            <div class="phone"><div class="phone-body"><span class="tag">Идея</span><h3>Статус «в отпуске» с датой возвращения</h3><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p></div><div class="sheet-bg"></div><div class="sheet"><span class="grip"></span><h4>Кто голосовал</h4><span class="tabs"><span class="on">👍 Нравится · 4</span><span>💩 Не нравится · 1</span></span><ul><li>Анна Петрова</li><li>Тест Менеджер <span class="guest">вы</span></li><li>Игорь Н.</li><li>Без имени <span class="guest">гость</span></li></ul></div></div>
+        </div>
+        <div>
+            <p class="label">B · аватарки → шторка</p>
+            <div class="phone"><div class="phone-body"><span class="tag">Идея</span><h3>Статус «в отпуске» с датой возвращения</h3><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+                <div class="votes-block"><div class="votes-block-head"><span>Голоса · +3</span><span class="votes"><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike">💩 1</button></span></div>
+                <button class="faces"><span class="face">АП</span><span class="face">ТМ</span><span class="face">ИН</span><span class="face">Г</span><span class="face">О</span><small>5 голосов ›</small></button></div>
+            </div></div>
+        </div>
+        <div>
+            <p class="label">C · долгое нажатие на 👍 / 💩 → шторка</p>
+            <div class="phone"><div class="phone-body"><span class="tag">Идея</span><h3>Статус «в отпуске» с датой возвращения</h3><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+                <div class="votes-block"><div class="votes-block-head"><span>Голоса · +3</span><span class="votes"><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike">💩 1</button></span></div>
+                <p class="hint">Удержите кнопку, чтобы увидеть, кто голосовал</p></div>
+            </div></div>
+        </div>
+    </div>
+
+
+    <h2>4. Телефон: где открывается список — в списке, в канбане и в посте</h2>
+    <p>Кнопки 👍 и 💩 по тапу голосуют, поэтому вход в список — своя кнопка словами: <b>«Кто голосовал ›»</b>, под голосами. Одинаковая на карточке в списке, в канбане и в открытом посте; видит её только команда. Тап — снизу выезжает список; закрывается свайпом вниз или тапом по фону. Обведено — куда нажать.</p>
+    <div class="pair"><p class="pair-title">Список</p>
+        <div><p class="label">До тапа</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span>Столбцы</span><span class="on">Список</span></span></div><div class="mlist"><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link">Кто голосовал ›</button></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link">Кто голосовал ›</button></div></div></div></div>
+        <div><p class="label">После тапа по «Кто голосовал»</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span>Столбцы</span><span class="on">Список</span></span></div><div class="mlist"><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link ring">Кто голосовал ›</button></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link">Кто голосовал ›</button></div></div><div class="sheet-bg"></div><div class="sheet"><span class="grip"></span><h4>Кто голосовал · «Статус в отпуске…»</h4><span class="tabs"><span class="on">👍 Нравится · 4</span><span>💩 Не нравится · 1</span></span><ul><li>Анна Петрова</li><li>Тест Менеджер <span class="guest">вы</span></li><li>Игорь Н.</li><li>Без имени <span class="guest">гость</span></li></ul></div></div></div></div>
+    <div class="pair"><p class="pair-title">Доска (столбцы)</p>
+        <div><p class="label">До тапа</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span class="on">Столбцы</span><span>Список</span></span></div><div class="mkanban"><div class="mcol"><span class="mcol-h"><span>Новое</span><span>6</span></span><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link">Кто голосовал ›</button></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link">Кто голосовал ›</button></div></div><div class="mcol"><span class="mcol-h"><span>Готово</span><span>1</span></span></div></div></div></div>
+        <div><p class="label">После тапа по «Кто голосовал»</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span class="on">Столбцы</span><span>Список</span></span></div><div class="mkanban"><div class="mcol"><span class="mcol-h"><span>Новое</span><span>6</span></span><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link ring">Кто голосовал ›</button></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div><button class="who-link">Кто голосовал ›</button></div></div><div class="mcol"><span class="mcol-h"><span>Готово</span><span>1</span></span></div></div><div class="sheet-bg"></div><div class="sheet"><span class="grip"></span><h4>Кто голосовал · «Статус в отпуске…»</h4><span class="tabs"><span class="on">👍 Нравится · 4</span><span>💩 Не нравится · 1</span></span><ul><li>Анна Петрова</li><li>Тест Менеджер <span class="guest">вы</span></li><li>Игорь Н.</li><li>Без имени <span class="guest">гость</span></li></ul></div></div></div></div>
+    <div class="pair"><p class="pair-title">Открытый пост</p>
+        <div><p class="label">До тапа</p><div class="phone"><div class="sheet-bg" style="background:rgba(8,24,26,.35)"></div>
+        <div class="sheet" style="top:60px;align-content:start"><span class="grip"></span><span class="tag">Идея</span><h4>Статус «в отпуске» с датой возвращения</h4><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+        <div class="votes-block"><div class="votes-block-head"><span>Голоса · +3</span><span class="mvotes"><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike">💩 1</button></span></div><button class="who-link">Кто голосовал ›</button></div>
+        <p class="note">Категория, столбец, приоритет, ответ команды…</p></div></div></div>
+        <div><p class="label">После тапа — список поверх поста</p><div class="phone"><div class="sheet-bg" style="background:rgba(8,24,26,.35)"></div>
+        <div class="sheet" style="top:60px;align-content:start"><span class="grip"></span><span class="tag">Идея</span><h4>Статус «в отпуске» с датой возвращения</h4><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+        <div class="votes-block"><div class="votes-block-head"><span>Голоса · +3</span><span class="mvotes"><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike">💩 1</button></span></div><button class="who-link ring">Кто голосовал ›</button></div>
+        <p class="note">Категория, столбец, приоритет, ответ команды…</p></div><div class="sheet-bg"></div><div class="sheet"><span class="grip"></span><h4>Кто голосовал · «Статус в отпуске…»</h4><span class="tabs"><span class="on">👍 Нравится · 4</span><span>💩 Не нравится · 1</span></span><ul><li>Анна Петрова</li><li>Тест Менеджер <span class="guest">вы</span></li><li>Игорь Н.</li><li>Без имени <span class="guest">гость</span></li></ul></div></div></div></div>
+    <p class="note">На десктопе та же кнопка «Кто голосовал ›» по клику открывает список рядом с собой (вместо модалки), а наведение на 👍 / 💩 с паузой показывает его без клика.</p>
+
+    <h2>5. Телефон: вариант с аватарками</h2>
+    <p>Рядом с голосами — стопка из первых трёх голосовавших (инициалы в кружках) и «+N» для остальных. Пока никто не голосовал — стопки нет. Тап по стопке — тот же список снизу, с кружками у имён. Видит только команда. Обведено — куда нажать.</p>
+    <div class="pair"><p class="pair-title">Список</p>
+        <div><p class="label">До тапа</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span>Столбцы</span><span class="on">Список</span></span></div><div class="mlist"><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="faces-btn" aria-label="Кто голосовал"><span class="face c1">АП</span><span class="face c2">ТМ</span><span class="face c3">ИН</span><span class="rest">+2</span></button><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="faces-btn" aria-label="Кто голосовал"><span class="face c2">ИН</span><span class="face c1">МК</span><span class="face c3">ОС</span><span class="rest">+9</span></button><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div><div class="mcard"><span class="tag">Идея</span><h5>Тёмная тема в виджете</h5>
+        <div class="mfoot"><span class="post-meta">Аноним · вчера</span><span class="mvotes"><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 0</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 0</button></span></div></div></div></div></div>
+        <div><p class="label">После тапа по аватаркам</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span>Столбцы</span><span class="on">Список</span></span></div><div class="mlist"><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="faces-btn ring" aria-label="Кто голосовал"><span class="face c1">АП</span><span class="face c2">ТМ</span><span class="face c3">ИН</span><span class="rest">+2</span></button><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="faces-btn" aria-label="Кто голосовал"><span class="face c2">ИН</span><span class="face c1">МК</span><span class="face c3">ОС</span><span class="rest">+9</span></button><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div><div class="mcard"><span class="tag">Идея</span><h5>Тёмная тема в виджете</h5>
+        <div class="mfoot"><span class="post-meta">Аноним · вчера</span><span class="mvotes"><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 0</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 0</button></span></div></div></div><div class="sheet-bg"></div><div class="sheet"><span class="grip"></span><h4>Кто голосовал · «Статус в отпуске…»</h4><span class="tabs"><span class="on">👍 Нравится · 4</span><span>💩 Не нравится · 1</span></span><ul>
+<li><span class="who"><span class="face c1">АП</span>Анна Петрова</span></li><li><span class="who"><span class="face c2">ТМ</span>Тест Менеджер</span><span class="guest">вы</span></li><li><span class="who"><span class="face c3">ИН</span>Игорь Н.</span></li><li><span class="who"><span class="face">?</span>Без имени</span><span class="guest">гость</span></li></ul></div></div></div></div>
+    <div class="pair"><p class="pair-title">Доска (столбцы)</p>
+        <div><p class="label">До тапа</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span class="on">Столбцы</span><span>Список</span></span></div><div class="mkanban"><div class="mcol"><span class="mcol-h"><span>Новое</span><span>6</span></span><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="faces-btn" aria-label="Кто голосовал"><span class="face c1">АП</span><span class="face c2">ТМ</span><span class="face c3">ИН</span><span class="rest">+2</span></button><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="faces-btn" aria-label="Кто голосовал"><span class="face c2">ИН</span><span class="face c1">МК</span><span class="face c3">ОС</span><span class="rest">+9</span></button><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div></div><div class="mcol"><span class="mcol-h"><span>Готово</span><span>1</span></span></div></div></div></div>
+        <div><p class="label">После тапа по аватаркам</p><div class="phone"><div class="mbar"><span class="mtag">Demo</span><span class="mseg"><span class="on">Предложения</span><span>Топ</span></span></div><div class="mbar" style="border:0;padding-bottom:0"><span class="mseg"><span class="on">Столбцы</span><span>Список</span></span></div><div class="mkanban"><div class="mcol"><span class="mcol-h"><span>Новое</span><span>6</span></span><div class="mcard"><span class="tag">Идея</span><h5>Статус «в отпуске» с датой возвращения</h5><p>Чтобы при упоминании человека сразу было видно…</p>
+        <div class="mfoot"><span class="post-meta">Марина К. · 20 окт.</span><span class="mvotes"><button class="faces-btn ring" aria-label="Кто голосовал"><span class="face c1">АП</span><span class="face c2">ТМ</span><span class="face c3">ИН</span><span class="rest">+2</span></button><button class="vote" aria-pressed="true" style="min-width:0;padding:3px 8px;font-size:13px">👍 4</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div><div class="mcard"><span class="tag" style="background:#f3cfc8">Баг</span><h5>Сбивается часовой пояс в календаре</h5>
+        <div class="mfoot"><span class="post-meta">Игорь Н. · 21 сент.</span><span class="mvotes"><button class="faces-btn" aria-label="Кто голосовал"><span class="face c2">ИН</span><span class="face c1">МК</span><span class="face c3">ОС</span><span class="rest">+9</span></button><button class="vote" style="min-width:0;padding:3px 8px;font-size:13px">👍 11</button><button class="vote dislike" style="min-width:0;padding:3px 8px;font-size:13px">💩 1</button></span></div></div></div><div class="mcol"><span class="mcol-h"><span>Готово</span><span>1</span></span></div></div><div class="sheet-bg"></div><div class="sheet"><span class="grip"></span><h4>Кто голосовал · «Статус в отпуске…»</h4><span class="tabs"><span class="on">👍 Нравится · 4</span><span>💩 Не нравится · 1</span></span><ul>
+<li><span class="who"><span class="face c1">АП</span>Анна Петрова</span></li><li><span class="who"><span class="face c2">ТМ</span>Тест Менеджер</span><span class="guest">вы</span></li><li><span class="who"><span class="face c3">ИН</span>Игорь Н.</span></li><li><span class="who"><span class="face">?</span>Без имени</span><span class="guest">гость</span></li></ul></div></div></div></div>
+    <div class="pair"><p class="pair-title">Открытый пост</p>
+        <div><p class="label">До тапа</p><div class="phone"><div class="sheet-bg" style="background:rgba(8,24,26,.35)"></div>
+        <div class="sheet" style="top:60px;align-content:start"><span class="grip"></span><span class="tag">Идея</span><h4>Статус «в отпуске» с датой возвращения</h4><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+        <div class="votes-block"><div class="votes-block-head"><span>Голоса · +3</span><span class="mvotes"><button class="faces-btn" aria-label="Кто голосовал"><span class="face c1">АП</span><span class="face c2">ТМ</span><span class="face c3">ИН</span><span class="rest">+2</span></button><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike">💩 1</button></span></div></div>
+        <p class="note">Категория, столбец, приоритет, ответ команды…</p></div></div></div>
+        <div><p class="label">После тапа — список поверх поста</p><div class="phone"><div class="sheet-bg" style="background:rgba(8,24,26,.35)"></div>
+        <div class="sheet" style="top:60px;align-content:start"><span class="grip"></span><span class="tag">Идея</span><h4>Статус «в отпуске» с датой возвращения</h4><p class="note">Чтобы при упоминании человека сразу было видно, что он в отпуске до 28 октября…</p>
+        <div class="votes-block"><div class="votes-block-head"><span>Голоса · +3</span><span class="mvotes"><button class="faces-btn ring" aria-label="Кто голосовал"><span class="face c1">АП</span><span class="face c2">ТМ</span><span class="face c3">ИН</span><span class="rest">+2</span></button><button class="vote" aria-pressed="true">👍 4</button><button class="vote dislike">💩 1</button></span></div></div>
+        <p class="note">Категория, столбец, приоритет, ответ команды…</p></div><div class="sheet-bg"></div><div class="sheet"><span class="grip"></span><h4>Кто голосовал · «Статус в отпуске…»</h4><span class="tabs"><span class="on">👍 Нравится · 4</span><span>💩 Не нравится · 1</span></span><ul>
+<li><span class="who"><span class="face c1">АП</span>Анна Петрова</span></li><li><span class="who"><span class="face c2">ТМ</span>Тест Менеджер</span><span class="guest">вы</span></li><li><span class="who"><span class="face c3">ИН</span>Игорь Н.</span></li><li><span class="who"><span class="face">?</span>Без имени</span><span class="guest">гость</span></li></ul></div></div></div></div>
+
+    <h2>Что меняется</h2>
+    <div class="notes">
+        <div class="note-card"><h3>Кнопки</h3><ul>
+            <li>Две кнопки у всех — команды, участников, гостей. Число внутри, клик голосует или снимает голос.</li>
+            <li>Свой голос выделен так же, как сразу после клика (с любого устройства — п. 24 уже починен).</li>
+            <li>У читателя на закрытой доске кнопки неактивны, подсказка про роль — как сейчас.</li>
+        </ul></div>
+        <div class="note-card"><h3>Кто голосовал</h3><ul>
+            <li>Только команде (владелец, админ, менеджер) — как сейчас.</li>
+            <li>На доске — всплывающий список при наведении на кнопку после паузы 0,3 с, чтобы не мелькал при проходе мышью. До 8 имён, дальше «и ещё N».</li>
+            <li>Список подгружается при первом наведении и запоминается, пока открыта доска.</li>
+            <li>В карточке поста — полный список, две колонки (на телефоне — одна под другой).</li>
+        </ul></div>
+    </div>
+</div>
+<script>
+// hover with a short pause, like a native tooltip but sooner; leaving hides it at once
+document.querySelectorAll('[data-pop]').forEach((wrap) => {
+    let t
+    const pop = wrap.querySelector('.voters-pop')
+    wrap.addEventListener('mouseenter', () => { t = setTimeout(() => pop?.classList.remove('hidden'), 300) })
+    wrap.addEventListener('mouseleave', () => { clearTimeout(t); pop?.classList.add('hidden') })
+})
+</script>
+</body>
+</html>

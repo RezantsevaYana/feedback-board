@@ -1,0 +1,237 @@
+@use '../utils' as *;
+
+// AppShell.vue + AppSidebar.vue — the cabinet's frame under the header (AppHeader): the side menu on the left,
+// the page on the right, split by a hairline running to the bottom of the screen, like the board's own sidebar.
+// Tablet and phone: the menu leaves the page and slides in as a panel (NavDrawer) from «Меню» in the header.
+.app-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+    // the line runs to the bottom of the screen even on a short page (minus the header bar)
+    min-height: calc(100vh - 76px);
+
+    @media screen and (max-width: $tablet) {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+        min-height: 0;
+    }
+}
+.app-layout-side {
+    position: sticky;
+    // under the sticky header bar
+    top: 100px;
+    // «Выйти» stays at the bottom of a short screen, a long menu scrolls on its own
+    height: calc(100vh - 124px);
+    overflow-y: auto;
+
+    @media screen and (max-width: $tablet) {
+        display: none;
+    }
+}
+.app-layout-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    @media screen and (max-width: $mobile) {
+        gap: 12px;
+    }
+    min-width: 0;
+    align-self: stretch;
+    border-left: 1px solid var(--line);
+    padding-left: 32px;
+
+    @media screen and (max-width: $tablet) {
+        border-left: 0;
+        padding-left: 0;
+    }
+}
+
+// AppSidebar.vue — three stacked groups: the cabinet, the current board, «Выйти» and the theme at the bottom
+.app-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 100%;
+
+    // rows are links here: no underline, full width also on tablet (the board's rows go inline there)
+    .nav-item {
+        width: 100%;
+        text-decoration: none;
+        font-size: 14px;
+        white-space: normal;
+
+        .count-badge {
+            margin-left: auto;
+        }
+    }
+}
+.app-sidebar-nav {
+    display: grid;
+    gap: 2px;
+}
+.app-sidebar-board {
+    display: grid;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+// a page's sections under its item (SectionLinks.vue): both lists stay in the DOM and the open one unfolds,
+// rows 0fr → 1fr, the list clipped while it grows; a quick fade so the text doesn't slide in half-cut
+.app-sidebar-sub {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+        grid-template-rows 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.2s ease-out;
+
+    > .section-links {
+        min-height: 0;
+        overflow: hidden;
+    }
+    &.open {
+        grid-template-rows: 1fr;
+        opacity: 1;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+// smaller rows with a hairline on the left that ties them to their item
+.section-links {
+    display: grid;
+    gap: 1px;
+    margin-left: 18px;
+    padding-left: 8px;
+    border-left: 1px solid var(--line);
+
+    .app-sidebar-sub.open & {
+        margin-block: 2px 6px;
+    }
+}
+.section-links-item {
+    padding: 5px 8px;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: none;
+
+    @include hover {
+        color: var(--fg);
+        background: var(--surface-2);
+    }
+    // the section on screen: ink and weight, not a second green block under the green item
+    &[aria-current='location'] {
+        color: var(--fg);
+        font-weight: 600;
+    }
+}
+// the board's name heads its places; another board is picked in the header's switcher
+.app-sidebar-board-name {
+    margin: 0;
+    padding: 0 10px 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 600;
+}
+.app-sidebar-foot {
+    display: grid;
+    gap: 10px;
+    justify-items: start;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+// SidebarAccount.vue — the board's sidebar: who is signed in, «Мои доски», «Настройки аккаунта», «Выйти»
+.sidebar-account {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+.sidebar-account-who {
+    display: grid;
+    gap: 2px;
+    justify-items: start;
+    min-width: 0;
+    padding: 0 10px;
+
+    .chip {
+        margin-top: 4px;
+    }
+}
+.sidebar-account-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 600;
+}
+.sidebar-account-mail {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 12px;
+}
+.sidebar-account-links {
+    display: grid;
+    gap: 1px;
+}
+// a row like the menu's items, a step smaller (SidebarAccount, BoardTools, «Выйти» in AppSidebar)
+.sidebar-link {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
+    &[aria-current='page'] {
+        background: var(--active);
+        color: var(--active-fg);
+        font-weight: 600;
+    }
+    &:disabled {
+        cursor: default;
+        opacity: 0.6;
+    }
+    @media (pointer: coarse) {
+        min-height: 40px;
+    }
+}
+// «Выйти» and what sits beside it in a drop-down (the theme), at the two ends of one row
+.sidebar-account-out {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+// «Выйти»: clay red text, no fill — leaving isn't destructive, but it's the way out
+.sidebar-link-out {
+    width: auto;
+    color: var(--bug);
+
+    @include hover {
+        background: color-mix(in srgb, var(--bug) 8%, transparent);
+        color: var(--bug);
+    }
+}

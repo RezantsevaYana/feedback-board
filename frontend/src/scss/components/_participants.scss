@@ -1,18 +1,18 @@
 @use '../utils' as *;
 
 // BoardParticipantsPage.vue + ParticipantsTable.vue, PendingInvitationsList.vue, InviteModal.vue.
-// Frame reuses .board-settings-section — the page lives in BoardWorkspace, next to Settings and Connection.
+// Frame reuses .board-settings-section — the blocks live on BoardAccessPage («Команда», «Участники»).
 
-.participants-head {
-    .participants-head-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
+// a block's heading with its add action on the right
+.participants-head-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
 
-        h2 {
-            margin: 0;
-        }
+    h2 {
+        margin: 0;
     }
 }
 
@@ -42,16 +42,58 @@
         text-align: right;
     }
 
-    // the select inside a row sits flush with the text — no extra label slot
+    // the select inside a row sits flush with the text
     .field {
-        padding-bottom: 0;
         margin: 0;
     }
 
+    // phone: no columns, each person is a block — name and email with the remove button on the right,
+    // the role select under them; «Добавлен» is left out
     @media screen and (max-width: $mobile) {
-        th:nth-child(3),
+        display: block;
+
+        thead {
+            display: none;
+        }
+        tbody {
+            display: block;
+        }
+        // rows, their lines and the owner's tint run to the screen's edges
+        tr {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas:
+                'person action'
+                'role role';
+            gap: 6px;
+            padding-block: 10px;
+            border-top: 1px solid var(--line);
+            @include bleed;
+        }
+        tr:last-child {
+            border-bottom: 1px solid var(--line);
+        }
+        td {
+            display: block;
+            padding: 0;
+            border: 0;
+        }
+        td:nth-child(1) {
+            grid-area: person;
+        }
+        td:nth-child(2) {
+            grid-area: role;
+            justify-self: start;
+        }
         td:nth-child(3) {
             display: none;
+        }
+        .participants-table-actions {
+            grid-area: action;
+            width: auto;
+        }
+        .participants-person-email {
+            overflow-wrap: anywhere;
         }
     }
 }
@@ -101,6 +143,13 @@
     padding: 0;
     display: grid;
     gap: 10px;
+
+    @media screen and (max-width: $mobile) {
+        gap: 0;
+        border-bottom: 1px solid var(--line);
+        @include bleed;
+        padding-inline: 0;
+    }
 }
 .pending-invite {
     display: flex;
@@ -111,8 +160,14 @@
     border-radius: 10px;
     background: var(--surface);
 
+    // phone: a list row to the screen's edges, not a box in a box
     @media screen and (max-width: $mobile) {
         flex-wrap: wrap;
+        gap: 8px;
+        // the list already runs to the edges (.pending-invites), the row only pads its content back in
+        padding: 10px 16px;
+        border-width: 1px 0 0;
+        border-radius: 0;
     }
 }
 .pending-invite-main {
@@ -133,20 +188,6 @@
     gap: 6px;
     flex-wrap: wrap;
 }
-.btn.btn-small {
-    padding: 5px 10px;
-    font-size: 13px;
-}
-.btn.btn-ghost {
-    background: transparent;
-    border-color: transparent;
-    color: var(--muted);
-
-    @include hover {
-        color: var(--bug);
-        background: color-mix(in srgb, var(--bug) 10%, transparent);
-    }
-}
 
 // --- Invite modal ----------------------------------------------------------
 .invite-modal {
@@ -157,18 +198,22 @@
 .invite-step {
     display: grid;
     gap: 14px;
-}
-// Hint under the textarea when some tokens didn't look like emails — the batch still goes through
-// with the valid ones, so this is a note, not an error (and not styled red).
-.invite-invalid-note {
-    margin: -8px 0 0;
-    color: var(--muted);
-    font-size: 13px;
 
-    .mono {
-        font-family: var(--font-mono);
-        color: var(--fg);
+    // «Отмена» on the left, «Отправить N писем» on the right; a phone stacks them full width, the send on top
+    .confirm-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+
+        @media screen and (max-width: $mobile) {
+            flex-direction: column-reverse;
+
+            .btn {
+                width: 100%;
+            }
+        }
     }
+
 }
 
 // Owner's untouchable row — subtle visual separation

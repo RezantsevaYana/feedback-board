@@ -9,6 +9,13 @@
     }
 }
 
+// phone: a row or a line that runs to the screen's edges — out through the container's 16px gutter,
+// the padding brings the content back in line with the rest of the page
+@mixin bleed($gutter: 16px) {
+    margin-inline: -$gutter;
+    padding-inline: $gutter;
+}
+
 // text cut to $lines lines with an ellipsis
 @mixin lineClamp($lines) {
     overflow: hidden;

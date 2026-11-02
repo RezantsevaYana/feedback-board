@@ -8,7 +8,7 @@
           <div class="incoming-invite-meta">{{ plural(b.pending_requests ?? 0) }}</div>
         </div>
         <div class="incoming-invite-actions">
-          <RouterLink :to="`/app/boards/${b.slug}/participants`" class="btn btn-primary">Рассмотреть</RouterLink>
+          <RouterLink :to="`/app/boards/${b.slug}/access#requests`" class="btn btn-sm">Рассмотреть</RouterLink>
         </div>
       </li>
     </ul>

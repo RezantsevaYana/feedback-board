@@ -25,6 +25,15 @@ class Project extends Model
     public const PIVOT_FIELDS = ['role'];
 
     /**
+     * Mirrors the DB default, so a freshly created model has visibility without a refresh.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'visibility' => 'public',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -160,6 +169,11 @@ class Project extends Model
     public function isPublished(): bool
     {
         return $this->owner_id === null || (bool) $this->owner?->hasVerifiedEmail();
+    }
+
+    public function isPrivate(): bool
+    {
+        return $this->visibility === \App\Enums\BoardVisibility::Private;
     }
 
     /**

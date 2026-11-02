@@ -1,245 +1,180 @@
 @use '../utils' as *;
 
-// BoardCard.vue — one card in the admin hub grid: name and slug with the queue badge on the right,
-// people and last activity under them, my role on the board, and for owner / admin
-// «Настройки», «Участники», «Как подключить» as compact buttons at the bottom.
+// BoardCard.vue — a board on «Мои доски». The whole card is a link to the board (a stretched link under the content);
+// the request chip, the visibility hint and «Настройки» / «Доступ» sit above it as their own targets. Hover tints the
+// card, or only the button under the pointer, so it's clear where a click goes.
 .boards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
+    // wide enough for «Перейти на доску» and both buttons on one line
+    grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+    gap: 12px;
     margin-top: 20px;
 }
 .board-card {
-    height: 100%;
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-        'top status'
-        'last last'
-        'role role'
-        'actions actions';
-    grid-template-rows: auto auto auto 1fr;
-    align-items: start;
-    gap: 6px 12px;
-    padding: 18px 20px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    color: var(--fg);
-    transition:
-        border-color 0.12s,
-        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-
-    // hover: the card lifts a little and the arrow by the name slides in
-    @include hover {
-        border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
-        transform: translateY(-2px);
-
-        .board-card-go {
-            opacity: 1;
-            transform: none;
-        }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        transition: border-color 0.12s;
-
-        @include hover {
-            transform: none;
-        }
-    }
-}
-// the name block opens the board
-.board-card-top {
-    grid-area: top;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-    color: inherit;
-    text-decoration: none;
-
-    @include hover {
-        .board-card-name {
-            color: var(--accent-ink);
-        }
-    }
-}
-.board-card-name-row {
-    display: flex;
-    align-items: center;
     gap: 6px;
-    min-width: 0;
-}
-.board-card-go {
-    flex: none;
-    color: var(--accent-ink);
-    font-weight: 600;
-    opacity: 0;
-    transform: translateX(-6px);
+    align-content: start;
+    padding: 16px 18px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
     transition:
-        opacity 0.18s ease-out,
-        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        background-color 0.15s ease-out,
+        border-color 0.15s ease-out;
 
+    // the card's own hover, unless the pointer is on one of the targets above the link
+    @include hover {
+        &:not(:has(.board-card-actions .btn:hover, .board-card-need.requests:hover, .visibility-badge:hover)) {
+            background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+            border-color: var(--control);
+
+            .board-card-arrow {
+                transform: translateX(3px);
+            }
+        }
+    }
+    &:has(.board-card-link:focus-visible) {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
     @media (prefers-reduced-motion: reduce) {
         transition: none;
     }
+    @media screen and (max-width: $mobile) {
+        padding: 14px 14px 10px;
+    }
+}
+.board-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+
+    &:focus-visible {
+        outline: none;
+    }
+}
+// everything that's its own target lifts above the stretched link
+.board-card-need.requests,
+.board-card .visibility-badge,
+.board-card-actions {
+    position: relative;
+    z-index: 2;
+}
+.board-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
 }
 .board-card-name {
-    font-size: 19px;
-    font-weight: 600;
     margin: 0;
+    min-width: 0;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
     overflow-wrap: anywhere;
 }
-.board-card-slug {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--muted);
+.board-card-needs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+    flex: none;
+    max-width: 60%;
 }
-// the queue badge and the last activity take their own grid cells
-.board-card-meta {
-    display: contents;
-}
-// quiet outline when nothing waits; filled green when there are new posts to triage
-.board-card-queue {
-    grid-area: status;
-    justify-self: end;
-    padding: 3px 10px;
-    border: 1px solid var(--line);
+.board-card-need {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    color: var(--muted);
     white-space: nowrap;
+    text-decoration: none;
 
-    // new posts: a dot that breathes slowly, so a waiting queue is noticed without shouting
-    &.pending {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border-color: var(--accent);
-        background: var(--accent);
-        color: var(--accent-fg);
+    // posts waiting in «Новое»: the selection's pale green, a dot like a live queue
+    &.fresh {
+        background: var(--active);
+        color: var(--active-fg);
 
         &::before {
             content: '';
             width: 6px;
             height: 6px;
-            border-radius: 999px;
+            border-radius: 50%;
             background: currentColor;
+        }
+    }
+    // people waiting for access: clay red on its tint, a link to «Доступ → Запросы»
+    &.requests {
+        background: color-mix(in srgb, var(--bug) 12%, var(--surface));
+        color: var(--bug);
 
-            @media (prefers-reduced-motion: no-preference) {
-                animation: board-card-breathe 2.4s ease-in-out infinite;
-            }
+        @include hover {
+            background: color-mix(in srgb, var(--bug) 20%, var(--surface));
         }
     }
 }
-@keyframes board-card-breathe {
-    0%,
-    100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.35;
-    }
-}
-.board-card-last {
-    grid-area: last;
+.board-card-calm {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 13px;
+    white-space: nowrap;
 }
-// my role here (the pill from _participants.scss)
-.board-card-role {
-    grid-area: role;
+.board-card-who {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    margin-top: 4px;
-
-    .role-chip {
-        font-size: 12px;
-        padding: 2px 8px;
-    }
+    gap: 10px;
+    margin-top: 2px;
 }
-// align-self: end pins the buttons to the card's bottom when names wrap differently
-.board-card-actions {
-    grid-area: actions;
-    align-self: end;
+.board-card-role {
+    color: var(--muted);
+    font-size: 14px;
+}
+.board-card-stats {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+.board-card-foot {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+}
+// «Перейти на доску →»: says what the card does; the arrow slides on the card's hover
+.board-card-open {
+    display: inline-flex;
+    gap: 4px;
+    white-space: nowrap;
+    color: var(--accent-ink);
+    font-size: 13px;
+    font-weight: 600;
+}
+.board-card-arrow {
+    display: inline-block;
+    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 
-    .btn {
-        font-size: 13px;
-        padding: 5px 10px;
-
-        // touch screens: full-height tap targets
-        @media (pointer: coarse) {
-            min-height: 44px;
-        }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
     }
 }
+.board-card-actions {
+    display: flex;
+    gap: 6px;
 
-// Phone: the boards become one compact list (hairlines between rows, no separate cards):
-// name and badge on the first line, slug and last activity on the second, the two actions as quiet links.
-@media screen and (max-width: $mobile) {
-    .boards-grid {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0;
-        margin-top: 12px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        overflow: hidden;
-    }
-    .board-card {
-        grid-template-areas:
-            'top status'
-            'role role'
-            'actions actions';
-        grid-template-rows: auto auto auto;
-        gap: 4px 12px;
-        padding: 12px 14px;
-        border: 0;
-        border-radius: 0;
-
-        & + & {
-            border-top: 1px solid var(--line);
-        }
-    }
-    .board-card-top {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 0 8px;
-    }
-    .board-card-name {
-        font-size: 16px;
-    }
-    // the last activity is the least needed on a phone; the badge already says whether something waits
-    .board-card-last {
-        display: none;
-    }
-    .board-card-queue {
-        align-self: center;
-        padding: 1px 8px;
-    }
-    .board-card-actions {
-        align-self: start;
-        gap: 16px;
-        margin-top: 0;
-
-        .btn {
-            min-height: 32px;
-            padding: 0;
-            border: 0;
-            background: none;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--muted);
-            text-decoration: underline;
-            text-decoration-color: var(--line);
-            text-underline-offset: 3px;
+    .btn {
+        @include hover {
+            background: var(--surface-2);
+            border-color: var(--control);
         }
     }
 }

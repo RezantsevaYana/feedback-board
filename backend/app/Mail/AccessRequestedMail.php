@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-/** To each owner / admin of a private board: someone asked for access, the decision is on the participants page. */
+/** To each owner / admin of a private board: someone asked for access, the decision is on the board's «Доступ» page. */
 class AccessRequestedMail extends Mailable
 {
     use Queueable, SerializesModels;
@@ -36,7 +36,7 @@ class AccessRequestedMail extends Mailable
                 'requesterName' => $this->accessRequest->name,
                 'requesterEmail' => $this->accessRequest->email,
                 'requestMessage' => $this->accessRequest->message,
-                'url' => $frontend.'/app/boards/'.$this->accessRequest->project->slug.'/participants',
+                'url' => $frontend.'/app/boards/'.$this->accessRequest->project->slug.'/access#requests',
             ],
         );
     }

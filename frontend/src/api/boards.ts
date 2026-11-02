@@ -34,9 +34,10 @@ export interface EmbedInfo {
   allowed_origins: string[]
   /** «#rrggbb» or null for the service's green */
   widget_color: string | null
+  visibility: BoardVisibility
 }
 
-/** public → everyone with the URL. private → only project_user members. One-way flip in V1. */
+/** public → everyone with the URL. private → only project_user members. Switches both ways. */
 export type BoardVisibility = 'public' | 'private'
 
 /** GET/PATCH /boards/{slug} — what the settings page edits. Slug is read-only after creation. */
@@ -49,6 +50,9 @@ export interface BoardSettings {
   widget_color: string | null
   /** how long a deleted board stays in the trash (feedback.trash_retention_days) */
   trash_retention_days: number
+  /** visible posts and members, for the «Доступ» warning */
+  posts_count: number
+  members_count: number
 }
 
 /** Live slug check — the create wizard calls this with debounce as the user types. */

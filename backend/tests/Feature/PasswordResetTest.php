@@ -120,6 +120,25 @@ class PasswordResetTest extends TestCase
         $this->assertTrue(Hash::check('new-secret-pass', $user->fresh()->password));
     }
 
+    public function test_the_page_learns_on_open_that_the_link_is_used(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create(['email' => 'anna@example.com']);
+        $this->postJson('/api/admin/forgot-password', ['email' => 'anna@example.com']);
+        $token = $this->letter($user)->token;
+
+        $this->postJson('/api/admin/reset-password/check', ['token' => $token, 'email' => 'anna@example.com'])->assertNoContent();
+
+        $this->fromCabinet()->postJson('/api/admin/reset-password', ['token' => $token, 'email' => 'anna@example.com', 'password' => 'new-secret-pass'])->assertOk();
+
+        $this->postJson('/api/admin/reset-password/check', ['token' => $token, 'email' => 'anna@example.com'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['token']);
+        $this->postJson('/api/admin/reset-password/check', ['token' => $token, 'email' => 'nobody@example.com'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['token']);
+    }
+
     public function test_a_stale_token_is_refused(): void
     {
         Notification::fake();

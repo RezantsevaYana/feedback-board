@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BoardVisibility;
 use App\Enums\ProjectRole;
 use App\Models\Post;
 use App\Models\Project;
@@ -55,13 +56,16 @@ class RolePermissionsTest extends TestCase
         }
     }
 
-    public function test_voting_and_posting_are_for_everyone_but_the_reader(): void
+    public function test_on_a_closed_board_voting_and_posting_are_for_everyone_but_the_reader(): void
     {
+        $this->board->update(['visibility' => BoardVisibility::Private]);
         $post = Post::factory()->for($this->board)->create();
         $category = $this->board->categories()->first() ?? $this->board->categories()->create(['name' => 'Идея']);
 
         foreach ($this->users as $role => $user) {
-            // the outsider is a visitor of this public board, like a guest
+            if ($role === 'outsider') {
+                continue; // doesn't see a closed board at all (VisibilityTest)
+            }
             $allowed = $role !== 'reader';
             // public endpoints read the user through the sanctum guard, which remembers the previous one
             $this->app['auth']->forgetGuards();
@@ -73,6 +77,21 @@ class RolePermissionsTest extends TestCase
                 ->postJson("/api/public/projects/{$this->board->slug}/posts", ['title' => "Идея от {$role}", 'description' => 'Описание идеи для проверки прав.', 'category_id' => $category->id])
                 ->assertStatus($allowed ? 201 : 403);
         }
+    }
+
+    public function test_on_an_open_board_the_reader_is_a_guest(): void
+    {
+        $post = Post::factory()->for($this->board)->create();
+        $category = $this->board->categories()->first() ?? $this->board->categories()->create(['name' => 'Идея']);
+        $this->app['auth']->forgetGuards();
+
+        // anyone by the link votes and posts there, so a reader signed in may too
+        $this->actingAs($this->users['reader'])
+            ->postJson("/api/public/posts/{$post->id}/vote", ['value' => 'like'])
+            ->assertOk();
+        $this->actingAs($this->users['reader'])
+            ->postJson("/api/public/projects/{$this->board->slug}/posts", ['title' => 'Идея читателя', 'description' => 'Описание идеи для проверки прав.', 'category_id' => $category->id])
+            ->assertCreated();
     }
 
     public function test_configure_is_for_owner_admin(): void

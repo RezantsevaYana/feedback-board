@@ -12,6 +12,11 @@
       </p>
     </section>
 
+    <section v-else-if="checking" class="auth-form" aria-busy="true">
+      <h1>Новый пароль</h1>
+      <p class="auth-intro">Проверяем ссылку…</p>
+    </section>
+
     <form v-else class="auth-form" novalidate @submit.prevent="submit">
       <h1>Новый пароль</h1>
       <p class="auth-intro">
@@ -36,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
 import { helpers, minLength, required } from '@vuelidate/validators'
@@ -60,6 +65,22 @@ const sending = ref(false)
 const passwordServer = ref('')
 // a stale, used or cut-off link: the message to show instead of the form
 const expired = ref(email ? '' : 'В ссылке не хватает адреса почты. Запросите новое письмо.')
+// a used link says so on open, not after the new password is typed
+const checking = ref(!!email)
+
+onMounted(async () => {
+  if (!checking.value) return
+  try {
+    await auth.checkResetToken(token, email)
+  } catch (e) {
+    // a network hiccup keeps the form: submit() will tell if the link is really stale
+    if (e instanceof ApiError && (e.field('token') || e.field('email'))) {
+      expired.value = e.field('token') ?? e.field('email') ?? ''
+    }
+  } finally {
+    checking.value = false
+  }
+})
 
 const rules = {
   password: {

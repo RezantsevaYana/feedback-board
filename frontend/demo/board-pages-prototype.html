@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Страницы доски — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --active-fg: #063f2c;
+            --active-line: #1d8547;
+            --line: #d8e1db;
+            --control: #a9bcb0;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --accent-ink: #1b7f41;
+            --accent-fg: #ffffff;
+            --bug: #b0423a;
+            --page: #f3f6f4;
+            --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body {
+            margin: 0;
+            background: var(--page);
+            color: var(--fg);
+            font-family: var(--font-body);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 760px; margin: 0 0 28px; }
+        .doc h2 { font-size: 20px; margin: 56px 0 8px; }
+        .doc h2 + p { color: var(--muted); max-width: 760px; margin: 0 0 18px; }
+
+        /* controls above the mock */
+        .controls { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; margin-bottom: 16px; position: sticky; top: 0; z-index: 5; padding: 12px 0; background: var(--page); }
+        .controls .group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+        .seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .seg button { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .seg button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+
+        /* the app mock */
+        .stage { display: flex; justify-content: center; }
+        .app { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; transition: width 0.2s; }
+        .app.phone { width: 390px; }
+        .hdr { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 16px 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; }
+        .hdr-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .brand { font-family: var(--font-display); font-weight: 600; font-size: 16px; white-space: nowrap; }
+        .brand-tag { display: none; padding: 4px 9px 4px 13px; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 12px; font-weight: 600; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%); }
+        .sep { color: var(--line); font-size: 18px; }
+        .switcher, .acct { font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .switcher::after, .acct::after { content: ' ⌄'; color: var(--muted); }
+        .hdr-right { display: flex; align-items: center; gap: 10px; }
+        .burger { display: none; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; place-items: center; }
+        .app.phone .brand, .app.phone .sep { display: none; }
+        .app.phone .brand-tag, .app.phone .burger { display: inline-grid; }
+        .app.phone .acct { font-size: 0; }
+        .app.phone .acct::before { content: 'ТМ'; font-size: 12px; font-weight: 600; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); }
+
+        .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 28px; padding: 20px 16px 28px; min-height: 640px; }
+        .app.phone .layout { grid-template-columns: 1fr; gap: 0; padding: 16px; }
+        .side { display: flex; flex-direction: column; gap: 10px; }
+        .app.phone .side { display: none; }
+        .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; color: var(--muted); font-weight: 500; font-size: 14px; cursor: pointer; }
+        .nav-item:hover { background: var(--surface-2); color: var(--fg); }
+        .nav-item.on { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+        .side-board { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 4px; }
+        .side-board-name { font-weight: 600; padding: 0 10px 4px; display: flex; align-items: center; gap: 8px; }
+        /* nested sections fold out smoothly: rows 0fr → 1fr, the inner list clips while it grows */
+        .sub-wrap { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease; }
+        .sub-wrap.open { grid-template-rows: 1fr; opacity: 1; }
+        .sub-wrap > .sub { overflow: hidden; min-height: 0; }
+        @media (prefers-reduced-motion: reduce) { .sub-wrap { transition: none; } }
+        .sub { margin: 0 0 0 18px; padding-left: 8px; border-left: 1px solid var(--line); display: grid; gap: 1px; }
+        .sub-wrap.open > .sub { margin-bottom: 6px; }
+        .sub span { font-size: 13px; color: var(--muted); padding: 4px 8px; }
+        .side-foot { margin-top: auto; border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; justify-items: start; }
+        .out { color: var(--bug); font-size: 13px; font-weight: 500; padding: 0 10px; }
+        .theme { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); }
+
+        .main { border-left: 1px solid var(--line); padding-left: 28px; display: grid; gap: 14px; align-content: start; }
+        .app.phone .main { border-left: 0; padding-left: 0; }
+        .main > * { max-width: 660px; }
+        .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+        .head h3 { font-size: 26px; margin: 0; letter-spacing: -0.015em; }
+        .app.phone .head h3 { font-size: 24px; }
+        .actions { display: flex; gap: 8px; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 14px; font-weight: 500; color: var(--fg); white-space: nowrap; }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+        .btn.danger { background: var(--bug); border-color: var(--bug); color: #fff; font-weight: 600; }
+        .btn.quiet { opacity: 0.55; }
+        .card { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 10px; background: #fff; }
+        .app.phone .card { border: 0; border-radius: 0; padding: 14px 0; border-top: 1px solid var(--line); }
+        .card h4 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .note { margin: 0; color: var(--muted); font-size: 13px; }
+        .field { display: grid; gap: 4px; font-size: 13px; font-weight: 500; }
+        .input { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; font-weight: 400; color: var(--fg); background: #fff; }
+        .input.ro { background: var(--surface-2); color: var(--muted); font-family: var(--font-mono); }
+        .code { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-family: var(--font-mono); font-size: 12.5px; overflow-wrap: anywhere; }
+        .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .between { justify-content: space-between; }
+        .chip { font-size: 12px; font-weight: 500; padding: 1px 8px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
+        .chip.green { background: var(--active); color: var(--active-fg); }
+        .badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; }
+        .tag { font-size: 12px; font-weight: 600; padding: 2px 10px 2px 12px; border-radius: 4px 10px 10px 4px; background: #f3cfc8; }
+        .tag.b { background: #c9dde6; }
+        .list { display: grid; }
+        .list > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+        .list > div:last-child { border-bottom: 0; }
+        .person b { display: block; font-weight: 500; }
+        .person small { color: var(--muted); }
+        .danger-zone { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--line); }
+
+        /* the mode choice as two radio cards: the decision of the page, at the top */
+        .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .app.phone .modes { grid-template-columns: 1fr; }
+        .mode { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; cursor: pointer; }
+        .mode b { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .mode b::before { content: ''; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--control); flex: none; }
+        .mode small { color: var(--muted); font-size: 13px; }
+        .mode.on { border-color: var(--active-line); background: color-mix(in srgb, var(--active) 45%, #fff); }
+        .mode.on b::before { border: 4px solid var(--accent); }
+        .off-note { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); font-size: 13px; color: var(--muted); }
+        .off-note b { color: var(--fg); font-weight: 600; }
+
+        /* explanation parts */
+        .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+        .rule { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+        .rule h3 { margin: 0 0 8px; font-size: 16px; }
+        .rule ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+        table.matrix { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
+        .matrix th, .matrix td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+        .matrix th { color: var(--muted); font-weight: 500; font-size: 13px; background: var(--surface-2); }
+        .matrix tr:last-child td { border-bottom: 0; }
+        .yes { color: var(--accent-ink); font-weight: 600; }
+        .no { color: var(--muted); }
+        .q { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; }
+        .q h3 { margin: 0 0 6px; font-size: 16px; }
+        .q p { margin: 0 0 8px; font-size: 14px; }
+        .q ol { margin: 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; }
+        .rec { color: var(--accent-ink); font-weight: 600; }
+        /* access requests: the person, then the two answers; on a phone always stacked, compact buttons in one row */
+        /* «+ Добавить …»: one look for every add action — green ink and a green edge, no fill,
+           so it reads as «add here» without competing with the page's one filled button */
+        .btn.add { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); font-weight: 600; }
+        .btn.add:hover { background: var(--active); color: var(--active-fg); }
+        .btn.sm { padding: 5px 12px; font-size: 13px; }
+        .btn.reject { color: var(--bug); border-color: color-mix(in srgb, var(--bug) 40%, var(--line)); }
+        .requests { display: grid; }
+        .request { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .request:first-child { padding-top: 4px; }
+        /* the card's own padding closes the block: no row padding stacked on top of it */
+        .request:last-child { border-bottom: 0; padding-bottom: 0; }
+        .request .person { min-width: 0; font-size: 14px; }
+        .request-actions { display: flex; gap: 6px; flex: none; }
+        .app.phone .request { flex-direction: column; align-items: stretch; gap: 8px; }
+        .app.phone .request-actions { justify-content: flex-start; }
+        .app.phone .request-actions .btn { flex: 1 1 0; justify-content: center; }
+        /* widget colour: the same preview as on the live «Подключение» page */
+        .wc { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: 'field field field' 'preview preview preview' '. reset save'; gap: 12px 8px; align-items: center; max-width: 360px; }
+        .wc .field { grid-area: field; }
+        .wc input.input { font-family: var(--font-mono); }
+        .wc-preview { grid-area: preview; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px; border-radius: var(--radius); background: var(--surface-2); }
+        .wc-launcher { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px 9px 20px; background: var(--w); color: #fff; font-size: 14px; font-weight: 600; clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%); box-shadow: 0 4px 14px rgba(16, 37, 40, 0.18); }
+        .wc-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--w); background: color-mix(in srgb, var(--w) 22%, #fff); color: color-mix(in srgb, var(--w) 70%, #000); font-size: 13px; font-weight: 500; }
+        .wc-link { color: var(--w); font-size: 13px; font-weight: 600; }
+        .wc-reset { grid-area: reset; font-size: 13px; color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); }
+        .wc-save { grid-area: save; }
+        /* what a guest sees in the widget of a closed board */
+        .guest-widget { display: grid; gap: 2px; justify-self: start; max-width: 340px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
+        .guest-widget small { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+        .guest-widget b { font-size: 14px; }
+        .guest-widget p { margin: 0; font-size: 13px; color: var(--muted); }
+        .solved { color: var(--accent-ink); font-weight: 600; }
+        .mark { outline: 2px dashed var(--accent); outline-offset: 3px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Страницы доски в кабинете</h1>
+    <p class="lede">
+        Сейчас настройки доски разложены по трём экранам («Настройки», «Участники и доступ», «Подключение»), и одно
+        решение («открытая или закрытая») влияет на всё сразу. Предлагаю систему из двух страниц:
+        <b>«Настройки»</b> отвечают на вопрос «что это за доска», <b>«Доступ»</b> — «кто её видит и как туда попадают».
+        Что показано на «Доступе», зависит от режима доски. Переключайте режим и страницу сверху.
+    </p>
+
+    <div class="controls">
+        <div class="group">Доска
+            <span class="seg" data-ctl="mode">
+                <button aria-pressed="true" data-v="public">Открытая</button>
+                <button aria-pressed="false" data-v="private">Закрытая</button>
+            </span>
+        </div>
+        <div class="group">Страница
+            <span class="seg" data-ctl="page">
+                <button aria-pressed="false" data-v="settings">Настройки</button>
+                <button aria-pressed="true" data-v="access">Доступ</button>
+            </span>
+        </div>
+        <div class="group">Экран
+            <span class="seg" data-ctl="device">
+                <button aria-pressed="true" data-v="desktop">Десктоп</button>
+                <button aria-pressed="false" data-v="phone">Телефон</button>
+            </span>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="app" id="app">
+            <div class="hdr">
+                <div class="hdr-left">
+                    <span class="brand">Feedback Board</span><span class="brand-tag">FB</span>
+                    <span class="sep">/</span>
+                    <span class="switcher">Demo</span>
+                </div>
+                <div class="hdr-right">
+                    <span class="acct">Тест Менеджер</span>
+                    <span class="burger">≡</span>
+                </div>
+            </div>
+            <div class="layout">
+                <aside class="side">
+                    <div class="nav-item">Мои доски</div>
+                    <div class="side-board">
+                        <div class="side-board-name">Demo <span class="chip" id="side-mode">открытая</span></div>
+                        <div class="nav-item" data-go="settings">Настройки</div>
+                        <div class="sub-wrap" id="side-sub-settings"><div class="sub"><span>Общее</span><span>Категории</span><span>Столбцы</span></div></div>
+                        <div class="nav-item" data-go="access">Доступ <span class="badge" id="side-badge" hidden>2</span></div>
+                        <div class="sub-wrap" id="side-sub-access"><div class="sub"></div></div>
+                    </div>
+                    <div class="side-foot">
+                        <span class="out">Выйти</span>
+                        <span class="theme">◐ авто</span>
+                    </div>
+                </aside>
+                <div class="main" id="main"></div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Правила системы</h2>
+    <p>Одно правило на всё: «Настройки» не зависят от режима, «Доступ» показывает только то, что работает в текущем режиме. Ничего не надо искать на другом экране.</p>
+    <div class="rules">
+        <div class="rule">
+            <h3>Настройки · что это за доска</h3>
+            <ul>
+                <li>Общее: название, адрес.</li>
+                <li>Категории и столбцы.</li>
+                <li>Удаление доски — внизу, отдельно от разделов.</li>
+                <li>Одинаковые для открытой и закрытой доски.</li>
+            </ul>
+        </div>
+        <div class="rule">
+            <h3>Доступ · открытая доска</h3>
+            <ul>
+                <li>Сверху выбор режима.</li>
+                <li>Ссылка на доску.</li>
+                <li>Виджет на сайте: код, <b>домены</b>, цвет — одним блоком, домены нужны только виджету.</li>
+                <li>Приглашений и списка участников нет: гостю приглашение не нужно.</li>
+            </ul>
+        </div>
+        <div class="rule">
+            <h3>Доступ · закрытая доска</h3>
+            <ul>
+                <li>Сверху выбор режима.</li>
+                <li>Ссылка: откроют только участники, остальные увидят «Запросить доступ».</li>
+                <li>Запросы на доступ, участники, приглашения.</li>
+                <li>Виджета нет — на его месте одна строка: «работает только у открытой доски».</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Что где показывается</h2>
+    <table class="matrix">
+        <thead><tr><th></th><th>Открытая доска</th><th>Закрытая доска</th></tr></thead>
+        <tbody>
+            <tr><td>Режим (открытая / закрытая)</td><td class="yes">Доступ, сверху</td><td class="yes">Доступ, сверху</td></tr>
+            <tr><td>Ссылка на доску</td><td class="yes">Доступ</td><td class="yes">Доступ</td></tr>
+            <tr><td>Виджет: код, домены, цвет</td><td class="yes">Доступ</td><td class="no">нет, строка-пояснение</td></tr>
+            <tr><td>Участники, приглашения</td><td class="no">нет (см. вопрос 1)</td><td class="yes">Доступ</td></tr>
+            <tr><td>Запросы на доступ</td><td class="no">нет</td><td class="yes">Доступ, перед участниками</td></tr>
+            <tr><td>Общее, категории, столбцы, удаление</td><td class="yes">Настройки</td><td class="yes">Настройки</td></tr>
+            <tr><td>Карточка в «Моих досках»</td><td>Настройки · Доступ</td><td>Настройки · Доступ <span class="badge">2</span></td></tr>
+            <tr><td>Меню владельца на самой доске</td><td>Категории · Столбцы · Настройки · Доступ</td><td>то же, счётчик запросов у «Доступ»</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Решения</h2>
+    <p>Приняты 02.11.2026: по каждому вопросу — помеченный вариант.</p>
+    <div class="q">
+        <h3>1. Команда на открытой доске</h3>
+        <p>Если на открытой доске нет приглашений, нельзя дать роль менеджера или админа — разбирать посты и настраивать доску будет только владелец. Сейчас на Demo, например, есть менеджер.</p>
+        <ol>
+            <li><span class="rec">Мой вариант:</span> на открытой доске вместо «Участников» блок «Команда» — только админы и менеджеры, кнопка «Добавить в команду» (роль только Админ или Менеджер). «Участник» и «Читатель» на открытой доске не существуют.</li>
+            <li>Совсем без команды на открытой доске: нужен менеджер — сначала закрыть доску.</li>
+            <li><span class="solved">Решено:</span> вариант 1.</li>
+        </ol>
+    </div>
+    <div class="q">
+        <h3>2. Что происходит с участниками при открытии доски</h3>
+        <p>У закрытой доски есть «Участники» и «Читатели». После открытия они становятся не нужны.</p>
+        <ol>
+            <li><span class="rec">Мой вариант:</span> записи остаются (вдруг доску снова закроют), но на открытой доске не показываются и прав не дают; админы и менеджеры остаются в «Команде». Ожидающие приглашения с ролью Участник/Читатель отменяются, в предупреждении об открытии это написано.</li>
+            <li>Удалять всех, кроме команды, при открытии.</li>
+            <li><span class="solved">Решено:</span> вариант 1.</li>
+        </ol>
+    </div>
+    <div class="q">
+        <h3>3. Виджет, уже стоящий на сайтах, при закрытии</h3>
+        <p>Код на чужих сайтах мы убрать не можем. Сейчас виджет закрытой доски показывает «Это закрытая доска».</p>
+        <ol>
+            <li><span class="rec">Мой вариант:</span> так и оставить, а в предупреждении о закрытии писать «виджет на сайтах перестанет принимать предложения, код лучше убрать».</li>
+            <li>Виджет закрытой доски не показывается совсем (кнопка пропадает с сайта).</li>
+            <li><span class="solved">Решено:</span> вариант 1, и в самом виджете при открытии текст «Доска закрыта…» (см. «Доступ» закрытой доски).</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+const state = { mode: 'public', page: 'access', device: 'desktop', color: '#1d8547' }
+const app = document.getElementById('app')
+const main = document.getElementById('main')
+
+const settings = () => `
+    <div class="head"><h3>Настройки</h3>
+        <div class="actions"><span class="btn">⧉ Скопировать ссылку</span><span class="btn primary">Открыть доску</span></div></div>
+    <div class="card"><h4>Общее</h4>
+        <label class="field">Название доски<span class="input">Demo</span></label>
+        <label class="field">Адрес доски · не меняется<span class="input ro">demo</span></label>
+        <div class="row between"><span></span><span class="btn primary quiet">Сохранить</span></div></div>
+    <div class="card"><h4>Категории</h4>
+        <div class="list"><div><span class="tag">Баг</span><span class="note">Переименовать · Удалить</span></div><div><span class="tag b">Идея</span><span class="note">Переименовать · Удалить</span></div></div></div>
+    <div class="card"><h4>Столбцы</h4>
+        <div class="list"><div><span class="chip">Новое</span><span class="note">Переименовать</span></div><div><span class="chip green">Готово</span><span class="note">Переименовать</span></div><div><span class="chip">Отклонено</span><span class="note">Переименовать</span></div></div></div>
+    <div class="danger-zone"><p class="note">Доска уйдёт в корзину, её можно будет восстановить.</p><span class="btn danger">Удалить доску</span></div>`
+
+const modeCards = () => `
+    <div class="card"><h4>Кто видит доску</h4>
+        <div class="modes">
+            <div class="mode ${state.mode === 'public' ? 'on' : ''}" data-mode="public"><b>Открытая</b><small>Любой по ссылке читает, голосует и предлагает. Можно поставить виджет на сайт.</small></div>
+            <div class="mode ${state.mode === 'private' ? 'on' : ''}" data-mode="private"><b>Закрытая</b><small>Только участники. Остальные могут запросить доступ. Виджета нет.</small></div>
+        </div>
+        <p class="note">Режим меняется в обе стороны; перед сменой покажем, что изменится, и спросим подтверждение.</p></div>`
+
+const link = () => `
+    <div class="card"><h4>Ссылка на доску</h4>
+        <p class="note">${state.mode === 'public' ? 'Откроет любой. Поделитесь ею в чате или письме.' : 'Откроют участники; остальные увидят экран «Запросить доступ».'}</p>
+        <div class="code">http://localhost:5176/demo</div>
+        <div class="row"><span class="btn">⧉ Скопировать ссылку</span></div></div>`
+
+const widget = () => state.mode === 'public' ? `
+    <div class="card"><h4>Виджет на сайте</h4>
+        <p class="note">Кнопка «Обратная связь» на сайте продукта. Вставьте тег перед <code>&lt;/body&gt;</code>.</p>
+        <div class="code">&lt;script src="http://localhost:5176/widget.js" data-project="demo" defer&gt;&lt;/script&gt;</div>
+        <div class="row"><span class="btn">⧉ Скопировать код</span></div>
+        <label class="field">Домены · сайты, где стоит виджет<span class="input">https://app.example.com</span></label>
+        <div class="row"><span class="btn add">+ Добавить домен</span></div></div>
+    <div class="card"><h4>Цвет виджета</h4>
+        <p class="note">Основной цвет кнопки и акцентов в форме. Меняется сразу на всех сайтах, код вставлять заново не нужно.</p>
+        <div class="wc" style="--w: ${state.color}">
+            <label class="field">HEX-код · например #1d8547<input class="input" id="hex" value="${state.color}" maxlength="7"></label>
+            <div class="wc-preview"><span class="wc-launcher"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h18v12H10l-5 4v-4H3z"/></svg>Обратная связь</span><span class="wc-chip">Идея</span><span class="wc-link">Доска ↗</span></div>
+            <span class="wc-reset" data-reset>Вернуть стандартный</span>
+            <span class="btn primary wc-save ${state.color === '#1d8547' ? 'quiet' : ''}">Сохранить</span>
+        </div></div>`
+    : `<div class="card"><h4>Виджет на сайте</h4>
+        <div class="off-note"><span>◌</span><span><b>Виджет недоступен.</b> Он работает только у открытой доски. Если виджет уже стоит на сайте, код лучше убрать.</span></div>
+        <div class="guest-widget">
+            <small>Что увидит гость в виджете</small>
+            <b>Доска закрыта</b>
+            <p>Предложения здесь больше не принимаются. Участники могут открыть доску по ссылке.</p>
+        </div></div></div>`
+
+const team = () => `
+    <div class="card"><div class="row between"><h4>Команда</h4><span class="btn add">+ Добавить в команду</span></div>
+        <p class="note">Те, кто разбирает посты и настраивает доску. Гостям приглашение не нужно.</p>
+        <div class="list">
+            <div><span class="person"><b>Тест Менеджер · вы</b><small>flow-manager@example.com</small></span><span class="chip green">Владелец</span></div>
+            <div><span class="person"><b>Анна Петрова</b><small>anna@example.com</small></span><span class="chip">Менеджер ⌄</span></div>
+        </div></div>`
+
+const people = () => `
+    <div class="card"><h4>Запросы на доступ <span class="badge">2</span></h4>
+        <div class="requests">
+            <div class="request"><span class="person"><b>Клиент Иванов</b><small>client@othercorp.com · «нужен доступ к нашим багам»</small></span><span class="request-actions"><span class="btn sm reject">Отклонить</span><span class="btn sm primary">Одобрить</span></span></div>
+            <div class="request"><span class="person"><b>Ольга</b><small>olga@acme.com</small></span><span class="request-actions"><span class="btn sm reject">Отклонить</span><span class="btn sm primary">Одобрить</span></span></div>
+        </div></div>
+    <div class="card"><div class="row between"><h4>Участники</h4><span class="btn add">+ Пригласить</span></div>
+        <p class="note">Доску видят только люди из этого списка.</p>
+        <div class="list">
+            <div><span class="person"><b>Тест Менеджер · вы</b><small>flow-manager@example.com</small></span><span class="chip green">Владелец</span></div>
+            <div><span class="person"><b>Анна Петрова</b><small>anna@example.com</small></span><span class="chip">Менеджер ⌄</span></div>
+            <div><span class="person"><b>Клиент Сидоров</b><small>sidorov@othercorp.com</small></span><span class="chip">Участник ⌄</span></div>
+        </div>
+        <p class="note">Ждут приглашения: boris@acme.com · Участник · приглашение действует до 9 нояб.</p></div>`
+
+const access = () => `
+    <div class="head"><h3>Доступ</h3>
+        <div class="actions"><span class="btn primary">Открыть доску</span></div></div>
+    ${modeCards()}${link()}${state.mode === 'public' ? widget() + team() : people() + widget()}`
+
+function render() {
+    app.classList.toggle('phone', state.device === 'phone')
+    main.innerHTML = state.page === 'settings' ? settings() : access()
+    document.querySelectorAll('[data-go]').forEach((el) => el.classList.toggle('on', el.dataset.go === state.page))
+    document.getElementById('side-sub-settings').classList.toggle('open', state.page === 'settings')
+    const wrap = document.getElementById('side-sub-access')
+    wrap.classList.toggle('open', state.page === 'access')
+    wrap.firstElementChild.innerHTML = state.mode === 'public'
+        ? '<span>Режим</span><span>Ссылка</span><span>Виджет</span><span>Команда</span>'
+        : '<span>Режим</span><span>Ссылка</span><span>Запросы</span><span>Участники</span>'
+    document.getElementById('side-mode').textContent = state.mode === 'public' ? 'открытая' : 'закрытая'
+    document.getElementById('side-badge').hidden = state.mode !== 'private'
+    document.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(state[seg.dataset.ctl] === b.dataset.v))))
+}
+document.addEventListener('click', (e) => {
+    const b = e.target.closest('.seg button')
+    if (b) { state[b.closest('.seg').dataset.ctl] = b.dataset.v; render() }
+    const go = e.target.closest('[data-go]')
+    if (go) { state.page = go.dataset.go; render() }
+    const m = e.target.closest('[data-mode]')
+    if (m) { state.mode = m.dataset.mode; render() }
+    if (e.target.closest('[data-reset]')) { state.color = '#1d8547'; render() }
+})
+// the preview follows the field as you type; a valid hex is kept for the next render
+document.addEventListener('input', (e) => {
+    if (e.target.id !== 'hex') return
+    let v = e.target.value.trim()
+    if (!v.startsWith('#')) v = '#' + v
+    if (/^#[0-9a-f]{6}$/i.test(v)) {
+        state.color = v.toLowerCase()
+        e.target.closest('.wc').style.setProperty('--w', state.color)
+        e.target.closest('.wc').querySelector('.wc-save').classList.toggle('quiet', state.color === '#1d8547')
+    }
+})
+render()
+</script>
+</body>
+</html>

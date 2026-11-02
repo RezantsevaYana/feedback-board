@@ -21,6 +21,8 @@ class AdminPostResource extends PostResource
             ...parent::toArray($request),
             'priority' => $this->priority,
             'is_hidden' => $this->is_hidden,
+            // the latest voters for the card's faces (VoterPreview); empty when nobody voted
+            'voters_preview' => $request->attributes->get('voters_preview', [])[$this->id] ?? [],
         ];
     }
 

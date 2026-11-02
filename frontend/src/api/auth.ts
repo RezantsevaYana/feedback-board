@@ -41,6 +41,11 @@ export const AuthApi = {
     return request<Item<Me>>(`${BASE_URL}/reset-password`, { method: 'POST', body: { token, email, password } })
   },
 
+  // the reset page on open: 204 if the link still works, 422 (token) if it's used or stale
+  checkResetToken(token: string, email: string) {
+    return request<void>(`${BASE_URL}/reset-password/check`, { method: 'POST', body: { token, email } })
+  },
+
   // «Настройки аккаунта» → «Профиль»: the name; returns /me with it
   updateProfile(name: string) {
     return request<Item<Me>>(`${BASE_URL}/me`, { method: 'PATCH', body: { name } })

@@ -195,7 +195,7 @@ class InvitationController extends Controller
             }
             if ($errors) {
                 return response()->json([
-                    'message' => isset($errors['name']) ? 'Укажите, как к вам обращаться.' : 'Придумайте пароль.',
+                    'message' => isset($errors['name']) ? 'Впишите ваше имя.' : 'Придумайте пароль.',
                     'errors' => $errors,
                 ], 422);
             }

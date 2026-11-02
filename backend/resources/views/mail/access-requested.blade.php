@@ -2,7 +2,7 @@
 <x-mail::message preheader="{{ $requesterName }} просит доступ. Решение — на странице участников.">
 # Запрос доступа к доске «{{ $boardName }}»
 
-**{{ $requesterName }}** ({{ $requesterEmail }}) открыл(а) ссылку на закрытую доску и просит доступ.
+**{{ $requesterName }}** ({{ $requesterEmail }}) просит доступ к доске.
 
 @if ($requestMessage)
 <x-mail::panel>

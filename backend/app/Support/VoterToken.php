@@ -36,18 +36,22 @@ class VoterToken
     }
 
     /**
-     * Remember how the current browser voted on these posts (post id => +1/-1), so resources can output my_vote.
+     * Remember how the current voter voted on these posts (post id => +1/-1), so resources can output my_vote.
+     * Same identity as VoteController: the account when signed in (a vote from another device counts),
+     * the browser token otherwise.
      *
      * @param  Collection<int, Post>  $posts
      */
     public static function markVoted(Request $request, Collection $posts): void
     {
+        $userId = $request->user('sanctum')?->id;
         $token = self::from($request);
-        if ($token === null || $posts->isEmpty()) {
+        if (($userId === null && $token === null) || $posts->isEmpty()) {
             return;
         }
 
-        $votes = Vote::where('voter_token', $token)
+        $votes = Vote::query()
+            ->when($userId !== null, fn ($q) => $q->where('user_id', $userId), fn ($q) => $q->where('voter_token', $token))
             ->whereIn('post_id', $posts->pluck('id'))
             ->pluck('value', 'post_id')
             ->all();

@@ -95,37 +95,25 @@
           </MenuComponent>
         </div>
         <!-- hover rolls the label up to a question; screen readers always hear «Предложить» -->
-        <!-- a reader only reads: no «Предложить» (the API refuses it too) -->
-        <button v-if="board.role !== 'reader'" type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
+        <!-- a reader on a closed board only reads: no «Предложить» (the API refuses it too) -->
+        <button v-if="!board.readOnly" type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
           <span class="cta-roll" aria-hidden="true"><span>Предложить</span><span>Есть идея?</span></span>
         </button>
-        <!-- three groups: who is logged in, this board's tools, and the way out (cabinet / logout).
-             Shown for every signed-in user — triagers get the triage chip + tools, voters / readers
-             get a role chip without tools, so no one sees "Вход для команды" after signing in. -->
-        <div v-if="board.me" class="team-box">
-          <div class="team-box-who">
-            <span class="chip">{{ board.team ? 'режим команды' : whoChip }}</span>
-            <span class="who-mail" :title="board.me?.email">{{ board.me?.email }}</span>
-            <RouterLink to="/app/account" class="link-btn">Настройки аккаунта</RouterLink>
-          </div>
-          <!-- managers triage only; categories, columns and settings are for owner / admin -->
-          <div v-if="board.configure" class="team-box-tools">
-            <button type="button" class="link-btn" @click="editingCategories = true">Категории</button>
-            <button type="button" class="link-btn" @click="editingStatuses = true">Столбцы</button>
-            <RouterLink :to="settingsLink" class="link-btn">Настройки доски</RouterLink>
-            <RouterLink :to="`/app/boards/${slug}/participants`" class="link-btn">
-              Участники<span v-if="pendingRequests" class="count-badge" :aria-label="`запросов на доступ: ${pendingRequests}`">{{ pendingRequests }}</span>
-            </RouterLink>
-          </div>
-          <div class="team-box-foot">
-            <RouterLink to="/app/boards" class="link-btn team-box-back">← Мои доски</RouterLink>
-            <button type="button" class="link-btn link-btn-danger" @click="askLogout">Выйти</button>
-          </div>
-        </div>
-        <button v-else type="button" class="link-btn team-login" @click="loggingIn = true">Вход для команды</button>
-        <ThemeToggle />
-        <!-- tablet and phone: the box folds into one menu next to the theme switch -->
-        <MenuComponent v-if="board.me" :items="teamItems" class="team-menu" :title="board.me?.email" aria-label="Меню аккаунта">{{ board.team ? 'Команда' : 'Аккаунт' }}</MenuComponent>
+        <!-- signed in: the board's tools (owner / admin) and the same account block as in the cabinet's menu,
+             so «Мои доски», «Настройки аккаунта» and «Выйти» are always in sight. Tablet and phone: both go
+             into the panel behind «Меню» -->
+        <template v-if="board.me">
+          <BoardTools v-if="board.configure" :slug="slug" :pending="pendingRequests" class="board-tools-side" @categories="editingCategories = true" @statuses="editingStatuses = true" />
+          <SidebarAccount :name="board.me.name" :email="board.me.email" :chip="whoChip" show-boards class="board-account" />
+        </template>
+        <button v-else type="button" class="link-btn team-login" aria-label="Вход для команды" @click="loggingIn = true">
+          <span class="team-login-full" aria-hidden="true">Вход для команды</span><span class="team-login-short" aria-hidden="true">Войти</span>
+        </button>
+        <!-- signed in, on tablet and phone the theme moves into the drawer, so the top row fits -->
+        <ThemeToggle :class="{ 'board-theme-side': board.me }" />
+        <button v-if="board.me" type="button" class="btn team-menu-btn" aria-label="Меню" :aria-expanded="menuOpen" @click="menuOpen = true">
+          <BurgerIcon /><span class="team-menu-label">Меню</span>
+        </button>
       </nav>
 
       <div class="board-main">
@@ -195,6 +183,16 @@
     </div>
 
     <PostModal v-if="board.project && postId" :id="postId" @close="closePost" />
+    <!-- tablet and phone: the board's tools and the account, behind «Меню» -->
+    <NavDrawer v-if="menuOpen && board.me" ref="drawer" label="Меню доски" anchor=".team-menu-btn" @close="onMenuClosed">
+      <div class="board-drawer">
+        <p class="board-drawer-title">{{ board.project?.name }}</p>
+        <BoardTools v-if="board.configure" :slug="slug" :pending="pendingRequests" @categories="openFromMenu('categories')" @statuses="openFromMenu('statuses')" />
+        <SidebarAccount :name="board.me.name" :email="board.me.email" :chip="whoChip" show-boards>
+          <template #after-out><ThemeToggle /></template>
+        </SidebarAccount>
+      </div>
+    </NavDrawer>
     <SubmitModal v-if="composing && board.project" :project="board.project.slug" :categories="board.categories" :title="composeTitle" :author="board.me ? { name: board.me.name } : null" :hide-author-field="board.project.visibility === 'private'" @close="closeCompose" @sent="onSent" />
     <VotersModal />
     <LoginModal v-if="loggingIn" @close="loggingIn = false" />
@@ -210,7 +208,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/api/types'
 import { ROLE_LABELS } from '@/api/types'
-import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
@@ -232,7 +229,11 @@ import PostModal from './components/PostModal.vue'
 import StatusesModal from './components/StatusesModal.vue'
 import SubmitModal from './components/SubmitModal.vue'
 import VotersModal from './components/VotersModal.vue'
+import BurgerIcon from '@/shared/ui/BurgerIcon.vue'
+import NavDrawer from '@/shared/ui/NavDrawer.vue'
+import SidebarAccount from '@/shared/components/SidebarAccount.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
+import BoardTools from './components/BoardTools.vue'
 import TopPosts from './components/TopPosts.vue'
 import WeeklyWinners from './components/WeeklyWinners.vue'
 import WeeklyWinnersModal from './components/WeeklyWinnersModal.vue'
@@ -242,7 +243,6 @@ const route = useRoute()
 const router = useRouter()
 const board = useBoardStore()
 const notification = useNotificationStore()
-const confirm = useConfirmStore()
 
 const slug = computed(() => String(route.params.slug ?? ''))
 const postId = computed(() => (route.params.id ? Number(route.params.id) : null))
@@ -253,7 +253,7 @@ const editingStatuses = ref(false)
 // «Предложить», optionally starting from what was searched for and not found
 const composeTitle = ref('')
 function compose(title = '') {
-  if (board.role === 'reader') return
+  if (board.readOnly) return
   composeTitle.value = title
   composing.value = true
 }
@@ -294,27 +294,24 @@ const activeFilters = computed(
 )
 // team mode: every board this user is on is one click away; owner / admin also get the board's settings
 const switchBoards = computed(() => (board.team ? (board.me?.projects ?? []) : []))
-const settingsLink = computed(() => `/app/boards/${slug.value}/settings`)
 // access requests waiting on this board (owner / admin only; /me sends 0 to everyone else)
 const pendingRequests = computed(() => board.me?.projects.find((p) => p.slug === slug.value)?.pending_requests ?? 0)
-// voter / reader (and anyone signed in but not on this board): show their role instead of «режим команды»
+// the role on this board under the name in the account block; «вы вошли» for someone signed in but not on it
 const whoChip = computed(() => (board.role ? `роль ${ROLE_LABELS[board.role].toLowerCase()}` : 'вы вошли'))
-const teamItems = computed<MenuItem[]>(() => [
-  { label: 'Мои доски', run: () => router.push('/app/boards') },
-  ...(board.configure
-    ? [
-        { label: 'Категории', run: () => (editingCategories.value = true) },
-        { label: 'Столбцы', run: () => (editingStatuses.value = true) },
-        { label: 'Настройки доски', run: () => router.push(settingsLink.value) },
-        {
-          label: pendingRequests.value ? `Участники · ${pendingRequests.value} запр.` : 'Участники',
-          run: () => router.push(`/app/boards/${slug.value}/participants`),
-        },
-      ]
-    : []),
-  { label: 'Настройки аккаунта', separated: true, run: () => router.push('/app/account') },
-  { label: 'Выйти', danger: true, separated: true, run: askLogout },
-])
+// tablet and phone: «Меню» opens the drawer with the tools and the account
+const menuOpen = ref(false)
+const drawer = ref<InstanceType<typeof NavDrawer> | null>(null)
+// an editor picked in the drawer opens once the drawer has gone: both lock the page and trap focus
+let afterMenu: (() => void) | null = null
+function openFromMenu(editor: 'categories' | 'statuses') {
+  afterMenu = () => (editor === 'categories' ? (editingCategories.value = true) : (editingStatuses.value = true))
+  drawer.value?.close()
+}
+function onMenuClosed() {
+  menuOpen.value = false
+  afterMenu?.()
+  afterMenu = null
+}
 
 // Локальная модель для поля поиска: каждый ввод — тик дебаунса в 300мс,
 // чтобы не стрелять запросом на каждую букву. Основной watcher в самом сторе
@@ -380,7 +377,8 @@ function onSent(post: Post) {
   closeCompose()
   notification.success('Предложение опубликовано')
   board.refresh()
-  openPost(post)
+  // the team's post card is an edit form — after «Предложить» they expect the post on the board, not its editor
+  if (!board.team) openPost(post)
 }
 function setSection(section: Section) {
   board.view.section = section
@@ -448,14 +446,4 @@ watch(
     if (slug) maybeShowWeeklyModal(slug)
   },
 )
-
-async function askLogout() {
-  const ok = await confirm.ask({
-    title: 'Выйти из режима команды?',
-    message: `${board.me?.email ?? 'Админ'} — выйти? Чтобы снова зайти, понадобится пароль.`,
-    confirmText: 'Выйти',
-    danger: true,
-  })
-  if (ok) board.logout()
-}
 </script>

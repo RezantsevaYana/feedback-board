@@ -26,6 +26,7 @@ const PATHS = {
   chart: 'M3.5 20.5v-7h5v7M9.5 20.5v-15h5v15M15.5 20.5v-10h5v10',
   close: 'M6 6l12 12M18 6 6 18',
   check: 'm5 12 5 5 9-10',
+  alert: 'M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM12 8v5M12 16.2v.1',
   copy: 'M9 9h11v12H9zM5 15H3V3h12v2',
   chat: 'M3 4.5h18v12H10l-5 4v-4H3z',
   chevron: 'm6 9 6 6 6-6',

@@ -83,7 +83,14 @@ class BoardController extends Controller
         if (array_key_exists('widget_color', $data)) {
             $board->widget_color = $data['widget_color'];
         }
+        $opening = $board->isDirty('visibility') && ! $board->isPrivate();
         $board->save();
+        // on an open board an invitation as Участник / Читатель means nothing: the link already lets anyone in
+        if ($opening) {
+            $board->invitations()->pending()
+                ->whereNotIn('role', ProjectRole::openBoardAssignable())
+                ->delete();
+        }
 
         return response()->json(['data' => $this->settings($board)]);
     }
@@ -167,6 +174,8 @@ class BoardController extends Controller
             'direct_url' => $publicUrl.'/'.$board->slug,
             'allowed_origins' => $board->allowed_origins ?? [],
             'widget_color' => $board->widget_color,
+            // a closed board's widget only says «Это закрытая доска»: the screen swaps the code for that note
+            'visibility' => $board->visibility->value,
         ]]);
     }
 
@@ -218,6 +227,9 @@ class BoardController extends Controller
             'widget_color' => $p->widget_color,
             // the delete section says how long the board stays recoverable
             'trash_retention_days' => (int) config('feedback.trash_retention_days'),
+            // the «Доступ» warning says how much becomes visible (or closed) when the mode changes
+            'posts_count' => $p->posts()->where('is_hidden', false)->count(),
+            'members_count' => $p->members()->count(),
         ];
     }
 

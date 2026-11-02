@@ -10,6 +10,7 @@
 // компоненты
 @use 'components/buttons';
 @use 'components/forms';
+@use 'components/radio-cards';
 @use 'components/submit-form';
 @use 'components/tags';
 @use 'components/votes';
@@ -30,13 +31,16 @@
 
 // Self-serve admin area (/app/*): hub, auth pages, shared shell.
 @use 'components/app-shell';
+@use 'components/app-sidebar';
+@use 'components/nav-drawer';
+@use 'components/burger-icon';
 @use 'components/verify-banner';
 @use 'components/auth-pages';
 @use 'components/boards-hub';
 @use 'components/board-card';
 @use 'components/board-new';
 @use 'components/board-workspace';
-@use 'components/board-embed';
+@use 'components/board-access';
 @use 'components/board-settings';
 @use 'components/participants';
 @use 'components/access-requests';
@@ -48,3 +52,4 @@
 @use 'components/account-page';
 @use 'components/copy-button';
 @use 'components/home-page';
+@use 'components/ui-kit';

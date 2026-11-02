@@ -51,7 +51,7 @@
         <button type="button" class="btn" @click="toggleHide">
           {{ board.allSelectedHidden ? 'Показать' : 'Скрыть' }}
         </button>
-        <button type="button" class="btn danger" @click="askDelete">Удалить</button>
+        <button type="button" class="btn btn-danger" @click="askDelete">Удалить</button>
       </template>
       <template v-else>
         <span class="bulk-empty">

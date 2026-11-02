@@ -1,19 +1,19 @@
 @use '../utils' as *;
 
-// BoardEmbedPage.vue — "how to connect": a board page inside BoardWorkspace (frame: _board-workspace.scss).
+// BoardAccessPage.vue + WidgetColorSection.vue — «Доступ»: a board page inside BoardWorkspace (frame: _board-workspace.scss).
 // Its blocks are settings cards (.board-settings-section), the rules below only add what's inside them.
-.board-embed-section {
+.board-access-section {
     // the card is a grid: the compact copy button keeps its own width instead of stretching
     .copy-btn {
         justify-self: start;
     }
 }
-.board-embed-section-head {
+.board-access-section-head {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
-.board-embed-code {
+.board-access-code {
     margin: 0;
     padding: 12px 14px;
     background: var(--surface-2);
@@ -26,21 +26,7 @@
     word-break: break-all;
     color: var(--fg);
 }
-.board-embed-origins {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-
-    .mono {
-        background: var(--surface-2);
-        color: var(--fg);
-        padding: 1px 6px;
-        border-radius: 6px;
-    }
-}
-.board-embed-warn {
+.board-access-warn {
     margin: 0;
     padding: 10px 12px;
     border-radius: var(--radius);
@@ -48,27 +34,6 @@
     color: var(--bug);
     font-size: 13px;
     line-height: 1.5;
-}
-.board-embed-link-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-
-    // «Открыть доску» matches the compact copy button next to it
-    .btn {
-        font-size: 13px;
-        padding: 6px 12px;
-    }
-}
-// same size as «Создать доску» on the previous screen
-.board-embed-actions {
-    display: flex;
-    margin-top: 4px;
-
-    .btn-primary {
-        min-width: 180px;
-        min-height: 44px;
-    }
 }
 // WidgetColorSection.vue — the widget's colour: HEX field, a preview painted with the widget's own tokens
 // (widgetPalette sets --accent, --active… on .widget-color-preview), save / back to default.
@@ -82,17 +47,15 @@
         '.       reset   save';
     align-items: center;
     gap: 12px 8px;
-    max-width: 360px;
 
+    // the field and the preview keep a compact width; «Сохранить» sits on the card's right edge like
+    // the other blocks' buttons
+    > .field,
+    > .widget-color-preview {
+        max-width: 360px;
+    }
     > .field {
         grid-area: field;
-        padding-bottom: 0;
-
-        > .err {
-            position: static;
-            white-space: normal;
-            margin-top: 2px;
-        }
     }
     .note {
         margin: 0;
@@ -101,7 +64,6 @@
     // phone: two rows — the field with «Сохранить» beside it, then a small launcher with the reset on the right;
     // the chip, the link, the note and the hint stay on desktop
     @media screen and (max-width: $mobile) {
-        max-width: none;
         grid-template-columns: minmax(0, 1fr) auto;
         // the launcher and the reset share the second row's one cell (start / end), so the reset's
         // width doesn't stretch the «Сохранить» column
@@ -123,11 +85,6 @@
 }
 .widget-color-save {
     grid-area: save;
-
-    @media screen and (max-width: $mobile) {
-        height: 40px;
-        padding: 0 14px;
-    }
 }
 .widget-color-note {
     grid-area: note;
@@ -203,4 +160,109 @@
     font-weight: 500;
     text-decoration: underline;
     text-underline-offset: 3px;
+}
+// BoardEmbedPage.vue — a closed board: the way to its access settings instead of the widget code
+
+// the copy buttons under the link and the widget code keep their own width in the card's grid
+.board-access-copy {
+    justify-self: start;
+}
+// «Домены» inside the widget block: a step below the card's heading
+.board-access-subhead {
+    margin: 8px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+// closed board: the widget isn't available — a warning in clay red on its tint, the same as the other
+// warnings on the page (.board-access-warn): a widget still on a site now turns guests away
+.board-access-off {
+    padding: 10px 14px;
+    border: 1px solid color-mix(in srgb, var(--bug) 30%, var(--line));
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--bug) 10%, var(--surface));
+    color: var(--bug);
+    font-size: 13px;
+
+    p {
+        margin: 0;
+    }
+    strong {
+        color: var(--bug);
+    }
+}
+// …and what a guest sees when they open the widget that's still on a site (widget/WidgetApp.vue)
+.board-access-guest {
+    display: grid;
+    gap: 2px;
+    justify-self: start;
+    max-width: 340px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 13px;
+    color: var(--muted);
+
+    strong {
+        color: var(--fg);
+        font-size: 14px;
+    }
+}
+.board-access-guest-caption {
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+// AccessMode.vue — the mode cards, then (once changed) what the switch does to posts, votes and people
+.access-mode {
+    display: grid;
+    gap: 12px;
+
+    .note {
+        margin: 0;
+    }
+}
+.access-mode-effects {
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    font-size: 14px;
+    line-height: 1.5;
+
+    ul {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding-left: 18px;
+    }
+}
+.access-mode-effects-title {
+    margin: 0 0 8px;
+    font-weight: 600;
+}
+
+// BoardAccessPage.vue — another mode picked on «Кто видит доску» but not applied: the blocks below are muted
+// and inert (they'd still act as the current mode), with one line saying they change after the switch
+.board-access-rest {
+    display: flex;
+    flex-direction: column;
+    gap: inherit;
+    transition: opacity 0.15s ease-out;
+
+    &.pending {
+        opacity: 0.45;
+        user-select: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+.board-access-pending {
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--fg);
+    font-size: 13px;
+    font-weight: 500;
 }

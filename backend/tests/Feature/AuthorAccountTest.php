@@ -102,6 +102,22 @@ class AuthorAccountTest extends TestCase
         $this->assertSame(0, $post->votes()->count());
     }
 
+    public function test_signed_in_sees_their_vote_from_another_device(): void
+    {
+        $post = Post::factory()->for($this->project)->create();
+
+        $this->actingAs($this->user)
+            ->postJson("/api/public/posts/{$post->id}/vote", ['value' => 'dislike'], ['X-Voter-Token' => (string) Str::uuid()]);
+
+        // другое устройство — другой токен, но голос тот же аккаунт: кнопка должна быть нажата
+        $this->actingAs($this->user)
+            ->getJson('/api/public/projects/demo/posts', ['X-Voter-Token' => (string) Str::uuid()])
+            ->assertJsonPath('data.0.my_vote', 'dislike');
+        $this->actingAs($this->user)
+            ->getJson("/api/public/projects/demo/posts/{$post->id}")
+            ->assertJsonPath('data.my_vote', 'dislike');
+    }
+
     public function test_anonymous_votes_stay_cookie_based(): void
     {
         $post = Post::factory()->for($this->project)->create();

@@ -32,10 +32,20 @@
             transition: none;
         }
     }
-        // phone: initials in a sage circle instead of the name
+    // phone: initials in a sage circle instead of the name; the trigger itself stays flat,
+    // so hover / open never paint a square around the circle — the circle carries the state
     @media screen and (max-width: $mobile) {
         padding: 4px 6px 4px 4px;
         gap: 4px;
+
+        @include hover {
+            background: none;
+
+            .account-menu-initials {
+                background: var(--active);
+                color: var(--active-fg);
+            }
+        }
     }
 }
 .menu.open .account-menu {
@@ -44,6 +54,15 @@
 
     .ico {
         transform: rotate(180deg);
+    }
+
+    @media screen and (max-width: $mobile) {
+        background: none;
+
+        .account-menu-initials {
+            background: var(--active);
+            color: var(--active-fg);
+        }
     }
 }
 .account-menu-name {

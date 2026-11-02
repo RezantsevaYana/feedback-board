@@ -38,7 +38,7 @@
         aria-label="Новый столбец"
         @input="addError = ''"
       />
-      <button class="btn btn-primary" type="submit" :disabled="!newName.trim()">Добавить</button>
+      <button class="btn btn-add" type="submit" :disabled="!newName.trim()">Добавить</button>
     </div>
     <ColorPaletteComponent v-model="newColor" label="Цвет нового столбца" variant="status" />
     <div v-if="newName.trim()" class="cat-preview">

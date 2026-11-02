@@ -2,7 +2,7 @@
   <form class="settings-domains" novalidate @submit.prevent="save">
     <p class="note">
       Сайты, где стоит виджет: схема и хост, без пути. Для локальной разработки подойдёт <code class="mono">http://localhost:*</code>.
-      Без доменов доска работает только по прямой ссылке.
+      Без доменов виджет не сможет отправлять предложения.
     </p>
     <div v-for="(row, idx) in rows" :key="row.key" class="settings-domains-row">
       <InputComponent
@@ -20,7 +20,7 @@
       </button>
     </div>
     <div class="settings-actions">
-      <button type="button" class="btn" @click="add">+ Добавить домен</button>
+      <button type="button" class="btn btn-add" @click="add">+ Добавить домен</button>
       <span class="spacer" />
       <button class="btn btn-primary" type="submit" :disabled="!changed || saving" :aria-busy="saving">
         {{ saving ? 'Сохраняем…' : 'Сохранить домены' }}

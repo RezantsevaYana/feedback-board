@@ -18,7 +18,7 @@ export type PostPatch = Partial<Pick<Post, 'title' | 'description' | 'priority' 
 }
 
 export const PostsApi = {
-  // posts on the public board
+  // posts on the public board; new_first=1 puts «Новое» on top and adds new_count
   list(slug: string, query: PostsQuery) {
     return request<Paginated<Post>>(`${PUBLIC_URL}/${projectPath(slug)}`, { query })
   },

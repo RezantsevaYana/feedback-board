@@ -1,16 +1,18 @@
 @use '../utils' as *;
 
 // VisibilityBadge.vue — «Открытая» / «Закрытая» with an icon (BoardCard on the hub, the board's sidebar).
-// Neutral sage chip for both: it's a fact about the board, not an action or a selection, so no green.
+// A fact about the board, not an action or a selection, so no green: open is the quiet sage chip,
+// closed is amber (the status ink --sta-orange on its tint, like a status pill), the one worth noticing.
 .visibility-badge {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
+    gap: 6px;
+    padding: 4px 10px;
     border-radius: 6px;
     background: var(--surface-2);
     color: var(--muted);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
     line-height: 1.4;
     white-space: nowrap;
@@ -18,8 +20,44 @@
     .ico {
         flex: none;
     }
-    // closed is the one worth noticing: ink text, so it reads before the open one does
     &.private {
-        color: var(--fg);
+        background: color-mix(in srgb, var(--sta-orange) 14%, var(--surface));
+        color: var(--sta-orange);
+        font-weight: 600;
     }
+    &:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
+    // the hint opens on hover (mouse), on focus (Tab, a tap on a phone)
+    &:focus .visibility-badge-hint {
+        display: block;
+    }
+    @include hover {
+        .visibility-badge-hint {
+            display: block;
+        }
+    }
+}
+.visibility-badge-hint {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    width: max-content;
+    max-width: 240px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--fg);
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: var(--shadow);
+    pointer-events: none;
+    // out of the layout until shown, so a hidden hint never widens the page on a phone
+    display: none;
+
+    @include rise(0.12s);
 }

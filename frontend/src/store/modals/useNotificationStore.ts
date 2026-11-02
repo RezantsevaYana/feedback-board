@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 
 const DURATION = {
-  success: 2200,
-  error: 4000,
+  success: 3500,
+  error: 5000,
 }
 // a message with an action (Отменить) stays longer, so there's time to press it
 const ACTION_DURATION = 6000

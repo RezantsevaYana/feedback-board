@@ -1,0 +1,80 @@
+@use '../utils' as *;
+
+// RadioCardsComponent.vue — a choice of a few as cards side by side (one column on a phone).
+// The native radio stays as the round mark, so keyboard and screen readers get a plain radio group.
+.radio-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+.radio-cards-legend {
+    padding: 0;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+.radio-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 2px;
+    align-items: center;
+    // cards in a row share the height: their text stays at the top, not spread over it
+    align-content: start;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.12s, background-color 0.12s;
+
+    @include hover {
+        border-color: var(--control);
+    }
+    // the chosen one: the selection's pale green, the green edge
+    &.on {
+        border-color: var(--active-line);
+        background: color-mix(in srgb, var(--active) 45%, var(--surface));
+    }
+    &:has(.radio-card-input:focus-visible) {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+    @media screen and (max-width: $mobile) {
+        padding: 10px 12px;
+    }
+}
+.radio-card-input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 1.5px solid var(--control);
+    border-radius: 50%;
+    background: var(--surface);
+
+    &:checked {
+        border: 5px solid var(--accent);
+    }
+    &:focus-visible {
+        outline: none;
+    }
+}
+.radio-card-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+.radio-card-hint {
+    grid-column: 2;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+}

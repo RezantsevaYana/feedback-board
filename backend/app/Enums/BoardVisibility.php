@@ -4,8 +4,8 @@ namespace App\Enums;
 
 /**
  * Who can see the board. Flipping public → private closes it to everyone outside the
- * project_user pivot; the reverse direction is forbidden in V1 (see docs/ROLES_PLAN.md §4
- * «Что НЕ входит в V1»). Stored on projects.visibility as a string with a CHECK.
+ * project_user pivot; private → public opens it back, with everything written there
+ * (docs/ROLES_PLAN.md §5, 02.11.2026). Stored on projects.visibility as a string with a CHECK.
  */
 enum BoardVisibility: string
 {

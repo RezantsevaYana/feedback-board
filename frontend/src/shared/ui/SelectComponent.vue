@@ -22,7 +22,7 @@
         v-if="open"
         :id="`${uid}-list`"
         class="select-list"
-        :class="{ 'with-hints': hasHints }"
+        :class="{ 'with-hints': hasHints, up }"
         role="listbox"
         tabindex="-1"
         :aria-activedescendant="active >= 0 ? `${uid}-opt-${active}` : undefined"
@@ -70,6 +70,20 @@ const root = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLButtonElement | null>(null)
 const open = ref(false)
 const active = ref(-1)
+// the list opens upward when there's no room under the field (a select at the bottom of a modal):
+// otherwise it would stretch the modal and give it a scrollbar
+const up = ref(false)
+const LIST_ROOM = 300
+
+function roomAround(): { above: number; below: number } {
+  const box = trigger.value?.getBoundingClientRect()
+  if (!box) return { above: 0, below: LIST_ROOM }
+  // the nearest scrolling ancestor (a modal) bounds the list, or else the screen
+  let scroller: HTMLElement | null = root.value?.parentElement ?? null
+  while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
+  const frame = scroller?.getBoundingClientRect() ?? { top: 0, bottom: window.innerHeight }
+  return { above: box.top - frame.top, below: frame.bottom - box.bottom }
+}
 
 const current = computed(() => props.options.find((o) => o.value === model.value))
 const hasHints = computed(() => props.options.some((o) => o.hint))
@@ -80,6 +94,8 @@ function toggle() {
 }
 function openList() {
   if (open.value) return
+  const room = roomAround()
+  up.value = room.below < LIST_ROOM && room.above > room.below
   open.value = true
   active.value = Math.max(0, props.options.findIndex((o) => o.value === model.value))
   document.addEventListener('pointerdown', onOutside, true)

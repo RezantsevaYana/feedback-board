@@ -49,6 +49,23 @@ class PasswordResetController extends Controller
      * A new password logs the user in right away: the link from the letter proves the address,
      * so it also counts as an email confirmation.
      */
+    /**
+     * The page asks this on open, so a used or stale link says so right away instead of after typing a password.
+     * Unknown address and a bad token read the same, as in reset().
+     */
+    public function check(Request $request): Response
+    {
+        $request->merge(['email' => is_string($request->email) ? Str::lower(trim($request->email)) : $request->email]);
+        $request->validate(['token' => ['required', 'string'], 'email' => ['required', 'email']]);
+
+        $user = Password::getUser($request->only('email'));
+        if (! $user || ! Password::tokenExists($user, $request->token)) {
+            throw ValidationException::withMessages(['token' => 'Ссылка устарела или уже использована. Запросите новое письмо.']);
+        }
+
+        return response()->noContent();
+    }
+
     public function reset(Request $request, LoginLockout $lockout): JsonResponse
     {
         $request->merge(['email' => is_string($request->email) ? Str::lower(trim($request->email)) : $request->email]);

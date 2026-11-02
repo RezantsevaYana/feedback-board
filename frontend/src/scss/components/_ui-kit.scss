@@ -1,0 +1,175 @@
+@use '../utils' as *;
+
+// UiKitPage.vue + UiKitSections.vue — /dev/ui, the components catalogue (local development only)
+.ui-kit {
+    display: grid;
+    gap: 20px;
+}
+.ui-kit-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+
+    h1 {
+        margin: 0 0 4px;
+    }
+    .note {
+        max-width: 60ch;
+        margin: 0;
+    }
+}
+.ui-kit-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+.ui-kit-widths {
+    grid-template-columns: repeat(3, auto);
+}
+// the page itself in a frame of the chosen width: media queries follow the frame, not the screen
+.ui-kit-frame {
+    justify-self: center;
+    width: 100%;
+    height: 80vh;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--bg);
+
+    &.tablet {
+        width: 768px;
+    }
+    &.phone {
+        width: 375px;
+    }
+}
+.ui-kit-section {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+
+    h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+    @media screen and (max-width: $mobile) {
+        padding: 16px 0;
+        border-width: 1px 0 0;
+        border-radius: 0;
+        @include bleed;
+    }
+}
+.ui-kit-where {
+    max-width: 75ch;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+.ui-kit-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.ui-kit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 4px 16px;
+    align-items: start;
+}
+.ui-kit-stack {
+    display: grid;
+    gap: 10px;
+}
+.ui-kit-label {
+    font-size: 13px;
+    font-weight: 500;
+}
+.ui-kit-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+    gap: 10px;
+}
+.ui-kit-swatch {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+
+    code {
+        color: var(--fg);
+    }
+    span:last-child {
+        grid-column: 2;
+    }
+}
+.ui-kit-swatch-color {
+    grid-row: span 2;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+
+    &.tone-accent { background: var(--accent); }
+    &.tone-accent-ink { background: var(--accent-ink); }
+    &.tone-active { background: var(--active); }
+    &.tone-surface-2 { background: var(--surface-2); }
+    &.tone-line { background: var(--line); }
+    &.tone-fg { background: var(--fg); }
+    &.tone-muted { background: var(--muted); }
+    &.tone-bug { background: var(--bug); }
+    &.tone-sta-orange { background: var(--sta-orange); }
+}
+// the menu's trigger is icon-sized by default; the sample one reads as a button with a label
+.menu-trigger.ui-kit-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    height: auto;
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 14px;
+}
+// the buttons' rule: which one for what, one row per kind
+.ui-kit-rules {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    td {
+        padding: 8px 12px 8px 0;
+        border-bottom: 1px solid var(--line);
+        vertical-align: middle;
+    }
+    td:last-child {
+        color: var(--muted);
+    }
+    @media screen and (max-width: $mobile) {
+        tr {
+            display: grid;
+            gap: 4px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line);
+        }
+        td {
+            padding: 0;
+            border: 0;
+        }
+    }
+}
+// the armed destructive answer, as ConfirmModal shows it
+.btn.btn-danger.ui-kit-armed {
+    background: var(--bug);
+    border-color: var(--bug);
+    color: var(--bug-fg);
+    font-weight: 600;
+}

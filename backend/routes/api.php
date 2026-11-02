@@ -40,6 +40,7 @@ Route::prefix('admin')->group(function () {
     // forgotten password: the letter, then the new password from the page it links to
     Route::post('forgot-password', [Admin\PasswordResetController::class, 'send'])->middleware('throttle:password-reset');
     Route::post('reset-password', [Admin\PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
+    Route::post('reset-password/check', [Admin\PasswordResetController::class, 'check'])->middleware('throttle:password-reset');
 
     // Public invitation flow (no auth needed to read or accept — the token IS the credential).
     Route::get('invitations/{token}', [Admin\InvitationController::class, 'show']);

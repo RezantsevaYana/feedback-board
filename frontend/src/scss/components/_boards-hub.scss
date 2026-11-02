@@ -30,7 +30,7 @@
 // room under the list so the pinned button never covers the last row
 .boards-hub {
     @media screen and (max-width: $mobile) {
-        padding-bottom: 88px;
+        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
     }
 }
 // «Я веду · 3» / «Я участник · 2» above each grid
@@ -94,15 +94,6 @@
 .incoming-invite-actions {
     display: flex;
     gap: 6px;
-
-    .btn {
-        font-size: 13px;
-        padding: 6px 12px;
-
-        @media (pointer: coarse) {
-            min-height: 44px;
-        }
-    }
 }
 
 // first visit: the greeting sits in the vertical middle of the screen, left-aligned with the container
@@ -135,9 +126,6 @@
     }
     .btn {
         margin-top: 10px;
-        min-height: 48px;
-        padding: 12px 24px;
-        font-size: 16px;
     }
 }
 .boards-hub-hello-lead {

@@ -13,6 +13,21 @@
         border-radius: 10px;
         border: 1px solid var(--line);
     }
+    // the settings page on a phone: plain rows with lines to the screen's edges (the board's modals keep the boxes)
+    .board-settings-section & {
+        @media screen and (max-width: $mobile) {
+            gap: 0;
+            border-bottom: 1px solid var(--line);
+            @include bleed;
+            padding-inline: 0;
+
+            > li > .cat-row:not(form) {
+                padding: 8px 16px;
+                border-width: 1px 0 0;
+                border-radius: 0;
+            }
+        }
+    }
 }
 .cat-row {
     display: flex;
@@ -21,21 +36,12 @@
     gap: 8px;
 
     // InputComponent занимает всё свободное место рядом с кнопками.
-    // Резерв под ошибкой здесь не нужен — ошибки показываются через .cat-err отдельной строкой.
+    // ошибки показываются через .cat-err отдельной строкой
     .field {
         flex: 1;
         min-width: 160px;
-        padding-bottom: 0;
     }
 
-    // кнопки в ряду компактнее, чем дефолтные .btn
-    .btn {
-        padding: 7px 14px;
-
-        @media screen and (max-width: $mobile) {
-            padding: 7px 12px;
-        }
-    }
 
     @media screen and (max-width: $mobile-mini) {
         gap: 6px;

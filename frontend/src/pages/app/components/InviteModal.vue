@@ -1,8 +1,8 @@
 <template>
-  <BaseModal label="Пригласить людей" @close="emit('close')">
+  <BaseModal :label="heading" @close="emit('close')">
     <form class="invite-modal" novalidate @submit.prevent="send">
       <div class="drawer-top">
-        <h2>Пригласить людей</h2>
+        <h2>{{ heading }}</h2>
         <button type="button" class="icon-btn" aria-label="Отмена" @click="close"><AppIcon name="close" /></button>
       </div>
 
@@ -12,18 +12,15 @@
           label="Почты через запятую или по строкам"
           hint="до 100 за раз"
           rows="6"
-          :error="rawError"
+          :error="fieldError"
           placeholder="anna@acme.com, boris@acme.com&#10;client@othercorp.com"
           autofocus
           @input="rawError = ''"
         />
-        <!-- Невалидные почты не блокируют отправку остальных — просто называем их, чтобы было видно, что их не отправили -->
-        <p v-if="parsed.invalid.length" class="invite-invalid-note">
-          Не распознано: <span class="mono">{{ parsed.invalid.join(', ') }}</span>
-        </p>
         <SelectComponent
           v-model="role"
           label="Роль для всей пачки"
+          :hint="teamOnly ? 'на открытой доске — только команда' : undefined"
           :options="roleOptions"
         />
         <div class="confirm-actions">
@@ -41,7 +38,7 @@
 import { computed, inject, ref } from 'vue'
 import { InvitationsApi, type Invitation } from '@/api/participants'
 import { errorMessage } from '@/api/client'
-import { ASSIGNABLE_ROLES, ROLE_HINTS, ROLE_LABELS, type ProjectRole } from '@/api/types'
+import { ASSIGNABLE_ROLES, ROLE_HINTS, ROLE_LABELS, TEAM_ROLES, type ProjectRole } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import BaseModal from '@/shared/ui/BaseModal.vue'
@@ -55,6 +52,8 @@ type AssignableRole = Exclude<ProjectRole, 'owner'>
 
 const props = defineProps<{
   slug: string
+  /** an open board: only Админ / Менеджер, everyone else is a guest by the link */
+  teamOnly?: boolean
 }>()
 const emit = defineEmits<{
   close: []
@@ -64,13 +63,25 @@ const emit = defineEmits<{
 const notification = useNotificationStore()
 const closeModal = inject<() => void>('baseModal:close', () => emit('close'))
 
-const roleOptions = ASSIGNABLE_ROLES.map((value) => ({ value, label: ROLE_LABELS[value], hint: ROLE_HINTS[value] }))
-const role = ref<AssignableRole>('voter')
+const heading = computed(() => (props.teamOnly ? 'Добавить в команду' : 'Пригласить людей'))
+const roleOptions = (props.teamOnly ? TEAM_ROLES : ASSIGNABLE_ROLES).map((value) => ({ value, label: ROLE_LABELS[value], hint: ROLE_HINTS[value] }))
+const role = ref<AssignableRole>(props.teamOnly ? 'manager' : 'voter')
 
 const raw = ref('')
 const rawError = ref('')
 const parsed = computed(() => parseEmails(raw.value))
 const sending = ref(false)
+// what doesn't look like an email is the field's error: red and right under it, so it isn't missed.
+// It doesn't block the rest — the button counts only the valid ones
+const fieldError = computed(() => {
+  if (rawError.value) return rawError.value
+  const invalid = parsed.value.invalid
+  if (!invalid.length) return ''
+  const list = invalid.join(', ')
+  return invalid.length === 1
+    ? `«${list}» — не похоже на почту, сюда письмо не уйдёт. Исправьте или удалите.`
+    : `Не похожи на почту: ${list}. Сюда письма не уйдут — исправьте или удалите.`
+})
 
 /**
  * Split the textarea into valid emails + the tokens that don't look like one.
@@ -110,11 +121,13 @@ async function send() {
     const skipped = result.skipped.length
     if (sentCount) {
       notification.success(
-        `Отправлено ${sentCount} ${plural(sentCount, 'письмо', 'письма', 'писем')}`
-          + (skipped ? ` · пропущено ${skipped} (уже на доске)` : ''),
+        `Отправили ${sentCount} ${plural(sentCount, 'приглашение', 'приглашения', 'приглашений')}`
+          + (skipped ? `, ${skipped} ${plural(skipped, 'человек', 'человека', 'человек')} уже на доске` : ''),
       )
     } else if (skipped) {
-      notification.success(`Все ${skipped} уже на доске — ничего не отправили`)
+      notification.error(skipped === 1
+        ? 'Этот человек уже на доске — приглашение не нужно'
+        : `Все ${skipped} ${plural(skipped, 'человек', 'человека', 'человек')} уже на доске — приглашения не нужны`)
     }
     emit('sent', result.data)
     close()

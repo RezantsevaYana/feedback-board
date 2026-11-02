@@ -36,6 +36,17 @@ enum ProjectRole: string
         return $this !== self::Reader;
     }
 
+    /**
+     * Roles that exist on an open board: the team that triages and configures it. Everyone else there is a guest
+     * by the link, so Участник / Читатель aren't invited to an open board and get no rights on it (02.11.2026).
+     *
+     * @return array<int, string>
+     */
+    public static function openBoardAssignable(): array
+    {
+        return [self::Admin->value, self::Manager->value];
+    }
+
     public function canSubmit(): bool
     {
         return $this !== self::Reader;

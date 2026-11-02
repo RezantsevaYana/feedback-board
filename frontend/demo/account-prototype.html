@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Настройки аккаунта — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff; --surface: #ffffff; --surface-2: #e8eee9; --active: #cfe7d7; --active-fg: #063f2c; --active-line: #1d8547;
+            --line: #d8e1db; --control: #a9bcb0; --fg: #0f2224; --muted: #4c5d60; --accent: #1d8547; --accent-ink: #1b7f41;
+            --bug: #b0423a; --amber: #7f4718; --page: #f3f6f4; --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif; --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 780px; margin: 0 0 24px; }
+        .doc h2 { font-size: 20px; margin: 48px 0 8px; }
+        .controls { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; margin-bottom: 16px; position: sticky; top: 0; z-index: 5; padding: 12px 0; background: var(--page); }
+        .group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+        .seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .seg button { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .seg button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+
+        .stage { display: flex; justify-content: center; }
+        .app { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+        .app.phone { width: 390px; }
+        .hdr { display: flex; align-items: center; justify-content: space-between; margin: 12px 16px 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; font-weight: 500; }
+        .brand { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+        .app.phone .brand { font-size: 0; } .app.phone .brand::before { content: 'FB'; font-size: 12px; padding: 4px 9px 4px 13px; background: var(--accent); color: #fff; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%); }
+        .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 28px; padding: 20px 16px 32px; min-height: 620px; }
+        .app.phone .layout { grid-template-columns: 1fr; padding: 16px; }
+        .side { display: flex; flex-direction: column; gap: 10px; }
+        .app.phone .side { display: none; }
+        .nav-item { padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; color: var(--muted); font-weight: 500; font-size: 14px; }
+        .nav-item.on { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+        .side-block { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 4px; }
+        .side-name { font-weight: 600; padding: 0 10px 4px; }
+        .sub { margin: 2px 0 6px 18px; padding-left: 8px; border-left: 1px solid var(--line); display: grid; }
+        .sub span { font-size: 13px; color: var(--muted); padding: 4px 8px; } .sub span.on { color: var(--fg); font-weight: 600; }
+        .side-foot { margin-top: auto; border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; justify-items: start; }
+        .out { color: var(--bug); font-size: 13px; font-weight: 500; padding: 0 10px; }
+        .theme { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); }
+
+        .main { border-left: 1px solid var(--line); padding-left: 28px; display: grid; gap: 14px; align-content: start; }
+        .app.phone .main { border-left: 0; padding-left: 0; }
+        .main > * { max-width: 600px; }
+        .main h3 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.015em; }
+        .card { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; display: grid; gap: 14px; background: #fff; }
+        .app.phone .card { border: 0; border-radius: 0; padding: 16px 0; border-top: 1px solid var(--line); }
+        .card h4 { margin: 0; font-size: 16px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 14px; font-weight: 500; color: var(--fg); white-space: nowrap; cursor: pointer; }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+        .field { display: grid; gap: 4px; font-size: 13px; font-weight: 500; }
+        .field small { color: var(--muted); font-weight: 400; }
+        .input { border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 15px; color: var(--fg); background: #fff; width: 100%; }
+        .input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+        .link { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; color: var(--accent-ink); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); text-underline-offset: 3px; cursor: pointer; }
+        .note { margin: 0; color: var(--muted); font-size: 13px; }
+
+        /* profile: who you are, then the one thing to edit */
+        .who { display: flex; align-items: center; gap: 14px; }
+        .avatar { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font-weight: 600; font-size: 17px; }
+        .who-text { display: grid; gap: 2px; min-width: 0; }
+        .who-name { font-size: 18px; font-weight: 600; }
+        .who-mail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; color: var(--muted); }
+        .mail-ok { font-size: 12px; font-weight: 600; color: var(--active-fg); background: var(--active); padding: 1px 8px; border-radius: 6px; }
+        .mail-no { font-size: 12px; font-weight: 600; color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, #fff); padding: 1px 8px; border-radius: 6px; }
+        .name-row { display: flex; gap: 8px; align-items: end; }
+        .name-row .field { flex: 1; }
+        .app.phone .name-row { flex-direction: column; align-items: stretch; }
+        .divider { height: 1px; background: var(--line); }
+
+        /* password: a row until you need it */
+        .pw-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .pw-row .note { max-width: 360px; }
+        .pw-form { display: grid; gap: 12px; }
+        .pw-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .app.phone .pw-actions .btn { flex: 1 1 0; }
+
+        .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+        .note-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+        .note-card h3 { margin: 0 0 8px; font-size: 16px; }
+        .note-card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Настройки аккаунта</h1>
+    <p class="lede">
+        Страница в том же каркасе, что настройки доски. Сверху — кто вы: инициалы, имя, почта и подтверждена ли она.
+        Редактируется одно — имя, кнопка «Сохранить» появляется, только когда его поменяли. Пароль свёрнут в строку и раскрывается по кнопке.
+        Попробуйте поменять имя и нажать «Сменить пароль».
+    </p>
+    <div class="controls">
+        <div class="group">Почта
+            <span class="seg" data-ctl="verified"><button aria-pressed="true" data-v="yes">Подтверждена</button><button aria-pressed="false" data-v="no">Не подтверждена</button></span>
+        </div>
+        <div class="group">Экран
+            <span class="seg" data-ctl="device"><button aria-pressed="true" data-v="desktop">Десктоп</button><button aria-pressed="false" data-v="phone">Телефон</button></span>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="app" id="app">
+            <div class="hdr"><span class="brand">Feedback Board</span><span>Тест Менеджер ⌄</span></div>
+            <div class="layout">
+                <aside class="side">
+                    <div class="nav-item">Мои доски</div>
+                    <div class="side-block"><div class="side-name">Flow Test</div><div class="nav-item">Настройки</div><div class="nav-item">Доступ</div></div>
+                    <div class="side-block"><div class="nav-item on">Настройки аккаунта</div><div class="sub"><span class="on">Профиль</span><span>Пароль</span></div></div>
+                    <div class="side-foot"><span class="out">Выйти</span><span class="theme">◐ авто</span></div>
+                </aside>
+                <div class="main" id="main"></div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Что изменилось</h2>
+    <div class="notes">
+        <div class="note-card"><h3>Профиль</h3><ul>
+            <li>Почта — текстом, а не серым полем, которое выглядит редактируемым.</li>
+            <li>Видно, подтверждена ли почта; если нет — тут же «Прислать письмо ещё раз».</li>
+            <li>«Сохранить» появляется рядом с полем имени, только когда имя изменено (сейчас висит бледная кнопка всегда).</li>
+        </ul></div>
+        <div class="note-card"><h3>Пароль</h3><ul>
+            <li>Нужен редко — свёрнут в строку «Сменить пароль»; форма раскрывается на месте, с «Отменой».</li>
+            <li>«Не помните текущий?» — внутри раскрытой формы, где он и нужен.</li>
+            <li>После смены форма сворачивается обратно, тост «Пароль изменён».</li>
+        </ul></div>
+        <div class="note-card"><h3>Телефон</h3><ul>
+            <li>Карточки без рамок, разделены линией — как остальные страницы кабинета.</li>
+            <li>«Сохранить» уходит под поле во всю ширину, кнопки формы пароля — две равные.</li>
+        </ul></div>
+    </div>
+</div>
+
+<script>
+const state = { verified: 'yes', device: 'desktop', name: 'Тест Менеджер', saved: 'Тест Менеджер', pw: false, resent: false }
+const main = document.getElementById('main')
+function initials(n) { return n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '?' }
+function render() {
+    document.getElementById('app').classList.toggle('phone', state.device === 'phone')
+    const changed = state.name.trim() !== state.saved
+    const mailState = state.verified === 'yes'
+        ? '<span class="mail-ok">подтверждена</span>'
+        : `<span class="mail-no">не подтверждена</span>${state.resent ? '<span>письмо отправлено</span>' : '<button class="link" data-act="resend">Прислать письмо ещё раз</button>'}`
+    main.innerHTML = `
+        <h3>Настройки аккаунта</h3>
+        <section class="card" id="profile">
+            <div class="who">
+                <span class="avatar">${initials(state.saved)}</span>
+                <div class="who-text">
+                    <span class="who-name">${state.saved}</span>
+                    <span class="who-mail">flow-manager@example.com ${mailState}</span>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="name-row">
+                <label class="field"><span>Имя <small>· так вас подписывают на досках</small></span><input class="input" id="name" value="${state.name}" maxlength="80"></label>
+                ${changed ? '<button class="btn primary" data-act="save">Сохранить</button>' : ''}
+            </div>
+            <p class="note">Почта не меняется: по ней вы входите и получаете письма.</p>
+        </section>
+        <section class="card" id="password">
+            ${state.pw ? `
+            <h4>Сменить пароль</h4>
+            <div class="pw-form">
+                <label class="field">Текущий пароль<input class="input" type="password"></label>
+                <label class="field"><span>Новый пароль <small>· от 8 символов</small></span><input class="input" type="password"></label>
+                <p class="note">Не помните текущий? <button class="link">Прислать ссылку на почту</button></p>
+                <div class="pw-actions"><button class="btn" data-act="pw-cancel">Отмена</button><button class="btn primary" data-act="pw-cancel">Сменить пароль</button></div>
+            </div>` : `
+            <div class="pw-row">
+                <div><h4>Пароль</h4><p class="note">Если его могли узнать — смените. Другие устройства останутся в аккаунте, придёт письмо.</p></div>
+                <button class="btn" data-act="pw-open">Сменить пароль</button>
+            </div>`}
+        </section>`
+    const input = document.getElementById('name')
+    input.addEventListener('input', () => { state.name = input.value; const pos = input.selectionStart; render(); const n = document.getElementById('name'); n.focus(); n.setSelectionRange(pos, pos) })
+    document.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(state[seg.dataset.ctl] === b.dataset.v))))
+}
+document.addEventListener('click', (e) => {
+    const b = e.target.closest('.seg button')
+    if (b) { state[b.closest('.seg').dataset.ctl] = b.dataset.v; state.resent = false; render(); return }
+    const a = e.target.closest('[data-act]')?.dataset.act
+    if (a === 'save') { state.saved = state.name.trim() || state.saved; state.name = state.saved; render() }
+    if (a === 'pw-open') { state.pw = true; render() }
+    if (a === 'pw-cancel') { state.pw = false; render() }
+    if (a === 'resend') { state.resent = true; render() }
+})
+render()
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Мои доски — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --active-fg: #063f2c;
+            --active-line: #1d8547;
+            --line: #d8e1db;
+            --control: #a9bcb0;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --accent-ink: #1b7f41;
+            --bug: #b0423a;
+            --page: #f3f6f4;
+            --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 780px; margin: 0 0 24px; }
+        .doc h2 { font-size: 20px; margin: 48px 0 8px; }
+        .doc h2 + p { color: var(--muted); max-width: 780px; margin: 0 0 16px; }
+
+        .controls { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; margin-bottom: 16px; position: sticky; top: 0; z-index: 5; padding: 12px 0; background: var(--page); }
+        .group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+        .seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .seg button { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .seg button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+
+        .stage { display: flex; justify-content: center; }
+        .app { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+        .app.phone { width: 390px; }
+        .hdr { display: flex; align-items: center; justify-content: space-between; margin: 12px 16px 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; }
+        .brand { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+        .app.phone .brand { font-size: 0; }
+        .app.phone .brand::before { content: 'FB'; font-size: 12px; padding: 4px 9px 4px 13px; background: var(--accent); color: #fff; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%); }
+        .hdr span { font-size: 14px; font-weight: 500; }
+        .page { padding: 24px 32px 40px; display: grid; gap: 14px; }
+        .app.phone .page { padding: 16px; }
+        .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .top h3 { margin: 0; font-size: 24px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 14px; font-weight: 500; color: var(--fg); white-space: nowrap; cursor: pointer; }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+        .btn.quiet { border-color: transparent; color: var(--muted); padding: 6px 10px; font-size: 13px; }
+        .btn.quiet:hover { background: var(--surface-2); color: var(--fg); }
+        .app.phone .top .btn.primary { position: sticky; }
+        .group-title { margin: 14px 0 0; font-size: 14px; font-weight: 600; color: var(--muted); }
+
+        /* shared bits */
+        /* «Открытая / Закрытая» as the app's VisibilityBadge: a sage chip with an icon, the meaning in a hint */
+        .vis { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid transparent; border-radius: 6px; background: var(--surface-2); font-size: 13px; font-weight: 500; color: var(--muted); cursor: default; }
+        .vis svg { width: 14px; height: 14px; }
+        /* closed is the one to notice, in a status ink on its 14% tint (the same recipe as status pills) */
+        .vis.private { font-weight: 600; color: var(--lock-ink); background: color-mix(in srgb, var(--lock-ink) 14%, #fff); }
+        .app[data-lock='amber'] { --lock-ink: #7f4718; }
+        .app[data-lock='blue'] { --lock-ink: #2a4e6a; }
+        .app[data-lock='ink'] .vis.private { color: var(--fg); background: color-mix(in srgb, var(--fg) 12%, var(--surface-2)); }
+        .vis-hint { display: none; position: absolute; top: calc(100% + 6px); left: 0; width: max-content; max-width: 240px; padding: 6px 10px; border-radius: 6px; background: var(--fg); color: #fff; font-size: 12px; font-weight: 400; line-height: 1.4; box-shadow: 0 10px 28px rgba(16, 37, 40, 0.12); }
+        .vis:hover .vis-hint, .vis:focus .vis-hint { display: block; }
+        .vis:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .card-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 2px; }
+        .card-meta-row .meta { font-size: 14px; }
+        .need { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+        .need.new { color: var(--active-fg); background: var(--active); padding: 2px 10px; border-radius: 999px; }
+        .need.req { color: var(--bug); background: color-mix(in srgb, var(--bug) 10%, #fff); padding: 2px 10px; border-radius: 999px; }
+        .need.calm { color: var(--muted); font-weight: 500; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .role { font-size: 12px; color: var(--muted); }
+        .meta { font-size: 13px; color: var(--muted); }
+
+        /* A: list */
+        .list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+        .row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.3fr) minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 14px 16px; border-bottom: 1px solid var(--line); cursor: pointer; }
+        .row:last-child { border-bottom: 0; }
+        .row:hover { background: color-mix(in srgb, var(--surface-2) 55%, #fff); }
+        .row:hover .row-name { color: var(--accent-ink); }
+        .row-title { display: grid; gap: 2px; min-width: 0; }
+        .row-name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; overflow: hidden; }
+        .row-name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+        .row-needs { display: flex; flex-wrap: wrap; gap: 6px; }
+        .row-actions { display: flex; gap: 2px; }
+        .list-head { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 16px; padding: 8px 16px; font-size: 12px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--line); }
+        .list-head span:last-child { width: 150px; }
+        .app.phone .list-head { display: none; }
+        .app.phone .row { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'title' 'needs' 'meta' 'actions'; gap: 6px; }
+        .app.phone .row-title { grid-area: title; }
+        .app.phone .row-needs { grid-area: needs; }
+        .app.phone .row-meta { grid-area: meta; }
+        .app.phone .row-actions { grid-area: actions; margin-left: -10px; }
+
+        /* cards: the whole card is the link to the board (a stretched link); the cabinet's two pages are their own
+           buttons on top of it; hover tints the card, or only the button under the pointer */
+        .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+        .card { position: relative; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 12px; display: grid; gap: 6px; background: #fff; transition: background-color 0.15s ease-out, border-color 0.15s ease-out; }
+        .card-link { position: absolute; inset: 0; border-radius: 12px; z-index: 1; }
+        .card-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .card:hover:not(:has(.card-actions .btn:hover, .need-link:hover, .vis:hover)) { background: color-mix(in srgb, var(--surface-2) 55%, #fff); border-color: var(--control); }
+        .card:hover:not(:has(.card-actions .btn:hover, .need-link:hover, .vis:hover)) .card-open .arrow { transform: translateX(3px); }
+        .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+        .card-name { font-size: 17px; font-weight: 600; margin: 0; }
+        .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
+        .card-open { font-size: 13px; font-weight: 600; color: var(--accent-ink); display: inline-flex; gap: 4px; }
+        .card-open .arrow { display: inline-block; transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+        .card-actions { display: flex; gap: 6px; position: relative; z-index: 2; }
+        .card-actions .btn { padding: 5px 12px; font-size: 13px; text-decoration: none; }
+        .card-actions .btn:hover { background: var(--surface-2); border-color: var(--control); }
+        .need-link { position: relative; z-index: 2; cursor: pointer; }
+        .need-link:hover { background: color-mix(in srgb, var(--bug) 18%, #fff); }
+        @media (prefers-reduced-motion: reduce) { .card, .card-open .arrow { transition: none; } }
+        /* «Ждут решения на ваших досках» exactly as in the app today (AwaitingDecisions.vue, _boards-hub.scss) */
+        .awaiting h4 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); }
+        .awaiting-row { display: flex; align-items: center; gap: 12px 16px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: var(--radius); background: #fff; }
+        .awaiting-row + .awaiting-row { margin-top: 8px; }
+        .awaiting-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+        .awaiting-main b { font-weight: 600; }
+        .awaiting-row .btn { font-size: 13px; padding: 6px 12px; }
+        .app.phone .awaiting-row { flex-wrap: wrap; }
+        .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+        .note-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+        .note-card h3 { margin: 0 0 8px; font-size: 16px; }
+        .note-card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+        .rec { color: var(--accent-ink); font-weight: 600; }
+        .q { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; font-size: 14px; }
+        .q h3 { margin: 0 0 6px; font-size: 16px; }
+        .q p, .q ol { margin: 0; }
+        .q ol { padding-left: 20px; display: grid; gap: 4px; margin-top: 6px; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Мои доски</h1>
+    <p class="lede">
+        Экран нужен, чтобы выбрать доску и сразу увидеть, где что-то ждёт: новые посты в разборе, запросы на доступ.
+        Главный сигнал — «что требует внимания», а не адрес и не плашки. Выбраны карточки (вариант B):
+        вся карточка — ссылка на доску, «Настройки» и «Доступ» — отдельные кнопки в кабинет. Наведите курсор: подсвечивается то, куда уйдёте.
+    </p>
+
+    <div class="controls">
+        <div class="group">Вариант
+            <span class="seg" data-ctl="variant">
+                <button aria-pressed="false" data-v="list">A · Список</button>
+                <button aria-pressed="true" data-v="cards">B · Карточки</button>
+            </span>
+        </div>
+        <div class="group">«Ждут решения»
+            <span class="seg" data-ctl="awaiting">
+                <button aria-pressed="true" data-v="show">Показать (как сейчас)</button>
+                <button aria-pressed="false" data-v="hide">Убрать</button>
+            </span>
+        </div>
+        <div class="group">Закрытая
+            <span class="seg" data-ctl="lock">
+                <button aria-pressed="true" data-v="amber">Янтарный</button>
+                <button aria-pressed="false" data-v="blue">Синий</button>
+                <button aria-pressed="false" data-v="ink">Тёмный</button>
+            </span>
+        </div>
+        <div class="group">Экран
+            <span class="seg" data-ctl="device">
+                <button aria-pressed="true" data-v="desktop">Десктоп</button>
+                <button aria-pressed="false" data-v="phone">Телефон</button>
+            </span>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="app" id="app">
+            <div class="hdr"><span class="brand">Feedback Board</span><span>Тест Менеджер ⌄</span></div>
+            <div class="page" id="page"></div>
+        </div>
+    </div>
+
+    <h2>Что изменилось</h2>
+    <p>Относительно текущей карточки.</p>
+    <div class="notes">
+        <div class="note-card">
+            <h3>Что требует внимания — первым</h3>
+            <ul>
+                <li>«6 новых» — зелёная плашка: посты ждут разбора.</li>
+                <li>«2 запроса» — красная: люди ждут доступа (вместо отдельного блока «Ждут решения» сверху).</li>
+                <li>Ничего не ждёт — спокойное «всё разобрано» или «постов пока нет», без плашки. «Пусто» больше не путает.</li>
+            </ul>
+        </div>
+        <div class="note-card">
+            <h3>Меньше шума</h3>
+            <ul>
+                <li>Адрес доски убран: он есть на «Доступе» и в ссылке.</li>
+                <li>Роль и «Открытая / Закрытая» — одной строкой мелким текстом с замком у закрытой, не две плашки.</li>
+                <li>Кнопки «Настройки» и «Доступ» — тихие, текстом; не переносятся.</li>
+                <li>У досок, где я участник, кнопок нет совсем — только открыть.</li>
+            </ul>
+        </div>
+        <div class="note-card">
+            <h3>Почему список (A)</h3>
+            <ul>
+                <li>Досок может быть 10–20: строки читаются сверху вниз и сравниваются по колонкам, сетка карточек — нет.</li>
+                <li>Привычно для рабочих инструментов (проекты в Linear, репозитории).</li>
+                <li>Одинаковые карточки сеткой — шаблон, от которого отказывается DESIGN.md.</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Вопросы</h2>
+    <div class="q">
+        <h3>1. Порядок досок</h3>
+        <p>Группы остаются как есть: сначала «Я веду» (там решаешь ты), потом «Я участник». Порядок меняется только внутри каждой группы.</p>
+        <ol>
+            <li><span class="rec">Мой вариант:</span> внутри группы сначала те, где что-то ждёт (запросы, новые посты), дальше по последней активности.</li>
+            <li>По последней активности, без подъёма «ждущих».</li>
+            <li>По названию.</li>
+        </ol>
+    </div>
+    <div class="q">
+        <h3>2. Блок «Ждут решения» над списком</h3>
+        <ol>
+            <li><span class="rec">Мой вариант:</span> убрать — запросы видны в строке доски красной плашкой, клик ведёт на «Доступ → Запросы».</li>
+            <li>Оставить и блок, и плашку.</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+const BOARDS = [
+    { name: 'Мобильное приложение', vis: 'private', role: 'Владелец', mine: true, fresh: 12, req: 2, members: 14, last: 'пост 20 мин назад' },
+    { name: 'Private Test', vis: 'private', role: 'Владелец', mine: true, fresh: 0, req: 0, members: 2, last: '', empty: true },
+    { name: 'Flow Test', vis: 'public', role: 'Владелец', mine: true, fresh: 3, req: 0, members: 2, last: 'пост вчера' },
+    { name: 'Сайт клиники', vis: 'public', role: 'Админ', mine: true, fresh: 0, req: 0, members: 5, last: 'пост 3 дня назад' },
+    { name: 'Demo', vis: 'public', role: 'Менеджер', mine: false, fresh: 6, req: 0, members: 2, last: 'пост 23 окт.' },
+    { name: 'Внутренний портал', vis: 'private', role: 'Участник', mine: false, fresh: 0, req: 0, members: 31, last: 'пост 2 нед. назад' },
+]
+const state = { variant: 'cards', device: 'desktop', awaiting: 'show', lock: 'amber' }
+const lock = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>'
+const globe = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/></svg>'
+
+const needs = (b) => {
+    const out = []
+    if (b.req) out.push(`<span class="need req">${b.req} ${b.req === 1 ? 'запрос' : 'запроса'} доступа</span>`)
+    if (b.fresh) out.push(`<span class="need new"><span class="dot"></span>${b.fresh} новых</span>`)
+    if (!out.length) out.push(`<span class="need calm">${b.empty ? 'постов пока нет' : 'всё разобрано'}</span>`)
+    return out.join('')
+}
+const vis = (b) => `<span class="vis ${b.vis}" tabindex="0">${b.vis === 'private' ? lock + 'Закрытая' : globe + 'Открытая'}<span class="vis-hint">${b.vis === 'private' ? 'Закрытая доска: видят только участники' : 'Открытая доска: видят все, у кого есть ссылка'}</span></span>`
+const actions = (b) => b.mine ? `<span class="btn quiet">Настройки</span><span class="btn quiet">Доступ</span>` : ''
+const sort = (list) => [...list].sort((a, b) => (b.req - a.req) || (b.fresh - a.fresh))
+
+function listView(items) {
+    return `<div class="list">
+        <div class="list-head"><span>Доска</span><span>Ждёт внимания</span><span>Активность</span><span></span></div>
+        ${items.map((b) => `<div class="row">
+            <div class="row-title"><span class="row-name"><b>${b.name}</b></span><span class="meta">${b.role} · ${vis(b)}</span></div>
+            <div class="row-needs">${needs(b)}</div>
+            <div class="row-meta meta">${b.members} ${b.members % 10 === 1 && b.members % 100 !== 11 ? 'участник' : (b.members % 10 >= 2 && b.members % 10 <= 4 && (b.members % 100 < 10 || b.members % 100 >= 20) ? 'участника' : 'участников')}${b.last ? ' · ' + b.last : ''}</div>
+            <div class="row-actions" style="width:${state.device === 'phone' ? 'auto' : '150px'}">${actions(b)}</div>
+        </div>`).join('')}
+    </div>`
+}
+function cardsView(items) {
+    return `<div class="cards">${items.map((b) => `<div class="card">
+        <a class="card-link" href="#" aria-label="Открыть доску ${b.name}"></a>
+        <div class="card-top"><p class="card-name">${b.name}</p><div class="row-needs">${needsCard(b)}</div></div>
+        <div class="card-meta-row">${vis(b)}<span class="meta">${b.role}</span></div>
+        <span class="meta">${b.members} участн.${b.last ? ' · ' + b.last : ''}</span>
+        <div class="card-foot">
+            <span class="card-open">Открыть доску <span class="arrow">→</span></span>
+            ${b.mine ? '<div class="card-actions"><a class="btn" href="#">Настройки</a><a class="btn" href="#">Доступ</a></div>' : ''}
+        </div>
+    </div>`).join('')}</div>`
+}
+// the request chip is its own link (to «Доступ → Запросы»), above the card's link
+const needsCard = (b) => needs(b).replace('class="need req"', 'class="need req need-link" title="Открыть запросы"')
+function render() {
+    document.getElementById('app').classList.toggle('phone', state.device === 'phone')
+    document.getElementById('app').dataset.lock = state.lock
+    const view = state.variant === 'list' ? listView : cardsView
+    const mine = sort(BOARDS.filter((b) => b.mine)), part = sort(BOARDS.filter((b) => !b.mine))
+    const waiting = BOARDS.filter((b) => b.req)
+    const awaiting = state.awaiting === 'show' && waiting.length ? `<section class="awaiting">
+            <h4>Ждут решения на ваших досках · ${waiting.reduce((n, b) => n + b.req, 0)}</h4>
+            ${waiting.map((b) => `<div class="awaiting-row"><div class="awaiting-main"><b>${b.name}</b><span class="meta">${b.req} запроса на доступ</span></div><span class="btn primary">Рассмотреть</span></div>`).join('')}
+        </section>` : ''
+    document.getElementById('page').innerHTML = `
+        <div class="top"><h3>Мои доски</h3><span class="btn primary">+ Новая доска</span></div>
+        ${awaiting}
+        <p class="group-title">Я веду · ${mine.length}</p>${view(mine)}
+        <p class="group-title">Я участник · ${part.length}</p>${view(part)}`
+    document.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(state[seg.dataset.ctl] === b.dataset.v))))
+}
+document.addEventListener('click', (e) => {
+    const b = e.target.closest('.seg button')
+    if (b) { state[b.closest('.seg').dataset.ctl] = b.dataset.v; render() }
+})
+render()
+</script>
+</body>
+</html>

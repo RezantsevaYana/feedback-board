@@ -19,17 +19,18 @@
             <p class="note">Сохраните ссылку: по ней видно статус и ответ команды.</p>
             <div class="post-link">
               <span>{{ postUrl.replace(/^https?:\/\//, '') }}</span>
-              <button type="button" class="btn" @click="copy">{{ copied ? 'Скопировано' : 'Скопировать' }}</button>
+              <button type="button" class="btn btn-sm" @click="copy">{{ copied ? 'Скопировано' : 'Скопировать' }}</button>
             </div>
             <div class="fbw-actions">
               <a class="btn btn-primary" :href="postUrl" target="_blank" rel="noopener">Открыть на доске</a>
               <button type="button" class="btn" @click="again">Отправить ещё</button>
             </div>
           </div>
-          <!-- private board: anonymous submits aren't allowed; direct the person to the board to sign in -->
+          <!-- the board was closed while the widget stayed on the site: say so, and lead members to the board.
+               The same words are previewed on the cabinet's «Доступ» page (BoardAccessPage) -->
           <div v-else-if="locked" class="done-box">
-            <h3>Это закрытая доска</h3>
-            <p class="note">Только участники могут отправлять. Войдите на доске и попробуйте ещё раз.</p>
+            <h3>Доска закрыта</h3>
+            <p class="note">Предложения здесь больше не принимаются. Участники могут открыть доску по ссылке.</p>
             <a class="btn btn-primary" :href="boardUrl" target="_blank" rel="noopener">Открыть доску ↗</a>
           </div>
           <div v-else-if="loadError" class="done-box">

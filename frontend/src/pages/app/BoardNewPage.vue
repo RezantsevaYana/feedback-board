@@ -1,80 +1,51 @@
 <template>
-  <AppHeader />
-  <main class="container base-page board-new">
-    <form class="board-new-form" novalidate @submit.prevent="submit">
-      <div class="page-head board-new-head">
-        <nav class="page-crumbs" aria-label="Путь">
-          <RouterLink to="/app/boards">Мои доски</RouterLink>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Новая доска</span>
-        </nav>
-        <h1>Новая доска</h1>
-      </div>
+  <form class="board-new-form" novalidate @submit.prevent="submit">
+    <div class="page-head board-new-head">
+      <h1>Новая доска</h1>
+    </div>
 
+    <InputComponent
+      v-model="name"
+      label="Название доски"
+      hint="пользователи увидят его в шапке"
+      class="board-new-name"
+      type="text"
+      maxlength="80"
+      :errors="v$.name"
+      validate-on-submit
+      autofocus
+    />
+
+    <div class="board-new-slug">
       <InputComponent
-        v-model="name"
-        label="Название доски"
-        hint="пользователи увидят его в шапке"
-        class="board-new-name"
+        v-model="slug"
+        label="Адрес доски"
+        hint="латиница, цифры, дефис"
         type="text"
-        maxlength="80"
-        :errors="v$.name"
+        autocapitalize="off"
+        spellcheck="false"
+        maxlength="64"
+        :error="slugError"
+        :errors="slugError ? undefined : v$.slug"
         validate-on-submit
-        autofocus
+        @input="onSlugInput"
       />
+      <p class="board-new-slug-hint" :class="slugHintClass">{{ slugHint }}</p>
+    </div>
 
-      <div class="board-new-slug">
-        <InputComponent
-          v-model="slug"
-          label="Адрес доски"
-          hint="латиница, цифры, дефис"
-          type="text"
-          autocapitalize="off"
-          spellcheck="false"
-          maxlength="64"
-          :error="slugError"
-          :errors="slugError ? undefined : v$.slug"
-          validate-on-submit
-          @input="onSlugInput"
-        />
-        <p class="board-new-slug-hint" :class="slugHintClass">{{ slugHint }}</p>
-      </div>
-
-      <fieldset class="board-new-origins">
-        <legend>Домены <small>· необязательно</small></legend>
-        <p class="note board-new-origins-note">
-          Сайты, где у вас будет виджет. Без домена доска работает только по прямой ссылке, виджет можно настроить позже.
-        </p>
-        <div v-for="(origin, idx) in origins" :key="idx" class="board-new-origin-row">
-          <InputComponent
-            v-model="origin.value"
-            type="text"
-            autocapitalize="off"
-            spellcheck="false"
-            :placeholder="ORIGIN_EXAMPLE"
-            :error="originErrors[idx]"
-          />
-          <button type="button" class="icon-btn" aria-label="Удалить домен" @click="removeOrigin(idx)">
-            <AppIcon name="close" />
-          </button>
-        </div>
-        <button type="button" class="btn board-new-add-origin" @click="addOrigin">+ Добавить домен</button>
-      </fieldset>
-
-      <div class="board-new-actions">
-        <!-- hover rolls the label into «Поехали →» (shared .cta-roll); while sending it reads «Создаём…» -->
-        <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending" :aria-label="sending ? undefined : 'Создать доску'">
-          <template v-if="sending">Создаём…</template>
-          <span v-else class="cta-roll" aria-hidden="true"><span>Создать доску</span><span>Поехали →</span></span>
-        </button>
-      </div>
-    </form>
-  </main>
+    <div class="board-new-actions">
+      <!-- hover rolls the label into «Поехали →» (shared .cta-roll); while sending it reads «Создаём…» -->
+      <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending" :aria-label="sending ? undefined : 'Создать доску'">
+        <template v-if="sending">Создаём…</template>
+        <span v-else class="cta-roll" aria-hidden="true"><span>Создать доску</span><span>Поехали →</span></span>
+      </button>
+    </div>
+  </form>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
 import { helpers, maxLength, minLength, required } from '@vuelidate/validators'
 import { BoardsApi, type SlugCheck } from '@/api/boards'
@@ -82,8 +53,6 @@ import { ApiError } from '@/api/client'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { slugify } from '@/shared/utils/slugify'
-import AppHeader from '@/shared/components/AppHeader.vue'
-import AppIcon from '@/shared/ui/AppIcon.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 
 const auth = useAuthStore()
@@ -97,11 +66,6 @@ const slugDirty = ref(false)
 const slugServer = ref('')
 const slugCheck = ref<SlugCheck | null>(null)
 const slugChecking = ref(false)
-
-// kept out of the template: a literal "//" there trips vue-tsc and drops the v-for scope
-const ORIGIN_EXAMPLE = 'https://app.example.com'
-const origins = reactive<Array<{ value: string }>>([{ value: '' }])
-const originErrors = ref<Record<number, string>>({})
 
 const sending = ref(false)
 
@@ -194,48 +158,26 @@ function reasonMessage(reason: SlugCheck['reason']): string {
   }
 }
 
-function addOrigin() {
-  origins.push({ value: '' })
-}
-function removeOrigin(idx: number) {
-  origins.splice(idx, 1)
-  if (origins.length === 0) origins.push({ value: '' })
-  originErrors.value = {}
-}
-
 async function submit() {
   if (sending.value) return
   slugServer.value = ''
-  originErrors.value = {}
   const isValid = await v$.value.$validate()
   if (!isValid) return
-
-  const cleanOrigins = origins
-    .map((o) => o.value.trim().replace(/\/+$/, ''))
-    .filter((v) => v.length > 0)
 
   sending.value = true
   try {
     const res = await BoardsApi.create({
       name: name.value.trim(),
       slug: slug.value.trim(),
-      origins: cleanOrigins,
     })
     auth.addBoard(res.data)
     notification.success(`Доска «${res.data.name}» готова`)
-    router.push({ name: 'board-embed', params: { slug: res.data.slug }, query: { created: '1' } })
+    router.push({ name: 'board-access', params: { slug: res.data.slug }, query: { created: '1' } })
   } catch (e) {
     if (e instanceof ApiError) {
       slugServer.value = e.field('slug') ?? ''
       if (slugServer.value) slugError.value = slugServer.value
-      // origins: errors come in as "origins.0", "origins.1" etc.
-      const errs: Record<number, string> = {}
-      for (const key of Object.keys(e.errors)) {
-        const match = key.match(/^origins\.(\d+)$/)
-        if (match && e.errors[key]?.[0]) errs[Number(match[1])] = e.errors[key][0]
-      }
-      originErrors.value = errs
-      if (!slugError.value && !Object.keys(errs).length) notification.error(e.message)
+      else notification.error(e.message)
     } else {
       notification.error(String(e))
     }

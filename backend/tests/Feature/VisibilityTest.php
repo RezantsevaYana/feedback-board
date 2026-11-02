@@ -88,14 +88,31 @@ class VisibilityTest extends TestCase
             ->assertJsonPath('data.visibility', 'private');
     }
 
-    public function test_private_to_public_is_rejected(): void
+    public function test_private_board_opens_back_with_its_votes(): void
     {
+        $member = User::factory()->create();
+        $this->board->members()->attach($member->id, ['role' => ProjectRole::Voter->value]);
+        $post = Post::factory()->for($this->board)->create();
+        $this->actingAs($member)->postJson("/api/public/posts/{$post->id}/vote", ['value' => 'like'])->assertOk();
+        // the sanctum guard keeps the last user between requests inside one test
+        $this->app['auth']->forgetGuards();
+
         $this->actingAs($this->owner)
             ->patchJson('/api/admin/boards/closed', ['visibility' => 'public'])
-            ->assertStatus(422)
-            ->assertJsonPath('errors.visibility.0', 'Закрытую доску нельзя открыть обратно.');
+            ->assertOk()
+            ->assertJsonPath('data.visibility', 'public')
+            ->assertJsonPath('data.posts_count', 1);
+        $this->app['auth']->forgetGuards();
 
-        $this->assertSame(BoardVisibility::Private, $this->board->refresh()->visibility);
+        // a guest sees the board and the members' votes as they were, and votes by browser on top
+        $this->getJson('/api/public/projects/closed/posts')->assertOk()->assertJsonPath('data.0.likes_count', 1);
+        $this->postJson("/api/public/posts/{$post->id}/vote", ['value' => 'like'], ['X-Voter-Token' => (string) \Illuminate\Support\Str::uuid()])
+            ->assertOk()
+            ->assertJsonPath('data.likes_count', 2);
+
+        // the member keeps the role and the vote by account
+        $this->assertSame(ProjectRole::Voter, $member->fresh()->roleOn($this->board->fresh()));
+        $this->actingAs($member)->getJson('/api/public/projects/closed/posts')->assertJsonPath('data.0.my_vote', 'like');
     }
 
     public function test_unknown_visibility_is_rejected(): void
