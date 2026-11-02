@@ -48,6 +48,15 @@ function ensureCsrf(): Promise<void> {
   return csrf
 }
 
+// A 403 without a reason means the role on the board doesn't allow it any more (changed in another window):
+// the app subscribes here and reloads /me, so the buttons follow the real role (useRoleSync).
+// 403 with a reason are the closed board's gate screens, they're handled where the board loads.
+const forbiddenListeners = new Set<() => void>()
+export function onForbidden(listener: () => void): () => void {
+  forbiddenListeners.add(listener)
+  return () => forbiddenListeners.delete(listener)
+}
+
 // HTTP core for the modules in api/*: components and stores call those modules, not this function.
 export async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const method = opts.method ?? 'GET'
@@ -84,6 +93,7 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
     if (response.status === 419) csrf = null
+    if (response.status === 403 && sameOrigin && typeof data.reason !== 'string') forbiddenListeners.forEach((listener) => listener())
     const fallback = TEXT.errors[response.status as keyof typeof TEXT.errors] ?? TEXT.errors.generic
     throw new ApiError(
       response.status,

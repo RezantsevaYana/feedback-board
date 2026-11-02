@@ -21,6 +21,15 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     /**
+     * Mirrors the DB default, so a freshly created model has the flag without a refresh.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_superadmin' => false,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -30,6 +39,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_superadmin' => 'boolean',
         ];
     }
 

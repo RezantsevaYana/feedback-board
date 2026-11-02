@@ -15,6 +15,8 @@ import { RouterView } from 'vue-router'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import ConfirmModal from '@/shared/ui/ConfirmModal.vue'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
+import { useRoleSync } from '@/shared/composables/useRoleSync'
 
 const notification = useNotificationStore()
+useRoleSync()
 </script>

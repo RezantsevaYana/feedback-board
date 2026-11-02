@@ -39,6 +39,11 @@ export const useBoardStore = defineStore('board', () => {
   /** The private board's name from the 403, so the gate can say which board it is; the board itself stays hidden. */
   const gateName = ref('')
   const me = ref<Me | null>(null)
+  // One session for the whole app: signing in or out on /app/login (another account in the same tab), or a fresh /me
+  // in the cabinet, reaches the board too. open() skips an already loaded board, so without this the board kept
+  // the previous account — a guest's screen, or someone else's buttons that ended in 403.
+  const auth = useAuthStore()
+  watch(() => auth.me, (next) => (me.value = next))
   /** The logged-in user's role on this board; null for guests and outsiders. */
   const role = computed(() => me.value?.projects.find((p) => p.slug === project.value?.slug)?.role ?? null)
   /** Team mode: owner / admin / manager on this board (the API checks it again on every call). */
@@ -135,6 +140,12 @@ export const useBoardStore = defineStore('board', () => {
         }
       } else loadError.value = errorMessage(e)
     }
+  }
+
+  /** The role may have changed in another window: read /me again, team mode and the tools follow it. */
+  async function refreshMe() {
+    if (!me.value) return
+    me.value = await AuthApi.me().then((r) => r.data).catch(() => null)
   }
 
   const currentSlug = () => project.value?.slug ?? ''
@@ -540,15 +551,9 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  async function login(email: string, password: string) {
-    const res = await AuthApi.login(email, password)
-    // the board reloads itself when team mode switches (watcher in BoardView)
-    me.value = res.data
-  }
-
   async function logout() {
     // through the cabinet store, so /app/* doesn't keep the session it cached
-    await useAuthStore().logout()
+    await auth.logout()
     me.value = null
     if (view.sort === 'priority') view.sort = 'top'
     // on a private board's gate the outsider becomes a guest: same gate, with name and email fields
@@ -560,10 +565,10 @@ export const useBoardStore = defineStore('board', () => {
 
   return {
     project, notFound, unpublished, privateLocked, noAccess, gateName, me, role, team, configure, readOnly, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, postsTotal, newCount, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
-    open, refresh, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
+    open, refresh, refreshMe, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
     addStatus, updateStatus, deleteStatus,
-    login, logout,
+    logout,
     startPolling, stopPolling,
     selectionMode, selectedIds, selectionCount, hasSelection, isSelected, selectedPosts, allSelectedHidden,
     exitSelection, toggleSelectionMode,

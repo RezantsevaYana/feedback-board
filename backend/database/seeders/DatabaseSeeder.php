@@ -11,7 +11,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 /**
- * Local demo: project "Demo" (/demo) with a few posts and an admin admin@example.com / password.
+ * Local demo: project "Demo" (/demo) with a few posts and an admin admin@example.com / password (also a superadmin).
  * Does nothing if the demo project already exists, so it is safe to run on every start.
  */
 class DatabaseSeeder extends Seeder
@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
 
         $admin = User::create(['name' => 'Админ', 'email' => 'admin@example.com', 'password' => 'password']);
         $admin->markEmailAsVerified();
+        // the local admin also opens «Админка сервиса» (/app/platform)
+        $admin->forceFill(['is_superadmin' => true])->save();
 
         // owner_id so ParticipantController marks this row as «создал доску» (source = created),
         // not «добавлен вручную». Pivot role must match: ProjectRole::Owner.

@@ -164,6 +164,16 @@
         background-color 0.2s ease-out,
         color 0.2s ease-out;
 }
+// the name, and under it the role on the open board
+.app-sidebar-board-title {
+    display: grid;
+    min-width: 0;
+}
+.app-sidebar-board-role {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+}
 .app-sidebar-board-name {
     min-width: 0;
     overflow: hidden;

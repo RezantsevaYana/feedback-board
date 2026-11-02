@@ -87,6 +87,8 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'email_verified' => $user->hasVerifiedEmail(),
+            // opens «Админка сервиса» in the account menu
+            'is_superadmin' => $user->is_superadmin,
             'projects' => $pivotProjects
                 ->merge($boards->reject(fn (Project $p) => $pivotIds->contains($p->id)))
                 ->sortBy('name')->values()

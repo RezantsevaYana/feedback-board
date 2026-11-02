@@ -61,7 +61,11 @@
         <!-- team mode with several boards: the brand tag opens the switcher instead of reloading this board -->
         <BoardSwitcher v-if="switchBoards.length > 1" class="proj slant" :boards="switchBoards" :current="slug" :label="board.project.name" />
         <RouterLink v-else class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
-        <VisibilityBadge :visibility="board.project.visibility" class="board-visibility" />
+        <!-- what the board is and who I am on it, right under its name -->
+        <div class="board-who">
+          <VisibilityBadge :visibility="board.project.visibility" />
+          <span v-if="board.role" class="board-who-role">Вы — {{ ROLE_LABELS[board.role].toLowerCase() }}</span>
+        </div>
         <div class="board-sections">
           <button
             v-for="s in primarySections"
@@ -106,9 +110,9 @@
           <BoardTools v-if="board.configure" :slug="slug" :pending="pendingRequests" class="board-tools-side" @categories="editingCategories = true" @statuses="editingStatuses = true" />
           <SidebarAccount :name="board.me.name" :email="board.me.email" :chip="whoChip" show-boards class="board-account" />
         </template>
-        <button v-else type="button" class="link-btn team-login" aria-label="Вход для команды" @click="loggingIn = true">
-          <span class="team-login-full" aria-hidden="true">Вход для команды</span><span class="team-login-short" aria-hidden="true">Войти</span>
-        </button>
+        <!-- a guest reads, votes and posts without an account; signing in is for the team of an open board,
+             through the one login page that brings them back here (a closed board has the gate with its own «Войти») -->
+        <RouterLink v-else :to="{ path: '/app/login', query: { next: route.fullPath } }" class="link-btn team-login">Войти</RouterLink>
         <!-- signed in, on tablet and phone the theme moves into the drawer, so the top row fits -->
         <ThemeToggle :class="{ 'board-theme-side': board.me }" />
         <button v-if="board.me" type="button" class="btn team-menu-btn" aria-label="Меню" :aria-expanded="menuOpen" @click="menuOpen = true">
@@ -195,7 +199,6 @@
     </NavDrawer>
     <SubmitModal v-if="composing && board.project" :project="board.project.slug" :categories="board.categories" :title="composeTitle" :author="board.me ? { name: board.me.name } : null" :hide-author-field="board.project.visibility === 'private'" @close="closeCompose" @sent="onSent" />
     <VotersModal />
-    <LoginModal v-if="loggingIn" @close="loggingIn = false" />
     <CategoriesModal v-if="editingCategories && board.configure" @close="editingCategories = false" />
     <StatusesModal v-if="editingStatuses && board.configure" @close="editingStatuses = false" />
     <FiltersModal v-if="filtersOpen" @close="filtersOpen = false" @reset="resetFilters" />
@@ -223,7 +226,6 @@ import CategoriesModal from './components/CategoriesModal.vue'
 import FiltersModal from './components/FiltersModal.vue'
 import KanbanBoard from './components/KanbanBoard.vue'
 import LeaderboardAuthors from './components/LeaderboardAuthors.vue'
-import LoginModal from './components/LoginModal.vue'
 import PostList from './components/PostList.vue'
 import PostModal from './components/PostModal.vue'
 import StatusesModal from './components/StatusesModal.vue'
@@ -247,7 +249,6 @@ const notification = useNotificationStore()
 const slug = computed(() => String(route.params.slug ?? ''))
 const postId = computed(() => (route.params.id ? Number(route.params.id) : null))
 const composing = ref(false)
-const loggingIn = ref(false)
 const editingCategories = ref(false)
 const editingStatuses = ref(false)
 // «Предложить», optionally starting from what was searched for and not found

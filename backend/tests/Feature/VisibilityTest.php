@@ -129,7 +129,20 @@ class VisibilityTest extends TestCase
 
         $this->actingAs($manager)
             ->patchJson('/api/admin/boards/closed', ['visibility' => 'private'])
-            ->assertForbidden();
+            ->assertForbidden()
+            // the toast shows this text: not the framework's English one
+            ->assertJsonPath('message', 'Не хватает прав на это действие. Возможно, вашу роль на доске изменили.');
+    }
+
+    public function test_board_admin_who_is_not_the_owner_can_flip_visibility(): void
+    {
+        $admin = User::factory()->create();
+        $this->board->members()->attach($admin, ['role' => ProjectRole::Admin->value]);
+
+        $this->actingAs($admin)
+            ->patchJson('/api/admin/boards/closed', ['visibility' => 'public'])
+            ->assertOk()
+            ->assertJsonPath('data.visibility', 'public');
     }
 
     public function test_settings_response_includes_visibility(): void

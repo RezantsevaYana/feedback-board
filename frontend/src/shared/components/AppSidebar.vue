@@ -11,7 +11,11 @@
              in the panel every row is a button that unfolds its pages in the menu itself -->
         <component :is="rowTag(b)" v-bind="rowAttrs(b)" class="app-sidebar-board-row">
           <span class="app-sidebar-board-mark" aria-hidden="true">{{ boardMark(b.name) }}</span>
-          <span class="app-sidebar-board-name">{{ b.name }}</span>
+          <!-- the open board says who I am on it: owner and admin see the same pages, so it's the only hint -->
+          <span class="app-sidebar-board-title">
+            <span class="app-sidebar-board-name">{{ b.name }}</span>
+            <span v-if="b.slug === shownSlug && b.role" class="app-sidebar-board-role">{{ ROLE_LABELS[b.role] }}</span>
+          </span>
           <span v-if="b.visibility === 'private'" class="app-sidebar-board-lock" title="Закрытая доска"><AppIcon name="lock" :size="13" /><span class="visually-hidden">закрытая</span></span>
           <!-- hidden while the pages are open: «Доступ» carries the number then -->
           <span v-if="b.pending_requests" class="count-badge" :aria-label="`запросов на доступ: ${b.pending_requests}`">{{ b.pending_requests }}</span>
@@ -57,7 +61,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import type { BoardSummary } from '@/api/types'
+import { ROLE_LABELS, type BoardSummary } from '@/api/types'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useLogout } from '@/shared/composables/useLogout'
 import { canConfigure } from '@/shared/utils/roles'

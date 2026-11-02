@@ -111,6 +111,7 @@ import PendingInvitationsList from './components/PendingInvitationsList.vue'
 import SettingsDomains from './components/SettingsDomains.vue'
 import WidgetColorSection from './components/WidgetColorSection.vue'
 import { boardLoadError } from './composables/boardLoadError'
+import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 
 // «Доступ» — who sees the board and how they get in. The mode (open / closed) is at the top and the rest shows only
 // what works in it: an open board has the link, the widget (code, domains, colour) and its team; a closed one has
@@ -133,6 +134,10 @@ const open = computed(() => settings.value?.visibility !== 'private')
 const boardName = computed(() => settings.value?.name ?? auth.me?.projects.find((b) => b.slug === slug.value)?.name ?? slug.value)
 
 watch(slug, load, { immediate: true })
+useLostAccess(slug, () => {
+  settings.value = null
+  loadError.value = NO_CONFIGURE_TEXT
+})
 
 async function load() {
   loading.value = true

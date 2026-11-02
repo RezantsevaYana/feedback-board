@@ -32,7 +32,7 @@ docker compose up
 | http://localhost:8000/api/… | API (на доске доступно через тот же адрес :5176) |
 | http://localhost:8025 | Mailpit: все письма сервиса (подтверждение почты, сброс пароля) |
 
-**Режим команды:** на доске нажмите «Вход для команды» и войдите как `admin@example.com` / `password` (только для локальной разработки).
+**Режим команды:** на доске нажмите «Войти» внизу бокового меню (ведёт на `/app/login` и обратно на доску) и войдите как `admin@example.com` / `password` (только для локальной разработки).
 
 Демо-данные создаются один раз. Чтобы сбросить их:
 
@@ -46,7 +46,10 @@ docker compose exec backend php artisan migrate:fresh --seed
 docker compose exec backend php artisan project:create "My Product" --slug=my-product --origin=https://app.example.com
 docker compose exec backend php artisan admin:create anna@example.com --project=my-product   # выведет пароль один раз
 docker compose exec backend php artisan admin:password anna@example.com                     # новый пароль
+docker compose exec backend php artisan superadmin:grant anna@example.com                   # админка сервиса (--revoke — забрать)
 ```
+
+**Админка сервиса** — `/app/platform`, пункт «Админка сервиса» в меню аккаунта: все доски и все пользователи (пока только просмотр). Открывается только тем, кому выданы права командой `superadmin:grant`; локальный `admin@example.com` получает их из сидов.
 
 Виджет на сайте продукта подключается одной строкой:
 

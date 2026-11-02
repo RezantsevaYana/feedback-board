@@ -104,5 +104,11 @@ Route::prefix('admin')->group(function () {
         Route::post('projects/{project:slug}/statuses', [Admin\StatusController::class, 'store']);
         Route::patch('statuses/{status}', [Admin\StatusController::class, 'update']);
         Route::delete('statuses/{status}', [Admin\StatusController::class, 'destroy']);
+
+        // «Админка сервиса»: every board and account, superadmins only
+        Route::prefix('platform')->middleware('can:platform.admin')->group(function () {
+            Route::get('boards', [Admin\PlatformController::class, 'boards']);
+            Route::get('users', [Admin\PlatformController::class, 'users']);
+        });
     });
 });

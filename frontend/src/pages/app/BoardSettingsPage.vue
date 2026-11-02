@@ -42,6 +42,7 @@ import StatusesEditor from '@/shared/components/StatusesEditor.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
 import SettingsGeneral from './components/SettingsGeneral.vue'
 import { boardLoadError } from './composables/boardLoadError'
+import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 import { useDeleteBoard } from './composables/useDeleteBoard'
 
 // «Настройки» — what the board is: sections with anchors (#general, #categories, #statuses), deletion below them
@@ -66,6 +67,10 @@ if (route.hash === '#access' || route.hash === '#domains') {
 }
 
 watch(slug, load, { immediate: true })
+useLostAccess(slug, () => {
+  settings.value = null
+  loadError.value = NO_CONFIGURE_TEXT
+})
 
 async function load() {
   loading.value = true
