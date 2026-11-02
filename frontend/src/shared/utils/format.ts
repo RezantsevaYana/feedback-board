@@ -33,3 +33,9 @@ export function initials(name: string | null | undefined, email: string | null |
   const words = (name ?? '').trim().split(/\s+/).filter(Boolean)
   return words.slice(0, 2).map((w) => w[0]!.toUpperCase()).join('') || (email?.[0] ?? '?').toUpperCase()
 }
+/** A board's mark in the side menu: the first letters of two words, short joining words («и», «для») skipped. */
+export function boardMark(name: string): string {
+  const words = name.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean)
+  const second = words.slice(1).find((w) => w.length > 3 && /^\p{L}/u.test(w))
+  return ((words[0]?.[0] ?? '?') + (second?.[0] ?? '')).toUpperCase()
+}

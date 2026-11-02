@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Доски в сайдбаре — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --active-fg: #063f2c;
+            --active-line: #1d8547;
+            --line: #d8e1db;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --bug: #b0423a;
+            --lock: #7f4718;
+            --page: #f3f6f4;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+            --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        button { font: inherit; color: inherit; }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 760px; margin: 0 0 24px; }
+        .doc h2 { font-size: 20px; margin: 48px 0 8px; }
+
+        .controls { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; margin-bottom: 16px; position: sticky; top: 0; z-index: 5; padding: 12px 0; background: var(--page); }
+        .controls .group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+        .seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .seg button { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .seg button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+
+        /* ---------- the app mock ---------- */
+        .stage { display: flex; justify-content: center; }
+        .app { position: relative; width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+        .app.phone { width: 390px; }
+        .hdr { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 16px 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }
+        .brand { font-family: var(--font-display); font-weight: 600; font-size: 16px; white-space: nowrap; }
+        .brand-tag { display: none; padding: 4px 9px 4px 13px; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 12px; font-weight: 600; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%); }
+        .sep { color: var(--line); font-size: 18px; }
+        .switcher { font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .switcher::after { content: ' ⌄'; color: var(--muted); }
+        .app.phone .sep { display: none; }
+        .hdr-right { display: flex; align-items: center; gap: 10px; }
+        .acct { font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .acct::after { content: ' ⌄'; color: var(--muted); }
+        .burger { display: none; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); place-items: center; cursor: pointer; padding: 0; }
+        .burger i { display: block; width: 16px; height: 1.5px; background: var(--fg); border-radius: 1px; transition: transform 0.24s var(--ease), opacity 0.2s; }
+        .burger span { display: grid; gap: 4px; }
+        .burger.x i:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+        .burger.x i:nth-child(2) { opacity: 0; }
+        .burger.x i:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+        .app.phone .brand { display: none; }
+        .app.phone .brand-tag, .app.phone .burger { display: inline-grid; }
+        .app.phone .acct { font-size: 0; }
+        .app.phone .acct::before { content: 'ИВ'; font-size: 12px; font-weight: 600; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); }
+
+        .layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; padding: 20px 16px 28px; min-height: 680px; }
+        .app.phone .layout { grid-template-columns: 1fr; padding: 16px; min-height: 620px; }
+        .app.phone .layout > .side { display: none; }
+
+        /* ---------- the sidebar ---------- */
+        .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+        .group { display: grid; gap: 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+        .group-label { display: flex; align-items: baseline; justify-content: space-between; padding: 0 10px 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+        .group-label button { border: 0; background: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--accent); cursor: pointer; }
+        .nav-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; background: none; color: var(--muted); font-weight: 500; font-size: 14px; text-align: left; cursor: pointer; }
+        .nav-item:hover { background: var(--surface-2); color: var(--fg); }
+        .nav-item.on { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+        .nav-item .badge { margin-left: auto; }
+
+        /* a board: its name is a row of its own; the current one unfolds its two pages under it */
+        .boards { display: grid; gap: 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+        .board { display: grid; border: 1px solid transparent; border-radius: 12px; transition: background-color 0.2s, border-color 0.2s; }
+        .board.open { background: var(--page); border-color: var(--line); padding: 4px; margin-block: 2px; }
+        .board-row { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; padding: 6px 8px; border: 0; border-radius: 8px; background: none; font-size: 14px; font-weight: 500; color: var(--muted); text-align: left; cursor: pointer; }
+        .board-mark { flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--surface-2); color: var(--fg); font-size: 11px; font-weight: 600; }
+        .board.cur .board-mark { background: var(--accent); color: #fff; }
+        .board-row:hover { background: var(--surface-2); color: var(--fg); }
+        .board-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .board-row .lock { flex: none; color: var(--lock); }
+        .board-row .badge { margin-left: auto; }
+        .board.open > .board-row { color: var(--fg); font-weight: 600; }
+        .board.open > .board-row:hover { background: none; }
+        .board.open > .board-row .badge { display: none; }
+        .side:not(.drop-side) .board.cur > .board-row { cursor: default; }
+        .pages { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.26s var(--ease), opacity 0.2s ease-out; }
+        .pages > div { min-height: 0; overflow: hidden; display: grid; gap: 2px; }
+        .board.open > .pages { grid-template-rows: 1fr; opacity: 1; }
+        .board.open > .pages > div { padding-top: 2px; }
+        /* the phone menu is a place to jump, not to read: no page sections, a shorter list */
+        .drop-side .sub-wrap { display: none; }
+        .pages .nav-item { padding: 6px 10px; font-size: 14px; }
+        .sub-wrap { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.26s var(--ease), opacity 0.2s ease-out; }
+        .sub-wrap.open { grid-template-rows: 1fr; opacity: 1; }
+        .sub-wrap > .sub { overflow: hidden; min-height: 0; }
+        .sub { margin: 0 0 0 18px; padding-left: 8px; border-left: 1px solid var(--line); display: grid; gap: 1px; }
+        .sub-wrap.open > .sub { margin-block: 2px 6px; }
+        .sub span { font-size: 13px; color: var(--muted); padding: 4px 8px; }
+        .sub span.here { color: var(--fg); font-weight: 600; }
+        @media (prefers-reduced-motion: reduce) { .pages, .sub-wrap { transition: none; } }
+        .more { margin-top: 2px; display: flex; align-items: center; gap: 6px; padding: 7px 10px; border: 0; background: none; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; text-align: left; border-radius: 8px; }
+        .more:hover { background: var(--surface-2); color: var(--fg); }
+        .add { padding: 7px 10px; border: 0; background: none; font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer; text-align: left; border-radius: 8px; }
+        .add:hover { background: var(--surface-2); }
+        .side-foot { margin-top: auto; border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; justify-items: start; }
+        .out { border: 0; background: none; color: var(--bug); font-size: 13px; font-weight: 500; padding: 0 10px; cursor: pointer; }
+        .theme { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); }
+        .badge { display: inline-grid; place-items: center; flex: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; }
+
+        /* ---------- the page on the right: grey placeholders, the sidebar is what's being decided ---------- */
+        .main { border-left: 1px solid var(--line); padding-left: 28px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+        .app.phone .main { border-left: 0; padding-left: 0; }
+        .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .head h3 { font-size: 26px; margin: 0; letter-spacing: -0.015em; }
+        .app.phone .head h3 { font-size: 24px; }
+        .kicker { font-size: 13px; color: var(--muted); margin: 0 0 -10px; }
+        .btn { display: inline-flex; align-items: center; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+        .row { display: flex; gap: 8px; }
+        .card { border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 10px; max-width: 660px; }
+        .app.phone .card { border: 0; border-radius: 0; padding: 14px 0; border-top: 1px solid var(--line); }
+        .card h4 { margin: 0; font-size: 16px; }
+        .ph { height: 12px; border-radius: 6px; background: var(--surface-2); }
+        .ph.w60 { width: 60%; } .ph.w80 { width: 80%; } .ph.w40 { width: 40%; }
+        .ph.field { height: 40px; border-radius: 10px; }
+
+        /* ---------- tablet / phone: the same menu drops down under the header ---------- */
+        .drop-bg { position: absolute; inset: 0; z-index: 2; background: rgba(15, 34, 36, 0.32); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .drop-bg.show { opacity: 1; pointer-events: auto; }
+        .drop { position: absolute; z-index: 3; top: 72px; left: 16px; right: 16px; max-height: 560px; overflow-y: auto; padding: 12px 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); box-shadow: 0 12px 32px rgba(15, 34, 36, 0.14); transform: translateY(-8px); opacity: 0; pointer-events: none; transition: transform 0.24s var(--ease), opacity 0.18s; }
+        .drop.show { transform: none; opacity: 1; pointer-events: auto; }
+        .drop .side { min-height: 0; }
+        .drop .side-foot { margin-top: 4px; }
+
+        /* ---------- explanation ---------- */
+        .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+        .rule { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+        .rule h3 { margin: 0 0 6px; font-size: 15px; }
+        .rule p, .rule li { margin: 0; color: var(--muted); font-size: 14px; }
+        .rule ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Доски в сайдбаре</h1>
+    <p class="lede">Все доски, которые ты ведёшь, прямо в боковом меню кабинета. Текущая раскрыта с «Настройками» и «Доступом», остальные — по строке. Клик по другой доске открывает ту же страницу у неё. Переключатель «Доски ▾» в шапке остаётся. Кликабельно: доски, страницы, «Ещё», «Меню» на телефоне.</p>
+
+    <div class="controls">
+        <div class="group">Экран
+            <div class="seg" id="device">
+                <button type="button" data-v="desktop" aria-pressed="true">Десктоп</button>
+                <button type="button" data-v="phone" aria-pressed="false">Телефон</button>
+            </div>
+        </div>
+        <div class="group">Сценарий
+            <div class="seg" id="scenario">
+                <button type="button" data-v="few" aria-pressed="true">3 доски</button>
+                <button type="button" data-v="many" aria-pressed="false">11 досок</button>
+                <button type="button" data-v="account" aria-pressed="false">Настройки аккаунта</button>
+                <button type="button" data-v="one" aria-pressed="false">Одна доска</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="app" id="app">
+            <header class="hdr">
+                <div class="row" style="align-items:center">
+                    <span class="brand">Feedback Board</span>
+                    <span class="brand-tag">FB</span>
+                    <span class="sep">/</span>
+                    <span class="switcher">Доски</span>
+                </div>
+                <div class="hdr-right">
+                    <span class="acct">Ирина Ветрова</span>
+                    <button type="button" class="burger" id="burger" aria-label="Меню"><span><i></i><i></i><i></i></span></button>
+                </div>
+            </header>
+            <div class="layout">
+                <aside class="side" id="side"></aside>
+                <section class="main" id="main"></section>
+            </div>
+            <div class="drop-bg" id="dropBg"></div>
+            <div class="drop" id="drop"><div class="side drop-side" id="dropSide"></div></div>
+        </div>
+    </div>
+
+    <h2>Как это работает</h2>
+    <div class="rules">
+        <div class="rule">
+            <h3>Какие доски в списке</h3>
+            <ul>
+                <li>Только те, что ты ведёшь (владелец или админ): у них есть «Настройки» и «Доступ».</li>
+                <li>Доски, где ты участник, остаются на «Моих досках»: настраивать там нечего.</li>
+                <li>Порядок как на «Моих досках»: сначала где ждут решения, потом по алфавиту.</li>
+            </ul>
+        </div>
+        <div class="rule">
+            <h3>Переключение</h3>
+            <ul>
+                <li>Клик по другой доске открывает ту же страницу, на которой ты сейчас: «Доступ» → «Доступ».</li>
+                <li>С «Настроек аккаунта» клик ведёт в «Настройки» доски.</li>
+                <li>Телефон: тап по доске раскрывает её прямо в меню, второй тап по «Настройкам» или «Доступу» сразу ведёт туда. Разделов страниц в мобильном меню нет, оно короче.</li>
+                <li>Квадратик с буквами — доска; у текущей он зелёный, а сама она с «Настройками» и «Доступом» собрана в одну плашку.</li>
+                <li>Бейдж у доски — запросы на доступ; замок — доска закрытая.</li>
+            </ul>
+        </div>
+        <div class="rule">
+            <h3>Много досок</h3>
+            <ul>
+                <li>Видно до 6 досок, текущая всегда среди них.</li>
+                <li>«Ещё 5» раскрывает остальные на месте, «Свернуть» прячет.</li>
+                <li>Новая доска создаётся из «Доски ▾» в шапке и с «Моих досок».</li>
+            </ul>
+        </div>
+        <div class="rule">
+            <h3>Шапка</h3>
+            <ul>
+                <li>Переключатель «Доски ▾» остаётся: в нём все доски, и те, где ты участник, и «+ Новая доска».</li>
+                <li>Сайдбар — быстрый переход между досками, которые ты настраиваешь.</li>
+                <li>На планшете и телефоне всё это в «Меню», та же выпадающая панель.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+const BOARDS_FEW = [
+    { slug: 'qa', name: 'QA Доска 1', pending: 2, private: true },
+    { slug: 'demo', name: 'Demo', pending: 0, private: false },
+    { slug: 'mobile', name: 'Мобильное приложение', pending: 0, private: true },
+]
+const BOARDS_MANY = [
+    ...BOARDS_FEW,
+    { slug: 'site', name: 'Сайт и лендинги', pending: 1, private: false },
+    { slug: 'crm', name: 'CRM для отдела продаж', pending: 0, private: true },
+    { slug: 'api', name: 'Публичное API', pending: 0, private: false },
+    { slug: 'help', name: 'Справочный центр', pending: 0, private: false },
+    { slug: 'billing', name: 'Оплата и тарифы', pending: 0, private: true },
+    { slug: 'ios', name: 'iOS-клиент', pending: 0, private: false },
+    { slug: 'partners', name: 'Партнёрский кабинет', pending: 0, private: true },
+    { slug: 'internal', name: 'Внутренние инструменты', pending: 0, private: true },
+]
+const SECTIONS = {
+    settings: ['Общее', 'Категории', 'Столбцы', 'Удалить доску'],
+    access: ['Кто видит доску', 'Ссылка', 'Запросы', 'Участники'],
+    account: ['Профиль', 'Пароль'],
+}
+const VISIBLE = 6
+const LOCK = '<svg class="lock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="закрытая"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+
+const s = { device: 'desktop', scenario: 'few', boards: BOARDS_FEW, current: 'qa', page: 'access', expanded: false, menu: false, peek: null }
+
+// attention first, then by name; the current board is always among the visible ones
+function ordered() {
+    return [...s.boards].sort((a, b) => (b.pending > 0) - (a.pending > 0) || a.name.localeCompare(b.name, 'ru'))
+}
+function visibleBoards() {
+    const all = ordered()
+    if (s.expanded || all.length <= VISIBLE + 1) return { list: all, hidden: 0 }
+    let list = all.slice(0, VISIBLE)
+    const cur = all.find(b => b.slug === s.current)
+    if (cur && !list.includes(cur)) list = [...list.slice(0, VISIBLE - 1), cur]
+    return { list, hidden: all.length - list.length }
+}
+
+function sub(key) {
+    const items = SECTIONS[key].map((t, i) => `<span class="${i === 0 ? 'here' : ''}">${t}</span>`).join('')
+    return `<div class="sub-wrap" data-sub="${key}"><div class="sub">${items}</div></div>`
+}
+
+// one or two letters of the name, like the account's initials
+function mark(name) {
+    // short joining words («и», «в», «для») don't make a letter
+    const w = name.replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/).filter((x, i) => i === 0 || x.length > 3)
+    return (w.length > 1 && /^\p{L}/u.test(w[1]) ? w[0][0] + w[1][0] : w[0].slice(0, 1)).toUpperCase()
+}
+function boardHtml(b) {
+    const badge = b.pending ? `<span class="badge" aria-label="запросов на доступ: ${b.pending}">${b.pending}</span>` : ''
+    return `<div class="board" data-slug="${b.slug}">
+        <button type="button" class="board-row" data-board="${b.slug}">
+            <span class="board-mark" aria-hidden="true">${mark(b.name)}</span><span class="board-name">${b.name}</span>${b.private ? LOCK : ''}${badge}
+        </button>
+        <div class="pages"><div>
+            <button type="button" class="nav-item" data-page="settings">Настройки</button>
+            ${sub('settings')}
+            <button type="button" class="nav-item" data-page="access">Доступ${badge}</button>
+            ${sub('access')}
+        </div></div>
+    </div>`
+}
+
+function sideHtml() {
+    const { list, hidden } = visibleBoards()
+    let more = ''
+    if (hidden) more = `<button type="button" class="more" data-more="1">Ещё ${hidden} ⌄</button>`
+    else if (s.expanded) more = `<button type="button" class="more" data-more="0">Свернуть ⌃</button>`
+    return `
+        <nav style="display:grid;gap:2px">
+            <button type="button" class="nav-item">Мои доски</button>
+        </nav>
+        <section class="boards" aria-label="Доски">
+            ${list.map(boardHtml).join('')}
+            ${more}
+        </section>
+        <section class="group" aria-label="Аккаунт">
+            <button type="button" class="nav-item" data-page="account">Настройки аккаунта</button>
+            ${sub('account')}
+        </section>
+        <div class="side-foot">
+            <button type="button" class="out">Выйти</button>
+            <span class="theme">◐ авто</span>
+        </div>`
+}
+
+function mainHtml() {
+    const b = s.boards.find(x => x.slug === s.current)
+    if (s.page === 'account') {
+        return `<div class="head"><h3>Настройки аккаунта</h3></div>
+            <div class="card"><h4>Профиль</h4><div class="ph w40"></div><div class="ph field"></div><div class="ph w60"></div></div>
+            <div class="card"><h4>Пароль</h4><div class="ph w80"></div></div>`
+    }
+    const title = s.page === 'settings' ? 'Настройки' : 'Доступ'
+    const blocks = s.page === 'settings'
+        ? ['Общее', 'Категории', 'Столбцы']
+        : ['Кто видит доску', 'Ссылка на доску', b.pending ? `Запросы на доступ · ${b.pending}` : 'Участники']
+    return `<p class="kicker">${b.name}</p>
+        <div class="head"><h3>${title}</h3>
+            <div class="row"><span class="btn">Скопировать ссылку</span><span class="btn primary">${s.device === 'phone' ? '→' : 'Перейти на доску →'}</span></div>
+        </div>
+        ${blocks.map(t => `<div class="card"><h4>${t}</h4><div class="ph w80"></div><div class="ph field"></div><div class="ph w60"></div></div>`).join('')}`
+}
+
+// classes only, on the nodes already there, so the pages fold in and out instead of popping
+// on the phone a tap on another board only unfolds it in the menu (peek), the next tap picks the page
+function applyState(root, phone) {
+    const shown = phone && s.peek ? s.peek : s.page !== 'account' ? s.current : null
+    root.querySelectorAll('.board').forEach(el => {
+        const cur = s.page !== 'account' && el.dataset.slug === s.current
+        const open = el.dataset.slug === shown
+        el.classList.toggle('cur', cur)
+        el.classList.toggle('open', open)
+        el.querySelector('.board-row').toggleAttribute('aria-current', cur)
+        el.querySelectorAll('[data-page]').forEach(n => n.classList.toggle('on', cur && n.dataset.page === s.page))
+        el.querySelectorAll('[data-sub]').forEach(n => n.classList.toggle('open', cur && n.dataset.sub === s.page))
+        el.querySelector('.pages').inert = !open
+    })
+    root.querySelector('.group [data-page="account"]').classList.toggle('on', s.page === 'account')
+    root.querySelector('[data-sub="account"]').classList.toggle('open', s.page === 'account')
+}
+let shape = ''
+function render() {
+    const app = document.getElementById('app')
+    app.classList.toggle('phone', s.device === 'phone')
+    const { list, hidden } = visibleBoards()
+    const next = list.map(b => b.slug).join() + '|' + hidden + '|' + s.expanded
+    if (next !== shape) {
+        shape = next
+        const side = sideHtml()
+        document.getElementById('side').innerHTML = side
+        document.getElementById('dropSide').innerHTML = side
+    }
+    applyState(document.getElementById('side'), false)
+    applyState(document.getElementById('dropSide'), true)
+    document.getElementById('main').innerHTML = mainHtml()
+    const open = s.device === 'phone' && s.menu
+    document.getElementById('drop').classList.toggle('show', open)
+    document.getElementById('dropBg').classList.toggle('show', open)
+    document.getElementById('burger').classList.toggle('x', open)
+}
+
+function seg(id, fn) {
+    const el = document.getElementById(id)
+    el.addEventListener('click', e => {
+        const btn = e.target.closest('button')
+        if (!btn) return
+        el.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)))
+        fn(btn.dataset.v)
+        render()
+    })
+}
+seg('device', v => { s.device = v; s.menu = false })
+seg('scenario', v => {
+    s.scenario = v
+    s.expanded = false
+    s.boards = v === 'many' ? BOARDS_MANY : v === 'one' ? BOARDS_FEW.slice(1, 2) : BOARDS_FEW
+    s.current = v === 'many' ? 'partners' : v === 'one' ? 'demo' : 'qa'
+    s.page = v === 'account' ? 'account' : 'access'
+})
+
+document.addEventListener('click', e => {
+    const side = e.target.closest('.side')
+    if (!side) return
+    const row = e.target.closest('[data-board]')
+    const page = e.target.closest('[data-page]')
+    const more = e.target.closest('[data-more]')
+    if (row && side.classList.contains('drop-side')) {
+        // phone: unfold it here, keep the menu open; a second tap on the open one folds it back
+        const slug = row.dataset.board
+        const shown = s.peek ?? (s.page !== 'account' ? s.current : null)
+        s.peek = slug === shown ? (slug === s.current ? null : s.page !== 'account' ? s.current : '') : slug
+    } else if (row) {
+        const slug = row.dataset.board
+        // the same page of the other board; from the account it's the board's settings
+        if (s.page === 'account') s.page = 'settings'
+        else if (slug === s.current) return
+        s.current = slug
+        s.menu = false
+    } else if (page) {
+        const slug = page.closest('.board')?.querySelector('[data-board]')?.dataset.board
+        if (slug) s.current = slug
+        s.page = page.dataset.page
+        s.menu = false
+        s.peek = null
+    } else if (more) {
+        s.expanded = more.dataset.more === '1'
+    } else return
+    render()
+})
+document.getElementById('burger').addEventListener('click', () => { s.menu = !s.menu; s.peek = null; render() })
+document.getElementById('dropBg').addEventListener('click', () => { s.menu = false; render() })
+
+render()
+</script>
+</body>
+</html>

@@ -19,10 +19,11 @@
 }
 .app-layout-side {
     position: sticky;
-    // under the sticky header bar
-    top: 100px;
+    // exactly where it stands in the flow (the header bar 69px + the page's 24px top padding): with a larger value
+    // the menu sat 7px lower on a long page and jumped up while the next page loaded short
+    top: 93px;
     // «Выйти» stays at the bottom of a short screen, a long menu scrolls on its own
-    height: calc(100vh - 124px);
+    height: calc(100vh - 117px);
     overflow-y: auto;
 
     @media screen and (max-width: $tablet) {
@@ -48,7 +49,7 @@
     }
 }
 
-// AppSidebar.vue — three stacked groups: the cabinet, the current board, «Выйти» and the theme at the bottom
+// AppSidebar.vue — stacked groups: the cabinet, the boards, the account, «Выйти» and the theme at the bottom
 .app-sidebar {
     display: flex;
     flex-direction: column;
@@ -71,11 +72,152 @@
     display: grid;
     gap: 2px;
 }
-.app-sidebar-board {
+// the boards and the account: two groups under a hairline each
+.app-sidebar-boards,
+.app-sidebar-group {
     display: grid;
-    gap: 6px;
+    gap: 2px;
     padding-top: 12px;
     border-top: 1px solid var(--line);
+}
+// one board: a row with its mark and name; the open one (`open`) gathers its two pages in a light tray,
+// so they read as that board's; the one on screen (`cur`) has a green mark, also while the panel shows another
+.app-sidebar-board {
+    display: grid;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    transition:
+        background-color 0.2s ease-out,
+        border-color 0.2s ease-out;
+
+    &.open {
+        margin-block: 2px;
+        padding: 4px;
+        border-color: var(--line);
+        // a step lighter than the hover, so a hovered page inside still shows
+        background: color-mix(in srgb, var(--surface-2) 45%, var(--bg));
+    }
+    &.cur .app-sidebar-board-mark {
+        background: var(--accent);
+        color: var(--accent-fg);
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+.app-sidebar-board-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
+    .count-badge {
+        margin-left: auto;
+    }
+    .open > & {
+        color: var(--fg);
+        font-weight: 600;
+
+        @include hover {
+            background: none;
+        }
+        .count-badge {
+            display: none;
+        }
+    }
+    // the board on screen is a name, not a link
+    &[aria-current] {
+        cursor: default;
+    }
+    @media (pointer: coarse) {
+        min-height: 44px;
+    }
+}
+.app-sidebar-board-mark {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: var(--surface-2);
+    color: var(--fg);
+    font-size: 11px;
+    font-weight: 600;
+    transition:
+        background-color 0.2s ease-out,
+        color 0.2s ease-out;
+}
+.app-sidebar-board-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.app-sidebar-board-lock {
+    flex: none;
+    display: inline-flex;
+    color: var(--sta-orange);
+}
+// the pages fold out under the open board: rows 0fr → 1fr, as the sections below
+.app-sidebar-board-pages {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+        grid-template-rows 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.2s ease-out;
+
+    > .app-sidebar-nav {
+        min-height: 0;
+        overflow: hidden;
+    }
+    .open > & {
+        grid-template-rows: 1fr;
+        opacity: 1;
+
+        > .app-sidebar-nav {
+            padding-top: 2px;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+// «Ещё 5» / «Свернуть» under a long list
+.app-sidebar-more {
+    justify-self: start;
+    margin-top: 2px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
 }
 // a page's sections under its item (SectionLinks.vue): both lists stay in the DOM and the open one unfolds,
 // rows 0fr → 1fr, the list clipped while it grows; a quick fade so the text doesn't slide in half-cut
@@ -127,16 +269,6 @@
         color: var(--fg);
         font-weight: 600;
     }
-}
-// the board's name heads its places; another board is picked in the header's switcher
-.app-sidebar-board-name {
-    margin: 0;
-    padding: 0 10px 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 15px;
-    font-weight: 600;
 }
 .app-sidebar-foot {
     display: grid;

@@ -19,9 +19,6 @@ import type { BoardSummary, Me } from '@/api/types'
 export const useAuthStore = defineStore('auth', () => {
   const me = ref<Me | null>(null)
   const loaded = ref(false)
-  // the board last open in the cabinet: the side menu keeps it on «Настройки аккаунта», so the account isn't
-  // a separate place you have to find your way back from
-  const lastBoardSlug = ref<string | null>(null)
   const loading = ref(false)
 
   const boards = ref<Board[]>([])
@@ -199,7 +196,6 @@ export const useAuthStore = defineStore('auth', () => {
     await AuthApi.logout().catch(() => undefined)
     me.value = null
     loaded.value = true
-    lastBoardSlug.value = null
     // next admin session starts clean
     boards.value = []
     trashed.value = []
@@ -208,7 +204,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    me, loaded, loading, isAuth, lastBoardSlug, boardSummaries, awaitingDecision, setPendingRequests, setVisibility,
+    me, loaded, loading, isAuth, boardSummaries, awaitingDecision, setPendingRequests, setVisibility,
     boards, trashed, boardsLoaded, boardsLoading, incoming,
     fetchMe, fetchBoards, fetchIncoming, acceptIncoming, declineIncoming, addBoard, renameBoard, trashBoard, restoreBoard,
     register, login, logout, verifyEmail, resendVerification, forgotPassword, checkResetToken, resetPassword, changePassword, updateName,

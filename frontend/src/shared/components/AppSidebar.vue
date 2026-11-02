@@ -1,34 +1,46 @@
 <template>
-  <div class="app-sidebar">
+  <div class="app-sidebar" :class="{ drawer }">
     <nav class="app-sidebar-nav" aria-label="Кабинет">
       <RouterLink to="/app/boards" class="nav-item" :aria-current="atHub ? 'page' : undefined">Мои доски</RouterLink>
     </nav>
 
-    <!-- the board this page belongs to and its two pages; another board is picked in the header -->
-    <section v-if="board" class="app-sidebar-board" aria-label="Доска">
-      <p class="app-sidebar-board-name">{{ board.name }}</p>
-      <nav class="app-sidebar-nav" :aria-label="`Страницы доски ${board.name}`">
-        <RouterLink :to="settingsPath" class="nav-item" :aria-current="onSettings ? 'page' : undefined">Настройки</RouterLink>
-        <!-- the open page's sections fold out under it; both lists stay in the DOM so the switch animates -->
-        <div class="app-sidebar-sub" :class="{ open: onSettings }" :inert="!onSettings">
-          <SectionLinks :path="settingsPath" :sections="SETTINGS_SECTIONS" :active="onSettings" />
+    <!-- every board the user configures; the open one shows its two pages, another is a click away -->
+    <section v-if="managed.length" class="app-sidebar-boards" aria-label="Доски">
+      <div v-for="b in visible" :key="b.slug" class="app-sidebar-board" :class="{ cur: b.slug === currentSlug, open: b.slug === shownSlug }">
+        <!-- a link to the same page of another board; the board on screen is just its name;
+             in the panel every row is a button that unfolds its pages in the menu itself -->
+        <component :is="rowTag(b)" v-bind="rowAttrs(b)" class="app-sidebar-board-row">
+          <span class="app-sidebar-board-mark" aria-hidden="true">{{ boardMark(b.name) }}</span>
+          <span class="app-sidebar-board-name">{{ b.name }}</span>
+          <span v-if="b.visibility === 'private'" class="app-sidebar-board-lock" title="Закрытая доска"><AppIcon name="lock" :size="13" /><span class="visually-hidden">закрытая</span></span>
+          <!-- hidden while the pages are open: «Доступ» carries the number then -->
+          <span v-if="b.pending_requests" class="count-badge" :aria-label="`запросов на доступ: ${b.pending_requests}`">{{ b.pending_requests }}</span>
+        </component>
+
+        <div class="app-sidebar-board-pages" :inert="b.slug !== shownSlug">
+          <nav class="app-sidebar-nav" :aria-label="`Страницы доски ${b.name}`">
+            <RouterLink :to="`/app/boards/${b.slug}/settings`" class="nav-item" :aria-current="b.slug === currentSlug && onSettings ? 'page' : undefined">Настройки</RouterLink>
+            <!-- the open page's sections fold out under it; both lists stay in the DOM so the switch animates -->
+            <div v-if="!drawer && b.slug === currentSlug" class="app-sidebar-sub" :class="{ open: onSettings }" :inert="!onSettings">
+              <SectionLinks :path="`/app/boards/${b.slug}/settings`" :sections="SETTINGS_SECTIONS" :active="onSettings" />
+            </div>
+            <RouterLink :to="`/app/boards/${b.slug}/access`" class="nav-item" :aria-current="b.slug === currentSlug && onAccess ? 'page' : undefined">
+              Доступ<span v-if="b.pending_requests" class="count-badge" :aria-label="`запросов на доступ: ${b.pending_requests}`">{{ b.pending_requests }}</span>
+            </RouterLink>
+            <div v-if="!drawer && b.slug === currentSlug" class="app-sidebar-sub" :class="{ open: onAccess }" :inert="!onAccess">
+              <SectionLinks :key="b.visibility" :path="`/app/boards/${b.slug}/access`" :sections="accessSections(b)" :active="onAccess" />
+            </div>
+          </nav>
         </div>
-        <RouterLink :to="accessPath" class="nav-item" :aria-current="onAccess ? 'page' : undefined">
-          Доступ<span v-if="board.pending_requests" class="count-badge" :aria-label="`запросов на доступ: ${board.pending_requests}`">{{ board.pending_requests }}</span>
-        </RouterLink>
-        <div class="app-sidebar-sub" :class="{ open: onAccess }" :inert="!onAccess">
-          <SectionLinks :key="board.visibility" :path="accessPath" :sections="accessSections" :active="onAccess" />
-        </div>
-      </nav>
+      </div>
+      <button v-if="hiddenCount" type="button" class="app-sidebar-more" @click="expanded = true">Ещё {{ hiddenCount }}</button>
+      <button v-else-if="expanded" type="button" class="app-sidebar-more" @click="expanded = false">Свернуть</button>
     </section>
 
-    <!-- the account sits in the same menu as the board's pages, with its sections, not in a place of its own -->
-    <section class="app-sidebar-board app-sidebar-account" aria-label="Аккаунт">
+    <!-- the account sits in the same menu as the boards, not in a place of its own; one short page, no sections -->
+    <section class="app-sidebar-group" aria-label="Аккаунт">
       <nav class="app-sidebar-nav" aria-label="Аккаунт">
         <RouterLink to="/app/account" class="nav-item" :aria-current="onAccount ? 'page' : undefined">Настройки аккаунта</RouterLink>
-        <div class="app-sidebar-sub" :class="{ open: onAccount }" :inert="!onAccount">
-          <SectionLinks path="/app/account" :sections="ACCOUNT_SECTIONS" :active="onAccount" />
-        </div>
       </nav>
     </section>
 
@@ -43,17 +55,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import type { BoardSummary } from '@/api/types'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useLogout } from '@/shared/composables/useLogout'
 import { canConfigure } from '@/shared/utils/roles'
+import { boardMark } from '@/shared/utils/format'
 import SectionLinks, { type SectionLink } from '@/shared/components/SectionLinks.vue'
+import AppIcon from '@/shared/ui/AppIcon.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 
-// The cabinet's side menu (AppShell), under the header: «Мои доски», the current board's two pages
-// («Настройки» — what the board is, «Доступ» — who sees it and how they get in) with their sections, the account
-// with its sections, «Выйти» and the theme at the bottom. The same content slides in as a panel on tablet and phone.
+// The cabinet's side menu (AppShell), under the header: «Мои доски», every board the user configures — the open one
+// with its two pages («Настройки» — what the board is, «Доступ» — who sees it and how they get in) and their
+// sections, the others a row each, a click opening the same page of that board — then the account,
+// «Выйти» and the theme at the bottom. Boards where the user only takes part stay on «Мои доски» and in the header's
+// switcher (prototype: frontend/demo/sidebar-boards-prototype.html).
+// `drawer` — the same menu in the tablet / phone panel (NavDrawer): a tap on a board unfolds its pages right there,
+// so another board's «Доступ» is two taps away, and the pages' sections are left out to keep the panel short.
+const props = defineProps<{
+  drawer?: boolean
+}>()
 const auth = useAuthStore()
 const route = useRoute()
 const { logout, busy } = useLogout()
@@ -64,35 +86,51 @@ const SETTINGS_SECTIONS: SectionLink[] = [
   { hash: '#statuses', label: 'Столбцы' },
 ]
 
-const ACCOUNT_SECTIONS: SectionLink[] = [
-  { hash: '#profile', label: 'Профиль' },
-  { hash: '#password', label: 'Пароль' },
-]
+// up to this many rows, the current board always among them; one more than that is shown rather than «Ещё 1»
+const VISIBLE = 6
 
 const atHub = computed(() => route.name === 'hub' || route.name === 'board-new')
 const onSettings = computed(() => route.name === 'board-settings')
 const onAccess = computed(() => route.name === 'board-access')
 const onAccount = computed(() => route.name === 'account')
-// on a board's page that board is remembered; the account page keeps showing it, so its pages stay one click away
-watch(() => route.params.slug, (slug) => {
-  if (slug) auth.lastBoardSlug = String(slug)
-}, { immediate: true })
-// a board's own pages — only for those who may configure it
-const board = computed(() => {
-  const slug = route.params.slug ? String(route.params.slug) : onAccount.value ? auth.lastBoardSlug : null
-  // every board the user is on (an admin of someone else's board too), not only the ones they own
-  const found = slug ? auth.me?.projects.find((b) => b.slug === slug) : undefined
-  return found && canConfigure(found.role) ? found : null
+const currentSlug = computed(() => (route.params.slug ? String(route.params.slug) : null))
+
+// every board the user is on and may configure (an admin of someone else's board too); what waits for a decision
+// first, as on «Мои доски», then by name
+const managed = computed(() =>
+  (auth.me?.projects ?? [])
+    .filter((b) => canConfigure(b.role))
+    .sort((a, b) => (b.pending_requests ?? 0) - (a.pending_requests ?? 0) || a.name.localeCompare(b.name, 'ru')),
+)
+const expanded = ref(false)
+const visible = computed(() => {
+  const all = managed.value
+  if (expanded.value || all.length <= VISIBLE + 1) return all
+  const head = all.slice(0, VISIBLE)
+  const cur = all.find((b) => b.slug === currentSlug.value)
+  return cur && !head.includes(cur) ? [...head.slice(0, VISIBLE - 1), cur] : head
 })
-const settingsPath = computed(() => `/app/boards/${board.value?.slug}/settings`)
-const accessPath = computed(() => `/app/boards/${board.value?.slug}/access`)
+const hiddenCount = computed(() => managed.value.length - visible.value.length)
+
+// the board whose pages are unfolded: the one on screen, or in the panel the one tapped last
+const peeked = ref<string | null | undefined>(undefined)
+const shownSlug = computed(() => (props.drawer && peeked.value !== undefined ? peeked.value : currentSlug.value))
+function peek(slug: string) {
+  peeked.value = shownSlug.value === slug ? null : slug
+}
+
+// a click on another board keeps the page: «Доступ» → «Доступ»; from the account it's the board's settings
+function samePage(slug: string): string {
+  return `/app/boards/${slug}/${onAccess.value ? 'access' : 'settings'}`
+}
+
 // «Доступ» shows what works in the board's mode: the widget and the team on an open board, people on a closed one
-const accessSections = computed<SectionLink[]>(() =>
-  board.value?.visibility === 'private'
+function accessSections(b: BoardSummary): SectionLink[] {
+  return b.visibility === 'private'
     ? [
         { hash: '#mode', label: 'Режим' },
         { hash: '#link', label: 'Ссылка' },
-        ...(board.value.pending_requests ? [{ hash: '#requests', label: 'Запросы' }] : []),
+        ...(b.pending_requests ? [{ hash: '#requests', label: 'Запросы' }] : []),
         { hash: '#participants', label: 'Участники' },
       ]
     : [
@@ -100,6 +138,15 @@ const accessSections = computed<SectionLink[]>(() =>
         { hash: '#link', label: 'Ссылка' },
         { hash: '#widget', label: 'Виджет' },
         { hash: '#team', label: 'Команда' },
-      ],
-)
+      ]
+}
+
+function rowTag(b: BoardSummary) {
+  if (props.drawer) return 'button'
+  return b.slug === currentSlug.value ? 'div' : RouterLink
+}
+function rowAttrs(b: BoardSummary) {
+  if (props.drawer) return { type: 'button', 'aria-expanded': b.slug === shownSlug.value, onClick: () => peek(b.slug) }
+  return b.slug === currentSlug.value ? { 'aria-current': 'true' } : { to: samePage(b.slug) }
+}
 </script>

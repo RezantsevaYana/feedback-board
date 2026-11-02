@@ -88,30 +88,12 @@
     }
 }
 
-// inside the drop-down the cabinet's menu is compact: the board's pages first, then the cabinet and the account,
-// «Выйти» and the theme in one last row; the sections of a page stay on the desktop's side menu
+// inside the drop-down the cabinet's menu is compact: the same groups as on the desktop (AppSidebar `drawer`),
+// without the pages' sections, «Выйти» and the theme in one last row
 .nav-drawer .app-sidebar {
     min-height: 0;
     gap: 8px;
 
-    // the board's two pages on top, then «Мои доски» and «Настройки аккаунта» as one group under a line
-    .app-sidebar-board:not(.app-sidebar-account) {
-        order: -1;
-        padding-top: 0;
-        border-top: 0;
-    }
-    > .app-sidebar-nav {
-        padding-top: 8px;
-        border-top: 1px solid var(--line);
-    }
-    .app-sidebar-account {
-        margin-top: -8px;
-        padding-top: 0;
-        border-top: 0;
-    }
-    .app-sidebar-sub {
-        display: none;
-    }
     .app-sidebar-foot {
         display: flex;
         align-items: center;

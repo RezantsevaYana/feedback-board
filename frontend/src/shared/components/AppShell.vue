@@ -15,7 +15,7 @@
   </main>
 
   <NavDrawer v-if="menuOpen" label="Меню кабинета" anchor=".app-shell-menu" @close="menuOpen = false">
-    <AppSidebar />
+    <AppSidebar drawer />
   </NavDrawer>
 </template>
 
@@ -27,7 +27,7 @@ import AppSidebar from '@/shared/components/AppSidebar.vue'
 import NavDrawer from '@/shared/ui/NavDrawer.vue'
 
 // Frame of every signed-in /app/* page, a parent route: the header on top (board switcher, account), the side menu
-// on the left (AppSidebar: the board's pages with their sections, «Выйти» and the theme at the bottom), the page on
+// on the left (AppSidebar: the boards with their pages and sections, «Выйти» and the theme at the bottom), the page on
 // the right. It stays mounted while the pages change, so the menu's nested sections fold in and out smoothly.
 // «Мои доски» (meta.noSidebar) is the whole page without the menu.
 const route = useRoute()
