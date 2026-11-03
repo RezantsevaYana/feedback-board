@@ -121,8 +121,11 @@ export const useBoardStore = defineStore('board', () => {
       me.value = u
       await refresh()
     } catch (e) {
-      if (e instanceof ApiError && e.status === 404) notFound.value = true
-      else if (e instanceof ApiError && e.status === 403) {
+      if (e instanceof ApiError && e.status === 404) {
+        notFound.value = true
+        // on 404 we still need `me` so the «Доска не найдена» screen can show «Мои доски» to signed-in admins
+        me.value = await user
+      } else if (e instanceof ApiError && e.status === 403) {
         // the EnsureProjectPublished middleware carries a stable reason so the SPA can pick the right screen
         me.value = await user
         const gate = e.body.board as { name?: unknown } | undefined

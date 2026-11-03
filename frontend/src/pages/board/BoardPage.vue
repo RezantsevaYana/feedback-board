@@ -1,9 +1,20 @@
 <template>
   <main class="container base-page">
-    <div v-if="board.notFound" class="center-page">
-      <div>
-        <h1>Доска не найдена</h1>
-        <p class="note">Проверьте адрес: доска открывается по ссылке вида /название-проекта.</p>
+    <!-- 404: slug didn't match any board. The brand slant tag + display heading, the typed address as a
+         mock URL with the missing slug struck through, then «На главную» / «Мои доски» (if signed in). -->
+    <div v-if="board.notFound" class="not-found">
+      <span class="not-found-tag slant">404</span>
+      <h1>Доска не&nbsp;найдена</h1>
+      <p class="not-found-lead">По этой ссылке нет доски. Возможно, её <b>переименовали</b> или в&nbsp;адресе опечатка.</p>
+      <div class="not-found-url">
+        <span class="not-found-url-label">Адрес</span>
+        <code><span class="host">{{ host }}</span>/<span class="slug">{{ slug }}</span></code>
+        <span class="not-found-url-warn" aria-hidden="true">!</span>
+      </div>
+      <p class="not-found-hint">Правильный формат — <code>/название-проекта</code>.</p>
+      <div class="not-found-actions">
+        <RouterLink to="/" class="btn btn-primary btn-lg slant">На главную</RouterLink>
+        <RouterLink v-if="board.me" to="/app/boards" class="btn btn-lg">Мои доски</RouterLink>
       </div>
     </div>
 
@@ -247,6 +258,8 @@ const board = useBoardStore()
 const notification = useNotificationStore()
 
 const slug = computed(() => String(route.params.slug ?? ''))
+// shown in the «Доска не найдена» address card next to the missing slug
+const host = computed(() => location.host)
 const postId = computed(() => (route.params.id ? Number(route.params.id) : null))
 const composing = ref(false)
 const editingCategories = ref(false)
