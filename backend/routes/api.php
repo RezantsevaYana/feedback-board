@@ -49,6 +49,8 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [Admin\AuthController::class, 'logout']);
         Route::get('me', [Admin\AuthController::class, 'me']);
+        // «Вернуться в админку» — только для текущей impersonation-сессии; доступа к /admin отдельно не даёт.
+        Route::post('impersonation/stop', [Admin\ImpersonationController::class, 'stop']);
         Route::patch('me', [Admin\AuthController::class, 'update']);
         Route::patch('me/password', [Admin\PasswordController::class, 'update'])->middleware('throttle:password-change');
         Route::post('email/verification-notification', [Admin\EmailVerificationController::class, 'resend'])->middleware('throttle:verify-email');

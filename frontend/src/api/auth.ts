@@ -23,6 +23,12 @@ export const AuthApi = {
     return request<void>(`${BASE_URL}/logout`, { method: 'POST' })
   },
 
+  // «Вернуться в админку» из баннера impersonation. Платформенная сессия остаётся живой — отвечает,
+  // куда редиректить (обычно /admin). Логин в web guard при этом сбрасывается.
+  stopImpersonation() {
+    return request<Item<{ redirect: string }>>(`${BASE_URL}/impersonation/stop`, { method: 'POST' })
+  },
+
   // the link from the letter: path and signed query go to the API as they are; no session needed, 403 if stale
   verifyEmail(id: string, hash: string, expires: string, signature: string) {
     return request<Item<{ id: number; email: string }>>(`${BASE_URL}/email/verify/${id}/${hash}`, {

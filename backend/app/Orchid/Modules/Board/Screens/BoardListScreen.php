@@ -6,6 +6,7 @@ namespace App\Orchid\Modules\Board\Screens;
 
 use App\Models\Project;
 use Carbon\Carbon;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
@@ -91,6 +92,13 @@ class BoardListScreen extends Screen
                     ->render(fn (Project $board) => $board->deleted_at
                         ? '<span class="text-danger">'.$board->deleted_at->format('d.m.Y').'</span>'
                         : '—'),
+
+                TD::make('actions', 'Действия')
+                    ->align(TD::ALIGN_CENTER)
+                    ->width('100px')
+                    ->render(fn (Project $board) => Link::make('Открыть')
+                        ->icon('bs.pencil')
+                        ->route('platform.board.edit', $board)),
             ]),
         ];
     }

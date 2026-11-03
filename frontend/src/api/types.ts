@@ -136,8 +136,10 @@ export interface Me {
   email: string
   /** Soft mode: the account works either way, the cabinet shows a banner until the letter's link is opened. */
   email_verified: boolean
-  /** An admin of the service: «Админка сервиса» (/app/platform) in the account menu. */
+  /** An admin of the service: «Админка сервиса» (/admin, Orchid) in the account menu. */
   is_superadmin: boolean
+  /** Set when a platform admin pressed «Войти как» on /admin/users — drives the top banner. */
+  impersonating_by: { id: number; email: string; name: string } | null
   /** Legacy projects via project_user pivot — drives team-mode login on the board. */
   projects: BoardSummary[]
   /** Self-serve boards owned by this user — drives the admin hub. */

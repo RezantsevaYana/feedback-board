@@ -8,7 +8,9 @@ use App\Models\User;
 use App\Orchid\Layouts\User\UserEditLayout;
 use App\Orchid\Layouts\User\UserFiltersLayout;
 use App\Orchid\Layouts\User\UserListLayout;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Orchid\Screen\Action;
 use Orchid\Screen\Actions\Link;
@@ -115,4 +117,26 @@ class UserListScreen extends Screen
 
     // Удаление аккаунта из таблицы в первой итерации убрано: нужен каскад по постам/доскам,
     // которого пока нет — см. docs/PLATFORM_ADMIN_PLAN.md «Следующие итерации».
+
+    /**
+     * Войти в SPA под чужой учёткой — для разбора саппорт-тикетов. Два guard'а делят одну
+     * сессию: платформенный остаётся залогинен (чтобы по «Вернуться» вернуться в /admin),
+     * параллельно в web guard логинится целевой юзер. SPA по /api/admin/me узнаёт по
+     * `impersonator_platform_id` в сессии, что идёт impersonation, и рисует баннер.
+     */
+    public function impersonate(Request $request): RedirectResponse
+    {
+        $target = User::findOrFail($request->integer('id'));
+
+        // Original platform admin id — only set on first switch, so «Вернуться» в SPA знает, кем мы были.
+        if (! session()->has('impersonator_platform_id')) {
+            session()->put('impersonator_platform_id', Auth::guard('platform')->id());
+        }
+
+        Auth::guard('web')->loginUsingId($target->getKey());
+
+        Toast::info("Вы вошли как {$target->email}. Вернуться в админку — по кнопке в баннере сверху.");
+
+        return redirect()->away(rtrim(config('app.frontend_url'), '/').'/app/boards');
+    }
 }

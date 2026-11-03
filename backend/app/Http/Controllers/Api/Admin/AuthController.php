@@ -77,6 +77,12 @@ class AuthController extends Controller
         $pivotIds = $pivotProjects->pluck('id');
         $boards = $user->boards()->orderBy('name')->get();
 
+        // «Войти как» из /admin пишет в сессию id платформенного админа. Фронт рисует
+        // баннер «Вы в сессии X, [Вернуться]» по полю impersonating_by в этом ответе.
+        // hasSession() — в unit-тестах с actingAs() session store не инициализируется.
+        $impersonatorId = $request->hasSession() ? $request->session()->get('impersonator_platform_id') : null;
+        $impersonatingBy = $impersonatorId ? User::find($impersonatorId)?->only(['id', 'email', 'name']) : null;
+
         // waiting access requests, one query for all boards; brief() shows them only where this user decides
         $pending = AccessRequest::pending()
             ->whereIn('project_id', $pivotIds->merge($boards->pluck('id'))->unique())
@@ -92,6 +98,7 @@ class AuthController extends Controller
             // UserAccess trait: it reads the `permissions` jsonb and matches 'platform.index' there
             // or on any role attached to the user.
             'is_superadmin' => $user->hasAccess('platform.index'),
+            'impersonating_by' => $impersonatingBy,
             'projects' => $pivotProjects
                 ->merge($boards->reject(fn (Project $p) => $pivotIds->contains($p->id)))
                 ->sortBy('name')->values()

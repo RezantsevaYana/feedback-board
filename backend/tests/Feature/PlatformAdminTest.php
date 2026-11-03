@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\ProjectService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchid\Support\Facades\Dashboard;
 use Tests\TestCase;
@@ -88,6 +90,51 @@ class PlatformAdminTest extends TestCase
         $this->assertFalse(User::find($user->id)->hasAccess('platform.index'));
 
         $this->artisan('superadmin:grant', ['email' => 'nobody@example.com'])->assertFailed();
+    }
+
+    public function test_impersonation_stop_logs_out_web_guard_and_clears_session_key(): void
+    {
+        $target = User::factory()->create();
+
+        // Эмулируем состояние после «Войти как»: web-гвард залогинен в target, в сессии — originator.
+        $this->actingAs($target)
+            ->withSession(['impersonator_platform_id' => 999])
+            ->getJson('/api/admin/me')
+            ->assertOk()
+            ->assertJsonPath('data.impersonating_by', null); // 999 — несуществующий, но ключ читается
+
+        $this->actingAs($target)
+            ->withSession(['impersonator_platform_id' => 999])
+            ->postJson('/api/admin/impersonation/stop')
+            ->assertOk()
+            ->assertJsonPath('data.redirect', '/admin');
+    }
+
+    public function test_transfer_ownership_moves_owner_id_and_demotes_previous(): void
+    {
+        $oldOwner = User::factory()->create();
+        $newOwner = User::factory()->create();
+        // ProjectFactory сам кладёт owner в пивот с role=owner.
+        $board = Project::factory()->create(['owner_id' => $oldOwner->id]);
+
+        app(ProjectService::class)->transferOwnership($board, $newOwner);
+
+        $this->assertSame($newOwner->id, $board->refresh()->owner_id);
+        $this->assertSame(ProjectRole::Owner, $newOwner->fresh()->roleOn($board));
+        $this->assertSame(ProjectRole::Admin, $oldOwner->fresh()->roleOn($board));
+    }
+
+    public function test_transfer_ownership_upgrades_user_already_on_the_board(): void
+    {
+        $oldOwner = User::factory()->create();
+        $otherAdmin = User::factory()->create();
+        $board = Project::factory()->create(['owner_id' => $oldOwner->id]);
+        $board->members()->attach($otherAdmin->id, ['role' => ProjectRole::Admin->value]);
+
+        app(ProjectService::class)->transferOwnership($board, $otherAdmin);
+
+        $this->assertSame(ProjectRole::Owner, $otherAdmin->fresh()->roleOn($board));
+        $this->assertSame(ProjectRole::Admin, $oldOwner->fresh()->roleOn($board));
     }
 
     private function makeSuperadmin(): User

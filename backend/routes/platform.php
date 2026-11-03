@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Models\Project;
+use App\Orchid\Modules\Board\Screens\BoardEditScreen;
 use App\Orchid\Modules\Board\Screens\BoardListScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
@@ -24,12 +26,19 @@ Route::screen('profile', UserProfileScreen::class)
         ->parent('platform.index')
         ->push(__('Profile'), route('platform.profile')));
 
-// Доски (сервиса) — список в первой итерации, правка — в будущих.
+// Доски (сервиса) — список и карточка. withTrashed, чтобы можно было открыть доску из корзины.
 Route::screen('/boards', BoardListScreen::class)
     ->name('platform.board.list')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push('Доски', route('platform.board.list')));
+
+Route::screen('/boards/{board}/edit', BoardEditScreen::class)
+    ->name('platform.board.edit')
+    ->withTrashed()
+    ->breadcrumbs(fn (Trail $trail, Project $board) => $trail
+        ->parent('platform.board.list')
+        ->push($board->name, route('platform.board.edit', $board)));
 
 // Platform > System > Users > User
 Route::screen('users/{user}/edit', UserEditScreen::class)

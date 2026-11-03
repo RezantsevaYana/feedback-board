@@ -1,0 +1,60 @@
+// Shown by shared/components/ImpersonationBanner.vue above every SPA screen while an admin
+// is signed in as the current user via /admin → UserList → «Войти как».
+
+@use '../utils' as *;
+
+.impersonation-banner {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 10px 24px;
+    background: var(--warn-bg, #fff2cf);
+    color: var(--warn-text, #5a4300);
+    border-bottom: 1px solid var(--warn-border, #e9c86a);
+    font-size: 14px;
+
+    @media screen and (max-width: $mobile) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 16px;
+    }
+}
+
+.impersonation-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    strong {
+        font-weight: 600;
+    }
+
+    span {
+        opacity: 0.85;
+    }
+}
+
+.impersonation-banner-stop {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    @include hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}

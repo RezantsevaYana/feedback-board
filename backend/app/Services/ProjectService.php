@@ -38,4 +38,38 @@ class ProjectService
             return $project;
         });
     }
+
+    /**
+     * Передача владения из админки сервиса. Старого владельца не выкидываем — он остаётся
+     * с ролью Admin, чтобы не отрезать его от доски (аккаунт жив, просто больше не owner).
+     * Нового владельца либо повышаем, либо добавляем в пивот.
+     *
+     * NB: `isPublished()` зависит от `owner->hasVerifiedEmail()` — если у нового владельца
+     * почта не подтверждена, доска уйдёт в «не опубликована» до подтверждения. UI предупреждает.
+     */
+    public function transferOwnership(Project $project, User $newOwner): void
+    {
+        DB::transaction(function () use ($project, $newOwner) {
+            $previousOwnerId = $project->owner_id;
+
+            if ($previousOwnerId === $newOwner->id) {
+                return;
+            }
+
+            $project->owner_id = $newOwner->id;
+            $project->save();
+
+            // Нового владельца делаем owner (повышаем, если уже в пивоте с другой ролью)
+            if ($project->members()->where('users.id', $newOwner->id)->exists()) {
+                $project->members()->updateExistingPivot($newOwner->id, ['role' => ProjectRole::Owner->value]);
+            } else {
+                $project->members()->attach($newOwner->id, ['role' => ProjectRole::Owner->value]);
+            }
+
+            // Старого — на admin, если он был на доске; legacy-доски (owner_id=null) этот блок пропускают.
+            if ($previousOwnerId && $project->members()->where('users.id', $previousOwnerId)->exists()) {
+                $project->members()->updateExistingPivot($previousOwnerId, ['role' => ProjectRole::Admin->value]);
+            }
+        });
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Orchid\Layouts\User;
 
 use App\Models\User;
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
@@ -69,6 +70,11 @@ class UserListLayout extends Table
                         Link::make(__('Edit'))
                             ->route('platform.systems.users.edit', $user->id)
                             ->icon('bs.pencil'),
+
+                        Button::make('Войти как')
+                            ->icon('bs.person-badge')
+                            ->method('impersonate', ['id' => $user->id])
+                            ->confirm("Вы войдёте в SPA под {$user->email}. Платформенная сессия сохранится — вернуться можно по баннеру сверху."),
                     ])),
         ];
     }

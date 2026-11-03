@@ -1,4 +1,5 @@
 <template>
+  <ImpersonationBanner />
   <RouterView />
   <ConfirmModal />
   <div v-if="notification.visible" class="toast" :class="{ error: notification.type === 'error' }" role="status">
@@ -14,6 +15,7 @@
 import { RouterView } from 'vue-router'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import ConfirmModal from '@/shared/ui/ConfirmModal.vue'
+import ImpersonationBanner from '@/shared/components/ImpersonationBanner.vue'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useRoleSync } from '@/shared/composables/useRoleSync'
 
