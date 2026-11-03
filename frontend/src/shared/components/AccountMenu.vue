@@ -31,8 +31,9 @@ const initials = computed(() => toInitials(auth.me?.name, auth.me?.email))
 const items = computed<MenuItem[]>(() => [
   { label: 'Настройки аккаунта', current: route.name === 'account', run: () => router.push('/app/account') },
   { label: 'Мои доски', current: route.name === 'hub', run: () => router.push('/app/boards') },
+  // «Админка сервиса» лежит на Orchid (/admin, не SPA): полная перезагрузка, не router.push.
   ...(auth.me?.is_superadmin
-    ? [{ label: 'Админка сервиса', current: route.name === 'platform', run: () => router.push('/app/platform') }]
+    ? [{ label: 'Админка сервиса', run: () => { window.location.href = '/admin' } }]
     : []),
   ...(props.withLogout ? [{ label: 'Выйти', separated: true, disabled: busy.value, run: logout }] : []),
 ])

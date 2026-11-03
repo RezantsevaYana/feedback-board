@@ -7,20 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * The service's own admins (/app/platform): they see every board and every account.
-     * Granted only from the console (superadmin:grant), never through the API.
+     * Run the migrations.
      */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_superadmin')->default(false)->after('password');
+            $table->jsonb('permissions')->nullable();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('is_superadmin');
+            $table->dropColumn(['permissions']);
         });
     }
 };

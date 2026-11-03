@@ -39,8 +39,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('board.vote', fn (User $user, Project $project) => (bool) $roleOn($user, $project)?->canVote());
         Gate::define('board.submit', fn (User $user, Project $project) => (bool) $roleOn($user, $project)?->canSubmit());
         Gate::define('board.delete', fn (User $user, Project $project) => (bool) $roleOn($user, $project)?->canDeleteBoard());
-        // the service's own admins: every board and account in /app/platform, granted by superadmin:grant
-        Gate::define('platform.admin', fn (User $user) => $user->is_superadmin);
 
         $tooMany = fn (string $message) => fn () => response()->json(['message' => $message], 429);
 

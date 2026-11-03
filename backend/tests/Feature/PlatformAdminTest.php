@@ -2,86 +2,98 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Orchid\Support\Facades\Dashboard;
 use Tests\TestCase;
 
 /**
- * «Админка сервиса», first iteration: superadmins see every board and every account, nobody else does.
+ * Orchid dashboard at /admin: who gets in, what they see, how superadmin:grant toggles rights.
+ * Guard — 'platform' (its own session, isolated from the SPA's 'web' guard — see config/auth.php).
+ * `/api/admin/me` stays on 'web': it's the SPA cabinet, not the Orchid admin.
  */
 class PlatformAdminTest extends TestCase
 {
     use RefreshDatabase;
 
-    private User $superadmin;
-
-    protected function setUp(): void
+    public function test_guest_is_redirected_to_the_orchid_login(): void
     {
-        parent::setUp();
-        $this->superadmin = User::factory()->create();
-        $this->superadmin->forceFill(['is_superadmin' => true])->save();
+        $this->get('/admin/boards')
+            ->assertRedirect('/admin/login');
     }
 
-    public function test_lists_every_board_with_owner_counts_and_trash(): void
+    public function test_user_without_platform_access_gets_403(): void
     {
-        $owner = User::factory()->create(['email' => 'owner@acme.com']);
-        $board = Project::factory()->create(['owner_id' => $owner->id]);
-        $legacy = Project::factory()->create();
-        $trashed = Project::factory()->create();
+        $plain = User::factory()->create(['permissions' => null]);
+
+        $this->actingAs($plain, 'platform')->get('/admin/boards')->assertForbidden();
+        $this->actingAs($plain, 'platform')->get('/admin/users')->assertForbidden();
+    }
+
+    public function test_superadmin_opens_both_screens(): void
+    {
+        $admin = $this->makeSuperadmin();
+
+        $this->actingAs($admin, 'platform')->get('/admin/boards')->assertOk();
+        $this->actingAs($admin, 'platform')->get('/admin/users')->assertOk();
+    }
+
+    public function test_board_list_includes_trashed_and_ownerless_rows(): void
+    {
+        $admin = $this->makeSuperadmin();
+
+        // owned by somebody — the usual self-serve board
+        $ownerOfKept = User::factory()->create();
+        $kept = Project::factory()->create(['name' => 'Kept board', 'owner_id' => $ownerOfKept->id]);
+
+        // legacy «из консоли»: no owner at all
+        $legacy = Project::factory()->create(['name' => 'Legacy board', 'owner_id' => null]);
+
+        // soft-deleted — in the корзина, still has to show up in the Orchid list
+        $trashed = Project::factory()->create(['name' => 'Trashed board', 'owner_id' => $ownerOfKept->id]);
         $trashed->delete();
 
-        $boards = collect($this->actingAs($this->superadmin)->getJson('/api/admin/platform/boards')->assertOk()->json('data'))->keyBy('slug');
-
-        $this->assertCount(3, $boards);
-        $this->assertSame('owner@acme.com', $boards[$board->slug]['owner']['email']);
-        $this->assertSame(1, $boards[$board->slug]['members_count']);
-        $this->assertNull($boards[$legacy->slug]['owner']);
-        $this->assertNotNull($boards[$trashed->slug]['deleted_at']);
+        $response = $this->actingAs($admin, 'platform')->get('/admin/boards')->assertOk();
+        $response->assertSeeText('Kept board');
+        $response->assertSeeText('Legacy board');
+        $response->assertSeeText('Trashed board');
+        // «из консоли» marker for null owner
+        $response->assertSeeText('из консоли');
     }
 
-    public function test_lists_every_account_with_its_boards_and_roles(): void
+    public function test_me_endpoint_reflects_is_superadmin(): void
     {
-        $board = Project::factory()->create();
-        $member = User::factory()->unverified()->create(['email' => 'member@acme.com']);
-        $board->members()->attach($member, ['role' => ProjectRole::Manager->value]);
+        $plain = User::factory()->create(['permissions' => null]);
+        $this->actingAs($plain)->getJson('/api/admin/me')
+            ->assertOk()
+            ->assertJsonPath('data.is_superadmin', false);
 
-        $users = collect($this->actingAs($this->superadmin)->getJson('/api/admin/platform/users')->assertOk()->json('data'))->keyBy('email');
-
-        $this->assertCount(2, $users);
-        $this->assertFalse($users['member@acme.com']['email_verified']);
-        $this->assertSame([['name' => $board->name, 'slug' => $board->slug, 'role' => 'manager']], $users['member@acme.com']['boards']);
-        $this->assertTrue($users[$this->superadmin->email]['is_superadmin']);
-        $this->assertArrayNotHasKey('password', $users['member@acme.com']);
+        $admin = $this->makeSuperadmin();
+        $this->actingAs($admin)->getJson('/api/admin/me')
+            ->assertOk()
+            ->assertJsonPath('data.is_superadmin', true);
     }
 
-    public function test_closed_to_everyone_else(): void
+    public function test_superadmin_grant_toggles_permissions_and_fails_on_unknown_email(): void
     {
-        $owner = User::factory()->create();
-        Project::factory()->create(['owner_id' => $owner->id]);
+        $user = User::factory()->create(['permissions' => null]);
 
-        $this->actingAs($owner)->getJson('/api/admin/platform/boards')->assertForbidden();
-        $this->actingAs($owner)->getJson('/api/admin/platform/users')->assertForbidden();
-        $this->actingAs($owner)->getJson('/api/admin/me')->assertJsonPath('data.is_superadmin', false);
-    }
+        // User::find() each time: UserAccess caches resolved permissions on the model instance,
+        // and refresh() keeps that private cache — a stale $user would report old access.
+        $this->artisan('superadmin:grant', ['email' => $user->email])->assertSuccessful();
+        $this->assertTrue(User::find($user->id)->hasAccess('platform.index'));
 
-    public function test_guest_gets_401(): void
-    {
-        $this->getJson('/api/admin/platform/boards')->assertUnauthorized();
-    }
-
-    public function test_console_grants_and_revokes_the_rights(): void
-    {
-        $user = User::factory()->create(['email' => 'anna@example.com']);
-
-        $this->artisan('superadmin:grant', ['email' => 'Anna@Example.com'])->assertSuccessful();
-        $this->assertTrue($user->refresh()->is_superadmin);
-        $this->actingAs($user)->getJson('/api/admin/me')->assertJsonPath('data.is_superadmin', true);
-
-        $this->artisan('superadmin:grant', ['email' => 'anna@example.com', '--revoke' => true])->assertSuccessful();
-        $this->assertFalse($user->refresh()->is_superadmin);
+        $this->artisan('superadmin:grant', ['email' => $user->email, '--revoke' => true])->assertSuccessful();
+        $this->assertFalse(User::find($user->id)->hasAccess('platform.index'));
 
         $this->artisan('superadmin:grant', ['email' => 'nobody@example.com'])->assertFailed();
+    }
+
+    private function makeSuperadmin(): User
+    {
+        return User::factory()->create([
+            'permissions' => Dashboard::getAllowAllPermission()->all(),
+        ]);
     }
 }

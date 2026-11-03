@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
+use Orchid\Support\Facades\Dashboard;
 
 class GrantSuperadmin extends Command
 {
@@ -24,10 +25,13 @@ class GrantSuperadmin extends Command
         }
 
         $grant = ! $this->option('revoke');
-        $user->forceFill(['is_superadmin' => $grant])->save();
+        // Dashboard::getAllowAllPermission() собирает все права, зарегистрированные в PlatformProvider::registerPermissions().
+        // Collection → массив, чтобы 'array' каст на permissions положил его в jsonb как есть.
+        $user->permissions = $grant ? Dashboard::getAllowAllPermission()->all() : null;
+        $user->save();
 
         $this->info($grant
-            ? "{$user->email} теперь админ сервиса: /app/platform"
+            ? "{$user->email} теперь админ сервиса: /admin"
             : "{$user->email} больше не админ сервиса");
 
         return self::SUCCESS;

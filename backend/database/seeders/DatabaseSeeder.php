@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Orchid\Support\Facades\Dashboard;
 
 /**
  * Local demo: project "Demo" (/demo) with a few posts and an admin admin@example.com / password (also a superadmin).
@@ -27,10 +28,15 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        $admin = User::create(['name' => 'Админ', 'email' => 'admin@example.com', 'password' => 'password']);
+        $admin = User::create([
+            'name' => 'Админ',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+            // local admin also opens «Админка сервиса» (/admin) — Dashboard::getAllowAllPermission()
+            // returns the full set registered in PlatformProvider::registerPermissions().
+            'permissions' => Dashboard::getAllowAllPermission()->all(),
+        ]);
         $admin->markEmailAsVerified();
-        // the local admin also opens «Админка сервиса» (/app/platform)
-        $admin->forceFill(['is_superadmin' => true])->save();
 
         // owner_id so ParticipantController marks this row as «создал доску» (source = created),
         // not «добавлен вручную». Pivot role must match: ProjectRole::Owner.

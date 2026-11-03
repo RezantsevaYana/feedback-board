@@ -3,35 +3,25 @@
 namespace App\Models;
 
 use App\Enums\ProjectRole;
-use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Orchid\Filters\Types\Like;
+use Orchid\Filters\Types\Where;
+use Orchid\Filters\Types\WhereDateStartEnd;
+use Orchid\Platform\Models\User as Authenticatable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+/**
+ * Orchid parent brings in AsSource/Chartable/Filterable/HasFactory/Notifiable/UserAccess traits
+ * — don't redeclare them here. `permissions` sits on `users` and holds the Orchid rights set.
+ */
+#[Fillable(['name', 'email', 'password', 'permissions'])]
+#[Hidden(['password', 'remember_token', 'permissions'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
-
     /**
-     * Mirrors the DB default, so a freshly created model has the flag without a refresh.
-     *
-     * @var array<string, mixed>
-     */
-    protected $attributes = [
-        'is_superadmin' => false,
-    ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -39,9 +29,36 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_superadmin' => 'boolean',
+            'permissions' => 'array',
         ];
     }
+
+    /**
+     * Columns the Orchid tables can sort by (?sort=…).
+     *
+     * @var array<int, string>
+     */
+    protected $allowedSorts = [
+        'id',
+        'name',
+        'email',
+        'email_verified_at',
+        'created_at',
+        'updated_at',
+    ];
+
+    /**
+     * Columns the Orchid filters bind to (?filter[…]=).
+     *
+     * @var array<string, class-string>
+     */
+    protected $allowedFilters = [
+        'id' => Where::class,
+        'name' => Like::class,
+        'email' => Like::class,
+        'created_at' => WhereDateStartEnd::class,
+        'updated_at' => WhereDateStartEnd::class,
+    ];
 
     /**
      * Boards this user has any role on. After slice 1 of docs/ROLES_PLAN.md the pivot carries

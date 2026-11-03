@@ -12,7 +12,6 @@ import BoardAccessPage from '@/pages/app/BoardAccessPage.vue'
 import BoardSettingsPage from '@/pages/app/BoardSettingsPage.vue'
 import InviteAcceptPage from '@/pages/auth/InviteAcceptPage.vue'
 import AccountPage from '@/pages/account/AccountPage.vue'
-import PlatformPage from '@/pages/platform/PlatformPage.vue'
 import AppShell from '@/shared/components/AppShell.vue'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 
@@ -45,8 +44,6 @@ const router = createRouter({
         // «Участники» and «Подключение» became one «Доступ» page (02.11.2026): old links and letters land there
         { path: 'boards/:slug/participants', redirect: (to) => ({ name: 'board-access', params: to.params, hash: '#participants' }) },
         { path: 'boards/:slug/embed', redirect: (to) => ({ name: 'board-access', params: to.params, query: to.query }) },
-        // «Админка сервиса»: the service's own admins only, the wide tables need the whole page
-        { path: 'platform', name: 'platform', component: PlatformPage, meta: { auth: true, superadmin: true, noSidebar: true } },
       ],
     },
     // the UI components catalogue: local development only, the build doesn't have the route
@@ -66,9 +63,6 @@ router.beforeEach(async (to) => {
   await auth.fetchMe()
   if (to.meta.auth && !auth.isAuth) {
     return { name: 'login', query: { next: to.fullPath } }
-  }
-  if (to.meta.superadmin && !auth.me?.is_superadmin) {
-    return { name: 'hub' }
   }
   if (to.meta.guest && auth.isAuth) {
     return { name: 'hub' }

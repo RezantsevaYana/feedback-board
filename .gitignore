@@ -13,6 +13,8 @@ node_modules/
 vendor/
 # published Laravel templates (letters), not dependencies
 !backend/resources/views/vendor/
+# published Orchid assets (css/js/mix-manifest) — commit so prod doesn't need vendor:publish
+!backend/public/vendor/
 dist/
 
 # Logs

@@ -25,6 +25,13 @@ export default defineConfig({
     proxy: {
       '/api': apiTarget,
       '/sanctum': apiTarget,
+      // Админка сервиса на Orchid живёт на бэкенде. Прокси нужен, чтобы /admin и его ассеты
+      // шли через наш origin (:5176) и переиспользовали ту же сессионную куку, что API.
+      // На проде то же проксирование делает веб-сервер (nginx) — см. README/DEPLOY.
+      // xfwd добавляет X-Forwarded-Host/Proto, чтобы Laravel генерил редиректы (/admin/login
+      // при 302 для гостя) на localhost:5176, а не на 'backend:8000' из docker DNS.
+      '/admin': { target: apiTarget, changeOrigin: true, xfwd: true },
+      '/vendor/orchid': { target: apiTarget, changeOrigin: true, xfwd: true },
     },
   },
 })

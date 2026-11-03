@@ -16,6 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Sanctum SPA: requests from the board's own origin get a session (team login)
         $middleware->statefulApi();
+
+        // Dev-прокси (vite) и прод-прокси (nginx) оба стоят перед Laravel на том же хосте и
+        // передают X-Forwarded-Host/Proto/For. Без этого Laravel видит хост 'backend:8000'
+        // из docker DNS и генерит редиректы на него — не доходит до браузера.
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -11,6 +11,7 @@ use App\Services\LoginLockout;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -87,8 +88,10 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'email_verified' => $user->hasVerifiedEmail(),
-            // opens «Админка сервиса» in the account menu
-            'is_superadmin' => $user->is_superadmin,
+            // opens «Админка сервиса» (/admin, Orchid) in the account menu. hasAccess() comes from Orchid's
+            // UserAccess trait: it reads the `permissions` jsonb and matches 'platform.index' there
+            // or on any role attached to the user.
+            'is_superadmin' => $user->hasAccess('platform.index'),
             'projects' => $pivotProjects
                 ->merge($boards->reject(fn (Project $p) => $pivotIds->contains($p->id)))
                 ->sortBy('name')->values()
@@ -119,10 +122,10 @@ class AuthController extends Controller
     /**
      * `pending_requests` — access requests waiting on this board; 0 where this user doesn't decide on them.
      *
-     * @param  \Illuminate\Support\Collection<int, int>  $pending  board id → waiting requests
+     * @param  Collection<int, int>  $pending  board id → waiting requests
      * @return array{id: int, name: string, slug: string, role: ?string, pending_requests: int}
      */
-    private function brief(Project $p, User $user, \Illuminate\Support\Collection $pending): array
+    private function brief(Project $p, User $user, Collection $pending): array
     {
         // $p->pivot is set when the project came via $user->projects(). For boards() we fall back to Owner
         // because the user is on the owner_id column — see the factory / ProjectService invariant.

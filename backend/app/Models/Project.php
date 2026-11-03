@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BoardVisibility;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,12 +12,42 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Orchid\Filters\Filterable;
+use Orchid\Filters\Types\Like;
+use Orchid\Filters\Types\Where;
+use Orchid\Filters\Types\WhereDateStartEnd;
+use Orchid\Screen\AsSource;
 
 #[Fillable(['name', 'slug', 'owner_id', 'visibility', 'allowed_origins', 'widget_color'])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
-    use HasFactory, SoftDeletes;
+    use AsSource, Filterable, HasFactory, SoftDeletes;
+
+    /**
+     * Columns the Orchid table on BoardListScreen can sort by (?sort=…).
+     *
+     * @var array<int, string>
+     */
+    protected $allowedSorts = [
+        'id',
+        'name',
+        'slug',
+        'created_at',
+        'posts_count',
+    ];
+
+    /**
+     * Column filters bound to the table header (?filter[…]=).
+     *
+     * @var array<string, class-string>
+     */
+    protected $allowedFilters = [
+        'name' => Like::class,
+        'slug' => Like::class,
+        'visibility' => Where::class,
+        'created_at' => WhereDateStartEnd::class,
+    ];
 
     /**
      * Pivot columns pulled by every members() query so the role is available
@@ -42,7 +73,7 @@ class Project extends Model
     {
         return [
             'allowed_origins' => 'array',
-            'visibility' => \App\Enums\BoardVisibility::class,
+            'visibility' => BoardVisibility::class,
         ];
     }
 
@@ -150,7 +181,6 @@ class Project extends Model
         return $this->hasMany(AccessRequest::class);
     }
 
-
     /**
      * Self-serve owner — the admin who created this board from the UI.
      * Null for legacy projects created via `project:create` artisan command.
@@ -173,7 +203,7 @@ class Project extends Model
 
     public function isPrivate(): bool
     {
-        return $this->visibility === \App\Enums\BoardVisibility::Private;
+        return $this->visibility === BoardVisibility::Private;
     }
 
     /**
