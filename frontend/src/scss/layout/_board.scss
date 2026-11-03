@@ -1,17 +1,25 @@
 @use '../utils' as *;
 
-// BoardPage.vue: section nav on the side, toolbar above content
+// BoardPage.vue: main is a flex column at least viewport-tall, so the board footer sits at the bottom when
+// the content is short and after it when it's long — no empty scroll pulled from the bottom.
+.board-page {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+// BoardPage.vue: section nav on the side, toolbar above content. flex: 1 lets the layout fill the remaining
+// viewport space in .board-page, so .board-main's border-left (the divider) runs to the footer's top edge.
 .board-layout {
     display: grid;
     grid-template-columns: 190px 1fr;
     gap: 24px;
     align-items: start;
-    min-height: calc(100vh - 72px);   // the divider runs to the bottom of the screen even on a short board
+    flex: 1 0 auto;
 
     @media screen and (max-width: $tablet) {
         grid-template-columns: 1fr;
         gap: 14px;
-        min-height: 0;
     }
     // room under the list for the pinned «Предложить» on a phone
     @media screen and (max-width: $mobile) {

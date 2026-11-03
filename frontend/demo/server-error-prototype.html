@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>500 «Что-то пошло не так» — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --active-fg: #063f2c;
+            --active-line: #1d8547;
+            --line: #d8e1db;
+            --control: #a9bcb0;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --accent-ink: #1b7f41;
+            --accent-fg: #ffffff;
+            --bug: #b0423a;
+            --page: #f3f6f4;
+            --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc > h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; }
+        .doc > p.lede { color: var(--muted); max-width: 760px; margin: 0 0 32px; }
+        .doc h2 { font-family: var(--font-body); font-size: 18px; font-weight: 600; margin: 48px 0 4px; display: flex; align-items: center; gap: 10px; }
+        .doc h2 .num { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 13px; font-weight: 600; }
+        .doc h2 + .meta { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+
+        .frame { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+        .chrome { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 55%, var(--bg)); }
+        .chrome .dots { display: inline-flex; gap: 6px; }
+        .chrome .dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+        .chrome .url { flex: 1; display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+        .chrome .url b { color: var(--fg); font-weight: 600; }
+
+        .slant { clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%); border-radius: 4px 10px 10px 4px; padding-left: 16px; }
+        .btn { border: 1px solid var(--line); background: var(--surface); color: var(--fg); min-height: 40px; padding: 0 16px; border-radius: 10px; font: inherit; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+        .btn:hover { border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
+        .btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); border-color: transparent; }
+        .btn-lg { min-height: 48px; padding: 0 24px; font-size: 16px; }
+        .btn-lg.slant { padding-left: 24px; }
+
+        /* ========= Variant A — mirror of 404: slant tag + big heading + status card + two actions ========= */
+        .err-a { padding: 72px 56px 96px; display: grid; justify-items: start; gap: 24px; }
+        .err-a .tag { font-size: 13px; font-weight: 700; padding: 4px 14px 4px 20px; background: var(--bug); color: #fff; letter-spacing: 0.08em; }
+        .err-a h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(44px, 11vw, 128px); line-height: 0.88; letter-spacing: -0.04em; margin: 0; max-width: 11ch; text-wrap: balance; }
+        .err-a .lead { max-width: 56ch; margin: 0; font-size: 16px; color: var(--muted); }
+        .err-a .lead b { color: var(--fg); font-weight: 600; }
+        /* status card: a terminal-ish line reporting the failed call */
+        .err-a .status { display: inline-grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); max-width: 100%; }
+        .err-a .status .label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+        .err-a .status code { font-family: var(--font-mono); font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .err-a .status code b { color: var(--bug); font-weight: 700; }
+        .err-a .status .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--bug) 18%, transparent); color: var(--bug); font-size: 12px; font-weight: 700; }
+        .err-a .status .pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .err-a .hint { font-size: 14px; color: var(--muted); margin: -6px 0 0; }
+        .err-a .actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .err-a .actions .btn-primary.slant { padding-left: 24px; }
+
+        /* ========= Variant B — compact: same brand shape, no status card ========= */
+        .err-b { padding: 72px 56px 96px; display: grid; justify-items: start; gap: 20px; }
+        .err-b .tag { font-size: 13px; font-weight: 700; padding: 4px 14px 4px 20px; background: var(--bug); color: #fff; letter-spacing: 0.08em; }
+        .err-b h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(44px, 11vw, 128px); line-height: 0.88; letter-spacing: -0.04em; margin: 0; max-width: 11ch; text-wrap: balance; }
+        .err-b .lead { max-width: 56ch; margin: 0; font-size: 16px; color: var(--muted); }
+        .err-b .lead code { font-family: var(--font-mono); background: var(--surface-2); border: 1px solid var(--line); padding: 1px 8px; border-radius: 6px; font-size: 13px; color: var(--bug); }
+        .err-b .actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .err-b .actions .btn-primary.slant { padding-left: 24px; }
+
+        /* ========= Variant C — expressive: giant «Упс», warm tone, one retry ========= */
+        .err-c { padding: 72px 56px 96px; display: grid; justify-items: start; gap: 20px; position: relative; }
+        .err-c .ups { font-family: var(--font-display); font-weight: 500; font-size: clamp(96px, 20vw, 240px); line-height: 0.85; letter-spacing: -0.05em; margin: 0; color: var(--accent); position: relative; }
+        .err-c .ups::after { content: ''; position: absolute; right: -14px; top: 10%; width: 18px; height: 18px; border-radius: 50%; background: var(--bug); box-shadow: 0 0 0 6px color-mix(in srgb, var(--bug) 15%, transparent); }
+        .err-c h1 { font-family: var(--font-body); font-size: 22px; font-weight: 600; margin: 0; max-width: 28ch; }
+        .err-c .lead { max-width: 44ch; margin: 0; font-size: 15px; color: var(--muted); }
+        .err-c .actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .err-c .actions .btn-primary.slant { padding-left: 24px; }
+
+        @media (max-width: 720px) {
+            .doc { padding: 24px 14px 72px; }
+            .err-a, .err-b, .err-c { padding: 48px 24px 64px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="doc">
+        <h1>500 «Что-то пошло не так» — прототип</h1>
+        <p class="lede">Три варианта экрана ошибки загрузки доски. Форма 404 нам нравится, поэтому вариант A — её зеркало: тот же слант-тег и большой display-заголовок, только тон красный. Варианты B и C пробуют убавить веса или дать больше характера.</p>
+
+        <h2><span class="num">A</span> Зеркало 404 — слант-тег «500», карточка статуса <span style="margin-left:6px; font-weight:500; font-size:13px; color:var(--muted);">— рекомендую</span></h2>
+        <p class="meta">Та же структура, что у «Доска не найдена»: красный слант, display-заголовок, карточка со статусом вместо адресной (показывает код и короткое сообщение), подсказка и действия. Пользователь узнаёт шаблон экрана ошибки и понимает, где он.</p>
+        <div class="frame">
+            <div class="chrome">
+                <span class="dots"><span></span><span></span><span></span></span>
+                <span class="url">feedback.rocont.dev<b>/demo</b></span>
+            </div>
+            <div class="err-a">
+                <span class="tag slant">500</span>
+                <h1>Что-то пошло не&nbsp;так</h1>
+                <p class="lead">Сервер не&nbsp;ответил. Мы уже разбираемся — <b>попробуйте через минуту</b> или обновите страницу.</p>
+                <div class="status">
+                    <span class="label">Запрос</span>
+                    <code>GET /api/projects/demo → <b>500 Internal Server Error</b></code>
+                    <span class="pill">недоступен</span>
+                </div>
+                <p class="hint">Если проблема повторяется — напишите нам, мы это чиним.</p>
+                <div class="actions">
+                    <a href="#" class="btn btn-primary btn-lg slant">Обновить страницу</a>
+                    <a href="#" class="btn btn-lg">На главную</a>
+                </div>
+            </div>
+        </div>
+
+        <h2><span class="num">B</span> Компактнее — без карточки статуса</h2>
+        <p class="meta">Тот же бренд, но без терминальной строки. Код ошибки упаковываем в инлайн-тег внутри lead. Легче и короче — хорошо, если 500 будем ловить часто и не хотим «тяжёлой» диагностики.</p>
+        <div class="frame">
+            <div class="chrome">
+                <span class="dots"><span></span><span></span><span></span></span>
+                <span class="url">feedback.rocont.dev<b>/demo</b></span>
+            </div>
+            <div class="err-b">
+                <span class="tag slant">500</span>
+                <h1>Что-то пошло не&nbsp;так</h1>
+                <p class="lead">Сервер ответил <code>500</code> на запрос доски. Попробуйте перезагрузить страницу через минуту — скорее всего, за это время всё починится.</p>
+                <div class="actions">
+                    <a href="#" class="btn btn-primary btn-lg slant">Обновить страницу</a>
+                    <a href="#" class="btn btn-lg">На главную</a>
+                </div>
+            </div>
+        </div>
+
+        <h2><span class="num">C</span> С характером — большое «Упс» и красная точка</h2>
+        <p class="meta">Теплее по тону: гигантское «Упс» в брендовом зелёном с акцентом-точкой в красном (как индикатор «не всё хорошо»). Внизу короткое объяснение. Хорошо, если хочется, чтобы ошибка не ощущалась как «нам пофиг» — а как «ой, видим, разбираемся».</p>
+        <div class="frame">
+            <div class="chrome">
+                <span class="dots"><span></span><span></span><span></span></span>
+                <span class="url">feedback.rocont.dev<b>/demo</b></span>
+            </div>
+            <div class="err-c">
+                <span class="ups">Упс</span>
+                <h1>Доска не загрузилась — сервер ответил ошибкой.</h1>
+                <p class="lead">Мы уже видим это и разбираемся. Попробуйте через минуту.</p>
+                <div class="actions">
+                    <a href="#" class="btn btn-primary btn-lg slant">Обновить страницу</a>
+                    <a href="#" class="btn btn-lg">На главную</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

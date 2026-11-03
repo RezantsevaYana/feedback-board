@@ -1,0 +1,67 @@
+@use '../utils' as *;
+
+// BoardPage.vue — a thin footer below the whole board workspace. Audience is the voter who arrived by
+// direct link: brand slant with a one-line claim on the left, a quiet «Создать свою доску →» on the right.
+.board-footer {
+    padding: 10px 0 2px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px 20px;
+    flex-wrap: wrap;
+    font-size: 13px;
+
+    // phone: the fixed «Предложить» sits over the viewport bottom. Give the footer breathing room so its
+    // content isn't masked by that button when the page is scrolled to the end.
+    @media screen and (max-width: $mobile) {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+        gap: 8px;
+    }
+}
+.board-footer-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+// brand tag, same shape and tone as .board-nav .proj; the whole thing is a link to the main page
+.board-footer-brand {
+    padding: 3px 12px 4px 16px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+
+    @include hover {
+        background: color-mix(in srgb, var(--accent) 88%, #000);
+    }
+}
+.board-footer-claim {
+    color: var(--muted);
+}
+// a quiet text link — underlined on hover, no button chrome, so it reads as a hint and not a call to action
+.board-footer-cta {
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 500;
+
+    @include hover {
+        color: var(--fg);
+
+        .board-footer-cta-arrow {
+            transform: translateX(3px);
+        }
+    }
+}
+// shared pattern with .home-go-arrow on the landing: the glyph nudges right on hover
+.board-footer-cta-arrow {
+    display: inline-block;
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}

@@ -42,14 +42,17 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
+import { useLogout } from '@/shared/composables/useLogout'
 
 // Public landing. A signed-in admin isn't redirected away (the page stays reachable to share or look at),
 // the buttons just switch: guests get «Создать доску» / «Войти», a signed-in admin gets «Мои доски».
 const auth = useAuthStore()
-const loggingOut = ref(false)
+// redirect: false — logging out from the landing just re-renders the page in guest mode;
+// no reason to kick the user over to /login from a page they came to as a visitor
+const { logout: onLogout, busy: loggingOut } = useLogout({ redirect: false })
 
 onMounted(async () => {
   try {
@@ -59,13 +62,4 @@ onMounted(async () => {
     auth.loaded = true
   }
 })
-
-async function onLogout() {
-  loggingOut.value = true
-  try {
-    await auth.logout()
-  } finally {
-    loggingOut.value = false
-  }
-}
 </script>

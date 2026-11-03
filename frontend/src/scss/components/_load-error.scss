@@ -1,0 +1,66 @@
+@use '../utils' as *;
+
+// BoardPage.vue — 500/network load failure: giant display «Упс» in brand green with a red indicator dot,
+// a short body-font headline, soft-retry («Попробовать снова» calls board.open — no full page reload).
+// Mirrors the «Доска не найдена» layout (bottom-aligned, viewport-tall grid) for a consistent error silhouette.
+.load-error {
+    min-height: calc(100dvh - 72px);
+    display: grid;
+    justify-items: start;
+    align-content: end;
+    gap: 24px;
+    max-width: 760px;
+
+    h1 {
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: clamp(20px, 2.4vw, 24px);
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+        margin: 0;
+        max-width: 30ch;
+    }
+
+    @media screen and (max-width: $mobile) {
+        min-height: calc(100dvh - 48px);
+        gap: 16px;
+    }
+}
+// the display word that carries the exclamation; the red dot on the top-right reads as a status indicator
+.load-error-ups {
+    position: relative;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(96px, 20vw, 240px);
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    color: var(--accent);
+
+    &::after {
+        content: '';
+        position: absolute;
+        right: -14px;
+        top: 10%;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--bug);
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--bug) 15%, transparent);
+    }
+}
+.load-error-lead {
+    max-width: 44ch;
+    margin: 0;
+    font-size: 15px;
+    color: var(--muted);
+}
+.load-error-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+
+    .btn-lg.slant {
+        padding-left: 24px;
+    }
+}

@@ -1,5 +1,5 @@
 <template>
-  <main class="container base-page">
+  <main class="container base-page board-page">
     <!-- 404: slug didn't match any board. The brand slant tag + display heading, the typed address as a
          mock URL with the missing slug struck through, then «На главную» / «Мои доски» (if signed in). -->
     <div v-if="board.notFound" class="not-found">
@@ -33,10 +33,16 @@
       <AccessGate :key="slug" :slug="slug" :name="board.gateName" :me="board.noAccess ? board.me : null" @logout="board.logout()" />
     </div>
 
-    <div v-else-if="!board.project && board.loadError" class="center-page">
-      <div>
-        <p class="note">Не получилось загрузить доску: {{ board.loadError }}</p>
-        <button type="button" class="btn" @click="board.open(slug)">Повторить</button>
+    <!-- 500 / network / anything that isn't 404 or 403: a giant brand «Упс» with a red indicator dot,
+         a short headline, and «Попробовать снова» / «На главную». The retry calls board.open(slug) so it's
+         a soft re-fetch, not a page reload — if the glitch cleared, the board slides in without a flash. -->
+    <div v-else-if="!board.project && board.loadError" class="load-error">
+      <span class="load-error-ups">Упс</span>
+      <h1>Доска не&nbsp;загрузилась — сервер ответил ошибкой.</h1>
+      <p class="load-error-lead">Мы уже видим это и&nbsp;разбираемся. Попробуйте через минуту.</p>
+      <div class="load-error-actions">
+        <button type="button" class="btn btn-primary btn-lg slant" @click="board.open(slug)">Попробовать снова</button>
+        <RouterLink to="/" class="btn btn-lg">На главную</RouterLink>
       </div>
     </div>
 
@@ -196,6 +202,20 @@
         </template>
       </div>
     </div>
+
+    <!-- TODO: закомментили футер — вернёмся. Был quiet strip для голосующего на доске: слант-бренд + клейм
+         слева, тихое «Создать свою доску →» справа. Виден, когда board.project загружен (не на 404/скелете/500).
+    <footer v-if="board.project" class="board-footer">
+      <div class="board-footer-left">
+        <RouterLink to="/" class="board-footer-brand slant">Feedback Board</RouterLink>
+        <span class="board-footer-claim">— одна доска вместо сообщений в чатах</span>
+      </div>
+      <RouterLink :to="board.me ? '/app/boards/new' : '/app/register'" class="board-footer-cta">
+        Создать свою доску <span class="board-footer-cta-arrow" aria-hidden="true">→</span>
+      </RouterLink>
+    </footer>
+    -->
+
 
     <PostModal v-if="board.project && postId" :id="postId" @close="closePost" />
     <!-- tablet and phone: the board's tools and the account, behind «Меню» -->
