@@ -16,7 +16,7 @@
       class="weekly-card"
       :class="{ 'has-post': !!entry.post, empty: !entry.post }"
       :data-color="entry.category.color ?? 'none'"
-      :style="{ '--i': i }"
+      :style="{ '--i': i, ...entityColorStyle(entry.category.color, 'accent') }"
       :tabindex="entry.post ? 0 : -1"
       :role="entry.post ? 'link' : undefined"
       :aria-label="entry.post?.title"
@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { entityColorStyle } from '@/shared/utils/entityColor'
 import { computed } from 'vue'
 import type { Post } from '@/api/types'
 import { TEXT } from '@/shared/constants/dict'

@@ -1,86 +1,102 @@
 <template>
-  <div class="color-palette" :class="`v-${variant}`" role="radiogroup" :aria-label="label" @keydown="onKey">
-    <button
-      v-for="(color, idx) in choices"
-      :key="color ?? 'none'"
-      :ref="(el) => bindRef(el, idx)"
-      type="button"
-      role="radio"
-      :aria-checked="selected === color"
-      :aria-label="titleFor(color)"
-      :tabindex="activeIndex === idx ? 0 : -1"
-      :data-color="color ?? 'none'"
-      :title="titleFor(color)"
-      class="color-swatch"
-      @click="select(color, idx)"
-    />
+  <div ref="root" class="entity-color" :aria-label="label" @keydown.esc.stop.prevent="close(true)">
+    <div class="entity-color-dropdown">
+      <button ref="trigger" type="button" class="btn entity-color-trigger" :aria-label="`Выбрать: ${label.toLowerCase()}`" :aria-expanded="open" :aria-controls="uid" @click="open = !open">
+        <span class="entity-color-swatch" :class="{ colorless: selected === null }" :style="swatchStyle" aria-hidden="true" />
+        Цвет <AppIcon name="chevron" :size="12" />
+      </button>
+      <Transition name="entity-palette">
+        <div v-if="open" :id="uid" class="entity-color-popup" role="region" :aria-label="label">
+          <div class="color-palette" :class="`v-${variant}`" role="group" aria-label="Готовые цвета">
+            <button v-for="color in PALETTE_COLORS" :key="color" type="button" class="color-swatch" :data-color="color" :aria-label="LABELS[color]" :title="LABELS[color]" :aria-pressed="selected === color" @click="selectPreset(color)" />
+          </div>
+          <ColorPicker :pure-color="pickerColor" @update:pure-color="pickCustom" is-widget format="hex" use-type="pure" picker-type="chrome" :disable-alpha="true" :disable-history="true" />
+        </div>
+      </Transition>
+    </div>
+    <InputComponent v-model="hex" :aria-label="`${label}: HEX`" placeholder="HEX" maxlength="7" autocomplete="off" spellcheck="false" :error="error" @input="error = ''" @blur="validate" />
+    <button v-if="clearable" type="button" class="btn entity-color-clear" :disabled="selected === null && !hex" aria-label="Без цвета" title="Без цвета" @click="clear"><AppIcon name="close" :size="14" /></button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { type ComponentPublicInstance, computed, nextTick, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
+import { ColorPicker } from 'vue3-colorpicker'
+import 'vue3-colorpicker/style.css'
 import { PALETTE_COLORS, type PaletteColor } from '@/api/types'
+import { entityColorHex } from '@/shared/utils/entityColor'
+import { DEFAULT_WIDGET_COLOR, normalizeHex } from '@/shared/utils/widgetColor'
+import AppIcon from './AppIcon.vue'
+import InputComponent from './InputComponent.vue'
 
-type Variant = 'category' | 'status'
-type Choice = PaletteColor | null
-
-const props = withDefaults(
-  defineProps<{
-    label: string
-    variant?: Variant
-    clearable?: boolean
-  }>(),
-  { variant: 'category', clearable: true },
-)
-
-const selected = defineModel<Choice>({ default: null })
-
-const choices = computed<Choice[]>(() => (props.clearable ? [null, ...PALETTE_COLORS] : [...PALETTE_COLORS]))
-
-// Human-readable titles for the swatches; palette slugs match PALETTE_COLORS.
-const LABELS: Record<PaletteColor, string> = {
-  red: 'Красный',
-  orange: 'Оранжевый',
-  yellow: 'Жёлтый',
-  green: 'Зелёный',
-  blue: 'Синий',
-  pink: 'Розовый',
-}
-const titleFor = (c: Choice) => (c === null ? 'Без цвета' : LABELS[c])
-
-const refs = ref<HTMLButtonElement[]>([])
-// a function ref gets the element, or a component instance in general; only the swatch buttons matter here
-function bindRef(el: Element | ComponentPublicInstance | null, idx: number) {
-  if (el instanceof HTMLButtonElement) refs.value[idx] = el
-}
-
-// WAI-ARIA radiogroup: exactly one swatch is tab-reachable at a time; arrow keys
-// move both selection and focus between swatches inside the group.
-const activeIndex = computed(() => {
-  const i = choices.value.indexOf(selected.value)
-  return i === -1 ? 0 : i
+const props = withDefaults(defineProps<{
+  label: string
+  variant?: 'category' | 'status'
+  clearable?: boolean
+}>(), { variant: 'category', clearable: true })
+const selected = defineModel<PaletteColor | null>({ default: null })
+const valid = defineModel<boolean>('valid', { default: true })
+const hex = ref(entityColorHex(selected.value, props.variant).toUpperCase())
+const pickerColor = ref(entityColorHex(selected.value, props.variant) || DEFAULT_WIDGET_COLOR)
+const error = ref('')
+const open = ref(false)
+const root = ref<HTMLElement | null>(null)
+const trigger = ref<HTMLButtonElement | null>(null)
+const uid = useId()
+const swatchStyle = computed(() => {
+  const color = entityColorHex(selected.value, props.variant)
+  return color ? { backgroundColor: color } : {}
 })
-
-function select(c: Choice, idx: number) {
-  selected.value = c
-  nextTick(() => refs.value[idx]?.focus())
+const LABELS: Record<(typeof PALETTE_COLORS)[number], string> = {
+  red: 'Красный', orange: 'Оранжевый', yellow: 'Жёлтый', green: 'Зелёный', blue: 'Синий', pink: 'Розовый',
 }
 
-function onKey(e: KeyboardEvent) {
-  const list = choices.value
-  const i = activeIndex.value
-  let next = i
-  switch (e.key) {
-    case 'ArrowRight':
-    case 'ArrowDown': next = (i + 1) % list.length; break
-    case 'ArrowLeft':
-    case 'ArrowUp': next = (i - 1 + list.length) % list.length; break
-    case 'Home': next = 0; break
-    case 'End': next = list.length - 1; break
-    default: return
-  }
-  e.preventDefault()
-  // `next` is always inside the list: the switch above wraps it around
-  select(list[next]!, next)
+watch(hex, (value) => {
+  const normalized = normalizeHex(value)
+  valid.value = !!normalized || (props.clearable && value.trim() === '')
+  if (normalized) {
+    if (normalized !== entityColorHex(selected.value, props.variant)) selected.value = normalized as PaletteColor
+    pickerColor.value = normalized
+  } else if (value.trim() === '' && props.clearable) selected.value = null
+})
+watch(selected, (color) => {
+  const next = entityColorHex(color, props.variant)
+  if (next !== normalizeHex(hex.value)) hex.value = next.toUpperCase()
+  pickerColor.value = next || DEFAULT_WIDGET_COLOR
+  valid.value = true
+  error.value = ''
+})
+function pickCustom(color: unknown) {
+  if (typeof color !== 'string') return
+  const next = normalizeHex(color)
+  if (next) hex.value = next.toUpperCase()
 }
+
+function selectPreset(color: PaletteColor) {
+  selected.value = color
+  hex.value = entityColorHex(color, props.variant).toUpperCase()
+  valid.value = true
+  error.value = ''
+}
+function clear() {
+  selected.value = null
+  hex.value = ''
+  valid.value = true
+  error.value = ''
+}
+function validate() {
+  if (!valid.value) error.value = 'Введите HEX, например #1D8547'
+}
+function close(refocus = false) {
+  open.value = false
+  if (refocus) trigger.value?.focus()
+}
+function outside(event: PointerEvent) {
+  if (!root.value?.contains(event.target as Node)) close()
+}
+watch(open, (value) => {
+  if (value) document.addEventListener('pointerdown', outside, true)
+  else document.removeEventListener('pointerdown', outside, true)
+})
+onBeforeUnmount(() => document.removeEventListener('pointerdown', outside, true))
 </script>

@@ -31,7 +31,7 @@
         <h3>{{ post.title }}</h3>
         <div class="meta">
           <CategoryTag :category="post.category" />
-          <span class="pill" :data-color="post.status.color ?? 'none'">{{ post.status.name }}</span>
+          <span class="pill" :data-color="post.status.color ?? 'none'" :style="entityColorStyle(post.status.color)">{{ post.status.name }}</span>
           <span>{{ post.author_name || TEXT.anonymous }}</span>
           <span>{{ fmtDate(post.created_at) }}</span>
         </div>
@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { entityColorStyle } from '@/shared/utils/entityColor'
 import type { Post } from '@/api/types'
 import { TEXT } from '@/shared/constants/dict'
 import { fmtDate } from '@/shared/utils/format'

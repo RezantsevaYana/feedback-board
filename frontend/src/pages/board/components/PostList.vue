@@ -22,7 +22,7 @@
       <!-- «Новое» comes first (new_first): a head over them, and one where the rest begins, as on the prototype
            (frontend/demo/list-view-prototype.html) — the status pill, the count, a line -->
       <div v-if="i === 0 && hasNewHead" class="list-divider">
-        <span class="pill" :data-color="board.defaultStatus?.color ?? 'none'">{{ board.defaultStatus?.name ?? 'Новое' }}</span>
+        <span class="pill" :data-color="board.defaultStatus?.color ?? 'none'" :style="entityColorStyle(board.defaultStatus?.color)">{{ board.defaultStatus?.name ?? 'Новое' }}</span>
         <span class="list-divider-count">{{ board.newCount }}</span>
       </div>
       <div v-if="restStartsAt === i" class="list-divider" role="separator">
@@ -57,7 +57,7 @@
         </div>
         <div class="card-side">
           <!-- under the «Новое» head the status is said once, by the head; «Остальные» are mixed, so they keep it -->
-          <span v-if="!(hasNewHead && i < restStartsAt)" class="pill" :data-color="post.status.color ?? 'none'">{{ post.status.name }}</span>
+          <span v-if="!(hasNewHead && i < restStartsAt)" class="pill" :data-color="post.status.color ?? 'none'" :style="entityColorStyle(post.status.color)">{{ post.status.name }}</span>
           <CardMenu v-if="board.team" :post="post" @move="move(post, $event)" @hide="toggleHidden(post)" />
           <CopyLink v-else :post-id="post.id" />
         </div>
@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { entityColorStyle } from '@/shared/utils/entityColor'
 import { computed } from 'vue'
 import type { Post } from '@/api/types'
 import { useBoardStore } from '@/store/board/useBoardStore'

@@ -19,12 +19,12 @@
 
         <div class="bulk-group" :class="{ open: openMenu === 'status' }">
           <button type="button" class="btn bulk-trigger" aria-haspopup="menu" :aria-expanded="openMenu === 'status'" @click="toggle('status')">
-            В столбец <AppIcon name="chevron" />
+            Изменить статус <AppIcon name="chevron" />
           </button>
           <ul v-if="openMenu === 'status'" class="bulk-menu" role="menu">
             <li v-for="s in board.statuses" :key="s.id" role="none">
               <button type="button" role="menuitem" class="bulk-item" @click="pickStatus(s)">
-                <span class="pill" :data-color="s.color ?? 'none'">{{ s.name }}</span>
+                <span class="pill" :data-color="s.color ?? 'none'" :style="entityColorStyle(s.color)">{{ s.name }}</span>
               </button>
             </li>
           </ul>
@@ -37,7 +37,7 @@
           <ul v-if="openMenu === 'category'" class="bulk-menu" role="menu">
             <li v-for="c in board.categories" :key="c.id" role="none">
               <button type="button" role="menuitem" class="bulk-item" @click="pickCategory(c.id)">
-                <span class="type slant" :data-color="c.color ?? 'none'">{{ c.name }}</span>
+                <span class="type slant" :data-color="c.color ?? 'none'" :style="entityColorStyle(c.color)">{{ c.name }}</span>
               </button>
             </li>
             <li role="none">
@@ -63,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+import { entityColorStyle } from '@/shared/utils/entityColor'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { errorMessage } from '@/api/client'
 import type { Category, Post, Status, SystemStatusSlug } from '@/api/types'

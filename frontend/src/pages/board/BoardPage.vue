@@ -139,7 +139,6 @@
               <h1>Предложения</h1>
               <p v-if="board.team" class="board-keys">
                 Перетащите карточку в другой столбец или нажмите на неё, чтобы изменить.
-                Клавиши: <kbd>J</kbd> <kbd>K</kbd> выбор, <kbd>1</kbd>–<kbd>{{ Math.min(board.statuses.length, 9) }}</kbd> перенос в столбец, <kbd>H</kbd> скрыть.
               </p>
               <p v-else>Что предлагают и что уже сделано. Голосуйте за то, что нужно вам.</p>
             </div>
@@ -159,7 +158,7 @@
 
           <div class="filters">
             <div class="seg-icons" role="group" aria-label="Вид">
-              <button type="button" :aria-pressed="board.view.layout === 'kanban'" @click="board.view.layout = 'kanban'"><AppIcon name="columns" />Столбцы</button>
+              <button type="button" :aria-pressed="board.view.layout === 'kanban'" @click="board.view.layout = 'kanban'"><AppIcon name="columns" />Канбан</button>
               <button type="button" :aria-pressed="board.view.layout === 'list'" @click="board.view.layout = 'list'"><AppIcon name="list" />Список</button>
             </div>
             <!-- phone: the filters live in a bottom sheet behind this button -->
@@ -190,10 +189,10 @@
                but any Eloquent::create bypassing it leaves the Kanban with no columns to draw at all) -->
           <div v-else-if="!board.statuses.length" class="board-empty">
             <h2>Доска ещё не настроена</h2>
-            <p v-if="board.configure">У доски нет ни одного столбца, поэтому предложения не отображаются. Добавьте хотя бы один столбец, чтобы доска заработала.</p>
+            <p v-if="board.configure">У доски нет ни одного статуса, поэтому предложения не отображаются. Добавьте хотя бы один статус, чтобы доска заработала.</p>
             <p v-else>Владелец доски пока не настроил её. Загляните чуть позже.</p>
             <div v-if="board.configure" class="row">
-              <button type="button" class="btn" @click="openQuick('statuses')">Открыть настройки столбцов</button>
+              <button type="button" class="btn" @click="openQuick('statuses')">Открыть настройки статусов</button>
             </div>
           </div>
           <KanbanBoard v-else-if="board.view.layout === 'kanban'" @open="openPost" />

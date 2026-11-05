@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProjectRole;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class CategoriesTest extends TestCase
@@ -23,7 +25,7 @@ class CategoriesTest extends TestCase
         $this->project = Project::factory()->create(['slug' => 'demo']);
         $this->admin = User::factory()->create();
         $this->admin->projects()->attach($this->project, [
-            'role' => \App\Enums\ProjectRole::Admin->value,
+            'role' => ProjectRole::Admin->value,
         ]);
     }
 
@@ -62,5 +64,36 @@ class CategoriesTest extends TestCase
 
         auth()->forgetGuards();
         $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Гость', 'color' => 'blue'])->assertUnauthorized();
+    }
+
+    public function test_custom_hex_colour_is_normalized_persisted_and_can_be_cleared(): void
+    {
+        $this->actingAs($this->admin);
+
+        $id = $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Свой цвет', 'color' => '  A1B2C3  '])
+            ->assertCreated()->assertJsonPath('data.color', '#a1b2c3')->json('data.id');
+        $this->assertDatabaseHas('categories', ['id' => $id, 'color' => '#a1b2c3']);
+
+        $this->patchJson("/api/admin/categories/{$id}", ['name' => 'Свой цвет', 'color' => '#F0A'])
+            ->assertOk()->assertJsonPath('data.color', '#ff00aa');
+        $this->assertDatabaseHas('categories', ['id' => $id, 'color' => '#ff00aa']);
+
+        $this->getJson('/api/public/projects/demo')->assertOk()
+            ->assertJsonFragment(['id' => $id, 'name' => 'Свой цвет', 'color' => '#ff00aa']);
+
+        $this->patchJson("/api/admin/categories/{$id}", ['name' => 'Свой цвет', 'color' => null])
+            ->assertOk()->assertJsonPath('data.color', null);
+        $this->assertDatabaseHas('categories', ['id' => $id, 'color' => null]);
+    }
+
+    #[TestWith(['#12GG34'])]
+    #[TestWith(['#12345678'])]
+    #[TestWith(['red; background:url(example)'])]
+    public function test_custom_colour_rejects_invalid_hex_and_css(string $color): void
+    {
+        $this->actingAs($this->admin);
+
+        $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Некорректный цвет', 'color' => $color])
+            ->assertJsonValidationErrors(['color' => 'Такой цвет недоступен.']);
     }
 }

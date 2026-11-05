@@ -16,7 +16,10 @@
             <span class="app-sidebar-board-name">{{ b.name }}</span>
             <span v-if="b.slug === shownSlug && b.role" class="app-sidebar-board-role">{{ ROLE_LABELS[b.role] }}</span>
           </span>
-          <span v-if="b.visibility === 'private'" class="app-sidebar-board-lock" title="Закрытая доска"><AppIcon name="lock" :size="13" /><span class="visually-hidden">закрытая</span></span>
+          <span class="app-sidebar-board-lock" :class="{ public: b.visibility === 'public' }" :title="b.visibility === 'private' ? 'Закрытая доска' : 'Открытая доска'">
+            <AppIcon :name="b.visibility === 'private' ? 'lock' : 'unlock'" :size="13" />
+            <span class="visually-hidden">{{ b.visibility === 'private' ? 'закрытая' : 'открытая' }}</span>
+          </span>
           <!-- hidden while the pages are open: «Доступ» carries the number then -->
           <span v-if="b.pending_requests" class="count-badge" :aria-label="`запросов на доступ: ${b.pending_requests}`">{{ b.pending_requests }}</span>
         </component>
@@ -87,7 +90,7 @@ const { logout, busy } = useLogout()
 const SETTINGS_SECTIONS: SectionLink[] = [
   { hash: '#general', label: 'Общее' },
   { hash: '#categories', label: 'Категории' },
-  { hash: '#statuses', label: 'Столбцы' },
+  { hash: '#statuses', label: 'Статусы' },
 ]
 
 // up to this many rows, the current board always among them; one more than that is shown rather than «Ещё 1»

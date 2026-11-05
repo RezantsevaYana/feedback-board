@@ -59,3 +59,104 @@
         }
     }
 }
+
+.entity-color {
+    display: grid;
+    grid-template-columns: auto minmax(0, 132px) auto;
+    align-items: start;
+    justify-content: start;
+    gap: 8px;
+    max-width: 100%;
+
+    > .field {
+        min-width: 0;
+        margin: 0;
+
+        .input {
+            height: 40px;
+            min-height: 40px;
+            font-family: var(--font-mono);
+        }
+    }
+    @media screen and (max-width: $mobile) {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        width: 100%;
+
+        > .field .input {
+            height: 44px;
+            min-height: 44px;
+            font-size: 16px;
+        }
+        .btn {
+            min-height: 44px;
+        }
+    }
+}
+.entity-color-dropdown {
+    position: relative;
+}
+.entity-color-trigger {
+    gap: 6px;
+    padding-inline: 10px;
+}
+.entity-color-swatch {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border: 1px solid var(--control);
+    border-radius: 4px;
+    background: var(--tag);
+
+    &.colorless {
+        background: linear-gradient(135deg, transparent 46%, var(--muted) 47%, var(--muted) 53%, transparent 54%);
+    }
+}
+.entity-color-clear {
+    width: 40px;
+    padding: 0;
+
+    @media screen and (max-width: $mobile) {
+        width: 44px;
+    }
+}
+.entity-color-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 110;
+    width: 260px;
+    max-width: calc(100vw - 48px);
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(16, 37, 40, 0.16);
+    transform-origin: top left;
+
+    .color-palette {
+        justify-content: space-between;
+        margin-bottom: 10px;
+        gap: 6px;
+    }
+    .color-swatch[aria-pressed='true'] {
+        outline: 2px solid var(--active-line);
+        outline-offset: 2px;
+    }
+    .vc-colorpicker {
+        max-width: 100%;
+        box-shadow: none;
+    }
+}
+.entity-palette-enter-active,
+.entity-palette-leave-active {
+    transition: opacity 160ms ease, transform 160ms ease;
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+.entity-palette-enter-from,
+.entity-palette-leave-to {
+    opacity: 0;
+    transform: translateY(-6px);
+}

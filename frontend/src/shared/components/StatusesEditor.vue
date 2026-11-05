@@ -1,7 +1,7 @@
 <template>
   <p class="note">
-    Столбцы доски и фильтр «Статус». «Новое», «Готово» и «Отклонено» — базовые: их можно переименовать,
-    но нельзя удалить и переместить. Свои столбцы встают между «Новое» и «Готово» — их можно перетаскивать
+    Статусы доски и фильтр «Статус». «Новое», «Готово» и «Отклонено» — базовые: их можно переименовать,
+    но нельзя удалить и переместить. Свои статусы встают между «Новое» и «Готово» — их можно перетаскивать
     за ручку слева, чтобы менять порядок.
   </p>
 
@@ -19,14 +19,14 @@
     >
       <form v-if="editingId === s.id" class="cat-edit" @submit.prevent="saveEdit">
         <div class="cat-row">
-          <InputComponent v-model="editName" maxlength="40" aria-label="Название столбца" autofocus />
-          <button class="btn btn-primary" type="submit">Сохранить</button>
+          <InputComponent v-model="editName" maxlength="40" aria-label="Название статуса" autofocus />
+          <button class="btn btn-primary" type="submit" :disabled="!editColorValid">Сохранить</button>
           <button class="btn" type="button" @click="editingId = null">Отмена</button>
         </div>
-        <ColorPaletteComponent v-model="editColor" label="Цвет столбца" variant="status" />
+        <ColorPaletteComponent v-model="editColor" v-model:valid="editColorValid" label="Цвет статуса" variant="status" />
         <div class="cat-preview">
           <span class="label">Как будет выглядеть:</span>
-          <span class="pill" :data-color="editColor ?? 'none'">{{ editName.trim() || s.name }}</span>
+          <span class="pill" :data-color="editColor ?? 'none'" :style="entityColorStyle(editColor)">{{ editName.trim() || s.name }}</span>
         </div>
         <span v-if="editError" class="err cat-err">{{ editError }}</span>
       </form>
@@ -34,10 +34,10 @@
         <!-- the grip is only interactive for custom columns; system ones get a dash in its place so names align -->
         <span v-if="!s.is_system" class="cat-grip" aria-label="Перетащите, чтобы изменить порядок" title="Перетащите, чтобы изменить порядок"><AppIcon name="grip" :size="16" /></span>
         <span v-else class="cat-grip cat-grip-empty" aria-hidden="true" />
-        <span class="pill" :data-color="s.color ?? 'none'">{{ s.name }}</span>
+        <span class="pill" :data-color="s.color ?? 'none'" :style="entityColorStyle(s.color)">{{ s.name }}</span>
         <span v-if="s.is_system" class="chip">базовый</span>
         <span class="spacer" />
-        <button class="link-btn" type="button" @click="startEdit(s)">Переименовать</button>
+        <button class="link-btn" type="button" @click="startEdit(s)">Изменить</button>
         <button v-if="!s.is_system" class="link-btn" type="button" @click="askRemove(s)">Удалить</button>
       </div>
     </li>
@@ -48,22 +48,23 @@
       <InputComponent
         v-model="newName"
         maxlength="40"
-        placeholder="Новый столбец, например «В работе»"
-        aria-label="Новый столбец"
+        placeholder="Новый статус, например «В работе»"
+        aria-label="Новый статус"
         @input="addError = ''"
       />
-      <button class="btn btn-add" type="submit" :disabled="!newName.trim()">Добавить</button>
+      <button class="btn btn-add" type="submit" :disabled="!newName.trim() || !newColorValid">Добавить</button>
     </div>
-    <ColorPaletteComponent v-model="newColor" label="Цвет нового столбца" variant="status" />
+    <ColorPaletteComponent v-model="newColor" v-model:valid="newColorValid" label="Цвет нового статуса" variant="status" />
     <div v-if="newName.trim()" class="cat-preview">
       <span class="label">Как будет выглядеть:</span>
-      <span class="pill" :data-color="newColor ?? 'none'">{{ newName.trim() }}</span>
+      <span class="pill" :data-color="newColor ?? 'none'" :style="entityColorStyle(newColor)">{{ newName.trim() }}</span>
     </div>
     <span v-if="addError" class="err cat-err">{{ addError }}</span>
   </form>
 </template>
 
 <script setup lang="ts">
+import { entityColorStyle } from '@/shared/utils/entityColor'
 import { ref } from 'vue'
 import { ApiError } from '@/api/client'
 import type { PaletteColor, Status } from '@/api/types'
@@ -84,12 +85,14 @@ const confirm = useConfirmStore()
 const newName = ref('')
 const newColor = ref<PaletteColor | null>(null)
 const addError = ref('')
+const newColorValid = ref(true)
+const editColorValid = ref(true)
 const editingId = ref<number | null>(null)
 const editName = ref('')
 const editColor = ref<PaletteColor | null>(null)
 const editError = ref('')
 
-// drag&drop для порядка кастомных столбцов; системные не двигаются
+// drag&drop для порядка кастомных статусов; системные не двигаются
 const dragId = ref<number | null>(null)
 const dragOverId = ref<number | null>(null)
 
@@ -139,7 +142,7 @@ const message = (e: unknown) => (e instanceof ApiError ? (e.field('name') ?? e.f
 
 async function add() {
   addError.value = ''
-  if (!newName.value.trim()) return
+  if (!newName.value.trim() || !newColorValid.value) return
   try {
     await board.addStatus(newName.value.trim(), newColor.value)
     newName.value = ''
@@ -154,10 +157,11 @@ function startEdit(s: Status) {
   editName.value = s.name
   editColor.value = s.color
   editError.value = ''
+  editColorValid.value = true
 }
 
 async function saveEdit() {
-  if (editingId.value === null) return
+  if (editingId.value === null || !editColorValid.value) return
   try {
     await board.updateStatus(editingId.value, editName.value.trim(), editColor.value)
     editingId.value = null
@@ -168,15 +172,15 @@ async function saveEdit() {
 
 async function askRemove(s: Status) {
   const ok = await confirm.ask({
-    title: 'Удалить столбец?',
-    message: `Удалить «${s.name}»? Карточки из этого столбца переедут в «Новое».`,
+    title: 'Удалить статус?',
+    message: `Удалить «${s.name}»? Карточки с этим статусом перейдут в «Новое».`,
     confirmText: 'Удалить',
     danger: true,
   })
   if (!ok) return
   try {
     await board.deleteStatus(s.id)
-    notification.success('Столбец удалён, карточки переехали в «Новое»')
+    notification.success('Статус удалён, карточки переехали в «Новое»')
   } catch (e) {
     notification.error(message(e))
   }

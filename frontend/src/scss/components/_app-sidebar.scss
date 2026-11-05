@@ -183,7 +183,11 @@
 .app-sidebar-board-lock {
     flex: none;
     display: inline-flex;
-    color: var(--sta-orange);
+    color: var(--sta-red);
+
+    &.public {
+        color: var(--sta-green);
+    }
 }
 // the pages fold out under the open board: rows 0fr → 1fr, as the sections below
 .app-sidebar-board-pages {

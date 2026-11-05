@@ -13,7 +13,7 @@
         class="quick-settings-tab"
         @click="tab = 'statuses'"
       >
-        Столбцы
+        Статусы
       </button>
       <button
         type="button"
@@ -38,7 +38,7 @@ import BaseModal from '@/shared/ui/BaseModal.vue'
 import CategoriesEditor from '@/shared/components/CategoriesEditor.vue'
 import StatusesEditor from '@/shared/components/StatusesEditor.vue'
 
-// Combined «Столбцы» + «Категории» editor under one «Быстрая настройка» entry from the board top menu
+// Combined «Статусы» + «Категории» editor under one «Быстрая настройка» entry from the board top menu
 // (test.md п. 14). The initial tab comes from which action in the menu opened the modal.
 type Tab = 'statuses' | 'categories'
 const props = withDefaults(defineProps<{ initial?: Tab }>(), { initial: 'statuses' })

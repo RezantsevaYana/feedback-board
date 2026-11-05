@@ -22,9 +22,9 @@
 
       <!-- preview of the launcher as it will appear on the client's site -->
       <div class="widget-launcher-preview" aria-hidden="true">
-        <span class="widget-launcher-preview-label">Как будет выглядеть:</span>
+        <span class="widget-launcher-preview-label">Предпросмотр</span>
         <span class="btn-primary widget-color-launcher slant">
-          <AppIcon name="chat" :size="14" />{{ input.trim() || 'Обратная связь' }}
+          <AppIcon name="chat" :size="14" /><span class="widget-launcher-preview-text">{{ input.trim() || 'Обратная связь' }}</span>
         </span>
       </div>
 

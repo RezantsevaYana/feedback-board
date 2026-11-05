@@ -17,7 +17,7 @@
         :key="entry.category.id"
         class="weekly-modal-row"
         :data-color="entry.category.color ?? 'none'"
-        :style="{ '--i': i }"
+        :style="{ '--i': i, ...entityColorStyle(entry.category.color, 'accent') }"
       >
         <CategoryTag :category="entry.category" />
         <div class="weekly-modal-body">
@@ -35,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import { entityColorStyle } from '@/shared/utils/entityColor'
 import { computed, inject, onMounted } from 'vue'
 import type { Post } from '@/api/types'
 import { TEXT } from '@/shared/constants/dict'

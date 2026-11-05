@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Project;
+use App\Support\EntityColor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -28,7 +29,7 @@ class CategoryController extends Controller
         $data = $this->validateFields($request, $project);
         $category = $project->categories()->create([
             'name' => $data['name'],
-            'color' => $data['color'],
+            'color' => $data['color'] ?? null,
             'position' => (int) $project->categories()->max('position') + 1,
         ]);
 
@@ -61,7 +62,10 @@ class CategoryController extends Controller
      */
     private function validateFields(Request $request, Project $project, ?Category $ignore = null): array
     {
-        $request->merge(['name' => is_string($request->name) ? trim($request->name) : $request->name]);
+        $request->merge([
+            'name' => is_string($request->name) ? trim($request->name) : $request->name,
+            ...($request->has('color') ? ['color' => EntityColor::normalize($request->input('color'))] : []),
+        ]);
 
         return $request->validate([
             'name' => [
@@ -69,12 +73,12 @@ class CategoryController extends Controller
                 Rule::unique('categories', 'name')->where('project_id', $project->id)->ignore($ignore),
             ],
             // null is a valid pick: the tag falls back to the neutral --tag token.
-            'color' => ['nullable', 'string', Rule::in(Category::PALETTE)],
+            'color' => ['nullable', 'string', EntityColor::RULE],
         ], [
             'name.required' => 'Назовите категорию.',
             'name.max' => 'Название — не длиннее 40 символов.',
             'name.unique' => 'Такая категория уже есть.',
-            'color.in' => 'Такой цвет недоступен.',
+            'color.regex' => 'Такой цвет недоступен.',
         ]);
     }
 

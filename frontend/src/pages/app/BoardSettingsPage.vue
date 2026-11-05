@@ -15,7 +15,7 @@
       </section>
 
       <section id="statuses" class="board-settings-section">
-        <h2>Столбцы</h2>
+        <h2>Статусы</h2>
         <StatusesEditor v-if="projectReady" />
         <p v-else class="note">{{ board.loadError || 'Загружаем…' }}</p>
       </section>

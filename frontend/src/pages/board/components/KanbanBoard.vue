@@ -11,7 +11,7 @@
       @drop.prevent="onDrop(col.status)"
     >
       <div class="col-head">
-        <h2 class="pill" :data-color="col.status.color ?? 'none'">{{ col.status.name }}</h2>
+        <h2 class="pill" :data-color="col.status.color ?? 'none'" :style="entityColorStyle(col.status.color)">{{ col.status.name }}</h2>
         <span class="col-count" :title="board.team && n < 9 ? `Клавиша ${n + 1} переносит карточку сюда` : undefined">{{ col.posts.length }}</span>
       </div>
       <article
@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { entityColorStyle } from '@/shared/utils/entityColor'
 import { computed, ref } from 'vue'
 import type { Post, Status } from '@/api/types'
 import { useBoardStore } from '@/store/board/useBoardStore'

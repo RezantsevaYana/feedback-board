@@ -4,7 +4,7 @@
       <span v-if="stacked">Категория</span>
       <CategoryChips />
     </div>
-    <SelectComponent v-if="board.view.layout === 'list'" v-model="board.view.status" :label="stacked ? 'Столбец' : undefined" :options="statusOptions" aria-label="Столбец" />
+    <SelectComponent v-if="board.view.layout === 'list'" v-model="board.view.status" :label="stacked ? 'Статус' : undefined" :options="statusOptions" aria-label="Статус" />
     <template v-if="board.team">
       <SelectComponent v-model="board.view.priority" :label="stacked ? 'Приоритет' : undefined" :options="priorityOptions" aria-label="Приоритет" />
       <CheckboxComponent v-model="board.view.showHidden" label="Показывать скрытые" />
@@ -29,7 +29,7 @@ defineProps<{
 const board = useBoardStore()
 
 const statusOptions = computed(() => [
-  { value: '' as const, label: 'Все столбцы' },
+  { value: '' as const, label: 'Все статусы' },
   ...board.statuses.map((s) => ({ value: s.id, label: s.name })),
 ])
 const priorityOptions = [

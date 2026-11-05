@@ -17,7 +17,7 @@ export interface Category {
 
 /** Palette slugs used by category tags and status pills. CSS tokens live in scss/base/_tokens.scss. */
 export const PALETTE_COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'pink'] as const
-export type PaletteColor = (typeof PALETTE_COLORS)[number]
+export type PaletteColor = (typeof PALETTE_COLORS)[number] | `#${string}`
 
 /** Колонка канбана. Три системных создаются вместе с проектом, остальные — команда сама. */
 export interface Status {
@@ -103,7 +103,7 @@ export const TEAM_ROLES: Exclude<ProjectRole, 'owner'>[] = ['admin', 'manager']
 /** What each role may do — shown under the role in the role pickers. Mirrors docs/ROLES_PLAN.md §1. */
 export const ROLE_HINTS: Record<ProjectRole, string> = {
   owner: 'Всё, включая удаление доски',
-  admin: 'Всё, кроме удаления доски: настройки, категории, столбцы, участники',
+  admin: 'Всё, кроме удаления доски: настройки, категории, статусы, участники',
   manager: 'Разбирает посты: статусы, ответы, скрытие',
   voter: 'Читает, голосует и предлагает',
   reader: 'Только читает',

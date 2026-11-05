@@ -52,7 +52,7 @@
       </div>
       <div class="grid3">
         <SelectComponent v-model="edit.category_id" label="Категория" :options="categoryOptions" />
-        <SelectComponent v-model="edit.status_id" label="Столбец" :options="statusOptions" />
+        <SelectComponent v-model="edit.status_id" label="Статус" :options="statusOptions" />
         <SelectComponent v-model="edit.priority" label="Приоритет" hint="только команде" :options="priorityOptions" />
       </div>
       <TextAreaComponent

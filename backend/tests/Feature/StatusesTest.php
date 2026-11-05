@@ -6,6 +6,7 @@ use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class StatusesTest extends TestCase
@@ -74,5 +75,36 @@ class StatusesTest extends TestCase
             ->assertJsonValidationErrors(['ids.0']);
 
         $this->assertSame(300, $foreignCustom->refresh()->position);
+    }
+
+    public function test_custom_hex_colour_is_normalized_persisted_and_can_be_cleared(): void
+    {
+        $this->actingAs($this->admin);
+
+        $id = $this->postJson('/api/admin/projects/demo/statuses', ['name' => 'Свой цвет', 'color' => '  A1B2C3  '])
+            ->assertCreated()->assertJsonPath('data.color', '#a1b2c3')->json('data.id');
+        $this->assertDatabaseHas('statuses', ['id' => $id, 'color' => '#a1b2c3']);
+
+        $this->patchJson("/api/admin/statuses/{$id}", ['name' => 'Свой цвет', 'color' => '#F0A'])
+            ->assertOk()->assertJsonPath('data.color', '#ff00aa');
+        $this->assertDatabaseHas('statuses', ['id' => $id, 'color' => '#ff00aa']);
+
+        $this->getJson('/api/public/projects/demo')->assertOk()
+            ->assertJsonFragment(['id' => $id, 'name' => 'Свой цвет', 'color' => '#ff00aa']);
+
+        $this->patchJson("/api/admin/statuses/{$id}", ['name' => 'Свой цвет', 'color' => null])
+            ->assertOk()->assertJsonPath('data.color', null);
+        $this->assertDatabaseHas('statuses', ['id' => $id, 'color' => null]);
+    }
+
+    #[TestWith(['#12GG34'])]
+    #[TestWith(['#12345678'])]
+    #[TestWith(['red; background:url(example)'])]
+    public function test_custom_colour_rejects_invalid_hex_and_css(string $color): void
+    {
+        $this->actingAs($this->admin);
+
+        $this->postJson('/api/admin/projects/demo/statuses', ['name' => 'Некорректный цвет', 'color' => $color])
+            ->assertJsonValidationErrors(['color' => 'Такой цвет недоступен.']);
     }
 }

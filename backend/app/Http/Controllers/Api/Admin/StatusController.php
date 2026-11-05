@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Status;
+use App\Support\EntityColor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -122,7 +123,10 @@ class StatusController extends Controller
      */
     private function validateFields(Request $request, Project $project, ?Status $ignore = null): array
     {
-        $request->merge(['name' => is_string($request->name) ? trim($request->name) : $request->name]);
+        $request->merge([
+            'name' => is_string($request->name) ? trim($request->name) : $request->name,
+            ...($request->has('color') ? ['color' => EntityColor::normalize($request->input('color'))] : []),
+        ]);
 
         return $request->validate([
             'name' => [
@@ -130,12 +134,12 @@ class StatusController extends Controller
                 Rule::unique('statuses', 'name')->where('project_id', $project->id)->ignore($ignore),
             ],
             // null is a valid pick: the pill falls back to the neutral --s-new look.
-            'color' => ['nullable', 'string', Rule::in(Status::PALETTE)],
+            'color' => ['nullable', 'string', EntityColor::RULE],
         ], [
             'name.required' => 'Назовите столбец.',
             'name.max' => 'Название — не длиннее 40 символов.',
             'name.unique' => 'Такой столбец уже есть.',
-            'color.in' => 'Такой цвет недоступен.',
+            'color.regex' => 'Такой цвет недоступен.',
         ]);
     }
 
