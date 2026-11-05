@@ -75,19 +75,16 @@
         display: none;
     }
 }
+// avatar chip with the user's initials; always visible, to the left of the name on desktop and on its own on phone
 .account-menu-initials {
-    display: none;
-
-    @media screen and (max-width: $mobile) {
-        display: grid;
-        place-items: center;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        // sage, not sprout: green is only for actions and selection (DESIGN.md, One Green Rule)
-        background: var(--surface-2);
-        color: var(--fg);
-        font-size: 13px;
-        font-weight: 600;
-    }
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    // sage, not sprout: green is only for actions and selection (DESIGN.md, One Green Rule)
+    background: var(--surface-2);
+    color: var(--fg);
+    font-size: 13px;
+    font-weight: 600;
 }

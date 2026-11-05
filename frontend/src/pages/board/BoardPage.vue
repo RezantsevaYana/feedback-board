@@ -1,4 +1,5 @@
 <template>
+  <AppHeader v-if="board.project && board.me" :extra-menu-items="menuExtras" />
   <main class="container base-page board-page">
     <!-- 404: slug didn't match any board. The brand slant tag + display heading, the typed address as a
          mock URL with the missing slug struck through, then «На главную» / «Мои доски» (if signed in). -->
@@ -75,9 +76,8 @@
 
     <div v-else class="board-layout">
       <nav class="board-nav" aria-label="Разделы доски">
-        <!-- team mode with several boards: the brand tag opens the switcher instead of reloading this board -->
-        <BoardSwitcher v-if="switchBoards.length > 1" class="proj slant" :boards="switchBoards" :current="slug" :label="board.project.name" />
-        <RouterLink v-else class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
+        <!-- the board switcher now lives in AppHeader above; the sidebar just names the current board -->
+        <RouterLink class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
         <!-- what the board is and who I am on it, right under its name -->
         <div class="board-who">
           <VisibilityBadge :visibility="board.project.visibility" />
@@ -120,27 +120,16 @@
         <button v-if="!board.readOnly" type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
           <span class="cta-roll" aria-hidden="true"><span>Предложить</span><span>Есть идея?</span></span>
         </button>
-        <!-- signed in: the board's tools (owner / admin) and the same account block as in the cabinet's menu,
-             so «Мои доски», «Настройки аккаунта» and «Выйти» are always in sight. Tablet and phone: both go
-             into the panel behind «Меню» -->
-        <template v-if="board.me">
-          <BoardTools v-if="board.configure" :slug="slug" :pending="pendingRequests" class="board-tools-side" @categories="editingCategories = true" @statuses="editingStatuses = true" />
-          <SidebarAccount :name="board.me.name" :email="board.me.email" :chip="whoChip" show-boards class="board-account" />
-        </template>
         <!-- a guest reads, votes and posts without an account; signing in is for the team of an open board,
-             through the one login page that brings them back here (a closed board has the gate with its own «Войти») -->
-        <RouterLink v-else :to="{ path: '/app/login', query: { next: route.fullPath } }" class="link-btn team-login">Войти</RouterLink>
-        <!-- signed in, on tablet and phone the theme moves into the drawer, so the top row fits -->
-        <ThemeToggle :class="{ 'board-theme-side': board.me }" />
-        <button v-if="board.me" type="button" class="btn team-menu-btn" aria-label="Меню" :aria-expanded="menuOpen" @click="menuOpen = true">
-          <BurgerIcon /><span class="team-menu-label">Меню</span>
-        </button>
+             through the one login page that brings them back here (a closed board has the gate with its own «Войти»).
+             For signed-in users the whole admin / account block lives in AppHeader above — see test.md п. 14, п. 7. -->
+        <RouterLink v-if="!board.me" :to="{ path: '/app/login', query: { next: route.fullPath } }" class="link-btn team-login">Войти</RouterLink>
+        <!-- theme toggle lives at the bottom of the sidebar; the account menu's own «Выйти» is in AppHeader -->
+        <ThemeToggle class="board-nav-theme" />
       </nav>
 
       <div class="board-main">
         <div v-if="refreshing" class="board-progress" role="progressbar" aria-label="Обновляем доску" />
-        <!-- the owner on an unpublished board (everyone else gets «Доска ещё не открыта») -->
-        <VerifyEmailBanner v-if="!board.project.published && board.me" :email="board.me.email" class="board-verify" />
         <TopPosts v-if="board.view.section === 'top'" @open="openPost" />
         <LeaderboardAuthors v-else-if="board.view.section === 'authors'" />
         <WeeklyWinners v-else-if="board.view.section === 'weekly'" @open="openPost" />
@@ -204,7 +193,7 @@
             <p v-if="board.configure">У доски нет ни одного столбца, поэтому предложения не отображаются. Добавьте хотя бы один столбец, чтобы доска заработала.</p>
             <p v-else>Владелец доски пока не настроил её. Загляните чуть позже.</p>
             <div v-if="board.configure" class="row">
-              <button type="button" class="btn" @click="editingStatuses = true">Открыть настройки столбцов</button>
+              <button type="button" class="btn" @click="openQuick('statuses')">Открыть настройки столбцов</button>
             </div>
           </div>
           <KanbanBoard v-else-if="board.view.layout === 'kanban'" @open="openPost" />
@@ -228,20 +217,9 @@
 
 
     <PostModal v-if="board.project && postId" :id="postId" @close="closePost" />
-    <!-- tablet and phone: the board's tools and the account, behind «Меню» -->
-    <NavDrawer v-if="menuOpen && board.me" ref="drawer" label="Меню доски" anchor=".team-menu-btn" @close="onMenuClosed">
-      <div class="board-drawer">
-        <p class="board-drawer-title">{{ board.project?.name }}</p>
-        <BoardTools v-if="board.configure" :slug="slug" :pending="pendingRequests" @categories="openFromMenu('categories')" @statuses="openFromMenu('statuses')" />
-        <SidebarAccount :name="board.me.name" :email="board.me.email" :chip="whoChip" show-boards>
-          <template #after-out><ThemeToggle /></template>
-        </SidebarAccount>
-      </div>
-    </NavDrawer>
     <SubmitModal v-if="composing && board.project" :project="board.project.slug" :categories="board.categories" :title="composeTitle" :author="board.me ? { name: board.me.name } : null" :hide-author-field="board.project.visibility === 'private'" @close="closeCompose" @sent="onSent" />
     <VotersModal />
-    <CategoriesModal v-if="editingCategories && board.configure" @close="editingCategories = false" />
-    <StatusesModal v-if="editingStatuses && board.configure" @close="editingStatuses = false" />
+    <QuickSettingsModal v-if="quickTab && board.configure" :initial="quickTab" @close="quickTab = null" />
     <FiltersModal v-if="filtersOpen" @close="filtersOpen = false" @reset="resetFilters" />
     <WeeklyWinnersModal v-if="weeklyModalOpen" @close="dismissWeeklyModal" @open-section="openWeeklySection" />
   </main>
@@ -255,7 +233,6 @@ import { ROLE_LABELS } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
-import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
 import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
 import VisibilityBadge from '@/shared/components/VisibilityBadge.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
@@ -263,20 +240,17 @@ import SearchComponent from '@/shared/ui/SearchComponent.vue'
 import AccessGate from './components/AccessGate.vue'
 import BoardFilters from './components/BoardFilters.vue'
 import BoardSkeleton from './components/BoardSkeleton.vue'
-import CategoriesModal from './components/CategoriesModal.vue'
+import { useAuthStore } from '@/store/auth/useAuthStore'
+import AppHeader from '@/shared/components/AppHeader.vue'
+import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 import FiltersModal from './components/FiltersModal.vue'
 import KanbanBoard from './components/KanbanBoard.vue'
 import LeaderboardAuthors from './components/LeaderboardAuthors.vue'
 import PostList from './components/PostList.vue'
 import PostModal from './components/PostModal.vue'
-import StatusesModal from './components/StatusesModal.vue'
+import QuickSettingsModal from './components/QuickSettingsModal.vue'
 import SubmitModal from './components/SubmitModal.vue'
 import VotersModal from './components/VotersModal.vue'
-import BurgerIcon from '@/shared/ui/BurgerIcon.vue'
-import NavDrawer from '@/shared/ui/NavDrawer.vue'
-import SidebarAccount from '@/shared/components/SidebarAccount.vue'
-import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
-import BoardTools from './components/BoardTools.vue'
 import TopPosts from './components/TopPosts.vue'
 import WeeklyWinners from './components/WeeklyWinners.vue'
 import WeeklyWinnersModal from './components/WeeklyWinnersModal.vue'
@@ -285,6 +259,7 @@ import WeeklyWinnersModal from './components/WeeklyWinnersModal.vue'
 const route = useRoute()
 const router = useRouter()
 const board = useBoardStore()
+const auth = useAuthStore()
 const notification = useNotificationStore()
 
 const slug = computed(() => String(route.params.slug ?? ''))
@@ -292,8 +267,19 @@ const slug = computed(() => String(route.params.slug ?? ''))
 const host = computed(() => location.host)
 const postId = computed(() => (route.params.id ? Number(route.params.id) : null))
 const composing = ref(false)
-const editingCategories = ref(false)
-const editingStatuses = ref(false)
+// which tab the «Быстрая настройка» modal opens on; null — modal is closed
+const quickTab = ref<'statuses' | 'categories' | null>(null)
+function openQuick(tab: 'statuses' | 'categories') {
+  quickTab.value = tab
+}
+// admin shortcuts added to the AccountMenu dropdown on the board page: owner/admin only
+const menuExtras = computed<MenuItem[]>(() => {
+  if (!board.configure) return []
+  return [
+    { label: 'Быстрая настройка', run: () => openQuick('statuses') },
+    { label: 'К настройкам доски', run: () => router.push(`/app/boards/${slug.value}/settings`) },
+  ]
+})
 // «Предложить», optionally starting from what was searched for and not found
 const composeTitle = ref('')
 function compose(title = '') {
@@ -337,26 +323,10 @@ const activeFilters = computed(
     ].filter(Boolean).length,
 )
 // team mode: every board this user is on is one click away; owner / admin also get the board's settings
-const switchBoards = computed(() => (board.team ? (board.me?.projects ?? []) : []))
 // access requests waiting on this board (owner / admin only; /me sends 0 to everyone else)
 const pendingRequests = computed(() => board.me?.projects.find((p) => p.slug === slug.value)?.pending_requests ?? 0)
 // the role on this board under the name in the account block; «вы вошли» for someone signed in but not on it
 const whoChip = computed(() => (board.role ? `роль ${ROLE_LABELS[board.role].toLowerCase()}` : 'вы вошли'))
-// tablet and phone: «Меню» opens the drawer with the tools and the account
-const menuOpen = ref(false)
-const drawer = ref<InstanceType<typeof NavDrawer> | null>(null)
-// an editor picked in the drawer opens once the drawer has gone: both lock the page and trap focus
-let afterMenu: (() => void) | null = null
-function openFromMenu(editor: 'categories' | 'statuses') {
-  afterMenu = () => (editor === 'categories' ? (editingCategories.value = true) : (editingStatuses.value = true))
-  drawer.value?.close()
-}
-function onMenuClosed() {
-  menuOpen.value = false
-  afterMenu?.()
-  afterMenu = null
-}
-
 // Локальная модель для поля поиска: каждый ввод — тик дебаунса в 300мс,
 // чтобы не стрелять запросом на каждую букву. Основной watcher в самом сторе
 // уже перезагружает список, когда board.view.search меняется.
@@ -393,6 +363,9 @@ function onVisibility() {
 }
 onMounted(() => {
   board.startPolling()
+  // AppHeader's account dropdown relies on auth.me; the board route doesn't go through AppShell,
+  // so we hydrate the auth store here instead (board.me alone wouldn't populate auth.boardSummaries either).
+  void auth.fetchMe().catch(() => undefined)
   document.addEventListener('visibilitychange', onVisibility)
   document.addEventListener('keydown', onSearchKey)
 })

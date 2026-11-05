@@ -1,0 +1,31 @@
+@use '../utils' as *;
+
+// QuickSettingsModal.vue — combined Columns / Categories editor opened from the account dropdown
+// on the board page (AppHeader → AccountMenu → «Быстрая настройка»). test.md п. 14.
+.quick-settings-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    background: var(--surface-2);
+}
+.quick-settings-tab {
+    flex: 1;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+        background: var(--active);
+        border-color: var(--active-line);
+        color: var(--active-fg);
+        font-weight: 600;
+    }
+}

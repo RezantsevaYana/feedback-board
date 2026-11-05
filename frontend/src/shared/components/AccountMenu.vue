@@ -1,7 +1,7 @@
 <template>
   <MenuComponent :items="items" :caption="auth.me?.email" class="account-menu" aria-label="Меню аккаунта">
-    <span class="account-menu-name">{{ auth.me?.name }}</span>
     <span class="account-menu-initials" aria-hidden="true">{{ initials }}</span>
+    <span class="account-menu-name">{{ auth.me?.name }}</span>
     <AppIcon name="chevron" />
   </MenuComponent>
 </template>
@@ -20,6 +20,8 @@ import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 // On a phone the name gives way to initials, the header row is already taken by the board switcher.
 const props = defineProps<{
   withLogout?: boolean
+  /** extra entries shown before «Выйти» — used on the board page for admin shortcuts */
+  extraItems?: MenuItem[]
 }>()
 const auth = useAuthStore()
 const route = useRoute()
@@ -35,6 +37,8 @@ const items = computed<MenuItem[]>(() => [
   ...(auth.me?.is_superadmin
     ? [{ label: 'Админка сервиса', run: () => { window.location.href = '/admin' } }]
     : []),
-  ...(props.withLogout ? [{ label: 'Выйти', separated: true, disabled: busy.value, run: logout }] : []),
+  // from the board page: «Быстрая настройка» opens the columns/categories modal, «К настройкам доски» routes
+  ...(props.extraItems?.map((item, i) => ({ ...item, separated: item.separated ?? i === 0 })) ?? []),
+  ...(props.withLogout ? [{ label: 'Выйти', separated: true, danger: true, disabled: busy.value, run: logout }] : []),
 ])
 </script>

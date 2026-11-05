@@ -1,0 +1,203 @@
+<!doctype html>
+<!-- Прототип: переделка сайдбара доски (test.md п. 14, связано с п. 7).
+     BoardTools и блок пользователя уходят из сайдбара в правый верхний угол доски — одно
+     dropdown-меню от аватара с подпунктами: аккаунт, быстрая настройка (модалка),
+     ссылка в расширенные настройки, выйти. -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sidebar rework — прототип</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #fff; --surface: #fff; --surface-2: #e8eee9; --active: #cfe7d7; --active-fg: #063f2c;
+    --active-line: #1d8547; --line: #d8e1db; --fg: #0f2224; --muted: #4c5d60;
+    --accent: #1d8547; --accent-fg: #fff; --page: #f3f6f4; --radius: 10px;
+    --font-body: 'Onest', system-ui, sans-serif; --font-display: 'Unbounded', 'Onest', sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+.doc h1 { font-family: var(--font-display); font-size: 28px; font-weight: 600; margin: 0 0 8px; }
+.doc .lede { color: var(--muted); max-width: 760px; margin: 0 0 24px; }
+.doc h2 { font-size: 18px; margin: 32px 0 10px; }
+.doc p.note { color: var(--muted); max-width: 760px; margin: 0 0 16px; }
+
+.app { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid;
+       grid-template-columns: 260px 1fr; min-height: 560px; position: relative; }
+
+/* Sidebar — что остаётся: навигация по разделам доски + CTA. Всё, что про админа/аккаунт — уехало наверх. */
+.side { border-right: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.side .proj { font-family: var(--font-display); font-weight: 600; font-size: 17px; color: var(--accent); display: block; margin-bottom: 2px; }
+.side .who { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+.side .nav-item { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 8px; font-size: 14px; color: var(--fg);
+                  cursor: pointer; border: 1px solid transparent; background: none; text-align: left; width: 100%; font: inherit; }
+.side .nav-item.active { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+.side .cta { margin-top: 12px; padding: 10px 14px; background: var(--accent); color: var(--accent-fg); border-radius: 8px;
+             font-weight: 600; font-size: 14px; border: none; cursor: pointer; }
+
+/* Main — заголовок + заглушка канбана */
+.main { padding: 14px 20px; position: relative; }
+.head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.head-row h1 { font-size: 22px; margin: 0; font-family: var(--font-display); }
+
+/* Topbar справа — аватар-кнопка. Это «блок админа» из п. 7 + сверну́тый BoardTools из п. 14. */
+.me-btn { display: inline-flex; gap: 8px; align-items: center; padding: 6px 10px 6px 6px; border: 1px solid var(--line); border-radius: 999px;
+          background: var(--surface); font: inherit; cursor: pointer; }
+.me-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); display: inline-flex;
+             align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.me-name { font-weight: 600; font-size: 14px; }
+.me-chev { opacity: 0.6; }
+
+/* Dropdown */
+.menu { position: absolute; top: 56px; right: 20px; min-width: 260px; background: var(--surface); border: 1px solid var(--line);
+        border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 8px; z-index: 10; display: none; }
+.menu.open { display: block; }
+.menu-head { padding: 8px 10px 12px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.menu-head b { display: block; font-size: 14px; }
+.menu-head small { display: block; color: var(--muted); font-size: 12px; }
+.menu-head .role { display: inline-block; margin-top: 4px; font-size: 11px; color: var(--active-fg); background: var(--active);
+                   padding: 2px 8px; border-radius: 999px; }
+.menu-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--fg);
+             cursor: pointer; border: none; background: none; width: 100%; text-align: left; font: inherit; text-decoration: none; }
+.menu-item:hover { background: var(--surface-2); }
+.menu-sep { height: 1px; background: var(--line); margin: 6px 0; }
+.menu-item.danger { color: #a3261e; }
+
+/* Kanban-заглушка */
+.kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.col { background: var(--surface-2); border-radius: 10px; padding: 10px; min-height: 240px; }
+.col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.card { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; margin-bottom: 6px; }
+
+/* Модалка «Быстрая настройка» */
+.backdrop { position: fixed; inset: 0; background: rgba(15,34,36,0.35); display: none; align-items: center; justify-content: center; z-index: 50; }
+.backdrop.open { display: flex; }
+.modal { background: var(--bg); border-radius: 14px; padding: 20px; width: 520px; max-width: 92vw; }
+.modal h2 { margin: 0 0 4px; font-family: var(--font-display); font-size: 18px; }
+.modal .sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+.tabs { display: flex; gap: 4px; padding: 3px; background: var(--surface-2); border-radius: 10px; margin-bottom: 14px; }
+.tabs button { flex: 1; padding: 6px 12px; border: 1px solid transparent; background: none; border-radius: 8px; font: inherit;
+               font-size: 14px; color: var(--muted); cursor: pointer; font-weight: 500; }
+.tabs button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+.tab-body { font-size: 14px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; padding: 16px; min-height: 180px; }
+.modal-foot { display: flex; justify-content: flex-end; margin-top: 14px; }
+.modal-foot button { padding: 8px 14px; background: var(--accent); color: var(--accent-fg); border: none; border-radius: 8px; font: inherit;
+                     font-weight: 600; cursor: pointer; }
+
+.legend { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+.legend h3 { font-size: 14px; margin: 0 0 6px; }
+.legend ul { padding-left: 18px; margin: 0; color: var(--muted); font-size: 13px; }
+.legend li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="doc">
+<h1>Сайдбар доски — переделка (test.md п. 14 + п. 7)</h1>
+<p class="lede">Админ-блок (имя + email + роль + «Мои доски» + «Настройки аккаунта») и BoardTools уходят из сайдбара в правый верхний угол доски. Дропдаун от аватара. Сайдбар остаётся «для всех» — навигация по разделам + CTA «Предложить».</p>
+
+<div class="app">
+    <aside class="side">
+        <span class="proj">Demo</span>
+        <span class="who">Публичная · Вы — админ</span>
+        <button class="nav-item active">📋 Предложения</button>
+        <button class="nav-item">⭐ Топ</button>
+        <button class="nav-item">👥 Авторы</button>
+        <button class="nav-item">🏆 Победители недели</button>
+        <button class="cta">+ Предложить</button>
+    </aside>
+    <main class="main">
+        <div class="head-row">
+            <h1>Предложения</h1>
+            <button class="me-btn" onclick="toggleMenu(event)">
+                <span class="me-avatar">А</span>
+                <span class="me-name">Админ</span>
+                <span class="me-chev">▾</span>
+            </button>
+        </div>
+
+        <div id="menu" class="menu" onclick="event.stopPropagation()">
+            <div class="menu-head">
+                <b>Админ</b>
+                <small>admin@example.com</small>
+                <span class="role">владелец</span>
+            </div>
+            <a href="#" class="menu-item">🗂️ Мои доски</a>
+            <a href="#" class="menu-item">⚙️ Настройки аккаунта</a>
+            <div class="menu-sep"></div>
+            <button class="menu-item" onclick="openModal()">⚡ Быстрая настройка</button>
+            <a href="#" class="menu-item">🔧 К настройкам доски →</a>
+            <div class="menu-sep"></div>
+            <button class="menu-item danger">↪ Выйти</button>
+        </div>
+
+        <div class="kanban">
+            <div class="col"><h3>Новое</h3>
+                <div class="card">Тёмная тема</div>
+                <div class="card">Поиск по закреплённым</div>
+            </div>
+            <div class="col"><h3>В работе</h3><div class="card">Отложенная отправка</div></div>
+            <div class="col"><h3>Готово</h3><div class="card">Часовой пояс в календаре</div></div>
+            <div class="col"><h3>Отклонено</h3><div class="card">Реакции</div></div>
+        </div>
+    </main>
+</div>
+
+<div id="backdrop" class="backdrop" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h2>Быстрая настройка</h2>
+        <p class="sub">Столбцы доски и категории постов. То же, что было в сайдбаре — но за одной кнопкой.</p>
+        <div class="tabs">
+            <button aria-pressed="true" onclick="setTab(event, 0)">Столбцы</button>
+            <button onclick="setTab(event, 1)">Категории</button>
+        </div>
+        <div id="tab0" class="tab-body">Здесь будет список столбцов с drag&drop (п. 10) — «Новое», «В работе», «Готово», «Отклонено» + кнопка добавить.</div>
+        <div id="tab1" class="tab-body" hidden>Здесь будет список категорий — «Баг», «Идея» + кнопка добавить.</div>
+        <div class="modal-foot"><button onclick="closeModal()">Закрыть</button></div>
+    </div>
+</div>
+
+<div class="legend">
+    <div>
+        <h3>Что убрали из сайдбара</h3>
+        <ul>
+            <li>«Столбцы», «Категории» (BoardTools)</li>
+            <li>«Настройки», «Доступ» (ссылки в кабинет)</li>
+            <li>Блок аккаунта (SidebarAccount): имя, email, «Мои доски», «Настройки аккаунта», «Выйти»</li>
+            <li>ThemeToggle — можно оставить внизу сайдбара или уехать в меню, обсудить</li>
+        </ul>
+    </div>
+    <div>
+        <h3>Что стало в правом верхнем углу</h3>
+        <ul>
+            <li>Кнопка-пилюля: аватар + имя + ▾</li>
+            <li>По клику — одно меню: шапка с профилем + 5 действий</li>
+            <li>«К настройкам доски» ведёт в /app/boards/{slug}/settings — там табы «Общие» и «Доступ»</li>
+            <li>У не-админа пункты «Быстрая настройка» и «К настройкам доски» просто не показываются</li>
+        </ul>
+    </div>
+</div>
+</div>
+
+<script>
+function toggleMenu(e) {
+    e.stopPropagation()
+    document.getElementById('menu').classList.toggle('open')
+}
+function openModal() {
+    document.getElementById('menu').classList.remove('open')
+    document.getElementById('backdrop').classList.add('open')
+}
+function closeModal() {
+    document.getElementById('backdrop').classList.remove('open')
+}
+function setTab(e, i) {
+    document.querySelectorAll('.tabs button').forEach((b, idx) => b.setAttribute('aria-pressed', idx === i ? 'true' : 'false'))
+    document.getElementById('tab0').hidden = i !== 0
+    document.getElementById('tab1').hidden = i !== 1
+}
+document.addEventListener('click', () => document.getElementById('menu').classList.remove('open'))
+</script>
+</body>
+</html>

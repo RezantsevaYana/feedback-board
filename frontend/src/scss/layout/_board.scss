@@ -29,7 +29,8 @@
 
 .board-nav {
     position: sticky;
-    top: 24px;
+    // AppHeader is sticky at the top (~69px tall) + 24px breathing room
+    top: 93px;
     display: grid;
     gap: 2px;
     min-width: 0;   // a long board name in the switcher ellipsizes instead of widening the grid column
@@ -399,6 +400,19 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+}
+// ThemeToggle at the bottom of the sidebar on desktop; on tablet/phone it rides along in the horizontal nav row
+.board-nav-theme {
+    justify-self: start;
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+
+    @media screen and (max-width: $tablet) {
+        margin: 0;
+        padding: 0;
+        border-top: 0;
     }
 }
 // inside the drawer: the board's name, its tools, the account at the bottom of the panel

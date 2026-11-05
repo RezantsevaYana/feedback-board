@@ -12,7 +12,7 @@
       </div>
       <div v-if="auth.isAuth" class="app-shell-user">
         <!-- inside the cabinet «Выйти» is at the bottom of the side menu; the pages around it keep it here -->
-        <AccountMenu :with-logout="!menu" />
+        <AccountMenu :with-logout="!menu" :extra-items="extraMenuItems" />
         <!-- tablet and phone, inside the cabinet: the side menu opens as a panel -->
         <button v-if="menu" type="button" class="btn app-shell-menu" aria-label="Меню" @click="emit('menu')">
           <BurgerIcon /><span class="app-shell-menu-label">Меню</span>
@@ -35,12 +35,15 @@ import AccountMenu from '@/shared/components/AccountMenu.vue'
 import BoardSwitcher from '@/shared/components/BoardSwitcher.vue'
 import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
 import BurgerIcon from '@/shared/ui/BurgerIcon.vue'
+import type { MenuItem } from '@/shared/ui/MenuComponent.vue'
 import { canConfigure } from '@/shared/utils/roles'
 
 // Top bar of every /app/* page: the board switcher and the account. Inside the cabinet (AppShell) the side menu
 // sits under it with the board's places; `menu` adds the button that opens that menu on tablet and phone.
 defineProps<{
   menu?: boolean
+  /** extra entries added to the account dropdown — used on the board page for «Быстрая настройка» etc. */
+  extraMenuItems?: MenuItem[]
 }>()
 const emit = defineEmits<{
   menu: []
