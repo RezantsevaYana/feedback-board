@@ -41,47 +41,40 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     grid-template-areas:
-        'field   field   field'
-        'preview preview preview'
-        'note    note    note'
-        '.       reset   save';
+        'picker   picker  picker'
+        'preview  preview preview'
+        'note     note    note'
+        '.        reset   save';
     align-items: center;
     gap: 12px 8px;
 
-    // the field and the preview keep a compact width; «Сохранить» sits on the card's right edge like
-    // the other blocks' buttons
-    > .field,
     > .widget-color-preview {
         max-width: 360px;
-    }
-    > .field {
-        grid-area: field;
     }
     .note {
         margin: 0;
     }
 
-    // phone: two rows — the field with «Сохранить» beside it, then a small launcher with the reset on the right;
-    // the chip, the link, the note and the hint stay on desktop
     @media screen and (max-width: $mobile) {
         grid-template-columns: minmax(0, 1fr) auto;
-        // the launcher and the reset share the second row's one cell (start / end), so the reset's
-        // width doesn't stretch the «Сохранить» column
         grid-template-areas:
-            'field   save'
+            'picker  save'
             'preview preview';
         align-items: end;
         gap: 10px 8px;
-
-        > .field small {
-            display: none;
-        }
-        .input {
-            height: 40px;
-            padding: 0 10px;
-            font-size: 16px; // iOS zooms into anything smaller
-        }
     }
+}
+// the vue3-colorpicker launcher is a 28×28 chip; we add the hex echo beside it so a glance at the row says the colour
+.widget-color-picker {
+    grid-area: picker;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.widget-color-hex {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: color-mix(in srgb, currentColor 70%, transparent);
 }
 .widget-color-save {
     grid-area: save;
@@ -265,4 +258,63 @@
     color: var(--fg);
     font-size: 13px;
     font-weight: 500;
+}
+// WidgetLauncherSection.vue — custom launcher button label; one text field, a preview chip, save / reset
+.widget-launcher-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+        'field   field  field'
+        'preview preview preview'
+        '.       reset  save';
+    align-items: center;
+    gap: 12px 8px;
+
+    > .field {
+        grid-area: field;
+        max-width: 360px;
+    }
+
+    @media screen and (max-width: $mobile) {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            'field   save'
+            'preview preview';
+        align-items: end;
+        gap: 10px 8px;
+
+        .input {
+            height: 40px;
+            padding: 0 10px;
+            font-size: 16px;
+        }
+    }
+}
+.widget-launcher-save {
+    grid-area: save;
+}
+.widget-launcher-reset {
+    grid-area: reset;
+
+    @media screen and (max-width: $mobile) {
+        grid-area: preview;
+        align-self: center;
+        justify-self: end;
+        padding: 0;
+    }
+}
+.widget-launcher-preview {
+    grid-area: preview;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px dashed var(--line);
+    background: var(--surface-2);
+}
+.widget-launcher-preview-label {
+    font-size: 13px;
+    color: color-mix(in srgb, currentColor 65%, transparent);
 }

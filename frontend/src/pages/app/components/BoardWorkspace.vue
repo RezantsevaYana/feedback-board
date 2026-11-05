@@ -7,9 +7,9 @@
           <!-- «Доступ» has the link as a block of its own, with its own copy button -->
           <CopyButton v-if="page !== 'access'" :value="boardUrl" label="Скопировать ссылку" />
           <!-- on a phone a 40px square with just the arrow; the label stays for screen readers -->
-          <RouterLink :to="`/${slug}`" class="btn btn-primary app-page-open" aria-label="Перейти на доску">
+          <a :href="boardUrl" target="_blank" rel="noopener" class="btn btn-primary app-page-open" aria-label="Перейти на доску">
             <span class="app-page-open-full" aria-hidden="true">Перейти на доску →</span><span class="app-page-open-short" aria-hidden="true">→</span>
-          </RouterLink>
+          </a>
         </div>
       </div>
       <p v-if="$slots.lead" class="page-lead"><slot name="lead" /></p>
@@ -20,11 +20,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
 import CopyButton from '@/shared/ui/CopyButton.vue'
 
 // Head of a board's two pages in the cabinet («Настройки», «Доступ»): the page's name, the board's link to share
-// and «Перейти на доску» (same tab). The switch between the pages is the side menu.
+// and «Перейти на доску» (opens in a new tab so the cabinet stays available). The switch between the pages is the side menu.
 const props = defineProps<{
   slug: string
   page: 'settings' | 'access'

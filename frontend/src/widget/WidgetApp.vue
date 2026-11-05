@@ -63,7 +63,7 @@
       @click="toggle"
     >
       <AppIcon :name="open ? 'close' : 'chat'" :size="open ? 16 : 14" />
-      <span v-if="!open" class="fbw-launcher-label">Обратная связь</span>
+      <span v-if="!open" class="fbw-launcher-label">{{ launcherText || 'Обратная связь' }}</span>
     </button>
   </div>
 </template>
@@ -93,6 +93,8 @@ const root = ref<HTMLElement | null>(null)
 const categories = ref<Category[] | null>(null)
 const projectName = ref('')
 const color = ref<string | null>(null)
+// custom launcher label from the project; empty string → the default stays
+const launcherText = ref('')
 // the launcher waits for the project (or its failure), so the service's green never flashes before the owner's colour
 const ready = ref(false)
 const palette = computed(() => widgetPalette(color.value))
@@ -113,6 +115,7 @@ async function loadCategories() {
     categories.value = res.data.categories
     projectName.value = res.data.name
     color.value = res.data.widget_color
+    launcherText.value = res.data.widget_launcher_text ?? ''
   } catch (e) {
     if (e instanceof ApiError && e.status === 403 && e.reason === 'login_required') {
       locked.value = true

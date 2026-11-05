@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -28,18 +29,20 @@ class ProjectFactory extends Factory
     }
 
     /**
-     * У каждого проекта всегда есть системные столбцы — без них Post::creating
-     * не может подобрать дефолт. Если задан owner_id, он автоматически попадает
-     * в project_user с role=owner — та же инвариант, что держит ProjectService::create.
+     * У каждого проекта всегда есть системные столбцы и категории — та же инвариант,
+     * что держит ProjectService::create. Без столбцов Post::creating не может подобрать
+     * дефолт; без категорий KanbanBoard не может сгруппировать посты по столбцам.
+     * Если задан owner_id, он автоматически попадает в project_user с role=owner.
      */
     public function configure(): static
     {
         return $this->afterCreating(function (Project $project) {
             $project->createDefaultStatuses();
+            $project->createDefaultCategories();
             if ($project->owner_id !== null) {
                 $project->members()->syncWithoutDetaching([
                     $project->owner_id => [
-                        'role' => \App\Enums\ProjectRole::Owner->value,
+                        'role' => ProjectRole::Owner->value,
                     ],
                 ]);
             }

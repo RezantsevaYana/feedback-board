@@ -21,7 +21,6 @@ class PublicPostsTest extends TestCase
         parent::setUp();
         Storage::fake('local');
         $this->project = Project::factory()->create(['slug' => 'demo', 'allowed_origins' => ['https://app.example.com', 'http://localhost:*']]);
-        $this->project->createDefaultCategories();
     }
 
     private function validPayload(array $overrides = []): array
@@ -160,11 +159,12 @@ class PublicPostsTest extends TestCase
     public function test_category_must_belong_to_the_project_and_is_optional_without_categories(): void
     {
         $foreign = Project::factory()->create();
-        $foreign->createDefaultCategories();
         $this->postJson('/api/public/projects/demo/posts', $this->validPayload(['category_id' => $foreign->categories()->first()->id]))
             ->assertJsonValidationErrors(['category_id' => 'Такой категории больше нет — обновите страницу.']);
 
+        // factory now seeds default categories; wipe them to cover the «project has none» branch.
         $bare = Project::factory()->create(['slug' => 'bare']);
+        $bare->categories()->delete();
         $this->postJson('/api/public/projects/bare/posts', $this->validPayload(['category_id' => null]))
             ->assertCreated()->assertJsonPath('data.category', null);
     }

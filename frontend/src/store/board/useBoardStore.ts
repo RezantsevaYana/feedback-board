@@ -541,6 +541,12 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  /** Переупорядочивание кастомных столбцов (drag&drop); системные остаются на своих позициях. */
+  async function reorderStatuses(ids: number[]) {
+    const res = await StatusesApi.reorder(currentSlug(), ids)
+    if (project.value) project.value.statuses = res.data.sort((a, b) => a.position - b.position || a.id - b.id)
+  }
+
   /** Удаление кастомного столбца: сервер переносит посты в «Новое», локально делаем то же. */
   async function deleteStatus(id: number) {
     await StatusesApi.remove(id)
@@ -570,7 +576,7 @@ export const useBoardStore = defineStore('board', () => {
     project, notFound, unpublished, privateLocked, noAccess, gateName, me, role, team, configure, readOnly, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, postsTotal, newCount, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
     open, refresh, refreshMe, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
-    addStatus, updateStatus, deleteStatus,
+    addStatus, updateStatus, deleteStatus, reorderStatuses,
     logout,
     startPolling, stopPolling,
     selectionMode, selectedIds, selectionCount, hasSelection, isSelected, selectedPosts, allSelectedHidden,

@@ -135,10 +135,8 @@ class TeamModeTest extends TestCase
 
     public function test_team_moves_post_to_another_category_of_the_same_project_only(): void
     {
-        $this->project->createDefaultCategories();
         $idea = $this->project->categories()->where('name', 'Идея')->firstOrFail();
         $foreign = Project::factory()->create();
-        $foreign->createDefaultCategories();
         $post = Post::factory()->for($this->project)->create();
 
         $this->actingAs($this->admin)->patchJson("/api/admin/posts/{$post->id}", ['category_id' => $idea->id])
@@ -165,6 +163,7 @@ class TeamModeTest extends TestCase
         Storage::fake('local');
         $this->post('/api/public/projects/demo/posts', [
             'title' => 'Скриншот', 'description' => 'Смотрите вложение',
+            'category_id' => $this->project->categories()->first()->id,
             'files' => [UploadedFile::fake()->image('a.png')],
         ], ['Accept' => 'application/json'])->assertCreated();
         $post = Post::firstOrFail();

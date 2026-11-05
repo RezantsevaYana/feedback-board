@@ -13,6 +13,20 @@
         border-radius: 10px;
         border: 1px solid var(--line);
     }
+
+    // drag&drop in StatusesEditor: custom rows get a grip, the active target gets a thick top line
+    &.cat-list-drag {
+        > li.draggable {
+            cursor: grab;
+        }
+        > li.dragging {
+            opacity: 0.4;
+        }
+        > li.drag-over > .cat-row:not(form) {
+            border-top: 2px solid var(--accent);
+            padding-top: 5px; // compensate the extra border so the row doesn't jump
+        }
+    }
     // the settings page on a phone: plain rows with lines to the screen's edges (the board's modals keep the boxes)
     .board-settings-section & {
         @media screen and (max-width: $mobile) {
@@ -42,7 +56,6 @@
         min-width: 160px;
     }
 
-
     @media screen and (max-width: $mobile-mini) {
         gap: 6px;
 
@@ -64,6 +77,23 @@
             }
         }
     }
+}
+// grip handle for custom statuses in StatusesEditor: a faint six-dot icon that darkens on hover
+.cat-grip {
+    display: inline-flex;
+    align-items: center;
+    color: color-mix(in srgb, currentColor 45%, transparent);
+    cursor: grab;
+    padding: 2px;
+
+    @include hover {
+        color: currentColor;
+    }
+}
+// system rows get the same-size spacer so the pills line up with the custom rows
+.cat-grip-empty {
+    width: 20px;
+    cursor: default;
 }
 .cat-err {
     flex-basis: 100%;

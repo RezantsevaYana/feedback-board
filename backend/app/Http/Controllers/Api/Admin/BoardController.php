@@ -83,6 +83,10 @@ class BoardController extends Controller
         if (array_key_exists('widget_color', $data)) {
             $board->widget_color = $data['widget_color'];
         }
+        // null → вернуть стандартный «Обратная связь»
+        if (array_key_exists('widget_launcher_text', $data)) {
+            $board->widget_launcher_text = $data['widget_launcher_text'];
+        }
         $opening = $board->isDirty('visibility') && ! $board->isPrivate();
         $board->save();
         // on an open board an invitation as Участник / Читатель means nothing: the link already lets anyone in
@@ -174,6 +178,7 @@ class BoardController extends Controller
             'direct_url' => $publicUrl.'/'.$board->slug,
             'allowed_origins' => $board->allowed_origins ?? [],
             'widget_color' => $board->widget_color,
+            'widget_launcher_text' => $board->widget_launcher_text,
             // a closed board's widget only says «Это закрытая доска»: the screen swaps the code for that note
             'visibility' => $board->visibility->value,
         ]]);
@@ -214,7 +219,7 @@ class BoardController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, slug: string, allowed_origins: array<int, string>, widget_color: ?string, trash_retention_days: int}
+     * @return array<string, mixed>
      */
     private function settings(Project $p): array
     {
@@ -225,6 +230,7 @@ class BoardController extends Controller
             'visibility' => $p->visibility->value,
             'allowed_origins' => $p->allowed_origins ?? [],
             'widget_color' => $p->widget_color,
+            'widget_launcher_text' => $p->widget_launcher_text,
             // the delete section says how long the board stays recoverable
             'trash_retention_days' => (int) config('feedback.trash_retention_days'),
             // the «Доступ» warning says how much becomes visible (or closed) when the mode changes

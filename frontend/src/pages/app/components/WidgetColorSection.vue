@@ -7,18 +7,20 @@
 
     <!-- one set of controls laid out by grid areas: a stacked form on desktop, two compact rows on a phone -->
     <form class="widget-color-form" novalidate @submit.prevent="save">
-      <InputComponent
-        v-model="input"
-        label="HEX-код"
-        hint="например #1d8547"
-        type="text"
-        maxlength="16"
-        autocapitalize="off"
-        spellcheck="false"
-        :placeholder="DEFAULT_WIDGET_COLOR"
-        :error="error"
-        @input="error = ''"
-      />
+      <div class="widget-color-picker">
+        <ColorPicker
+          v-model:pure-color="input"
+          format="hex"
+          use-type="pure"
+          picker-type="chrome"
+          :disable-alpha="true"
+          :disable-history="true"
+          round-history
+          :z-index="100"
+        />
+        <!-- HEX is also visible inside the picker's popup; a quick-glance echo stays here for the collapsed state -->
+        <code class="widget-color-hex">{{ (input || DEFAULT_WIDGET_COLOR).toUpperCase() }}</code>
+      </div>
       <button class="btn btn-primary widget-color-save" type="submit" :disabled="!changed || saving" :aria-busy="saving">
         {{ saving ? 'Сохраняем…' : 'Сохранить' }}
       </button>
@@ -40,11 +42,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { ColorPicker } from 'vue3-colorpicker'
+import 'vue3-colorpicker/style.css'
 import { BoardsApi } from '@/api/boards'
-import { ApiError, errorMessage } from '@/api/client'
+import { errorMessage } from '@/api/client'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
-import InputComponent from '@/shared/ui/InputComponent.vue'
 import { DEFAULT_WIDGET_COLOR, normalizeHex, textOn, widgetPalette } from '@/shared/utils/widgetColor'
 
 // The widget's main colour on the «Доступ» page (open boards). Stored on the board (PATCH /boards/{slug}),
@@ -59,32 +62,28 @@ const emit = defineEmits<{
 }>()
 const notification = useNotificationStore()
 
+// saved — то, что в БД (null — сохранён дефолт, hex — кастомный); input — то, что в пикере (всегда hex,
+// т.к. ColorPicker не умеет "пусто"). При saved=null подставляем в input дефолтный цвет сервиса.
 const saved = ref(props.color)
-const input = ref(props.color ?? '')
-const error = ref('')
+const input = ref(props.color ?? DEFAULT_WIDGET_COLOR)
 const saving = ref(false)
 
 watch(() => props.color, (next) => {
   saved.value = next
-  input.value = next ?? ''
+  input.value = next ?? DEFAULT_WIDGET_COLOR
 })
 
-// an empty field means the default; a half-typed value keeps the last good preview instead of flashing green
-const parsed = computed(() => (input.value.trim() === '' ? null : normalizeHex(input.value)))
-const lastValid = ref(props.color)
-watch(parsed, (next) => {
-  if (next !== null || input.value.trim() === '') lastValid.value = next
-})
-const palette = computed(() => widgetPalette(lastValid.value))
-const darkText = computed(() => textOn(lastValid.value ?? DEFAULT_WIDGET_COLOR) !== '#ffffff')
-const changed = computed(() => (input.value.trim() === '' ? saved.value !== null : parsed.value !== saved.value))
+// ColorPicker гарантирует валидный hex, но на всякий случай пропускаем через normalizeHex (lowercase).
+const parsed = computed(() => normalizeHex(input.value) ?? DEFAULT_WIDGET_COLOR)
+const palette = computed(() => widgetPalette(parsed.value))
+const darkText = computed(() => textOn(parsed.value) !== '#ffffff')
+
+// если пользователь руками выбрал дефолтный цвет — считаем это "вернуть дефолт", сохраним null
+const toSave = computed(() => (parsed.value === DEFAULT_WIDGET_COLOR ? null : parsed.value))
+const changed = computed(() => toSave.value !== saved.value)
 
 async function save() {
-  if (input.value.trim() !== '' && parsed.value === null) {
-    error.value = 'Цвет — HEX из 6 или 3 цифр, например #1d8547'
-    return
-  }
-  await send(parsed.value)
+  await send(toSave.value)
 }
 
 async function reset() {
@@ -96,13 +95,11 @@ async function send(color: string | null) {
   try {
     const res = await BoardsApi.update(props.slug, { widget_color: color })
     saved.value = res.data.widget_color
-    input.value = res.data.widget_color ?? ''
+    input.value = res.data.widget_color ?? DEFAULT_WIDGET_COLOR
     emit('saved', res.data.widget_color)
     notification.success(res.data.widget_color ? 'Цвет виджета сохранён' : 'Вернули стандартный цвет')
   } catch (e) {
-    const field = e instanceof ApiError ? e.field('widget_color') : null
-    if (field) error.value = field
-    else notification.error(errorMessage(e))
+    notification.error(errorMessage(e))
   } finally {
     saving.value = false
   }

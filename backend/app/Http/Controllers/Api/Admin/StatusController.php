@@ -57,6 +57,44 @@ class StatusController extends Controller
     }
 
     /**
+     * Переупорядочивание кастомных столбцов между системными «Новое» и «Готово».
+     * Принимает полный список id кастомных статусов в новом порядке; системные
+     * (slug в Status::SYSTEM_SLUGS) остаются на своих местах и в payload не участвуют.
+     * Раздаём position с шагом 100, начиная с 200, — «воздух» между 100 и 9000 хватает
+     * на MAX_PER_PROJECT - 3 кастомных.
+     */
+    public function reorder(Request $request, Project $project): JsonResponse
+    {
+        Gate::authorize('board.configure', $project);
+
+        $customIds = $project->statuses()->where('is_system', false)->pluck('id')->all();
+
+        $data = $request->validate([
+            'ids' => ['present', 'array', 'size:'.count($customIds)],
+            'ids.*' => ['integer', Rule::in($customIds)],
+        ], [
+            'ids.size' => 'Передайте полный список кастомных столбцов в новом порядке.',
+            'ids.*.in' => 'Нельзя переставить системный или чужой столбец.',
+        ]);
+
+        /** @var array<int, int> $ids */
+        $ids = $data['ids'];
+        if (count(array_unique($ids)) !== count($ids)) {
+            throw ValidationException::withMessages(['ids' => 'Один и тот же столбец повторяется.']);
+        }
+
+        DB::transaction(function () use ($ids, $project) {
+            foreach ($ids as $index => $id) {
+                $project->statuses()->where('id', $id)->update(['position' => 200 + $index * 100]);
+            }
+        });
+
+        $fresh = $project->statuses()->get()->map(fn (Status $s) => $this->present($s))->all();
+
+        return response()->json(['data' => $fresh]);
+    }
+
+    /**
      * Системные нельзя удалить; посты удалённого кастомного столбца переносятся
      * в дефолтный (slug='new').
      */

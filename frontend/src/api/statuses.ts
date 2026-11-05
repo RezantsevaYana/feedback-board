@@ -18,4 +18,9 @@ export const StatusesApi = {
   remove(id: number) {
     return request<void>(`${BASE_URL}/statuses/${id}`, { method: 'DELETE' })
   },
+
+  // reorder custom columns; `ids` is the full list of this project's custom statuses in the new order
+  reorder(slug: string, ids: number[]) {
+    return request<{ data: Status[] }>(`${BASE_URL}/projects/${encodeURIComponent(slug)}/statuses/reorder`, { method: 'PATCH', body: { ids } })
+  },
 }

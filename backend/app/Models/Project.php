@@ -18,7 +18,7 @@ use Orchid\Filters\Types\Where;
 use Orchid\Filters\Types\WhereDateStartEnd;
 use Orchid\Screen\AsSource;
 
-#[Fillable(['name', 'slug', 'owner_id', 'visibility', 'allowed_origins', 'widget_color'])]
+#[Fillable(['name', 'slug', 'owner_id', 'visibility', 'allowed_origins', 'widget_color', 'widget_launcher_text'])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */

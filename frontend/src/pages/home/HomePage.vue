@@ -1,17 +1,16 @@
 <template>
   <main class="container home-page">
     <div class="home-ground">
-      <span class="home-tag slant">Баги и идеи вашего продукта</span>
+      <span class="home-tag slant">Обратная связь от пользователей</span>
       <h1>Feedback Board</h1>
-      <!-- the promise first, then the board address shown like a browser bar -->
+      <!-- the promise first, then the board address shown like a browser bar, with a separate CTA to the demo -->
       <p class="home-lead">
-        <span class="home-claim">Одна доска вместо сообщений в чатах.</span>
+        <span class="home-claim">Вместо разрозненных писем и чатов — одна доска. Что важнее, подскажут голоса ваших пользователей.</span>
         <span class="home-bar">
           <span>Адрес доски</span>
           <code>/название-проекта</code>
-          <span class="home-bar-sep" aria-hidden="true">·</span>
-          <span>например <RouterLink to="/demo">/demo</RouterLink></span>
         </span>
+        <RouterLink to="/demo" class="home-demo">Посмотреть пример <code>/demo</code> <span class="home-demo-arrow" aria-hidden="true">→</span></RouterLink>
       </p>
     </div>
     <!-- while /me is in flight the block keeps its height but shows nothing, so guest and signed-in buttons never flash -->

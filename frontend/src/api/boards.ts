@@ -34,6 +34,8 @@ export interface EmbedInfo {
   allowed_origins: string[]
   /** «#rrggbb» or null for the service's green */
   widget_color: string | null
+  /** custom launcher button label or null for the default «Обратная связь» */
+  widget_launcher_text: string | null
   visibility: BoardVisibility
 }
 
@@ -48,6 +50,7 @@ export interface BoardSettings {
   visibility: BoardVisibility
   allowed_origins: string[]
   widget_color: string | null
+  widget_launcher_text: string | null
   /** how long a deleted board stays in the trash (feedback.trash_retention_days) */
   trash_retention_days: number
   /** visible posts and members, for the «Доступ» warning */
@@ -78,11 +81,17 @@ export const BoardsApi = {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`)
   },
 
-  // rename the board, replace its widget domains, set the widget colour (null = default) or
-  // flip visibility (public → private only; private → public is 422) — send only what changed
+  // rename the board, replace its widget domains, set the widget colour (null = default), set the
+  // widget launcher text (null = default «Обратная связь») or flip visibility — send only what changed
   update(
     slug: string,
-    body: { name?: string; origins?: string[]; widget_color?: string | null; visibility?: BoardVisibility },
+    body: {
+      name?: string
+      origins?: string[]
+      widget_color?: string | null
+      widget_launcher_text?: string | null
+      visibility?: BoardVisibility
+    },
   ) {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`, { method: 'PATCH', body })
   },

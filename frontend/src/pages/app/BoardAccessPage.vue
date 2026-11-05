@@ -40,6 +40,7 @@
           </section>
 
           <WidgetColorSection :slug="slug" :color="embed.widget_color" @saved="embed.widget_color = $event" />
+          <WidgetLauncherSection :slug="slug" :text="embed.widget_launcher_text" @saved="embed.widget_launcher_text = $event" />
 
           <section id="team" class="board-settings-section">
             <div class="participants-head-row">
@@ -110,6 +111,7 @@ import ParticipantsTable from './components/ParticipantsTable.vue'
 import PendingInvitationsList from './components/PendingInvitationsList.vue'
 import SettingsDomains from './components/SettingsDomains.vue'
 import WidgetColorSection from './components/WidgetColorSection.vue'
+import WidgetLauncherSection from './components/WidgetLauncherSection.vue'
 import { boardLoadError } from './composables/boardLoadError'
 import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 

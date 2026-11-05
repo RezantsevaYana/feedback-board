@@ -28,7 +28,6 @@ class AuthorAccountTest extends TestCase
     {
         parent::setUp();
         $this->project = Project::factory()->create(['slug' => 'demo']);
-        $this->project->createDefaultCategories();
         $this->user = User::factory()->create(['name' => 'Иван Петров']);
     }
 

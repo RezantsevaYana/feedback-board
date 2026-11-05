@@ -25,7 +25,6 @@ class BoardSettingsTest extends TestCase
             'owner_id' => $this->owner->id,
             'allowed_origins' => [],
         ]);
-        $this->board->createDefaultCategories();
     }
 
     public function test_created_board_comes_back_with_its_summary(): void
@@ -88,6 +87,31 @@ class BoardSettingsTest extends TestCase
         $this->patchJson('/api/admin/boards/my-board', ['widget_color' => ''])->assertOk()->assertJsonPath('data.widget_color', null);
         $this->patchJson('/api/admin/boards/my-board', ['widget_color' => '#123456'])->assertOk();
         $this->patchJson('/api/admin/boards/my-board', ['widget_color' => null])->assertOk()->assertJsonPath('data.widget_color', null);
+    }
+
+    public function test_widget_launcher_text_saves_trims_and_reaches_the_widget(): void
+    {
+        $this->actingAs($this->owner);
+
+        // default is null until the owner picks their own label
+        $this->getJson('/api/admin/boards/my-board/embed')->assertJsonPath('data.widget_launcher_text', null);
+
+        $this->patchJson('/api/admin/boards/my-board', ['widget_launcher_text' => '  Есть идея?  '])
+            ->assertOk()
+            ->assertJsonPath('data.widget_launcher_text', 'Есть идея?');
+
+        // the widget reads it from the public project, the connection page from embed
+        $this->getJson('/api/public/projects/my-board')->assertJsonPath('data.widget_launcher_text', 'Есть идея?');
+        $this->getJson('/api/admin/boards/my-board/embed')->assertJsonPath('data.widget_launcher_text', 'Есть идея?');
+
+        // empty / whitespace / null — back to the default («Обратная связь» is rendered by the widget itself)
+        $this->patchJson('/api/admin/boards/my-board', ['widget_launcher_text' => '   '])->assertOk()->assertJsonPath('data.widget_launcher_text', null);
+        $this->patchJson('/api/admin/boards/my-board', ['widget_launcher_text' => 'Напишите нам'])->assertOk();
+        $this->patchJson('/api/admin/boards/my-board', ['widget_launcher_text' => null])->assertOk()->assertJsonPath('data.widget_launcher_text', null);
+
+        // 40 chars is the hard ceiling
+        $this->patchJson('/api/admin/boards/my-board', ['widget_launcher_text' => str_repeat('а', 41)])
+            ->assertJsonValidationErrors(['widget_launcher_text' => 'Текст кнопки — не длиннее 40 символов.']);
     }
 
     public function test_widget_color_rejects_what_is_not_hex(): void

@@ -25,6 +25,8 @@ class UpdateBoardRequest extends FormRequest
             'origins.*' => ['string', 'distinct', 'regex:#^https?://[^/\s]+$#'],
             // #rrggbb after prepareForValidation; null brings back the service's own green
             'widget_color' => ['sometimes', 'nullable', 'string', 'regex:/^#[0-9a-f]{6}$/'],
+            // custom label on the widget launcher button; null brings back the default «Обратная связь»
+            'widget_launcher_text' => ['sometimes', 'nullable', 'string', 'max:40'],
             // both ways: closing and opening back (02.11.2026, docs/ROLES_PLAN.md §5); the UI warns before either
             'visibility' => ['sometimes', 'string', Rule::in(array_map(fn (BoardVisibility $v) => $v->value, BoardVisibility::cases()))],
         ];
@@ -42,6 +44,7 @@ class UpdateBoardRequest extends FormRequest
             'origins.*.distinct' => 'Этот домен уже есть в списке.',
             'origins.*.regex' => 'Домен — схема и хост без пути, например https://app.example.com',
             'widget_color.regex' => 'Цвет — HEX из 6 или 3 цифр, например #1d8547',
+            'widget_launcher_text.max' => 'Текст кнопки — не длиннее 40 символов.',
             'visibility.in' => 'Неизвестный режим доступа.',
         ];
     }
@@ -53,6 +56,11 @@ class UpdateBoardRequest extends FormRequest
         }
         if ($this->has('widget_color')) {
             $this->merge(['widget_color' => $this->normalizeColor($this->widget_color)]);
+        }
+        if ($this->has('widget_launcher_text')) {
+            // пустая строка (или только пробелы) — вернуть стандартный текст; max:40 отработает уже по тримленному
+            $text = is_string($this->widget_launcher_text) ? trim($this->widget_launcher_text) : $this->widget_launcher_text;
+            $this->merge(['widget_launcher_text' => $text === '' ? null : $text]);
         }
         if ($this->has('origins')) {
             $this->merge(['origins' => array_values(array_filter(array_map(

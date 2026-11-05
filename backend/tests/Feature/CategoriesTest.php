@@ -21,7 +21,6 @@ class CategoriesTest extends TestCase
     {
         parent::setUp();
         $this->project = Project::factory()->create(['slug' => 'demo']);
-        $this->project->createDefaultCategories();
         $this->admin = User::factory()->create();
         $this->admin->projects()->attach($this->project, [
             'role' => \App\Enums\ProjectRole::Admin->value,
@@ -57,7 +56,6 @@ class CategoriesTest extends TestCase
         $this->postJson('/api/admin/projects/demo/categories', ['name' => 'Лишняя', 'color' => 'blue'])->assertJsonValidationErrors('name');
 
         $foreign = Project::factory()->create();
-        $foreign->createDefaultCategories();
         $this->postJson("/api/admin/projects/{$foreign->slug}/categories", ['name' => 'Чужая', 'color' => 'blue'])->assertForbidden();
         $this->patchJson('/api/admin/categories/'.$foreign->categories()->first()->id, ['name' => 'Взлом', 'color' => 'blue'])->assertForbidden();
         $this->deleteJson('/api/admin/categories/'.$foreign->categories()->first()->id)->assertForbidden();

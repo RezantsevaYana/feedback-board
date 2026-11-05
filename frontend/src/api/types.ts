@@ -67,6 +67,8 @@ export interface Project {
   visibility: 'public' | 'private'
   /** the widget's main colour, «#rrggbb»; null = the service's green (shared/utils/widgetColor) */
   widget_color: string | null
+  /** custom launcher button label; null = the default «Обратная связь» */
+  widget_launcher_text: string | null
   categories: Category[]
   statuses: Status[]
 }

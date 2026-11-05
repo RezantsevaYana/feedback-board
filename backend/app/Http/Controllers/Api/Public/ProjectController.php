@@ -21,6 +21,8 @@ class ProjectController extends Controller
             'visibility' => $project->visibility->value,
             // the widget paints its button and accents with it; null = the service's green
             'widget_color' => $project->widget_color,
+            // custom label on the launcher button; null = the default «Обратная связь»
+            'widget_launcher_text' => $project->widget_launcher_text,
             'categories' => $project->categories->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name, 'color' => $c->color]),
             'statuses' => $project->statuses->map(fn (Status $s) => [
                 'id' => $s->id,

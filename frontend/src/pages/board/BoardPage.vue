@@ -197,6 +197,16 @@
               <button type="button" class="btn" @click="composeFromSearch">{{ board.view.search ? `Предложить «${shortSearch}»` : 'Предложить своё' }}</button>
             </div>
           </div>
+          <!-- patologic fallback: a board somehow created without statuses (should be impossible via ProjectService,
+               but any Eloquent::create bypassing it leaves the Kanban with no columns to draw at all) -->
+          <div v-else-if="!board.statuses.length" class="board-empty">
+            <h2>Доска ещё не настроена</h2>
+            <p v-if="board.configure">У доски нет ни одного столбца, поэтому предложения не отображаются. Добавьте хотя бы один столбец, чтобы доска заработала.</p>
+            <p v-else>Владелец доски пока не настроил её. Загляните чуть позже.</p>
+            <div v-if="board.configure" class="row">
+              <button type="button" class="btn" @click="editingStatuses = true">Открыть настройки столбцов</button>
+            </div>
+          </div>
           <KanbanBoard v-else-if="board.view.layout === 'kanban'" @open="openPost" />
           <PostList v-else @open="openPost" />
         </template>

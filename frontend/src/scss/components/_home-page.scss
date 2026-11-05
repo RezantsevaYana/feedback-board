@@ -60,9 +60,9 @@
 }
 .home-tag {
     justify-self: start;
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
-    padding: 3px 12px 3px 18px;
+    padding: 5px 14px 5px 22px;
     background: var(--accent-fg);
     color: var(--accent);
 }
@@ -108,6 +108,36 @@
 }
 .home-bar-sep {
     opacity: 0.6;
+}
+// a link to the demo board, pulled out of the address bar so it's clearly a CTA, not a note
+.home-demo {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-fg);
+    text-decoration-color: color-mix(in srgb, var(--accent-fg) 55%, transparent);
+    text-underline-offset: 3px;
+
+    code {
+        font-family: var(--font-mono);
+        font-weight: 600;
+    }
+
+    @include hover {
+        .home-demo-arrow {
+            transform: translateX(3px);
+        }
+    }
+}
+.home-demo-arrow {
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
 }
 // the CTA slot is sized for the buttons even before /me answers, so nothing below it jumps
 .home-cta {

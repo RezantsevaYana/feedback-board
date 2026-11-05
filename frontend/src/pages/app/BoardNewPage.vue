@@ -94,8 +94,8 @@ watch(slug, (next) => {
 })
 
 function onSlugInput() {
-  // The user touched the slug field by hand — don't overwrite it from the name any more.
-  slugDirty.value = true
+  // Clearing the slug input resumes auto-generation from the name field.
+  slugDirty.value = slug.value.length > 0
 }
 
 let slugTimer: ReturnType<typeof setTimeout> | null = null
