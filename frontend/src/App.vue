@@ -1,6 +1,7 @@
 <template>
   <ImpersonationBanner />
   <RouterView />
+  <ThemeToggle v-if="isAuthRoute" class="auth-theme-toggle" />
   <ConfirmModal />
   <div v-if="notification.visible" class="toast" :class="{ error: notification.type === 'error' }" role="status">
     <AppIcon :name="notification.type === 'error' ? 'alert' : 'check'" :size="18" class="toast-icon" />
@@ -12,13 +13,20 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { computed } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import ConfirmModal from '@/shared/ui/ConfirmModal.vue'
+import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 import ImpersonationBanner from '@/shared/components/ImpersonationBanner.vue'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useRoleSync } from '@/shared/composables/useRoleSync'
 
 const notification = useNotificationStore()
 useRoleSync()
+
+// На auth-экранах нет board-nav, где обычно живёт переключатель, поэтому вешаем плавающий в углу.
+const AUTH_ROUTES = new Set(['register', 'login', 'forgot-password', 'reset-password', 'verify-email', 'invite-accept'])
+const route = useRoute()
+const isAuthRoute = computed(() => AUTH_ROUTES.has(String(route.name ?? '')))
 </script>

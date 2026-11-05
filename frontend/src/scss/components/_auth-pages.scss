@@ -89,3 +89,18 @@ body:has(.auth-page) {
         font-weight: 500;
     }
 }
+
+// На auth-экранах нет board-nav, где обычно живёт переключатель — показываем плавающий
+// в левом нижнем углу. Базовые стили .theme-toggle задают форму и hover (layout/_board.scss).
+.auth-theme-toggle {
+    position: fixed;
+    left: 24px;
+    bottom: 24px;
+    margin: 0;
+    z-index: 10;
+
+    @media screen and (max-width: $mobile) {
+        left: 16px;
+        bottom: 16px;
+    }
+}
