@@ -4,11 +4,14 @@
   <ul class="cat-list">
     <li v-for="c in board.categories" :key="c.id">
       <form v-if="editingId === c.id" class="cat-edit" @submit.prevent="saveEdit">
+        <!-- says what this is: the field holds the name being edited («Готово» alone read like a button) -->
+        <p class="cat-edit-caption">Изменить категорию</p>
         <div class="cat-row editing">
           <ColorPaletteComponent v-model="editColor" v-model:valid="editColorValid" label="Цвет категории" variant="category" />
           <InputComponent v-model="editName" maxlength="40" aria-label="Название категории" autofocus />
           <button class="btn btn-primary" type="submit" :disabled="!editColorValid">Сохранить</button>
-          <button class="btn" type="button" @click="editingId = null">Отмена</button>
+          <!-- phone: just «×»; the word stays for screen readers -->
+          <button class="btn cat-cancel" type="button" aria-label="Отмена" @click="editingId = null"><span class="cat-cancel-word">Отмена</span><AppIcon name="close" :size="16" class="cat-cancel-icon" /></button>
         </div>
         <div class="cat-preview">
           <span class="label">Как будет выглядеть:</span>
@@ -21,6 +24,8 @@
         <span class="spacer" />
         <button class="link-btn" type="button" @click="startEdit(c)">Изменить</button>
         <button class="link-btn" type="button" @click="askRemove(c)">Удалить</button>
+        <!-- phone: one «⋯» instead of the two words (TEST.md п. 42) -->
+        <span class="cat-more"><MenuComponent :items="rowMenu(c)" :aria-label="`Действия: ${c.name}`" /></span>
       </div>
     </li>
     <li v-if="!board.categories.length" class="note">Категорий нет — форма отправки будет без выбора.</li>
@@ -48,8 +53,10 @@ import type { Category, PaletteColor } from '@/api/types'
 import { useConfirmStore } from '@/store/modals/useConfirmStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
+import AppIcon from '@/shared/ui/AppIcon.vue'
 import ColorPaletteComponent from '@/shared/ui/ColorPaletteComponent.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
+import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 import CategoryTag from './CategoryTag.vue'
 
 // Team settings: what posts can be about. Shown in the widget form, on the board filters and on cards.
@@ -98,6 +105,13 @@ async function saveEdit() {
   } catch (e) {
     editError.value = message(e)
   }
+}
+
+function rowMenu(c: Category): MenuItem[] {
+  return [
+    { label: 'Изменить', run: () => startEdit(c) },
+    { label: 'Удалить', run: () => askRemove(c), danger: true, separated: true },
+  ]
 }
 
 async function askRemove(c: Category) {

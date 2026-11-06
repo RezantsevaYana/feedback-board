@@ -16,8 +16,9 @@
 
     // drag&drop in StatusesEditor: custom rows get a grip, the active target gets a thick top line
     &.cat-list-drag {
-        > li.draggable {
-            cursor: grab;
+        // only the grip drags (pointer events in StatusesEditor), the rest of the row scrolls the page as usual
+        > li.dragging .cat-grip {
+            cursor: grabbing;
         }
         > li.dragging {
             opacity: 0.4;
@@ -77,21 +78,36 @@
             flex: 1 1 0;
             min-width: 0;
         }
+        // editing: [colour][name][Сохранить][×] in one 40px row
         &.editing {
+            flex-wrap: nowrap;
+            gap: 6px;
+
             > .field {
-                flex-basis: calc(100% - 52px);
+                flex: 1 1 0;
             }
-            > .field + .btn {
-                margin-left: auto;
+            > .btn {
+                flex: none;
+                min-height: 40px;
+                height: 40px;
+            }
+            > .btn-primary {
+                padding: 0 12px;
+            }
+            .entity-color-trigger,
+            > .field .input {
+                min-height: 40px;
+                height: 40px;
+            }
+            .entity-color-trigger {
+                width: 40px;
             }
         }
     }
     @media screen and (max-width: $mobile-mini) {
         gap: 6px;
 
-        &.editing > .field {
-            flex-basis: calc(100% - 50px);
-        }
+
         // ряд «только для чтения»: тег слева, спейсер уходит, ссылки прижаты вправо
         &:not(form) {
             > .spacer {
@@ -103,13 +119,28 @@
         }
     }
 }
-// grip handle for custom statuses in StatusesEditor: a faint six-dot icon that darkens on hover
+// grip handle for custom statuses in StatusesEditor: a faint six-dot icon that darkens on hover.
+// touch-action: none — dragging it with a finger moves the row, not the page
 .cat-grip {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     color: color-mix(in srgb, currentColor 45%, transparent);
     cursor: grab;
     padding: 2px;
+    touch-action: none;
+    user-select: none;
+
+    @media screen and (max-width: $mobile) {
+        width: 32px;
+        height: 40px;
+        margin-left: -8px;
+        padding: 0;
+
+        &.cat-grip-empty {
+            width: 24px;
+        }
+    }
 
     @include hover {
         color: currentColor;
@@ -154,5 +185,62 @@
         .type {
             transition: none;
         }
+    }
+}
+
+// the row's «⋯» (CategoriesEditor, StatusesEditor): on a phone it stands for «Изменить / Удалить» (and
+// «Выше / Ниже» for a custom column), 44px rows under the thumb; a wide screen keeps the words
+.cat-more {
+    display: none;
+}
+@media screen and (max-width: $mobile) {
+    .cat-list > li > .cat-row:not(form) {
+        min-height: 44px;
+        padding-block: 2px;
+        padding-right: 2px;
+
+        > .link-btn {
+            display: none;
+        }
+        > .cat-more {
+            display: block;
+            margin-left: auto;
+
+        }
+    }
+}
+
+// the edit form's caption: what the field below is
+.cat-edit-caption {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+}
+// «Отмена»: the word on a wide screen, «×» on a phone
+.cat-cancel-icon {
+    display: none;
+}
+@media screen and (max-width: $mobile) {
+    .cat-cancel {
+        width: 40px;
+        padding: 0;
+    }
+    .cat-cancel-word {
+        display: none;
+    }
+    .cat-cancel-icon {
+        display: block;
+    }
+    // the row's «⋯»: three dots, no pad of its own — a pad shows only while pressed / open
+    .cat-list > li > .cat-row:not(form) > .cat-more .menu-trigger {
+        width: 32px;
+        height: 32px;
+        background: none;
+        color: var(--muted);
+    }
+    .cat-list > li > .cat-row:not(form) > .cat-more .menu.open .menu-trigger {
+        background: var(--active);
+        color: var(--active-fg);
     }
 }
