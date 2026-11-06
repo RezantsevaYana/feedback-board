@@ -1,6 +1,6 @@
 <template>
-  <AppHeader v-if="board.project && board.me" :extra-menu-items="menuExtras" />
-  <main class="container base-page board-page">
+  <AppHeader v-if="withHeader" :extra-menu-items="menuExtras" />
+  <main class="container base-page board-page" :class="{ 'no-header': !withHeader }">
     <!-- 404: slug didn't match any board. The brand slant tag + display heading, the typed address as a
          mock URL with the missing slug struck through, then «На главную» / «Мои доски» (if signed in). -->
     <div v-if="board.notFound" class="not-found">
@@ -78,10 +78,11 @@
       <nav class="board-nav" aria-label="Разделы доски">
         <!-- the board switcher now lives in AppHeader above; the sidebar just names the current board -->
         <RouterLink class="proj slant" :to="{ name: 'board', params: { slug } }">{{ board.project.name }}</RouterLink>
-        <!-- what the board is and who I am on it, right under its name -->
-        <div class="board-who">
+        <!-- what the board is and who I am on it, right under its name; only for people with a role on the board:
+             a guest just uses the board, «Открытая» means nothing to them (TEST.md п. 39) -->
+        <div v-if="board.role" class="board-who">
           <VisibilityBadge :visibility="board.project.visibility" />
-          <span v-if="board.role" class="board-who-role">Вы — {{ ROLE_LABELS[board.role].toLowerCase() }}</span>
+          <span class="board-who-role">Вы — {{ ROLE_LABELS[board.role].toLowerCase() }}</span>
         </div>
         <div class="board-sections">
           <button
@@ -268,6 +269,9 @@ const postId = computed(() => (route.params.id ? Number(route.params.id) : null)
 const composing = ref(false)
 // which tab the «Быстрая настройка» modal opens on; null — modal is closed
 const quickTab = ref<'statuses' | 'categories' | null>(null)
+// the service header (board switcher, account) is for signed-in people; a guest sees only the board,
+// and the sticky sidebar then sits under the page's top edge instead of under the header
+const withHeader = computed(() => !!board.project && !!board.me)
 function openQuick(tab: 'statuses' | 'categories') {
   quickTab.value = tab
 }
@@ -314,9 +318,9 @@ const filtersOpen = ref(false)
 const activeFilters = computed(
   () =>
     [
-      board.view.category !== '',
-      board.view.layout === 'list' && board.view.status !== '',
-      board.team && board.view.priority !== '',
+      board.view.category.length > 0,
+      board.view.layout === 'list' && board.view.status.length > 0,
+      board.team && board.view.priority.length > 0,
       board.team && !board.view.showHidden,
       board.view.sort !== 'new',
     ].filter(Boolean).length,

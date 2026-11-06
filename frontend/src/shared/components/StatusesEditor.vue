@@ -18,12 +18,12 @@
       @dragend="onDragEnd"
     >
       <form v-if="editingId === s.id" class="cat-edit" @submit.prevent="saveEdit">
-        <div class="cat-row">
+        <div class="cat-row editing">
+          <ColorPaletteComponent v-model="editColor" v-model:valid="editColorValid" label="Цвет статуса" variant="status" />
           <InputComponent v-model="editName" maxlength="40" aria-label="Название статуса" autofocus />
           <button class="btn btn-primary" type="submit" :disabled="!editColorValid">Сохранить</button>
           <button class="btn" type="button" @click="editingId = null">Отмена</button>
         </div>
-        <ColorPaletteComponent v-model="editColor" v-model:valid="editColorValid" label="Цвет статуса" variant="status" />
         <div class="cat-preview">
           <span class="label">Как будет выглядеть:</span>
           <span class="pill" :data-color="editColor ?? 'none'" :style="entityColorStyle(editColor)">{{ editName.trim() || s.name }}</span>
@@ -45,6 +45,7 @@
 
   <form class="cat-edit" @submit.prevent="add">
     <div class="cat-row">
+      <ColorPaletteComponent v-model="newColor" v-model:valid="newColorValid" label="Цвет нового статуса" variant="status" />
       <InputComponent
         v-model="newName"
         maxlength="40"
@@ -54,7 +55,6 @@
       />
       <button class="btn btn-add" type="submit" :disabled="!newName.trim() || !newColorValid">Добавить</button>
     </div>
-    <ColorPaletteComponent v-model="newColor" v-model:valid="newColorValid" label="Цвет нового статуса" variant="status" />
     <div v-if="newName.trim()" class="cat-preview">
       <span class="label">Как будет выглядеть:</span>
       <span class="pill" :data-color="newColor ?? 'none'" :style="entityColorStyle(newColor)">{{ newName.trim() }}</span>

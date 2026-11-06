@@ -1,6 +1,7 @@
 <template>
   <!-- the owner's colour arrives with the project as custom properties (the only inline style: it's data, not design) -->
-  <div ref="root" class="fbw" :class="[position === 'bottom-left' ? 'left' : 'right', { ready }]" :style="palette">
+  <!-- a closed board shows nothing on the site at all; reopened, the widget is back on the next page load (TEST.md п. 22) -->
+  <div v-if="!closed" ref="root" class="fbw" :class="[position === 'bottom-left' ? 'left' : 'right', { ready }]" :style="palette">
     <Transition name="fbw-panel">
       <div v-if="open" class="fbw-panel" role="dialog" aria-label="Обратная связь">
         <div class="fbw-head">
@@ -25,13 +26,6 @@
               <a class="btn btn-primary" :href="postUrl" target="_blank" rel="noopener">Открыть на доске</a>
               <button type="button" class="btn" @click="again">Отправить ещё</button>
             </div>
-          </div>
-          <!-- the board was closed while the widget stayed on the site: say so, and lead members to the board.
-               The same words are previewed on the cabinet's «Доступ» page (BoardAccessPage) -->
-          <div v-else-if="locked" class="done-box">
-            <h3>Доска закрыта</h3>
-            <p class="note">Предложения здесь больше не принимаются. Участники могут открыть доску по ссылке.</p>
-            <a class="btn btn-primary" :href="boardUrl" target="_blank" rel="noopener">Открыть доску ↗</a>
           </div>
           <div v-else-if="loadError" class="done-box">
             <p class="alert">{{ loadError }}</p>
@@ -99,8 +93,9 @@ const launcherText = ref('')
 const ready = ref(false)
 const palette = computed(() => widgetPalette(color.value))
 const loadError = ref('')
-// private board + anonymous visitor → EnsureProjectPublished answers 403 with reason=login_required
-const locked = ref(false)
+// the board is closed: anonymous visitor → EnsureProjectPublished answers 403 reason=login_required,
+// a signed-in member gets the project with visibility «private». Either way the widget stays off the page.
+const closed = ref(false)
 const sent = ref<Post | null>(null)
 const copied = ref(false)
 
@@ -109,16 +104,19 @@ const postUrl = computed(() => (sent.value ? `${boardUrl.value}/posts/${sent.val
 
 async function loadCategories() {
   loadError.value = ''
-  locked.value = false
   try {
     const res = await ProjectsApi.get(props.project, props.origin)
+    if (res.data.visibility === 'private') {
+      closed.value = true
+      return
+    }
     categories.value = res.data.categories
     projectName.value = res.data.name
     color.value = res.data.widget_color
     launcherText.value = res.data.widget_launcher_text ?? ''
   } catch (e) {
     if (e instanceof ApiError && e.status === 403 && e.reason === 'login_required') {
-      locked.value = true
+      closed.value = true
     } else {
       loadError.value = errorMessage(e)
     }

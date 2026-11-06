@@ -273,6 +273,54 @@ textarea.input {
         padding: 8px 10px;
     }
 }
+// MultiSelectComponent.vue — the same list as SelectComponent; a picked row is tinted green
+// with a check on the right, so several picks read at a glance
+.multi-select {
+    // the trigger has a fixed width (see .multi-select-size), the list is as wide as its longest option
+    // or the trigger: neither changes as picks change
+    .select-list {
+        display: grid;
+        gap: 2px;
+        width: max-content;
+    }
+}
+// the shown label and invisible copies of every possible one share one grid cell: the cell takes the widest
+.multi-select-value {
+    display: grid;
+
+    > span {
+        grid-area: 1 / 1;
+    }
+}
+.multi-select-size {
+    visibility: hidden;
+}
+.multi-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    &.selected {
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+        color: var(--accent-ink);
+        // the tint and the check mark the pick; bold would widen the row and nudge the list
+        font-weight: 400;
+    }
+    &.selected.active {
+        background: color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+}
+// every row keeps the check's room, shown only when picked: the list width never changes with the pick
+.multi-select-mark {
+    flex: none;
+    color: var(--accent-ink);
+    visibility: hidden;
+
+    .selected > & {
+        visibility: visible;
+    }
+}
 .select-option-hint {
     display: block;
     margin-top: 2px;

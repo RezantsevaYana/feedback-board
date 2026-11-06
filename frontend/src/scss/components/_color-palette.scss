@@ -78,11 +78,11 @@
             font-family: var(--font-mono);
         }
     }
+    // phone: only the swatch trigger stays in the row, HEX and «Без цвета» move into the popup
     @media screen and (max-width: $mobile) {
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        width: 100%;
+        display: block;
 
-        > .field .input {
+        .field .input {
             height: 44px;
             min-height: 44px;
             font-size: 16px;
@@ -98,6 +98,24 @@
 .entity-color-trigger {
     gap: 6px;
     padding-inline: 10px;
+
+    &.invalid {
+        border-color: var(--bug);
+    }
+    // phone: the trigger is a bare 44×44 swatch at the start of the name row
+    @media screen and (max-width: $mobile) {
+        width: 44px;
+        padding: 0;
+
+        .entity-color-swatch {
+            width: 22px;
+            height: 22px;
+        }
+        .entity-color-text,
+        .ico {
+            display: none;
+        }
+    }
 }
 .entity-color-swatch {
     width: 18px;
@@ -145,6 +163,38 @@
     .vc-colorpicker {
         max-width: 100%;
         box-shadow: none;
+    }
+    // phone: wider popup, finger-sized preset dots, HEX row between presets and the picker
+    @media screen and (max-width: $mobile) {
+        width: 300px;
+        max-width: calc(100vw - 32px);
+        padding: 12px;
+
+        .color-palette {
+            margin-bottom: 12px;
+        }
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+        }
+        .vc-colorpicker {
+            width: 100%;
+        }
+    }
+}
+.entity-color-hex {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    > .field {
+        min-width: 0;
+        margin: 0;
+
+        .input {
+            font-family: var(--font-mono);
+        }
     }
 }
 .entity-palette-enter-active,

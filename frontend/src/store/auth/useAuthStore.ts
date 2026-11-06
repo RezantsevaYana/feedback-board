@@ -5,6 +5,7 @@ import { type Board, BoardsApi, type TrashedBoard } from '@/api/boards'
 import { ApiError } from '@/api/client'
 import { type AcceptResult, type IncomingInvitation, MyInvitationsApi } from '@/api/participants'
 import type { BoardSummary, Me } from '@/api/types'
+import { broadcastAuthChange } from '@/shared/composables/useAuthBroadcast'
 
 /**
  * Global auth state for the admin app (/app/*): who's logged in, which boards they're on, who invites them.
@@ -143,16 +144,22 @@ export const useAuthStore = defineStore('auth', () => {
     return res.data
   }
 
+  /** A new session started in this tab (login, sign-up, reset password): the other tabs are told to reload. */
+  function signedIn(next: Me): void {
+    const changed = me.value?.id !== next.id
+    me.value = next
+    loaded.value = true
+    if (changed) broadcastAuthChange(next.id)
+  }
+
   async function register(name: string, email: string, password: string): Promise<void> {
     const res = await AuthApi.register(name, email, password)
-    me.value = res.data
-    loaded.value = true
+    signedIn(res.data)
   }
 
   async function login(email: string, password: string): Promise<void> {
     const res = await AuthApi.login(email, password)
-    me.value = res.data
-    loaded.value = true
+    signedIn(res.data)
   }
 
   /** The link from the letter; then /me again, so this tab knows the address is confirmed (and who is logged in). */
@@ -173,8 +180,7 @@ export const useAuthStore = defineStore('auth', () => {
   /** The server logs in with the new password, so the page goes straight to the hub. */
   async function resetPassword(token: string, email: string, password: string): Promise<void> {
     const res = await AuthApi.resetPassword(token, email, password)
-    me.value = res.data
-    loaded.value = true
+    signedIn(res.data)
   }
 
   /** «Профиль» in the account settings; the header menu shows the new name at once. */
@@ -196,6 +202,7 @@ export const useAuthStore = defineStore('auth', () => {
     await AuthApi.logout().catch(() => undefined)
     me.value = null
     loaded.value = true
+    broadcastAuthChange(null)
     // next admin session starts clean
     boards.value = []
     trashed.value = []

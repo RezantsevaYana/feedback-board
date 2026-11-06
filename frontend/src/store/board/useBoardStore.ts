@@ -17,6 +17,10 @@ import { canConfigure, canTriage } from '@/shared/utils/roles'
 export type Section = 'posts' | 'top' | 'authors' | 'weekly'
 export type Layout = 'kanban' | 'list'
 export type Sort = 'top' | 'new' | 'priority'
+/** a category id, or 'none' for posts left without a category */
+export type CategoryFilter = number | 'none'
+/** a priority, or 'none' for posts without one */
+export type PriorityFilter = PostPriority | 'none'
 
 /** Columns show everything at once (MVP volumes); the list pages by 20 (TZ 5.2). */
 const KANBAN_LIMIT = 100
@@ -63,15 +67,16 @@ export const useBoardStore = defineStore('board', () => {
   const view = reactive({
     section: 'posts' as Section,
     layout: defaultLayout,
-    category: '' as '' | number | 'none',
-    status: '' as '' | number,
+    // multi-select filters (TEST.md п. 36–37): empty = everything; several = any of them
+    category: [] as CategoryFilter[],
+    status: [] as number[],
     search: '',
     sort: 'new' as Sort,
     topScope: 'open' as 'open' | 'all',
     leaderboardScope: 'all' as LeaderboardScope,
     leaderboardMetric: 'posts' as LeaderboardMetric,
     // team only
-    priority: '' as '' | PostPriority | 'none',
+    priority: [] as PriorityFilter[],
     showHidden: true,
   })
 
@@ -79,12 +84,12 @@ export const useBoardStore = defineStore('board', () => {
   const filtered = computed(
     () =>
       !!view.search.trim() ||
-      view.category !== '' ||
-      (view.layout === 'list' && view.status !== '') ||
-      (team.value && (view.priority !== '' || !view.showHidden)),
+      view.category.length > 0 ||
+      (view.layout === 'list' && view.status.length > 0) ||
+      (team.value && (view.priority.length > 0 || !view.showHidden)),
   )
   function resetFilters() {
-    Object.assign(view, { search: '', category: '', status: '', priority: '', showHidden: true })
+    Object.assign(view, { search: '', category: [], status: [], priority: [], showHidden: true })
   }
 
   const posts = ref<Post[]>([])
@@ -163,17 +168,17 @@ export const useBoardStore = defineStore('board', () => {
     }
     try {
       const query = {
-        category: view.category,
-        status_id: view.layout === 'list' ? view.status : '',
+        category: view.category.join(','),
+        status_id: view.layout === 'list' ? view.status.join(',') : '',
         q: view.search.trim(),
         sort: !team.value && view.sort === 'priority' ? 'top' : view.sort,
         // the list view without a column filter: «Новое» first, a line before the rest (PostList)
-        new_first: view.layout === 'list' && !view.status ? 1 : undefined,
+        new_first: view.layout === 'list' && !view.status.length ? 1 : undefined,
         page: nextPage,
         per_page: view.layout === 'kanban' ? KANBAN_LIMIT : LIST_PAGE,
       }
       const res = team.value
-        ? await PostsApi.adminList(currentSlug(), { ...query, priority: view.priority, hidden: view.showHidden ? 'include' : 'exclude' })
+        ? await PostsApi.adminList(currentSlug(), { ...query, priority: view.priority.join(','), hidden: view.showHidden ? 'include' : 'exclude' })
         : await PostsApi.list(currentSlug(), query)
       posts.value = append ? [...posts.value, ...res.data] : res.data
       postsLoaded.value = true
@@ -198,7 +203,7 @@ export const useBoardStore = defineStore('board', () => {
       loadError.value = ''
     }
     try {
-      const res = await PostsApi.list(currentSlug(), { category: view.category, sort: 'top', per_page: KANBAN_LIMIT })
+      const res = await PostsApi.list(currentSlug(), { category: view.category.join(','), sort: 'top', per_page: KANBAN_LIMIT })
       topPosts.value = res.data
     } catch (e) {
       if (!silent) loadError.value = errorMessage(e)
@@ -521,7 +526,7 @@ export const useBoardStore = defineStore('board', () => {
   async function deleteCategory(id: number) {
     await CategoriesApi.remove(id)
     if (project.value) project.value.categories = project.value.categories.filter((c) => c.id !== id)
-    if (view.category === id) view.category = ''
+    view.category = view.category.filter((c) => c !== id)
     for (const post of [...posts.value, ...topPosts.value]) if (post.category?.id === id) post.category = null
   }
 
@@ -552,7 +557,7 @@ export const useBoardStore = defineStore('board', () => {
     await StatusesApi.remove(id)
     const fallback = defaultStatus.value
     if (project.value) project.value.statuses = project.value.statuses.filter((s) => s.id !== id)
-    if (view.status === id) view.status = ''
+    view.status = view.status.filter((s) => s !== id)
     if (fallback) {
       for (const post of [...posts.value, ...topPosts.value]) {
         if (post.status.id === id) post.status = { ...fallback }

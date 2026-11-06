@@ -93,6 +93,21 @@ class TeamModeTest extends TestCase
         $this->getJson("/api/admin/projects/demo/posts?status_id={$rejectedStatusId}")->assertJsonCount(1, 'data');
     }
 
+    public function test_team_filters_by_several_priorities_at_once(): void
+    {
+        $critical = Post::factory()->for($this->project)->create(['priority' => PostPriority::Critical]);
+        $high = Post::factory()->for($this->project)->create(['priority' => PostPriority::High]);
+        Post::factory()->for($this->project)->create(['priority' => PostPriority::Low]);
+        $unset = Post::factory()->for($this->project)->create();
+
+        $this->actingAs($this->admin);
+        $ids = fn (string $priority) => collect($this->getJson("/api/admin/projects/demo/posts?priority={$priority}")->assertOk()->json('data.*.id'))->sort()->values()->all();
+
+        $this->assertSame([$critical->id, $high->id], $ids('high,critical'));
+        $this->assertSame([$critical->id, $unset->id], $ids('critical,none'));
+        $this->getJson('/api/admin/projects/demo/posts?priority=high,urgent')->assertUnprocessable();
+    }
+
     public function test_team_updates_status_priority_and_reply(): void
     {
         $post = Post::factory()->for($this->project)->create();

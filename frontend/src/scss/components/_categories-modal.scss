@@ -40,6 +40,12 @@
                 border-width: 1px 0 0;
                 border-radius: 0;
             }
+            // the row being edited keeps the same gutters and top line as the read-only rows
+            > li > .cat-edit {
+                margin: 0;
+                padding: 10px 16px 12px;
+                border-top: 1px solid var(--line);
+            }
         }
     }
 }
@@ -55,17 +61,36 @@
         flex: 1;
         min-width: 160px;
     }
+    // ColorPaletteComponent стоит первым в DOM, но на десктопе уходит отдельной строкой под название
+    > .entity-color {
+        order: 1;
+        flex-basis: 100%;
+    }
 
+    // телефон: [цвет][название][Добавить] в одну строку; при редактировании кнопки — строкой ниже, справа
+    @media screen and (max-width: $mobile) {
+        > .entity-color {
+            order: 0;
+            flex: none;
+        }
+        > .field {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        &.editing {
+            > .field {
+                flex-basis: calc(100% - 52px);
+            }
+            > .field + .btn {
+                margin-left: auto;
+            }
+        }
+    }
     @media screen and (max-width: $mobile-mini) {
         gap: 6px;
 
-        .field {
-            flex: 1 1 100%;
-            min-width: 0;
-        }
-        // кнопки под инпутом своего размера, прижаты вправо (как «Сохранить» в остальных формах)
-        .field + .btn {
-            margin-left: auto;
+        &.editing > .field {
+            flex-basis: calc(100% - 50px);
         }
         // ряд «только для чтения»: тег слева, спейсер уходит, ссылки прижаты вправо
         &:not(form) {

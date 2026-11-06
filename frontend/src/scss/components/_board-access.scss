@@ -230,6 +230,13 @@
 .board-access-copy {
     justify-self: start;
 }
+// «Ссылка на доску»: copy it, or open the board in a new tab
+.board-access-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-self: start;
+}
 // «Домены» inside the widget block: a step below the card's heading
 .board-access-subhead {
     margin: 8px 0 0;
@@ -237,43 +244,22 @@
     font-weight: 600;
 }
 // closed board: the widget isn't available — a warning in clay red on its tint, the same as the other
-// warnings on the page (.board-access-warn): a widget still on a site now turns guests away
+// closed board: the widget hides itself on the sites, nothing to fix — a calm note, not a warning
 .board-access-off {
+    max-width: 65ch;
     padding: 10px 14px;
-    border: 1px solid color-mix(in srgb, var(--bug) 30%, var(--line));
+    border: 1px solid var(--line);
     border-radius: var(--radius);
-    background: color-mix(in srgb, var(--bug) 10%, var(--surface));
-    color: var(--bug);
+    background: var(--surface-2);
+    color: var(--muted);
     font-size: 13px;
 
     p {
         margin: 0;
     }
     strong {
-        color: var(--bug);
-    }
-}
-// …and what a guest sees when they open the widget that's still on a site (widget/WidgetApp.vue)
-.board-access-guest {
-    display: grid;
-    gap: 2px;
-    justify-self: start;
-    max-width: 340px;
-    padding: 10px 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface);
-    font-size: 13px;
-    color: var(--muted);
-
-    strong {
         color: var(--fg);
-        font-size: 14px;
     }
-}
-.board-access-guest-caption {
-    margin-bottom: 4px;
-    font-size: 12px;
 }
 
 // AccessMode.vue — the mode cards, then (once changed) what the switch does to posts, votes and people

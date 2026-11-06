@@ -66,6 +66,28 @@ class PublicPostsTest extends TestCase
         $this->getJson('/api/public/projects/demo/posts?status_id=999999')->assertUnprocessable();
     }
 
+    public function test_board_filters_by_several_categories_and_statuses_at_once(): void
+    {
+        [$bug, $idea] = $this->project->categories()->get()->all();
+        $new = $this->project->statuses()->where('slug', 'new')->firstOrFail();
+        $done = $this->project->statuses()->where('slug', 'done')->firstOrFail();
+        $foreignStatus = Project::factory()->create()->statuses()->firstOrFail();
+        $bugPost = Post::factory()->for($this->project)->create(['category_id' => $bug->id]);
+        $ideaDone = Post::factory()->for($this->project)->status('done')->create(['category_id' => $idea->id]);
+        $loose = Post::factory()->for($this->project)->create(['category_id' => null]);
+        Post::factory()->for($this->project)->status('rejected')->create(['category_id' => $bug->id]);
+
+        $this->getJson("/api/public/projects/demo/posts?category={$idea->id},none&sort=new")
+            ->assertJsonPath('data.*.id', [$loose->id, $ideaDone->id]);
+        $this->getJson("/api/public/projects/demo/posts?status_id={$new->id},{$done->id}&sort=new")
+            ->assertJsonPath('data.*.id', [$loose->id, $ideaDone->id, $bugPost->id]);
+        // both filters together: any of the categories AND any of the statuses
+        $this->getJson("/api/public/projects/demo/posts?category={$bug->id},none&status_id={$new->id}&sort=new")
+            ->assertJsonPath('data.*.id', [$loose->id, $bugPost->id]);
+        $this->getJson("/api/public/projects/demo/posts?status_id={$new->id},{$foreignStatus->id}")->assertUnprocessable();
+        $this->getJson('/api/public/projects/demo/posts?category=1,,2')->assertUnprocessable();
+    }
+
     public function test_the_list_view_puts_new_posts_first_and_counts_them(): void
     {
         $done = Post::factory()->for($this->project)->status('done')->create(['likes_count' => 9]);

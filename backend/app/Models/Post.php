@@ -116,17 +116,67 @@ class Post extends Model
     }
 
     /**
-     * category=<id> or category=none.
+     * category=<id>, category=none, or several comma-separated (category=3,7,none): any of them matches.
      *
      * @param  Builder<Post>  $query
      */
     public function scopeInCategory(Builder $query, ?string $category): void
     {
-        match ($category) {
-            null, '' => null,
-            'none' => $query->whereNull('category_id'),
-            default => $query->where('category_id', (int) $category),
-        };
+        if ($category === null || $category === '') {
+            return;
+        }
+
+        $values = explode(',', $category);
+        $ids = array_map('intval', array_diff($values, ['none']));
+        $withoutCategory = in_array('none', $values, true);
+
+        $query->where(function (Builder $query) use ($ids, $withoutCategory): void {
+            if ($ids !== []) {
+                $query->whereIn('category_id', $ids);
+            }
+            if ($withoutCategory) {
+                $query->orWhereNull('category_id');
+            }
+        });
+    }
+
+    /**
+     * priority=<value>, priority=none (not set), or several comma-separated (priority=high,none): any of them matches.
+     *
+     * @param  Builder<Post>  $query
+     */
+    public function scopeWithPriorities(Builder $query, ?string $priorities): void
+    {
+        if ($priorities === null || $priorities === '') {
+            return;
+        }
+
+        $values = explode(',', $priorities);
+        $set = array_values(array_diff($values, ['none']));
+        $unset = in_array('none', $values, true);
+
+        $query->where(function (Builder $query) use ($set, $unset): void {
+            if ($set !== []) {
+                $query->whereIn('priority', $set);
+            }
+            if ($unset) {
+                $query->orWhereNull('priority');
+            }
+        });
+    }
+
+    /**
+     * status_id=<id> or several comma-separated (status_id=3,5): any of them matches.
+     *
+     * @param  Builder<Post>  $query
+     */
+    public function scopeInStatuses(Builder $query, ?string $statusIds): void
+    {
+        if ($statusIds === null || $statusIds === '') {
+            return;
+        }
+
+        $query->whereIn('status_id', array_map('intval', explode(',', $statusIds)));
     }
 
     /**

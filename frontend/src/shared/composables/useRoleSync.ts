@@ -13,6 +13,11 @@ export function useRoleSync() {
 
   function sync() {
     if (auth.isAuth) void auth.fetchMe(true).catch(() => undefined)
+    // the hub's lists (boards, «Вас приглашают») — only if this tab has them, the board page doesn't
+    if (auth.isAuth && auth.boardsLoaded) {
+      void auth.fetchBoards().catch(() => undefined)
+      void auth.fetchIncoming().catch(() => undefined)
+    }
     void board.refreshMe()
   }
   function onVisible() {

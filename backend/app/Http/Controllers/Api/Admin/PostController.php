@@ -8,9 +8,11 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\AdminPostResource;
 use App\Models\Post;
 use App\Models\Project;
+use App\Rules\StatusIdList;
 use App\Support\VoterPreview;
 use App\Support\VoterToken;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -29,10 +31,12 @@ class PostController extends Controller
     {
         Gate::authorize('board.triage', $project);
 
+        $priorities = implode('|', [...array_column(PostPriority::cases(), 'value'), 'none']);
         $filters = $request->validate([
-            'category' => ['nullable', 'regex:/^(\d+|none)$/'],
-            'status_id' => ['nullable', 'integer', Rule::exists('statuses', 'id')->where('project_id', $project->id)],
-            'priority' => ['nullable', Rule::in([...array_column(PostPriority::cases(), 'value'), 'none'])],
+            'category' => ['nullable', 'regex:/^(\d+|none)(,(\d+|none))*$/'],
+            'status_id' => ['nullable', new StatusIdList($project)],
+            // one priority or several comma-separated (priority=high,critical,none)
+            'priority' => ['nullable', "regex:/^({$priorities})(,({$priorities}))*$/"],
             'hidden' => ['nullable', Rule::in(['include', 'exclude'])],
             'q' => ['nullable', 'string', 'max:120'],
             'sort' => ['nullable', Rule::in(['top', 'new', 'priority'])],
@@ -43,10 +47,8 @@ class PostController extends Controller
         $filtered = $project->posts()
             ->when(($filters['hidden'] ?? 'include') === 'exclude', fn ($q) => $q->where('is_hidden', false))
             ->inCategory($filters['category'] ?? null)
-            ->when($filters['status_id'] ?? null, fn ($q, $statusId) => $q->where('status_id', $statusId))
-            ->when($filters['priority'] ?? null, fn ($q, $priority) => $priority === 'none'
-                ? $q->whereNull('priority')
-                : $q->where('priority', $priority))
+            ->inStatuses($filters['status_id'] ?? null)
+            ->withPriorities($filters['priority'] ?? null)
             ->search($filters['q'] ?? null);
         // the list view: «Новое» on top, and how many of them there are, so the page can draw the line after them
         $newStatusId = ($filters['new_first'] ?? false) ? $project->defaultStatus()?->id : null;
@@ -81,7 +83,7 @@ class PostController extends Controller
      * it blank the row surfaces as «Аноним» so the list is countable at a glance. Dislikes mix
      * with likes — the client splits them by `kind`.
      */
-    public function voters(Request $request, Post $post): \Illuminate\Http\JsonResponse
+    public function voters(Request $request, Post $post): JsonResponse
     {
         Gate::authorize('board.triage', $post->project);
 

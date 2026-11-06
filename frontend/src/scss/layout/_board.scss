@@ -20,6 +20,9 @@
     @media screen and (max-width: $tablet) {
         grid-template-columns: 1fr;
         gap: 14px;
+        // one column, two rows (nav, content) in a viewport-tall box: without this the spare height of a short
+        // section («Авторы», «Хиты недели») goes to the rows and the content drifts to the middle of the screen
+        align-content: start;
     }
     // room under the list for the pinned «Предложить» on a phone
     @media screen and (max-width: $mobile) {
@@ -31,6 +34,14 @@
     position: sticky;
     // AppHeader is sticky at the top (~69px tall) + 24px breathing room
     top: 93px;
+
+    // a guest's board has no AppHeader: the sidebar stays where it is in the flow, not pushed 93px down
+    // (desktop only: on tablet and phone the nav isn't sticky, see below)
+    .no-header & {
+        @media screen and (min-width: $tablet + 1) {
+            top: 24px;
+        }
+    }
     display: grid;
     gap: 2px;
     min-width: 0;   // a long board name in the switcher ellipsizes instead of widening the grid column
@@ -174,6 +185,10 @@
     @media screen and (max-width: $mobile) {
         .proj {
             order: 0;
+        }
+        // a guest has no visibility chip (it pushed the controls right): the tag does it instead
+        &:not(:has(.board-who)) > .proj {
+            margin-right: auto;
         }
         .theme-toggle,
         .team-login,

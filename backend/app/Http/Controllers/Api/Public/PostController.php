@@ -8,6 +8,7 @@ use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Models\Project;
 use App\Models\Voter;
+use App\Rules\StatusIdList;
 use App\Support\VoterToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,8 +25,8 @@ class PostController extends Controller
     public function index(Request $request, Project $project): AnonymousResourceCollection
     {
         $filters = $request->validate([
-            'category' => ['nullable', 'regex:/^(\d+|none)$/'],
-            'status_id' => ['nullable', 'integer', Rule::exists('statuses', 'id')->where('project_id', $project->id)],
+            'category' => ['nullable', 'regex:/^(\d+|none)(,(\d+|none))*$/'],
+            'status_id' => ['nullable', new StatusIdList($project)],
             'q' => ['nullable', 'string', 'max:120'],
             'sort' => ['nullable', Rule::in(['top', 'new'])],
             'new_first' => ['nullable', 'boolean'],
@@ -35,7 +36,7 @@ class PostController extends Controller
         $filtered = $project->posts()
             ->listedOnBoard()
             ->inCategory($filters['category'] ?? null)
-            ->when($filters['status_id'] ?? null, fn ($q, $statusId) => $q->where('status_id', $statusId))
+            ->inStatuses($filters['status_id'] ?? null)
             ->search($filters['q'] ?? null);
         // the list view: «Новое» on top, and how many of them there are, so the page can draw the line after them
         $newStatusId = ($filters['new_first'] ?? false) ? $project->defaultStatus()?->id : null;

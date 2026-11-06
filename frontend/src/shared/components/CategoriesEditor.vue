@@ -4,12 +4,12 @@
   <ul class="cat-list">
     <li v-for="c in board.categories" :key="c.id">
       <form v-if="editingId === c.id" class="cat-edit" @submit.prevent="saveEdit">
-        <div class="cat-row">
+        <div class="cat-row editing">
+          <ColorPaletteComponent v-model="editColor" v-model:valid="editColorValid" label="Цвет категории" variant="category" />
           <InputComponent v-model="editName" maxlength="40" aria-label="Название категории" autofocus />
           <button class="btn btn-primary" type="submit" :disabled="!editColorValid">Сохранить</button>
           <button class="btn" type="button" @click="editingId = null">Отмена</button>
         </div>
-        <ColorPaletteComponent v-model="editColor" v-model:valid="editColorValid" label="Цвет категории" variant="category" />
         <div class="cat-preview">
           <span class="label">Как будет выглядеть:</span>
           <span class="type slant" :data-color="editColor ?? 'none'" :style="entityColorStyle(editColor)">{{ editName.trim() || c.name }}</span>
@@ -28,10 +28,10 @@
 
   <form class="cat-edit" @submit.prevent="add">
     <div class="cat-row">
+      <ColorPaletteComponent v-model="newColor" v-model:valid="newColorValid" label="Цвет новой категории" variant="category" />
       <InputComponent v-model="newName" maxlength="40" placeholder="Новая категория, например «Доставка»" aria-label="Новая категория" @input="addError = ''" />
       <button class="btn btn-add" type="submit" :disabled="!newName.trim() || !newColorValid">Добавить</button>
     </div>
-    <ColorPaletteComponent v-model="newColor" v-model:valid="newColorValid" label="Цвет новой категории" variant="category" />
     <div v-if="newName.trim()" class="cat-preview">
       <span class="label">Как будет выглядеть:</span>
       <span class="type slant" :data-color="newColor ?? 'none'" :style="entityColorStyle(newColor)">{{ newName.trim() }}</span>

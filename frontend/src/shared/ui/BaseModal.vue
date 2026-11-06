@@ -36,7 +36,7 @@ import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { useEscapeKey } from '@/shared/composables/useEscapeKey'
 import { useFocusTrap } from '@/shared/composables/useFocusTrap'
 
-// Закрывается на крестик (slot), клик по фону, Esc, и свайп вниз на мобиле (≤479).
+// Закрывается на крестик (slot), клик по фону, Esc, и свайп вниз на мобиле (≤479); `persistent` — только своими кнопками.
 // Анимация симметричная: открытие и закрытие проходят Transition. Чтобы leave успел
 // отыграть, внутренние компоненты (×-кнопки, «Отмена», успех после save) закрывают
 // модалку через inject('baseModal:close'), а не прямым emit('close') наверх —
@@ -46,6 +46,8 @@ const props = defineProps<{
   label: string
   narrow?: boolean
   tag?: string
+  /** no way out but the modal's own buttons: background click, Esc and the swipe do nothing */
+  persistent?: boolean
 }>()
 const emit = defineEmits<{
   close: []
@@ -66,7 +68,7 @@ function onBgMouseDown(e: MouseEvent) {
   bgPressed = e.target === e.currentTarget
 }
 function onBgMouseUp() {
-  if (bgPressed) requestClose()
+  if (bgPressed && !props.persistent) requestClose()
   bgPressed = false
 }
 
@@ -78,7 +80,7 @@ const { isTop } = useFocusTrap(modalEl)
 
 // пока галерея скриншотов открыта (lightgallery), Esc берёт она; из двух модалок (подтверждение
 // поверх категорий) закрывается только верхняя
-useEscapeKey(() => isTop() && !document.querySelector('.lg-outer.lg-visible') && requestClose())
+useEscapeKey(() => !props.persistent && isTop() && !document.querySelector('.lg-outer.lg-visible') && requestClose())
 onMounted(() => document.body.classList.add('locked'))
 onBeforeUnmount(() => document.body.classList.remove('locked'))
 
@@ -95,7 +97,7 @@ function isBottomSheet() {
   return window.matchMedia('(max-width: 479px)').matches
 }
 function onTouchStart(e: TouchEvent) {
-  if (!isBottomSheet() || !modalEl.value) return
+  if (props.persistent || !isBottomSheet() || !modalEl.value) return
   // не перехватываем жесты внутри прокручиваемого контента, пока он не прокручен в самый верх
   if (modalEl.value.scrollTop > 0) return
   const t = e.touches[0]

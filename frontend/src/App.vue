@@ -3,6 +3,7 @@
   <RouterView />
   <ThemeToggle v-if="isAuthRoute" class="auth-theme-toggle" />
   <ConfirmModal />
+  <AuthChangedModal />
   <div v-if="notification.visible" class="toast" :class="{ error: notification.type === 'error' }" role="status">
     <AppIcon :name="notification.type === 'error' ? 'alert' : 'check'" :size="18" class="toast-icon" />
     <span class="toast-message">{{ notification.message }}</span>
@@ -18,6 +19,7 @@ import { RouterView, useRoute } from 'vue-router'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import ConfirmModal from '@/shared/ui/ConfirmModal.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
+import AuthChangedModal from '@/shared/components/AuthChangedModal.vue'
 import ImpersonationBanner from '@/shared/components/ImpersonationBanner.vue'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useRoleSync } from '@/shared/composables/useRoleSync'

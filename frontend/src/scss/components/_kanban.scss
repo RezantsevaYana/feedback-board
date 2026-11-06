@@ -4,18 +4,22 @@
 .kanban {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(190px, 1fr);
+    // many statuses: a column never gets narrower than a card needs (votes and author on one line),
+    // the row scrolls sideways instead (TEST.md п. 35); 3–4 columns still stretch to the full width
+    grid-auto-columns: minmax(272px, 1fr);
     gap: 12px;
     overflow-x: auto;
     padding-bottom: 8px;
     align-items: stretch;    // trays end level; the empty part of a short column is its drop zone
-    scroll-snap-type: x mandatory;
+    // desktop: a soft snap, so a trackpad swipe isn't yanked to a column edge
+    scroll-snap-type: x proximity;
     scroll-padding-left: 4px;
     @include thin-scrollbar;
 
     // tablet: columns keep a card-friendly width and the row scrolls, instead of squeezing three into the screen
     @media screen and (max-width: $tablet) {
         grid-auto-columns: minmax(260px, 1fr);
+        scroll-snap-type: x mandatory;
     }
     @media screen and (max-width: $mobile-mini) {
         // одна колонка на экран, со «подсматривающей» следующей — пальцем листаем по статусам

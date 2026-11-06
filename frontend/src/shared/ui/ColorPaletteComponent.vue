@@ -1,21 +1,29 @@
 <template>
   <div ref="root" class="entity-color" :aria-label="label" @keydown.esc.stop.prevent="close(true)">
     <div class="entity-color-dropdown">
-      <button ref="trigger" type="button" class="btn entity-color-trigger" :aria-label="`Выбрать: ${label.toLowerCase()}`" :aria-expanded="open" :aria-controls="uid" @click="open = !open">
+      <button ref="trigger" type="button" class="btn entity-color-trigger" :class="{ invalid: !valid }" :aria-label="`Выбрать: ${label.toLowerCase()}`" :aria-expanded="open" :aria-controls="uid" @click="open = !open">
         <span class="entity-color-swatch" :class="{ colorless: selected === null }" :style="swatchStyle" aria-hidden="true" />
-        Цвет <AppIcon name="chevron" :size="12" />
+        <span class="entity-color-text">Цвет</span>
+        <AppIcon name="chevron" :size="12" />
       </button>
       <Transition name="entity-palette">
-        <div v-if="open" :id="uid" class="entity-color-popup" role="region" :aria-label="label">
+        <div v-if="open" :id="uid" ref="popup" class="entity-color-popup" role="region" :aria-label="label">
           <div class="color-palette" :class="`v-${variant}`" role="group" aria-label="Готовые цвета">
             <button v-for="color in PALETTE_COLORS" :key="color" type="button" class="color-swatch" :data-color="color" :aria-label="LABELS[color]" :title="LABELS[color]" :aria-pressed="selected === color" @click="selectPreset(color)" />
+          </div>
+          <!-- on a phone the HEX field and «Без цвета» live here, so the form row keeps only the swatch button -->
+          <div v-if="compact" class="entity-color-hex">
+            <InputComponent v-model="hex" :aria-label="`${label}: HEX`" placeholder="HEX" maxlength="7" autocomplete="off" spellcheck="false" :error="error" @input="error = ''" @blur="validate" />
+            <button v-if="clearable" type="button" class="btn entity-color-clear" :disabled="selected === null && !hex" aria-label="Без цвета" title="Без цвета" @click="clear"><AppIcon name="close" :size="14" /></button>
           </div>
           <ColorPicker :pure-color="pickerColor" @update:pure-color="pickCustom" is-widget format="hex" use-type="pure" picker-type="chrome" :disable-alpha="true" :disable-history="true" />
         </div>
       </Transition>
     </div>
-    <InputComponent v-model="hex" :aria-label="`${label}: HEX`" placeholder="HEX" maxlength="7" autocomplete="off" spellcheck="false" :error="error" @input="error = ''" @blur="validate" />
-    <button v-if="clearable" type="button" class="btn entity-color-clear" :disabled="selected === null && !hex" aria-label="Без цвета" title="Без цвета" @click="clear"><AppIcon name="close" :size="14" /></button>
+    <template v-if="!compact">
+      <InputComponent v-model="hex" :aria-label="`${label}: HEX`" placeholder="HEX" maxlength="7" autocomplete="off" spellcheck="false" :error="error" @input="error = ''" @blur="validate" />
+      <button v-if="clearable" type="button" class="btn entity-color-clear" :disabled="selected === null && !hex" aria-label="Без цвета" title="Без цвета" @click="clear"><AppIcon name="close" :size="14" /></button>
+    </template>
   </div>
 </template>
 
@@ -24,6 +32,7 @@ import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
 import { PALETTE_COLORS, type PaletteColor } from '@/api/types'
+import { useMediaQuery } from '@/shared/composables/useMediaQuery'
 import { entityColorHex } from '@/shared/utils/entityColor'
 import { DEFAULT_WIDGET_COLOR, normalizeHex } from '@/shared/utils/widgetColor'
 import AppIcon from './AppIcon.vue'
@@ -42,7 +51,10 @@ const error = ref('')
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLButtonElement | null>(null)
+const popup = ref<HTMLElement | null>(null)
 const uid = useId()
+// same as $mobile in scss/utils/_variables.scss
+const compact = useMediaQuery('(max-width: 767px)')
 const swatchStyle = computed(() => {
   const color = entityColorHex(selected.value, props.variant)
   return color ? { backgroundColor: color } : {}
@@ -94,6 +106,13 @@ function close(refocus = false) {
 function outside(event: PointerEvent) {
   if (!root.value?.contains(event.target as Node)) close()
 }
+// the add form sits at the very bottom of the «Быстрая настройка» sheet / the settings page:
+// scroll the nearest scroll container just enough to show the whole popup
+watch(popup, (el) => {
+  if (!el) return
+  const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  el.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' })
+})
 watch(open, (value) => {
   if (value) document.addEventListener('pointerdown', outside, true)
   else document.removeEventListener('pointerdown', outside, true)

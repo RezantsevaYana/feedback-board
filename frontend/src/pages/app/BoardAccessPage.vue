@@ -25,7 +25,11 @@
             Пока почта не подтверждена, ссылка и виджет не работают для посетителей: они увидят «Доска ещё не открыта».
           </p>
           <pre class="board-access-code"><code>{{ embed.direct_url }}</code></pre>
-          <CopyButton :value="embed.direct_url" label="Скопировать ссылку" class="board-access-copy" />
+          <div class="board-access-actions">
+            <CopyButton :value="embed.direct_url" label="Скопировать ссылку" />
+            <!-- a new tab, so the settings stay open (TEST.md п. 16) -->
+            <a :href="embed.direct_url" target="_blank" rel="noopener" class="btn">Перейти на доску ↗</a>
+          </div>
         </section>
 
         <!-- open board: the widget with its domains and colour, then the team -->
@@ -75,14 +79,9 @@
 
           <section id="widget" class="board-settings-section">
             <h2>Виджет на сайте</h2>
+            <!-- widget/WidgetApp.vue renders nothing for a closed board and comes back by itself once it's open -->
             <div class="board-access-off">
-              <p><strong>Виджет недоступен.</strong> Он работает только у открытой доски. Если виджет уже стоит на сайте, код лучше убрать.</p>
-            </div>
-            <!-- what the widget shows a guest now: the same words as widget/WidgetApp.vue -->
-            <div class="board-access-guest" aria-label="Что увидит гость в виджете">
-              <span class="board-access-guest-caption">Что увидит гость в виджете</span>
-              <strong>Доска закрыта</strong>
-              <span>Предложения здесь больше не принимаются. Участники могут открыть доску по ссылке.</span>
+              <p><strong>Виджет скрыт.</strong> Пока доска закрыта, кнопка «Обратная связь» на сайте не показывается. Код можно не убирать: когда снова откроете доску, виджет появится сам.</p>
             </div>
           </section>
         </template>
