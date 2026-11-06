@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Настройки доски — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --active-fg: #063f2c;
+            --active-line: #1d8547;
+            --line: #d8e1db;
+            --control: #a9bcb0;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --accent-ink: #1b7f41;
+            --accent-fg: #ffffff;
+            --bug: #b0423a;
+            --page: #f3f6f4;
+            --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 780px; margin: 0 0 10px; }
+        .doc > ul.lede { color: var(--muted); max-width: 780px; margin: 0 0 24px; padding-left: 20px; }
+        .doc > h2 { font-size: 20px; margin: 48px 0 8px; }
+        .doc > ol { max-width: 780px; color: var(--muted); padding-left: 20px; }
+        .doc > ol li { margin-bottom: 8px; }
+        .doc > ol b { color: var(--fg); }
+
+        /* prototype controls */
+        .controls { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; margin-bottom: 16px; position: sticky; top: 0; z-index: 5; padding: 12px 0; background: var(--page); }
+        .controls .group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+        .seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .seg button { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .seg button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+        .variant-note { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); background: var(--surface); border: 1px dashed var(--control); color: var(--muted); font-size: 14px; max-width: 900px; }
+        .variant-note b { color: var(--fg); }
+
+        /* app mock */
+        .stage { display: flex; justify-content: center; }
+        .app { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+        .app.phone { width: 390px; }
+        .hdr { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 16px 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; }
+        .brand { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+        .brand-sep { color: var(--control); margin: 0 6px; }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 13px; font-weight: 600; }
+        .shell { display: grid; grid-template-columns: 230px 1fr; gap: 32px; padding: 24px 32px 48px; }
+        .phone .shell { grid-template-columns: 1fr; gap: 12px; padding: 16px; }
+
+        /* cabinet sidebar */
+        .side { display: grid; gap: 2px; align-content: start; font-size: 14px; }
+        .phone .side { display: none; }
+        .side-title { color: var(--muted); font-size: 12px; margin: 0 0 6px 10px; }
+        .side-board { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); font-weight: 600; }
+        .side-board .mark { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-size: 12px; }
+        .side-group { display: grid; gap: 2px; padding: 4px 0 8px 12px; margin-left: 10px; border-left: 1px solid var(--line); }
+        .side a { display: block; padding: 6px 10px; border-radius: 8px; color: var(--fg); text-decoration: none; cursor: pointer; }
+        .side a:hover { background: var(--surface-2); }
+        .side a[aria-current='true'] { background: var(--active); color: var(--active-fg); font-weight: 600; outline: 1px solid var(--active-line); }
+        .side a.sub { color: var(--muted); font-size: 13px; padding: 4px 10px; }
+        .side a.sub[aria-current='true'] { outline: none; background: none; color: var(--accent-ink); }
+        .side .other { margin-top: 10px; color: var(--muted); padding: 6px 10px; }
+        .count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px; background: var(--bug); color: #fff; font-size: 11px; font-weight: 600; vertical-align: 1px; }
+
+        /* page */
+        .page-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
+        .page-head h1 { font-family: var(--font-display); font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -0.02em; }
+        .phone .page-head h1 { font-size: 22px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font: inherit; font-size: 14px; font-weight: 500; color: var(--fg); cursor: pointer; white-space: nowrap; text-decoration: none; }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+        .btn-danger { color: var(--bug); border-color: color-mix(in srgb, var(--bug) 40%, var(--line)); }
+        .btn-sm { min-height: 32px; padding: 0 12px; font-size: 13px; }
+        .phone .head-actions .btn-copy { display: none; }
+
+        /* phone: section switcher instead of the sidebar */
+        .tabs { display: none; gap: 6px; overflow-x: auto; margin: 0 -16px 4px; padding: 0 16px 4px; scrollbar-width: none; }
+        .phone .tabs { display: flex; }
+        .tabs a { flex: none; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 14px; color: var(--fg); text-decoration: none; cursor: pointer; }
+        .tabs a[aria-current='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+        .variant-a.phone .tabs { position: sticky; top: 0; background: var(--bg); z-index: 2; padding-top: 8px; padding-bottom: 8px; }
+
+        /* sections */
+        .sections { display: grid; gap: 16px; max-width: 760px; }
+        .block { border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; }
+        .phone .block { padding: 16px; }
+        .block > h2 { margin: 0; font-size: 18px; }
+        .block-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+        .block-title h2 { margin: 0; font-size: 18px; }
+        .sub-block { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+        .sub-block h3 { margin: 0; font-size: 15px; }
+        .note { margin: 0; color: var(--muted); font-size: 13px; }
+        .new { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #f2e7c6; color: #6b531a; font-size: 11px; font-weight: 600; vertical-align: 2px; }
+
+        .field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+        .field b { color: var(--fg); font-weight: 500; }
+        .input { height: 40px; border: 1px solid var(--control); border-radius: 10px; padding: 0 12px; font: inherit; font-size: 14px; color: var(--fg); background: var(--surface); width: 100%; }
+        .input-pre { display: flex; align-items: stretch; height: 40px; border: 1px solid var(--control); border-radius: 10px; overflow: hidden; background: var(--surface); }
+        .input-pre span { display: grid; place-items: center; padding: 0 10px; background: var(--surface-2); color: var(--muted); font-family: var(--font-mono); font-size: 13px; }
+        .input-pre input { border: 0; flex: 1; min-width: 0; padding: 0 12px; font: inherit; font-family: var(--font-mono); font-size: 14px; }
+        .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .code { margin: 0; padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius); font-family: var(--font-mono); font-size: 13px; word-break: break-all; white-space: pre-wrap; }
+
+        /* the board's link in «Общее»: the address and its two actions in one line */
+        .share { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; border-radius: var(--radius); background: var(--surface-2); }
+        .share code { flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .phone .share { flex-wrap: wrap; padding: 10px 12px; }
+        .phone .share code { flex-basis: 100%; }
+        .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .phone .modes { grid-template-columns: 1fr; }
+        .mode { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; display: grid; gap: 2px; }
+        .mode b { font-size: 15px; }
+        .mode span { color: var(--muted); font-size: 13px; }
+        .mode[aria-checked='true'] { border-color: var(--active-line); background: color-mix(in srgb, var(--accent) 7%, transparent); outline: 1px solid var(--active-line); }
+
+        .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+        .check i { flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 5px; border: 1.5px solid var(--control); }
+        .check i.on { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--accent), inset 0 0 0 9px #fff; }
+        .check small { display: block; color: var(--muted); font-size: 13px; }
+
+        .people { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .people td { padding: 9px 0; border-top: 1px solid var(--line); }
+        .people td:last-child { text-align: right; color: var(--muted); }
+        .people small { display: block; color: var(--muted); font-size: 12px; }
+        .chip { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); font-size: 12px; color: var(--muted); }
+        .chip.wait { background: #f2e7c6; color: #6b531a; }
+
+        .list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+        .list li { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+        .list li .sp { flex: 1; }
+        .list li a { color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+        .tag { padding: 1px 10px 1px 12px; font-size: 13px; font-weight: 600; clip-path: polygon(6px 0, 100% 0, 100% 100%, 0 100%); }
+        .pill { padding: 1px 9px; border-radius: 6px; font-size: 13px; }
+        .grip { color: var(--control); letter-spacing: -2px; }
+        .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .phone .two { grid-template-columns: 1fr; }
+
+        /* widget preview */
+        .wpreview { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        /* phone: the two frames side by side and low — a hint of the widget, not a second screen */
+        .phone .wpreview { gap: 8px; }
+        .phone .wcase { height: 104px; border-radius: 10px; }
+        .phone .wcase small { left: 8px; top: 5px; font-size: 11px; }
+        .phone .launcher { right: 8px; bottom: 8px; padding: 4px 9px 4px 11px; font-size: 10px; }
+        .phone .panel { right: 8px; bottom: 8px; width: 78%; height: 74px; padding: 7px; gap: 4px; border-radius: 8px; }
+        .phone .panel b { font-size: 10px; }
+        .phone .panel span { height: 9px; }
+        .wcase { position: relative; height: 170px; border-radius: 12px; background: repeating-linear-gradient(0deg, var(--page), var(--page) 14px, #edf2ee 14px, #edf2ee 15px); border: 1px solid var(--line); overflow: hidden; }
+        .wcase small { position: absolute; left: 10px; top: 8px; font-size: 12px; color: var(--muted); }
+        .launcher { position: absolute; right: 12px; bottom: 12px; padding: 7px 14px 7px 16px; background: var(--wcolor, var(--accent)); color: #fff; font-size: 13px; font-weight: 600; clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%); }
+        .panel { position: absolute; right: 12px; bottom: 12px; width: 62%; height: 132px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 8px 20px rgb(0 0 0 / 10%); padding: 10px; display: grid; gap: 6px; align-content: start; font-size: 12px; }
+        .panel b { font-size: 13px; }
+        .panel span { height: 16px; border-radius: 5px; background: var(--surface-2); }
+        .panel span.btnline { width: 50%; background: var(--wcolor, var(--accent)); justify-self: end; }
+        /* colour control, as in the product: trigger + HEX (+ clear), the popup has presets (categories / statuses) and the picker */
+        .cpick { position: relative; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .cpick-trigger { gap: 8px; }
+        .cpick-sw { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--control); }
+        .cpick-hex { width: 120px; font-family: var(--font-mono); }
+        .cpick-clear { width: 40px; padding: 0; }
+        .cpick-pop { position: absolute; top: calc(100% + 8px); left: 0; z-index: 4; width: 252px; padding: 10px; display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 8px 24px rgb(16 37 40 / 16%); }
+        .cpick-presets { display: flex; justify-content: space-between; }
+        .cpick-presets button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; padding: 0; }
+        .cpick-sv { height: 130px; border-radius: 6px; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--hue, #1d8547)); }
+        .cpick-hue { height: 10px; border-radius: 5px; background: linear-gradient(to right, red, #ff0, lime, cyan, blue, #f0f, red); }
+
+        /* «?» next to a sub-block title: a small example of where the thing shows on the board */
+        .sub-title { display: flex; align-items: center; gap: 8px; }
+        .sub-block.first { border-top: 0; padding-top: 0; }
+        .qmark { position: relative; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--control); color: var(--muted); font-size: 12px; font-weight: 600; cursor: help; }
+        .hint { position: absolute; left: -8px; top: calc(100% + 8px); z-index: 4; width: 280px; padding: 12px; display: grid; gap: 8px; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.18s cubic-bezier(0.2, 0.9, 0.3, 1), transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1), visibility 0s linear 0.18s; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgb(16 37 40 / 16%); font-weight: 400; color: var(--fg); text-align: left; cursor: default; }
+        .qmark:hover .hint, .qmark:focus .hint { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+        @media (prefers-reduced-motion: reduce) { .hint, .hint-inline { transition: none !important; } }
+        .hint-cap { font-size: 12px; color: var(--muted); }
+        .mini-filters { display: flex; gap: 4px; }
+        .mini-filters i { font-style: normal; font-size: 11px; padding: 1px 7px; border: 1px solid var(--line); border-radius: 6px; }
+        .mini-filters i.on { background: var(--active); border-color: var(--active-line); }
+        .mini-card { display: grid; gap: 5px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; justify-items: start; }
+        .mini-card b { font-size: 12px; }
+        .mini-card em, .mini-kanban em { display: block; height: 8px; width: 80%; border-radius: 4px; background: var(--surface-2); }
+        .mini-kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .mini-kanban i { display: grid; gap: 4px; align-content: start; padding: 5px; border-radius: 6px; background: var(--surface-2); font-style: normal; }
+        .mini-kanban em { width: 100%; height: 14px; background: #fff; }
+        .hl { outline: 2px solid #e2b33c; outline-offset: 2px; }
+        .phone .hint { left: auto; right: -60px; width: 250px; }
+
+        /* add / edit forms in the lists */
+        .edit-row { display: flex; gap: 8px; align-items: center; }
+        .edit-row .input { flex: 1; min-width: 0; }
+        .list li.editing { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 10px; }
+        /* inputs take what's left, buttons keep their size */
+        .edit-row > .btn, .cpick > .btn { flex: none; }
+        .edit-row > .input, .cpick > .cpick-hex { flex: 1 1 0; min-width: 0; }
+        .preview { font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+        .phone .list li.editing .edit-row { flex-wrap: wrap; }
+        .phone .list li.editing .edit-row .input { flex-basis: 100%; }
+        .phone .list li.editing .edit-row .btn:first-of-type { margin-left: auto; }
+        .check-result { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+        .check-result li { display: flex; gap: 8px; align-items: baseline; }
+        .ok { color: var(--accent-ink); font-weight: 600; }
+        .no { color: var(--bug); font-weight: 600; }
+        .off { padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); color: var(--muted); font-size: 14px; }
+        .off b { color: var(--fg); }
+
+        /* B: the page title already names the section */
+        .variant-b .block:not(.danger) > h2,
+        .variant-b .block > .block-title > h2 { display: none; }
+        .danger { border-color: color-mix(in srgb, var(--bug) 30%, var(--line)); }
+        .danger h2 { color: var(--bug); }
+
+        .q { margin-top: 40px; max-width: 820px; }
+        .q h2 { font-size: 20px; margin: 0 0 12px; }
+        .q ol { padding-left: 20px; color: var(--muted); }
+        .q li { margin-bottom: 10px; }
+        .q b { color: var(--fg); }
+
+        /* ——— phone: denser, thumb-first (most owners will use it from the phone) ——— */
+        .btn .short { display: none; }
+        .modes-seg, .modes-hint { display: none; }
+        .icon-act { display: none; }
+        .sq-color { display: none; }
+        .cpick-sw.colorless { background: linear-gradient(135deg, transparent 46%, var(--muted) 47%, var(--muted) 53%, transparent 54%); }
+        .phone .btn .full { display: none; }
+        .phone .btn .short { display: inline; font-size: 18px; line-height: 1; }
+        .phone .btn-open { width: 40px; padding: 0; }
+        .phone .page-head { margin-bottom: 10px; }
+        /* tabs stick under the top edge while the section scrolls */
+        .phone .tabs { position: sticky; top: 0; z-index: 3; background: var(--bg); padding-top: 6px; padding-bottom: 8px; margin-bottom: 0; }
+        /* sections: no card frame, the screen is the card; sub-blocks split by lines edge to edge */
+        .phone .sections { gap: 0; }
+        .phone .block { border: 0; border-radius: 0; padding: 4px 0 20px; gap: 12px; }
+        .phone .block.danger { border-top: 1px solid var(--line); padding-top: 16px; }
+        .phone .sub-block { margin: 0 -16px; padding: 14px 16px 0; gap: 8px; }
+        .phone .sub-block.first { margin-top: 0; }
+        .phone .note { font-size: 12.5px; }
+        /* mode: a segmented control and one line of hint instead of two tall cards */
+        .phone .modes { display: none; }
+        .phone .modes-seg { display: flex; }
+        .phone .modes-seg button { flex: 1; }
+        .phone .modes-hint:not([hidden]) { display: block; }
+        /* list rows: tag on the left, one «⋯» on the right, 44px tall */
+        .phone .list { gap: 0; margin: 0 -16px; border-top: 1px solid var(--line); }
+        .phone .list li { min-height: 44px; padding: 4px 4px 4px 16px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; gap: 8px; }
+        .phone .list li .act { display: none; }
+        .phone .icon-act { display: grid; place-items: center; width: 40px; height: 40px; border: 0; background: none; font-size: 20px; color: var(--muted); }
+        .phone .list li.editing { padding: 10px 16px 12px; background: color-mix(in srgb, var(--accent) 5%, transparent); }
+        .phone .list li.editing .edit-row { flex-wrap: nowrap; }
+        .phone .list li.editing .edit-row .input { flex-basis: auto; }
+        .phone .list li.editing .edit-row .btn:first-of-type { margin-left: 0; }
+        .phone .cancel-btn { width: 40px; padding: 0; }
+        /* add: [■][name][+] in one row, the colour square opens the same popup */
+        .phone .sq-color { display: inline-flex; width: 40px; padding: 0; }
+        .phone .add-row .add-btn { width: 40px; padding: 0; }
+        .phone .list li.editing .cpick { flex-wrap: nowrap; }
+        .phone .cpick-hex { flex: 1; width: auto; min-width: 0; }
+        /* people: tighter rows */
+        .phone .people td { padding: 7px 0; font-size: 13px; }
+        .phone .people .btn-sm { min-height: 30px; padding: 0 10px; }
+        /* «?» on the phone: no floating tooltip (it ran off the screen) — the example opens under the title */
+        .phone .qmark { position: static; }
+        .phone .qmark .hint { display: none; }
+        .phone .sub-title { flex-wrap: wrap; }
+        .hint-inline { display: none; }
+        .phone .hint-inline { display: grid; grid-template-rows: 0fr; flex-basis: 100%; opacity: 0; transition: grid-template-rows 0.26s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease-out; }
+        .phone .hint-inline.open { grid-template-rows: 1fr; opacity: 1; }
+        .phone .hint-body { display: grid; gap: 8px; min-height: 0; overflow: hidden; }
+        .phone .hint-body > span:first-child { margin-top: 2px; }
+        .phone .hint-inline .hint-frame { display: grid; gap: 8px; padding: 10px; border-radius: 10px; background: var(--surface-2); }
+        .phone .hint-inline .mini-card { background: var(--surface); }
+        /* «Категории и статусы» on the phone: two clear groups — a heading, a note, the rows in their own rounded box */
+        .phone [data-section='structure'] .sub-block { margin: 0; padding: 0; border-top: 0; gap: 8px; }
+        .phone [data-section='structure'] .sub-block + .sub-block { margin-top: 28px; }
+        .phone [data-section='structure'] .sub-title h3 { font-size: 17px; }
+        /* no overflow: hidden — the «⋯» menu must hang out of the box; the end rows round themselves instead */
+        .phone .fold .list, .phone [data-section='structure'] .list { margin: 0; border: 1px solid var(--line); border-radius: 12px; }
+        .phone .fold .list li { padding-left: 12px; padding-right: 8px; }
+        .phone .fold .list li:first-child { border-radius: 11px 11px 0 0; }
+        .phone .fold .list li:last-child { border-radius: 0 0 11px 11px; border-bottom: 0; }
+        .phone [data-section='structure'] .list li { padding-left: 12px; }
+        .phone [data-section='structure'] .list li:last-child { border-bottom: 0; }
+        .phone [data-section='structure'] .list li.editing { padding: 10px 12px 12px; }
+        .phone [data-section='structure'] .add-row { margin-top: 2px; }
+        .switch-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; font-size: 14px; }
+        .switch-row b { font-weight: 500; }
+        .switch-row small { display: block; color: var(--muted); font-size: 13px; }
+        .switch { flex: none; position: relative; width: 40px; height: 24px; margin-top: 2px; border-radius: 12px; border: 0; background: var(--control); cursor: pointer; transition: background 0.15s; }
+        .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+        .switch[aria-checked='true'] { background: var(--accent); }
+        .switch[aria-checked='true']::after { transform: translateX(16px); }
+        .who-row { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; font-size: 14px; }
+        .who-row legend { padding: 0; margin-bottom: 8px; font-weight: 500; }
+        .radio { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+        .radio input { appearance: none; flex: none; width: 18px; height: 18px; margin: 2px 0 0; border-radius: 50%; border: 1.5px solid var(--control); background: var(--surface); cursor: pointer; }
+        .radio input:checked { border: 5px solid var(--accent); }
+        .radio small { display: block; color: var(--muted); font-size: 13px; }
+        .switch-row code { font-family: var(--font-mono); font-size: 12px; background: var(--surface-2); padding: 0 4px; border-radius: 4px; }
+
+        /* phone: fields and the square buttons next to them share one height, a thumb-sized 44px */
+        .phone .input, .phone .input-pre { height: 44px; }
+        .phone .edit-row > .btn, .phone .cpick > .btn { min-height: 44px; height: 44px; }
+        .phone .cancel-btn, .phone .add-row .add-btn, .phone .sq-color, .phone .cpick-clear { width: 44px; }
+        .phone .edit-row > .btn-primary { padding: 0 14px; }
+
+        /* status reorder: drag by the grip (mouse and finger), or «⋯» → Выше / Ниже */
+        .grip { display: inline-grid; place-items: center; width: 28px; height: 32px; margin-left: -6px; cursor: grab; touch-action: none; user-select: none; border-radius: 6px; }
+        .phone .grip { width: 32px; height: 40px; }
+        #status-list li.lifted { position: relative; z-index: 2; background: var(--surface); box-shadow: 0 8px 20px rgb(16 37 40 / 16%); cursor: grabbing; }
+        #status-list li.lifted .grip { cursor: grabbing; color: var(--accent); }
+        .row-menu { position: absolute; right: 8px; top: calc(100% - 4px); z-index: 5; min-width: 160px; padding: 4px; display: grid; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 24px rgb(0 0 0 / 12%); }
+        .row-menu button { text-align: left; padding: 9px 10px; border: 0; border-radius: 6px; background: none; font: inherit; font-size: 14px; color: var(--fg); cursor: pointer; }
+        .row-menu button:hover { background: var(--surface-2); }
+        .row-menu button:disabled { color: var(--control); cursor: default; background: none; }
+        .row-menu .danger-item { color: var(--bug); }
+        .list li { position: relative; }
+
+        .modes-radios { display: none; }
+        .phone .modes-radios { display: grid; }
+        .mode-confirm { display: grid; gap: 10px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, #e2b33c 14%, var(--surface)); border: 1px solid color-mix(in srgb, #e2b33c 45%, var(--line)); font-size: 14px; }
+        .mode-confirm ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; display: grid; gap: 4px; }
+        .phone .mode-confirm .row .btn { flex: 1; min-height: 44px; }
+        .pending-rest { opacity: 0.45; pointer-events: none; }
+        .proto-modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgb(15 34 36 / 40%); }
+        .proto-modal-box { width: min(420px, 100%); padding: 20px; border-radius: 16px; background: var(--surface); display: grid; gap: 12px; }
+        .proto-modal-box h2 { margin: 0; font-size: 18px; }
+
+        /* ——— phone: foldable groups. Each closed group says its state in the header, so nothing is hidden blind ——— */
+        .fold > summary { list-style: none; }
+        .fold > summary::-webkit-details-marker { display: none; }
+        .fold-sum, .fold-chev { display: none; }
+        .fold-body { display: grid; gap: 10px; }
+        .app:not(.phone) .fold > summary { margin-bottom: 6px; }
+        .fold > summary:focus:not(:focus-visible) { outline: none; }
+        .fold > summary:focus-visible { outline: 2px solid var(--active-line); outline-offset: 2px; border-radius: 8px; }
+        /* the title row has a fixed height and the chevron sits on it: opening only removes the line under it,
+           so the title and the chevron stay where they are instead of jumping up */
+        .phone .fold > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 32px auto; align-items: center; column-gap: 10px; padding: 10px 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .phone .fold > summary > :first-child { grid-column: 1; grid-row: 1; }
+        .phone .fold > summary h3 { font-size: 16px; }
+        .phone .fold-sum { display: flex; flex-wrap: wrap; gap: 4px 6px; grid-column: 1; grid-row: 2; margin-top: 2px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+        .phone .fold-sum .tag, .phone .fold-sum .pill { font-size: 11px; }
+        /* chevron in a soft round pad: points right when folded, turns down and goes green when open */
+        .phone .fold-chev { display: grid; place-items: center; grid-column: 2; grid-row: 1; width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); color: var(--muted); transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), background-color 0.18s ease-out, color 0.18s ease-out; }
+        .phone .fold[open] .fold-chev { transform: rotate(90deg); background: var(--active); color: var(--active-fg); }
+        .phone .fold > summary:active .fold-chev { background: var(--active); }
+        .phone .fold[open] .fold-sum { display: none; }
+        .phone .fold-body { padding-bottom: 14px; }
+        .phone .fold[open] .fold-body { animation: fold-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1); }
+        @keyframes fold-in { from { opacity: 0; transform: translateY(-4px); } }
+        @media (prefers-reduced-motion: reduce) { .phone .fold[open] .fold-body { animation: none; } .phone .fold-chev { transition: none; } }
+        /* foldable groups on the phone: one line between them, no extra frames */
+        .phone [data-section] .fold { margin: 0 -16px; padding: 0 16px; border-top: 1px solid var(--line); }
+        .phone [data-section='structure'] .fold + .fold { margin-top: 0; }
+        .phone [data-section='structure'] .fold { border-top: 1px solid var(--line); }
+        .phone [data-section='structure'] .fold:first-of-type { border-top: 0; }
+        /* desktop: everything open, the summary is just the heading */
+        .app:not(.phone) .fold > summary { pointer-events: none; }
+        .phone .fold > summary > .hint-inline { grid-column: 1 / -1; grid-row: 3; }
+        .phone .fold > summary > .hint-inline.open .hint-body { padding-top: 8px; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Настройки доски — прототип</h1>
+    <p class="lede">Пункт 42 test.md: вместо двух страниц «Настройки» и «Доступ» одна «Настройки», разложенная по задачам владельца. Жёлтая метка «п. N» — блоки из ещё не сделанных пунктов, они здесь чтобы проверить, что им найдётся место.</p>
+    <ul class="lede">
+        <li><b>Общее</b> — что это за доска: название, адрес, удаление.</li>
+        <li><b>Доступ</b> — кто видит и что может: режим, ссылка, поисковики, гости, люди.</li>
+        <li><b>Категории и статусы</b> — как устроены посты на доске.</li>
+        <li><b>Виджет</b> — всё про кнопку на сайте продукта, включая её вид.</li>
+    </ul>
+
+    <div class="controls">
+        <div class="group">Навигация
+            <div class="seg" data-ctl="variant">
+                <button type="button" data-v="a" aria-pressed="false">A. Одна страница</button>
+                <button type="button" data-v="b" aria-pressed="true">B. Разделы</button>
+            </div>
+        </div>
+        <div class="group">Доска
+            <div class="seg" data-ctl="mode">
+                <button type="button" data-v="public" aria-pressed="true">Открытая</button>
+                <button type="button" data-v="private" aria-pressed="false">Закрытая</button>
+            </div>
+        </div>
+        <div class="group">Экран
+            <div class="seg" data-ctl="device">
+                <button type="button" data-v="desktop" aria-pressed="true">Десктоп</button>
+                <button type="button" data-v="phone" aria-pressed="false">Телефон</button>
+            </div>
+        </div>
+    </div>
+
+    <p class="variant-note" data-note="a" hidden><b>A. Одна страница.</b> Все четыре блока подряд, в сайдбаре — якоря на них (как сейчас «Общее / Категории / Статусы»). Плюс: всё видно прокруткой, ничего не надо искать. Минус: страница длинная, у открытой доски виджет и люди уходят далеко вниз.</p>
+    <p class="variant-note" data-note="b"><b>B. Разделы — выбран.</b> Четыре пункта в сайдбаре под доской — у каждого свой адрес (/settings/general, /access, /structure, /widget), на экране один блок. Плюс: короткие страницы, на «Виджет» можно дать прямую ссылку. Минус: на одну страницу больше переходов, чем сейчас.</p>
+
+    <div class="stage">
+        <div class="app variant-b" id="app">
+            <div class="hdr">
+                <div><span class="brand">Feedback Board</span><span class="brand-sep">/</span>Доски ▾</div>
+                <div class="avatar">А</div>
+            </div>
+            <div class="shell">
+                <nav class="side" aria-label="Кабинет">
+                    <span class="side-title">Мои доски</span>
+                    <div class="side-board"><span class="mark">D</span>Demo</div>
+                    <div class="side-group" id="side-links"></div>
+                    <a class="other">Kerr</a>
+                    <a class="other">Настройки аккаунта</a>
+                </nav>
+
+                <main>
+                    <div class="page-head">
+                        <h1 id="page-title">Настройки</h1>
+                        <div class="row head-actions">
+                            <button type="button" class="btn btn-copy">Скопировать ссылку</button>
+                            <a class="btn btn-primary btn-open"><span class="full">Перейти на доску →</span><span class="short" aria-label="Перейти на доску">→</span></a>
+                        </div>
+                    </div>
+                    <div class="tabs" id="tabs"></div>
+
+                    <div class="sections">
+                        <!-- 1. Общее -->
+                        <section class="block" data-section="general">
+                            <h2>Общее</h2>
+                            <label class="field"><b>Название доски</b><input class="input" value="Demo"></label>
+                            <label class="field"><b>Адрес доски <span class="new">п. 24</span></b>
+                                <span class="input-pre"><span>feedback.app/</span><input value="demo"></span>
+                            </label>
+                            <p class="note">Старый адрес продолжит работать — ссылки и виджет не сломаются.</p>
+                            <div class="row"><button type="button" class="btn btn-primary">Сохранить</button></div>
+
+                            <!-- the link is what the board is for: first thing on the first block, not inside «Доступ» -->
+                            <div class="sub-block">
+                                <h3>Ссылка на доску</h3>
+                                <div class="share">
+                                    <code>https://feedback.app/demo</code>
+                                    <button type="button" class="btn btn-sm">Скопировать</button>
+                                    <a class="btn btn-sm">Открыть ↗</a>
+                                </div>
+                                <p class="note" data-when="public">Откроет любой — поделитесь ею в чате или письме. Кто ещё может голосовать и предлагать — в «Доступе».</p>
+                                <p class="note" data-when="private">Откроют участники; остальные увидят экран «Запросить доступ». Кого пустить — в «Доступе».</p>
+                            </div>
+                        </section>
+
+                        <!-- 2. Доступ -->
+                        <section class="block" data-section="access">
+                            <div class="block-title"><h2>Доступ</h2></div>
+                            <fieldset class="who-row modes-radios">
+                                <label class="radio"><input type="radio" name="mode-phone" data-mode-radio="public"><span>Открытая<small>Любой по ссылке читает, голосует и предлагает.</small></span></label>
+                                <label class="radio"><input type="radio" name="mode-phone" data-mode-radio="private"><span>Закрытая<small>Только участники, остальные могут запросить доступ.</small></span></label>
+                            </fieldset>
+                            <div class="modes">
+                                <div class="mode" data-mode-card="public"><b>Открытая</b><span>Любой по ссылке читает, голосует и предлагает. Можно поставить виджет на сайт.</span></div>
+                                <div class="mode" data-mode-card="private"><b>Закрытая</b><span>Только участники. Остальные могут запросить доступ. Виджет на сайте скрыт.</span></div>
+                            </div>
+                            <!-- a picked mode isn't applied at once: what changes, then an explicit button (as in the product's AccessMode) -->
+                            <div class="mode-confirm" id="mode-confirm" hidden>
+                                <b id="mc-title"></b>
+                                <ul id="mc-effects"></ul>
+                                <div class="row"><button type="button" class="btn btn-primary" id="mc-apply"></button><button type="button" class="btn" id="mc-cancel">Отмена</button></div>
+                            </div>
+
+                            <div class="sub-block" data-fold="guests" data-when="public">
+                                <h3>Гости <span class="new">п. 40</span> <span class="new">п. 19</span></h3>
+                                <!-- who may act: two plain radio options, each with its own consequence -->
+                                <fieldset class="who-row">
+                                    <legend>Кто может оставлять предложения</legend>
+                                    <label class="radio"><input type="radio" name="who-post" checked><span>Все посетители<small>Регистрироваться не нужно — на доске и через виджет на сайте.</small></span></label>
+                                    <label class="radio"><input type="radio" name="who-post"><span>Только с аккаунтом<small>Посетителя попросят зарегистрироваться или войти. Виджет на сайте скроется: войти в нём нельзя.</small></span></label>
+                                </fieldset>
+                                <fieldset class="who-row">
+                                    <legend>Кто может голосовать</legend>
+                                    <label class="radio"><input type="radio" name="who-vote" checked><span>Все посетители<small>Регистрироваться не нужно.</small></span></label>
+                                    <label class="radio"><input type="radio" name="who-vote"><span>Только с аккаунтом<small>Голоса видны всем, а проголосовать можно после регистрации или входа.</small></span></label>
+                                </fieldset>
+                                <div class="switch-row" data-switch>
+                                    <div><b>Показывать в поисковиках</b>
+                                        <small>Если выключить, на странице доски появится <code>&lt;meta name="robots" content="noindex, nofollow"&gt;</code>, а в robots.txt — <code>Disallow: /demo</code>. Поисковики перестанут показывать доску; уже проиндексированная пропадёт из выдачи не сразу. По ссылке доска открывается как обычно.</small>
+                                    </div>
+                                    <button type="button" class="switch" role="switch" aria-checked="true" aria-label="Показывать в поисковиках"></button>
+                                </div>
+                            </div>
+
+                            <div class="sub-block" data-when="private">
+                                <h3>Запросы на доступ <span class="count">2</span></h3>
+                                <table class="people">
+                                    <tr><td>Ольга<small>olga@example.com · «Хочу следить за багами»</small></td><td><button type="button" class="btn btn-sm btn-primary">Пустить</button> <button type="button" class="btn btn-sm">Отказать</button></td></tr>
+                                    <tr><td>Денис<small>denis@example.com</small></td><td><button type="button" class="btn btn-sm btn-primary">Пустить</button> <button type="button" class="btn btn-sm">Отказать</button></td></tr>
+                                </table>
+                            </div>
+
+                            <div class="sub-block" data-fold="team">
+                                <div class="block-title">
+                                    <h3 data-when="public">Команда</h3><h3 data-when="private">Участники</h3>
+                                    <button type="button" class="btn btn-sm">+ Пригласить</button>
+                                </div>
+                                <p class="note" data-when="public">Те, кто разбирает посты и настраивает доску. Гостям приглашение не нужно.</p>
+                                <table class="people">
+                                    <tr><td>Админ<small>admin@example.com</small></td><td>Владелец</td></tr>
+                                    <tr><td>Тест Менеджер<small>manager@example.com</small></td><td>Менеджер ▾</td></tr>
+                                    <tr data-when="private"><td>Читатель<small>reader@example.com</small></td><td>Читатель ▾</td></tr>
+                                    <tr><td>anna@example.com <span class="chip wait">не зарегистрирована</span><small>приглашение отправлено 4 нояб. <span class="new">п. 23</span></small></td><td>Менеджер · <a>отменить</a></td></tr>
+                                </table>
+                            </div>
+                        </section>
+
+                        <!-- 3. Категории и статусы -->
+                        <section class="block" data-section="structure">
+                            <h2>Категории и статусы</h2>
+
+                            <!-- stacked, not in two columns: every row may open the colour form (presets + picker) and needs the width -->
+                            <div class="sub-block first" data-fold="categories">
+                                <div class="sub-title">
+                                    <h3>Категории</h3>
+                                    <span class="qmark" tabindex="0" aria-label="Где видны категории">?
+                                        <span class="hint" role="tooltip">
+                                            <span class="hint-cap">На доске — метка на карточке и фильтр</span>
+                                            <span class="mini-filters"><i class="on">Все</i><i>Баг</i><i>Идея</i></span>
+                                            <span class="mini-card"><span class="tag hl" style="background:#f3cfc8">Баг</span><b>Не прикрепляется файл больше 20 МБ</b><em></em></span>
+                                        </span>
+                                    </span>
+                                    <span class="new">п. 33</span>
+                                </div>
+                                <p class="note">О чём бывают предложения: выбирают в форме, по ним фильтруют.</p>
+                                <ul class="list">
+                                    <li><span class="tag" style="background:#f3cfc8">Баг</span><span class="sp"></span><a class="act">Изменить</a><a class="act">Удалить</a><button type="button" class="icon-act" aria-label="Действия">⋯</button></li>
+                                    <li class="editing">
+                                        <div class="edit-row"><input class="input" value="Идея"><button type="button" class="btn btn-sm btn-primary">Сохранить</button><button type="button" class="btn btn-sm cancel-btn"><span class="full">Отмена</span><span class="short" aria-label="Отмена">×</span></button></div>
+                                        <div class="cpick" data-presets="category">
+                                            <button type="button" class="btn cpick-trigger"><span class="cpick-sw" style="background:#c9dde6"></span>Цвет ▾</button>
+                                            <input class="input cpick-hex" value="#C9DDE6">
+                                            <button type="button" class="btn cpick-clear" aria-label="Без цвета">×</button>
+                                        </div>
+                                        <span class="preview">Как будет выглядеть: <span class="tag" style="background:#c9dde6">Идея</span></span>
+                                    </li>
+                                </ul>
+                                <div class="edit-row add-row"><button type="button" class="btn sq-color" aria-label="Цвет"><span class="cpick-sw colorless"></span></button><input class="input" placeholder="Новая категория"><button type="button" class="btn btn-sm add-btn"><span class="full">Добавить</span><span class="short">+</span></button></div>
+                            </div>
+
+                            <div class="sub-block" data-fold="statuses">
+                                <div class="sub-title">
+                                    <h3>Статусы</h3>
+                                    <span class="qmark" tabindex="0" aria-label="Где видны статусы">?
+                                        <span class="hint" role="tooltip">
+                                            <span class="hint-cap">На доске — колонки канбана и метка в списке</span>
+                                            <span class="mini-kanban"><i><span class="pill hl" style="background:#e3ebe6">Новое</span><em></em><em></em></i><i><span class="pill hl" style="background:#cce4d1;color:#14623a">В работе</span><em></em></i><i><span class="pill hl" style="background:#cce4d1;color:#14623a">Готово</span><em></em></i></span>
+                                        </span>
+                                    </span>
+                                    <span class="new">п. 33</span>
+                                </div>
+                                <p class="note">Колонки канбана и фильтр «Статус». Порядок — перетащите за ⋮⋮ или «⋯» → «Выше / Ниже».</p>
+                                <ul class="list" id="status-list">
+                                    <li><span class="grip">⋮⋮</span><span class="pill" style="background:#e3ebe6">Новое</span><span class="sp"></span><a class="act">Изменить</a><button type="button" class="icon-act" aria-label="Действия">⋯</button></li>
+                                    <li><span class="grip">⋮⋮</span><span class="pill" style="background:#cce4d1;color:#14623a">В работе</span><span class="sp"></span><a class="act">Изменить</a><a class="act">Удалить</a><button type="button" class="icon-act" aria-label="Действия">⋯</button></li>
+                                    <li><span class="grip">⋮⋮</span><span class="pill" style="background:#cce4d1;color:#14623a">Готово</span><span class="sp"></span><a class="act">Изменить</a><button type="button" class="icon-act" aria-label="Действия">⋯</button></li>
+                                    <li><span class="grip">⋮⋮</span><span class="pill" style="background:#f3cfc8;color:#8f3029">Отклонено</span><span class="sp"></span><a class="act">Изменить</a><button type="button" class="icon-act" aria-label="Действия">⋯</button></li>
+                                </ul>
+                                <div class="edit-row add-row"><button type="button" class="btn sq-color" aria-label="Цвет"><span class="cpick-sw colorless"></span></button><input class="input" placeholder="Новый статус"><button type="button" class="btn btn-sm add-btn"><span class="full">Добавить</span><span class="short">+</span></button></div>
+                            </div>
+                        </section>
+
+                        <!-- 4. Виджет -->
+                        <section class="block" data-section="widget">
+                            <h2>Виджет на сайте</h2>
+                            <div class="off" data-when="private"><b>Виджет скрыт.</b> Пока доска закрыта, кнопка «Обратная связь» на сайте не показывается. Код можно не убирать: когда снова откроете доску, виджет появится сам.</div>
+
+                            <div data-when="public" style="display:grid;gap:14px">
+                                <p class="note">Кнопка на сайте вашего продукта. Пользователь оставляет баг или идею — они сразу попадают на эту доску. <span class="new">п. 17–18</span></p>
+                                <div class="wpreview" id="wpreview">
+                                    <div class="wcase"><small>На сайте</small><span class="launcher" id="wl">Обратная связь</span></div>
+                                    <div class="wcase"><small>После клика</small><div class="panel"><b>Обратная связь</b><span></span><span></span><span class="btnline"></span></div></div>
+                                </div>
+
+                                <div class="sub-block">
+                                    <h3>Внешний вид</h3>
+                                    <div class="field"><b>Цвет кнопки</b>
+                                        <div class="cpick" data-target="widget">
+                                            <button type="button" class="btn cpick-trigger"><span class="cpick-sw" style="background:#1d8547"></span>Цвет ▾</button>
+                                            <input class="input cpick-hex" value="#1D8547">
+                                            <button type="button" class="btn btn-sm cpick-reset">Сбросить</button>
+                                        </div>
+                                    </div>
+                                    <label class="field"><b>Текст кнопки</b><input class="input" id="wtext" value="Обратная связь" maxlength="40"></label>
+                                </div>
+
+                                <div class="sub-block" data-fold="install">
+                                    <h3>Установка</h3>
+                                    <p class="note">Вставьте тег перед закрывающим &lt;/body&gt;.</p>
+                                    <pre class="code">&lt;script src="https://feedback.app/widget.js" data-project="demo" defer&gt;&lt;/script&gt;</pre>
+                                    <div class="row"><button type="button" class="btn btn-sm">Скопировать код</button><button type="button" class="btn btn-sm">Проверить размещение <span class="new">п. 26</span></button></div>
+                                    <ul class="check-result">
+                                        <li><span class="ok">✓</span> app.example.com — найден</li>
+                                        <li><span class="no">✕</span> shop.example.com — не найден. Если виджет вставлен через JS, проверка его не видит — откройте сайт сами.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="sub-block" data-fold="domains">
+                                    <h3>Домены</h3>
+                                    <p class="note">Сайты, на которых виджет может работать.</p>
+                                    <ul class="list"><li>app.example.com<span class="sp"></span><a>Убрать</a></li><li>shop.example.com<span class="sp"></span><a>Убрать</a></li></ul>
+                                    <div class="edit-row add-row"><input class="input" placeholder="https://site.ru"><button type="button" class="btn btn-sm add-btn"><span class="full">Добавить</span><span class="short">+</span></button></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- not a section of the nav: an action on the whole board -->
+                        <section class="block danger" data-section="general" data-tail>
+                            <h2>Удалить доску</h2>
+                            <p class="note">Доска уйдёт в корзину, из списка досок её можно будет восстановить.</p>
+                            <div class="row"><button type="button" class="btn btn-danger">Удалить доску</button></div>
+                        </section>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <div class="proto-modal" id="open-modal" hidden>
+    <div class="proto-modal-box" role="dialog" aria-label="Открыть доску для всех?">
+        <h2>Открыть доску для всех?</h2>
+        <p class="note">Всё, что писали участники, увидит любой по ссылке: 12 постов, ответы команды и имена авторов.</p>
+        <div class="row"><button type="button" class="btn" id="om-cancel">Отмена</button><button type="button" class="btn btn-primary" id="om-ok">Открыть доску</button></div>
+    </div>
+</div>
+
+    <div class="q">
+        <h2>Что решить</h2>
+        <ol>
+            <li><b>Решено: вариант B (разделы).</b> Ссылка на доску — в «Общем». Категории и статусы — друг под другом, у каждого свой «?» с примером (п. 33). Цвет виджета, категорий и статусов — та же палитра, что в продукте (готовые цвета + пипетка), а не набор кружков.</li>
+            <li><b>Группа «Визуальные» из п. 42 не нужна.</b> Цвет и текст кнопки — в «Виджет», категории и статусы — свой раздел.</li>
+            <li><b>Поисковики (п. 19) и ограничения гостей (п. 40) — в «Доступ», блок «Гости».</b> Оба отвечают на вопрос «что может посторонний», и оба имеют смысл только у открытой доски. П. 40 — два вопроса «Кто может оставлять предложения» и «Кто может голосовать», ответ — радиокнопки «Все посетители» (по умолчанию) / «Только с аккаунтом», у каждого варианта своя подпись-следствие. Если предлагать без входа нельзя, виджет на сайте скрывается: войти в нём нельзя.</li>
+            <li><b>Порядок статусов на телефоне.</b> Сейчас в продукте HTML5 drag &amp; drop — на тач-экранах он не работает. В прототипе: перетаскивание за ⋮⋮ на pointer-событиях (мышь и палец одним кодом, страница не скроллится, пока тянешь за ручку) + «⋯» → «Выше / Ниже» как запасной путь и для клавиатуры. В коде — свой небольшой composable или библиотека (SortableJS / vue-draggable-plus — новая зависимость, нужно согласие).</li>
+            <li><b>Телефон: сворачиваемые группы со сводкой.</b> «Гости», «Команда», «Категории», «Статусы», «Установка», «Домены» на телефоне свёрнуты; в заголовке — текущее состояние («Предлагают все · голосуют все · видна в поиске», «2 человека · 1 ждёт приглашения», сами метки категорий, цепочка статусов, «Код вставлен на 1 из 2 сайтов», список доменов), так что открывать нужно только чтобы поменять. Всегда видно главное: режим доступа, ссылку, превью и внешний вид виджета. Запросы на доступ не сворачиваются — там ждут решения. На десктопе всё раскрыто. В коде — нативный &lt;details&gt;, кнопки из заголовка («+ Пригласить») уходят в тело группы.</li>
+            <li><b>Телефон — основной сценарий.</b> На телефоне разделы без рамок, табы прилипают сверху, у строк одна «⋯» вместо «Изменить / Удалить», добавление в одну строку [■][название][+], режим доступа — переключатель вместо двух карточек, «?» раскрывает пример под заголовком.</li>
+            <li><b>Быстрая настройка на доске</b> (модалка категорий и статусов) остаётся как есть и ведёт в раздел «Категории и статусы».</li>
+            <li><b>Описание доски</b> из п. 42.2 — в продукте его пока нет. Добавляем поле в «Общее» или пропускаем?</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    const state = { variant: 'b', mode: 'public', device: 'desktop', section: 'general' }
+    const SECTIONS = [
+        { id: 'general', label: 'Общее' },
+        { id: 'access', label: 'Доступ', count: () => (state.mode === 'private' ? 2 : 0) },
+        { id: 'structure', label: 'Категории и статусы' },
+        { id: 'widget', label: 'Виджет' },
+    ]
+    const app = document.getElementById('app')
+
+    function link(s, cls) {
+        const a = document.createElement('a')
+        a.className = cls
+        a.dataset.go = s.id
+        a.textContent = s.label
+        const n = s.count?.()
+        if (n) a.insertAdjacentHTML('beforeend', `<span class="count">${n}</span>`)
+        if (state.variant === 'b' && state.section === s.id) a.setAttribute('aria-current', 'true')
+        return a
+    }
+
+    let render = function () {
+        app.className = `app variant-${state.variant}${state.device === 'phone' ? ' phone' : ''}`
+        document.querySelectorAll('[data-note]').forEach((n) => (n.hidden = n.dataset.note !== state.variant))
+
+        // sidebar: A — «Настройки» with anchors under it; B — four pages
+        const side = document.getElementById('side-links')
+        side.innerHTML = ''
+        if (state.variant === 'a') {
+            const page = document.createElement('a')
+            page.textContent = 'Настройки'
+            page.setAttribute('aria-current', 'true')
+            side.append(page)
+            SECTIONS.forEach((s) => side.append(link(s, 'sub')))
+        } else {
+            SECTIONS.forEach((s) => side.append(link(s, '')))
+        }
+        const tabs = document.getElementById('tabs')
+        tabs.innerHTML = ''
+        SECTIONS.forEach((s) => tabs.append(link(s, '')))
+
+        // A shows every block, B only the current one
+        document.querySelectorAll('[data-section]').forEach((b) => {
+            b.hidden = state.variant === 'b' && b.dataset.section !== state.section
+        })
+        document.getElementById('page-title').textContent =
+            state.variant === 'b' ? SECTIONS.find((s) => s.id === state.section).label : 'Настройки'
+
+        document.querySelectorAll('[data-when]').forEach((el) => (el.hidden = el.dataset.when !== state.mode))
+        document.querySelectorAll('[data-mode-card]').forEach((el) => el.setAttribute('aria-checked', String(el.dataset.modeCard === state.mode)))
+        showPending()
+    }
+
+    document.querySelectorAll('[data-ctl]').forEach((seg) => {
+        seg.addEventListener('click', (e) => {
+            const b = e.target.closest('button')
+            if (!b) return
+            state[seg.dataset.ctl] = b.dataset.v
+            seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+            render()
+        })
+    })
+    document.addEventListener('click', (e) => {
+        const go = e.target.closest('[data-go]')
+        if (go) {
+            state.section = go.dataset.go
+            if (state.variant === 'a') {
+                render()
+                document.querySelector(`[data-section="${go.dataset.go}"]:not([data-tail])`).scrollIntoView({ behavior: 'smooth', block: 'start' })
+            } else render()
+            return
+        }
+        const sw = e.target.closest('.switch')
+        if (sw) {
+            const on = sw.getAttribute('aria-checked') !== 'true'
+            sw.setAttribute('aria-checked', String(on))
+            const row = sw.closest('[data-switch]')
+            row.querySelector('[data-on]').hidden = !on
+            row.querySelector('[data-off]').hidden = on
+            return
+        }
+        const q = e.target.closest('.qmark')
+        // «?» sits in a fold's header: it opens the example, it must not fold / unfold the group
+        if (q) e.preventDefault()
+        if (q && state.device === 'phone') {
+            // inside a fold the example gets its own row of the header (under the title and the state line),
+            // never inside the fixed-height title row
+            const title = q.closest('summary') ?? q.closest('.sub-title')
+            let inline = title.querySelector('.hint-inline')
+            if (!inline) {
+                inline = document.createElement('span')
+                inline.className = 'hint-inline'
+                inline.innerHTML = `<span class="hint-body"><span class="hint-frame">${q.querySelector('.hint').innerHTML}</span></span>`
+                title.append(inline)
+                inline.getBoundingClientRect() // start from the closed state, so the first open animates too
+            }
+            inline.classList.toggle('open')
+            return
+        }
+        const pick = e.target.closest('[data-mode-card], [data-mode-radio]')
+        if (pick) { propose(pick.dataset.modeCard ?? pick.dataset.modeRadio); return }
+        if (e.target.id === 'mc-cancel') { propose(state.mode); return }
+        if (e.target.id === 'mc-apply') {
+            if (pending === 'public') document.getElementById('open-modal').hidden = false
+            else apply()
+            return
+        }
+        if (e.target.id === 'om-cancel') { document.getElementById('open-modal').hidden = true; return }
+        if (e.target.id === 'om-ok') { document.getElementById('open-modal').hidden = true; apply(); return }
+        const trigger = e.target.closest('.cpick-trigger')
+        const sq = e.target.closest('.sq-color')
+        if (sq) {
+            const row = sq.closest('.add-row')
+            if (!row.classList.contains('with-pick')) {
+                row.classList.add('with-pick')
+                row.insertAdjacentHTML('afterend', `<div class="cpick" data-presets="category"><button type="button" class="btn cpick-trigger"><span class="cpick-sw colorless"></span>Цвет ▾</button><input class="input cpick-hex" placeholder="HEX"><button type="button" class="btn cpick-clear">×</button></div>`)
+                togglePop(row.nextElementSibling)
+            }
+            return
+        }
+        const insidePop = e.target.closest('.cpick-pop')
+        if (!insidePop) document.querySelectorAll('.cpick-pop').forEach((p) => { if (!trigger || p.parentElement !== trigger.parentElement) p.remove() })
+        if (trigger) { togglePop(trigger.parentElement); return }
+        const preset = e.target.closest('.cpick-presets button')
+        if (preset) setColor(preset.closest('.cpick'), preset.dataset.c)
+        const reset = e.target.closest('.cpick-reset')
+        if (reset) setColor(reset.closest('.cpick'), '#1D8547')
+    })
+    // mode switch: pick → what changes → button (+ a modal when opening, as in the product)
+    let pending = null
+    const EFFECTS = {
+        private: ['Доску увидят только участники, остальные смогут запросить доступ.', 'Голоса гостей останутся в счётчиках, новых не будет.', 'Участники пишут и голосуют из аккаунта.', 'Кнопка виджета исчезнет с сайтов. Вернётся, если снова откроете доску.'],
+        public: ['Любой по ссылке увидит 12 постов, ответы команды и имена авторов. Скрытые останутся скрытыми.', 'Голоса участников сохранятся, гости тоже смогут голосовать.', 'Останется команда — админы и менеджеры. Приглашения участников и читателей отменятся.', 'Кнопка виджета снова появится на сайтах.'],
+    }
+    function propose(mode) {
+        pending = mode === state.mode ? null : mode
+        showPending()
+    }
+    function apply() {
+        const mode = pending
+        pending = null
+        document.querySelector(`[data-ctl="mode"] [data-v="${mode}"]`).click()
+    }
+    function showPending() {
+        const shown = pending ?? state.mode
+        document.querySelectorAll('[data-mode-card]').forEach((el) => el.setAttribute('aria-checked', String(el.dataset.modeCard === shown)))
+        document.querySelectorAll('[data-mode-radio]').forEach((el) => (el.checked = el.dataset.modeRadio === shown))
+        const box = document.getElementById('mode-confirm')
+        box.hidden = !pending
+        if (pending) {
+            document.getElementById('mc-title').textContent = pending === 'private' ? 'Что изменится, если закрыть доску' : 'Что изменится, если открыть доску'
+            document.getElementById('mc-effects').innerHTML = EFFECTS[pending].map((t) => `<li>${t}</li>`).join('')
+            document.getElementById('mc-apply').textContent = pending === 'private' ? 'Сделать закрытой' : 'Открыть доску'
+        }
+        // the rest of the section reacts only after the switch: muted meanwhile
+        document.querySelectorAll('[data-section="access"] .sub-block').forEach((b) => b.classList.toggle('pending-rest', !!pending))
+    }
+    const PRESETS = { category: ['#f3cfc8', '#f6d8b3', '#efe09f', '#cce4d1', '#c9dde6', '#efccd4'] }
+    function togglePop(pick) {
+        const open = pick.querySelector('.cpick-pop')
+        if (open) { open.remove(); return }
+        const pop = document.createElement('div')
+        pop.className = 'cpick-pop'
+        const presets = PRESETS[pick.dataset.presets]
+        pop.innerHTML = (presets ? `<div class="cpick-presets">${presets.map((c) => `<button type="button" data-c="${c}" style="background:${c}"></button>`).join('')}</div>` : '')
+            + '<div class="cpick-sv"></div><div class="cpick-hue"></div>'
+        pop.style.setProperty('--hue', pick.querySelector('.cpick-sw').style.background)
+        pick.append(pop)
+    }
+    function setColor(pick, hex) {
+        pick.querySelector('.cpick-sw').style.background = hex
+        pick.querySelector('.cpick-hex').value = hex.toUpperCase()
+        if (pick.dataset.target === 'widget') document.getElementById('wpreview').style.setProperty('--wcolor', hex)
+        const tag = pick.parentElement.querySelector('.preview .tag')
+        if (tag) tag.style.background = hex
+    }
+    document.querySelectorAll('.cpick-hex').forEach((input) => input.addEventListener('input', () => {
+        if (/^#[0-9a-f]{6}$/i.test(input.value)) setColor(input.closest('.cpick'), input.value)
+    }))
+    document.getElementById('wtext').addEventListener('input', (e) => {
+        document.getElementById('wl').textContent = e.target.value || 'Обратная связь'
+    })
+
+    // ——— status reorder ———
+    // drag by the grip with pointer events: one code path for mouse and finger; touch-action: none on the grip
+    // keeps the page from scrolling while dragging, the rest of the row still scrolls the page normally
+    const statusList = document.getElementById('status-list')
+    let dragged = null
+    let startY = 0
+    statusList.addEventListener('pointerdown', (e) => {
+        const grip = e.target.closest('.grip')
+        if (!grip) return
+        dragged = grip.closest('li')
+        startY = e.clientY
+        dragged.classList.add('lifted')
+        grip.setPointerCapture(e.pointerId)
+    })
+    statusList.addEventListener('pointermove', (e) => {
+        if (!dragged) return
+        dragged.style.transform = `translateY(${e.clientY - startY}px)`
+        const rows = [...statusList.children].filter((li) => li !== dragged)
+        const before = rows.find((li) => e.clientY < li.getBoundingClientRect().top + li.offsetHeight / 2)
+        const target = before ?? null
+        if (target !== dragged.nextElementSibling) {
+            const top = dragged.getBoundingClientRect().top
+            statusList.insertBefore(dragged, target)
+            startY += dragged.getBoundingClientRect().top - top
+            dragged.style.transform = `translateY(${e.clientY - startY}px)`
+        }
+    })
+    const drop = () => {
+        if (!dragged) return
+        dragged.classList.remove('lifted')
+        dragged.style.transform = ''
+        dragged = null
+    }
+    statusList.addEventListener('pointerup', drop)
+    statusList.addEventListener('pointercancel', drop)
+
+    // «⋯»: a small menu with Изменить / Выше / Ниже / Удалить
+    document.addEventListener('click', (e) => {
+        const more = e.target.closest('.icon-act')
+        const item = e.target.closest('.row-menu button')
+        if (item) {
+            const li = item.closest('li')
+            if (item.dataset.move === 'up' && li.previousElementSibling) li.parentElement.insertBefore(li, li.previousElementSibling)
+            if (item.dataset.move === 'down' && li.nextElementSibling) li.parentElement.insertBefore(li.nextElementSibling, li)
+            item.closest('.row-menu').remove()
+            return
+        }
+        document.querySelectorAll('.row-menu').forEach((m) => m.remove())
+        if (!more) return
+        const li = more.closest('li')
+        const inStatuses = li.parentElement.id === 'status-list'
+        const menu = document.createElement('div')
+        menu.className = 'row-menu'
+        menu.innerHTML = '<button type="button">Изменить</button>'
+            + (inStatuses ? `<button type="button" data-move="up" ${li.previousElementSibling ? '' : 'disabled'}>Выше</button><button type="button" data-move="down" ${li.nextElementSibling ? '' : 'disabled'}>Ниже</button>` : '')
+            + '<button type="button" class="danger-item">Удалить</button>'
+        li.append(menu)
+    })
+
+    // ——— foldable groups (phone): <details> built from [data-fold] sub-blocks; the closed header shows the state ———
+    const SUMMARY = {
+        guests: () => {
+            const post = document.querySelector('input[name="who-post"]:checked') === document.querySelector('input[name="who-post"]')
+            const vote = document.querySelector('input[name="who-vote"]:checked') === document.querySelector('input[name="who-vote"]')
+            const seo = [...document.querySelectorAll('[data-switch] .switch')].pop().getAttribute('aria-checked') === 'true'
+            return [post ? 'Предлагают все' : 'Предлагают с аккаунтом', vote ? 'голосуют все' : 'голосуют с аккаунтом', seo ? 'видна в поиске' : 'скрыта от поиска'].join(' · ')
+        },
+        team: (body) => {
+            const rows = [...body.querySelectorAll('.people tr')].filter((tr) => !tr.hidden)
+            const waiting = rows.filter((tr) => tr.querySelector('.chip.wait')).length
+            const people = rows.length - waiting
+            return `${people} ${people === 1 ? 'человек' : people < 5 ? 'человека' : 'человек'}` + (waiting ? ` · ${waiting} ждёт приглашения` : '')
+        },
+        categories: (body) => [...body.querySelectorAll('.list > li > .tag, .list > li.editing .preview .tag')].map((t) => t.outerHTML).join(''),
+        statuses: (body) => [...body.querySelectorAll('.list > li > .pill')].map((p) => p.textContent).join(' → '),
+        install: () => 'Код вставлен на 1 из 2 сайтов',
+        domains: (body) => [...body.querySelectorAll('.list li')].map((li) => li.firstChild.textContent.trim()).join(', '),
+    }
+    document.querySelectorAll('[data-fold]').forEach((block) => {
+        const details = document.createElement('details')
+        details.className = block.className + ' fold'
+        details.dataset.fold = block.dataset.fold
+        if (block.dataset.when) details.dataset.when = block.dataset.when
+        const head = block.firstElementChild
+        const summary = document.createElement('summary')
+        // buttons don't belong in a summary: «+ Пригласить» moves to the top of the body
+        const actions = [...head.querySelectorAll('.btn')]
+        summary.append(head)
+        summary.insertAdjacentHTML('beforeend', '<span class="fold-sum"></span><span class="fold-chev" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>')
+        const body = document.createElement('div')
+        body.className = 'fold-body'
+        actions.forEach((b) => { const row = document.createElement('div'); row.className = 'row'; row.append(b); body.append(row) })
+        while (block.firstChild) body.append(block.firstChild)
+        details.append(summary, body)
+        block.replaceWith(details)
+    })
+    function updateFolds() {
+        const phone = state.device === 'phone'
+        document.querySelectorAll('details.fold').forEach((d) => {
+            d.querySelector('.fold-sum').innerHTML = SUMMARY[d.dataset.fold](d.querySelector('.fold-body'))
+            if (!phone) d.open = true
+        })
+    }
+    let lastDevice = null
+    function syncFoldsToDevice() {
+        if (state.device === lastDevice) return
+        lastDevice = state.device
+        // phone starts folded; requests waiting for a decision would stay open (they aren't foldable)
+        document.querySelectorAll('details.fold').forEach((d) => (d.open = state.device !== 'phone'))
+    }
+    document.addEventListener('click', () => setTimeout(updateFolds))
+    document.addEventListener('change', () => setTimeout(updateFolds))
+    const baseRender = render
+    render = function () { baseRender(); syncFoldsToDevice(); updateFolds() }
+    render()
+</script>
+</body>
+</html>

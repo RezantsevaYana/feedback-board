@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Онбординг новой доски — прототип</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #e8eee9;
+            --active: #cfe7d7;
+            --active-fg: #063f2c;
+            --active-line: #1d8547;
+            --line: #d8e1db;
+            --control: #a9bcb0;
+            --fg: #0f2224;
+            --muted: #4c5d60;
+            --accent: #1d8547;
+            --accent-ink: #1b7f41;
+            --accent-fg: #ffffff;
+            --bug: #b0423a;
+            --page: #f3f6f4;
+            --radius: 10px;
+            --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+            --ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+        .doc { max-width: 1240px; margin: 0 auto; padding: 40px 24px 96px; }
+        .doc > h1 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+        .doc > p.lede { color: var(--muted); max-width: 800px; margin: 0 0 10px; }
+        .doc > ul.lede { color: var(--muted); max-width: 800px; margin: 0 0 24px; padding-left: 20px; }
+        .doc > ul.lede b, .doc > p.lede b { color: var(--fg); }
+
+        .controls { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; margin-bottom: 16px; position: sticky; top: 0; z-index: 5; padding: 12px 0; background: var(--page); }
+        .controls .group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+        .seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface-2); }
+        .seg button { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .seg button[aria-pressed='true'] { background: var(--active); border-color: var(--active-line); color: var(--active-fg); font-weight: 600; }
+
+        /* app mock */
+        .stage { display: flex; justify-content: center; }
+        .app { width: 100%; min-height: 720px; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; position: relative; }
+        .app.phone { width: 390px; min-height: 780px; }
+
+        /* focused flow: no cabinet sidebar, only the brand, the progress and a way out */
+        .ob-top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--line); }
+        .phone .ob-top { grid-template-columns: 1fr auto; gap: 10px 12px; padding: 12px 16px; }
+        .brand { font-family: var(--font-display); font-weight: 600; font-size: 15px; white-space: nowrap; }
+        .brand small { font-family: var(--font-body); font-weight: 500; color: var(--muted); font-size: 13px; margin-left: 8px; }
+        .progress { display: grid; gap: 6px; justify-self: center; width: min(420px, 100%); }
+        .phone .progress { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+        .progress-bars { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+        .progress-bars i { height: 4px; border-radius: 2px; background: var(--surface-2); transition: background-color 0.25s var(--ease); }
+        .progress-bars i.done { background: var(--accent); }
+        .progress-bars i.cur { background: color-mix(in srgb, var(--accent) 45%, var(--surface-2)); }
+        .progress-label { font-size: 12px; color: var(--muted); text-align: center; }
+        .phone .progress-label { text-align: left; }
+        .later { background: none; border: 0; font: inherit; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; white-space: nowrap; }
+
+        .ob-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 48px; padding: 40px 48px; align-items: start; }
+        .phone .ob-main { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 20px; padding: 20px 16px 24px; }
+        .phone .brand small { display: none; }
+        .step { display: grid; gap: 18px; max-width: 560px; animation: step-in 0.28s var(--ease); }
+        @keyframes step-in { from { opacity: 0; transform: translateY(6px); } }
+        @media (prefers-reduced-motion: reduce) { .step { animation: none; } }
+        .step h1 { font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin: 0; }
+        .phone .step h1 { font-size: 22px; }
+        .step .lead { margin: -8px 0 0; color: var(--muted); max-width: 52ch; }
+        .note { margin: 0; color: var(--muted); font-size: 13px; }
+
+        /* controls */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font: inherit; font-size: 15px; font-weight: 500; color: var(--fg); cursor: pointer; white-space: nowrap; }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+        .btn-sm { min-height: 36px; padding: 0 12px; font-size: 14px; }
+        .btn-ghost { border-color: transparent; background: none; color: var(--muted); }
+        .input { width: 100%; height: 44px; border: 1px solid var(--control); border-radius: 10px; padding: 0 12px; font: inherit; font-size: 15px; color: var(--fg); background: var(--surface); }
+        textarea.input { height: 96px; padding: 10px 12px; resize: vertical; }
+        .field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+        .field b { color: var(--fg); font-weight: 500; font-size: 14px; }
+
+        .choice { display: grid; gap: 10px; }
+        .option { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
+        .option input { appearance: none; width: 20px; height: 20px; margin: 2px 0 0; border-radius: 50%; border: 1.5px solid var(--control); background: var(--surface); grid-row: span 2; }
+        .option input:checked { border: 6px solid var(--accent); }
+        .option b { font-weight: 600; }
+        .option small { grid-column: 2; color: var(--muted); font-size: 13px; }
+        .option:has(input:checked) { border-color: var(--active-line); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+        /* chips for categories / statuses */
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip-ed { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 6px 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; }
+        .chip-ed .dot { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--control); }
+        .chip-ed button { width: 26px; height: 26px; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; }
+        .chip-ed button:hover { background: var(--surface-2); }
+        .suggest { display: flex; flex-wrap: wrap; gap: 8px; }
+        .suggest button { height: 34px; padding: 0 12px; border-radius: 999px; border: 1px dashed var(--control); background: none; font: inherit; font-size: 14px; color: var(--fg); cursor: pointer; }
+        .suggest button:hover { border-style: solid; background: var(--surface-2); }
+        .add-row { display: flex; gap: 8px; }
+        .add-row .input { flex: 1 1 0; min-width: 0; }
+        .add-row .btn { flex: none; }
+        .sub { font-size: 13px; font-weight: 500; color: var(--muted); margin: 4px 0 -8px; }
+
+        .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+        .flow .arrow { color: var(--control); }
+        .pill { padding: 3px 10px; border-radius: 6px; font-size: 13px; }
+
+        .share { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; border-radius: var(--radius); background: var(--surface-2); }
+        .share code { flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .code { margin: 0; padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius); font-family: var(--font-mono); font-size: 13px; word-break: break-all; white-space: pre-wrap; }
+        /* grids with forms and code inside: the column never grows past the screen */
+        .step, .where, .where-card, .done { grid-template-columns: minmax(0, 1fr); }
+        .where { display: grid; gap: 14px; }
+        .where-card { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; }
+        .where-card h3 { margin: 0; font-size: 16px; }
+
+        /* sticky bottom bar: Назад / Пропустить / Дальше */
+        .ob-bar { display: flex; align-items: center; gap: 10px; padding: 14px 48px; border-top: 1px solid var(--line); background: var(--bg); }
+        .phone .ob-bar { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); position: sticky; bottom: 0; }
+        .ob-bar .sp { flex: 1; }
+        .phone .ob-bar { gap: 8px; }
+        .phone .ob-bar .sp { display: none; }
+        .phone .ob-bar .btn-primary { flex: 1; min-width: 0; }
+        .phone .ob-bar [data-go='back'] { width: 44px; padding: 0; border-color: var(--line); }
+        .phone .ob-bar [data-go='skip'] { padding: 0 10px; }
+        .ob-bar .short { display: none; }
+        .phone .ob-bar .short { display: inline; }
+        .phone .ob-bar .full { display: none; }
+
+        /* live preview of the board (desktop: right column; phone: a strip that folds) */
+        .preview { position: sticky; top: 24px; display: grid; gap: 10px; }
+        .preview-cap { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+        .mini { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; background: var(--page); }
+        .mini-head { display: flex; align-items: center; gap: 8px; }
+        .mini-tag { font-family: var(--font-display); font-size: 12px; background: var(--accent); color: var(--accent-fg); padding: 3px 10px 3px 12px; clip-path: polygon(6px 0, 100% 0, 100% 100%, 0 100%); }
+        .mini-vis { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+        .mini-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+        .mini-filters i { font-style: normal; font-size: 11px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); }
+        .mini-filters i.on { background: var(--active); border-color: var(--active-line); }
+        .mini-cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, 1fr); gap: 6px; overflow-x: auto; }
+        .mini-col { display: grid; gap: 6px; align-content: start; min-height: 150px; padding: 6px; border-radius: 8px; background: var(--surface-2); }
+        .mini-col > .pill { justify-self: start; font-size: 11px; padding: 1px 7px; }
+        .mini-card { display: grid; gap: 4px; padding: 7px; border-radius: 7px; background: var(--surface); border: 1px solid var(--line); font-size: 11px; }
+        .mini-card .tag { justify-self: start; }
+        .mini-card.yours { outline: 2px solid #e2b33c; outline-offset: 1px; animation: rise 0.4s var(--ease); }
+        @keyframes rise { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+        .ph { height: 6px; border-radius: 3px; background: var(--surface-2); }
+        .tag { font-size: 11px; font-weight: 600; padding: 1px 8px 1px 10px; clip-path: polygon(5px 0, 100% 0, 100% 100%, 0 100%); }
+        /* phone: the question comes first; the preview is a strip under it with only the part this step changes */
+        .phone .preview { position: static; order: 1; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--page); border: 1px solid var(--line); }
+        .lens { display: none; }
+        .phone .preview.folded .lens { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 28px; }
+        .lens .focus { outline: 2px solid var(--bug); outline-offset: 2px; border-radius: 6px; }
+        .lens .mini-cols { grid-auto-columns: minmax(84px, 1fr); width: 100%; }
+        .lens .mini-col { min-height: 0; padding: 5px; }
+        .lens .mini-card { width: 100%; }
+        .phone .preview:not(.folded) .mini { border: 0; padding: 0; background: none; }
+        .phone .preview .mini { padding: 10px; }
+        .phone .preview .mini-col { min-height: 70px; }
+        .phone .preview-toggle { display: inline; }
+        .preview-toggle { display: none; background: none; border: 0; font: inherit; font-size: 12px; color: var(--accent-ink); cursor: pointer; padding: 0; }
+        .phone .preview.folded .mini { display: none; }
+
+        /* done screen */
+        .done { display: grid; gap: 14px; justify-items: start; }
+        .done-mark { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--active); color: var(--active-fg); font-size: 26px; }
+
+        /* «left half way» frame */
+        .resume { margin-top: 40px; display: grid; gap: 12px; }
+        .resume h2 { font-size: 20px; margin: 0; }
+        .resume p { margin: 0; color: var(--muted); max-width: 760px; }
+        .hub-card { width: 340px; border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 10px; background: var(--bg); }
+        .hub-card-top { display: flex; align-items: center; gap: 10px; }
+        .hub-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-weight: 600; }
+        .hub-setup { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, #e2b33c 14%, var(--surface)); font-size: 13px; }
+        .hub-setup .progress-bars i { height: 3px; }
+
+        .q { margin-top: 40px; max-width: 820px; }
+        .q h2 { font-size: 20px; margin: 0 0 12px; }
+        .q ol { padding-left: 20px; color: var(--muted); }
+        .q li { margin-bottom: 10px; }
+        .q b { color: var(--fg); }
+
+        .slug { display: flex; align-items: stretch; height: 44px; border: 1px solid var(--control); border-radius: 10px; overflow: hidden; background: var(--surface); }
+        .slug span { display: grid; place-items: center; padding: 0 10px; background: var(--surface-2); color: var(--muted); font-family: var(--font-mono); font-size: 13px; }
+        .slug input { flex: 1; min-width: 0; border: 0; padding: 0 12px; font: inherit; font-family: var(--font-mono); font-size: 15px; color: var(--fg); background: none; }
+        .slug-hint { font-size: 13px; color: var(--muted); }
+        .slug-hint.ok { color: var(--accent-ink); }
+        .slug-hint.taken { color: var(--bug); }
+
+        /* the part of the preview the current step changes: red frame, the rest steps back */
+        .mini [data-part] { transition: opacity 0.2s var(--ease); border-radius: 6px; }
+        /* dim what the step doesn't change; a box holding the focused part, and anything inside it, stays bright */
+        .mini.focusing [data-part]:not(.focus):not(:has(.focus)):not(.focus [data-part]) { opacity: 0.4; }
+        .mini .focus { outline: 2px solid var(--bug); outline-offset: 3px; }
+        .mini .bump { animation: bump 0.45s var(--ease); }
+        @keyframes bump { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--bug) 45%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+        @media (prefers-reduced-motion: reduce) { .mini .bump { animation: none; } }
+        .preview-cap b { color: var(--bug); font-weight: 600; }
+        .mini { position: relative; }
+        .mini-url { font-family: var(--font-mono); font-size: 11px; color: var(--muted); justify-self: start; padding: 1px 6px; }
+        .mini-launcher { justify-self: end; font-size: 11px; font-weight: 600; color: #fff; background: var(--accent); padding: 4px 10px 4px 12px; clip-path: polygon(6px 0, 100% 0, 100% 100%, 0 100%); }
+        .mini-people { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); justify-self: start; padding: 2px 4px; }
+        .mini-people i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--line); color: var(--fg); }
+        .mini-card-empty { border-style: dashed; color: var(--muted); font-size: 11px; text-align: center; padding: 14px 6px; background: none; }
+        .suggest button { display: inline-flex; align-items: center; gap: 6px; }
+        .suggest button * { pointer-events: none; }
+        .suggest .dot { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--control); }
+        .suggest .plus { color: var(--accent-ink); font-weight: 600; margin-left: 2px; }
+        .h3-note { font-weight: 400; font-size: 13px; color: var(--muted); margin-left: 6px; }
+        .phone .h3-note { display: block; margin: 2px 0 0; }
+        .preview-toggle { white-space: nowrap; }
+        .preview-cap { gap: 12px; align-items: baseline; }
+        .phone .suggest { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none; scroll-snap-type: x proximity; scroll-padding-inline: 16px; -webkit-overflow-scrolling: touch; }
+        .phone .suggest::-webkit-scrollbar { display: none; }
+        .phone .suggest button { flex: none; scroll-snap-align: start; }
+        /* a soft fade on the right edge says there is more to scroll */
+        .phone .suggest { mask-image: linear-gradient(to right, #000 85%, transparent); }
+        .lens-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; max-width: 100%; padding: 4px; }
+        .lens-flow .pill { font-size: 12px; padding: 1px 8px; }
+        .lens-flow .arrow { color: var(--control); font-size: 12px; }
+        .lens > * { min-width: 0; max-width: 100%; }
+    </style>
+</head>
+<body>
+<div class="doc">
+    <h1>Онбординг новой доски — прототип</h1>
+    <p class="lede">Пункты 20 и 13 test.md. Экран открывается сразу по «Новая доска» и заменяет нынешнюю страницу создания: шесть коротких шагов в отдельном экране без сайдбара. Доска создаётся на первом шаге (название и адрес), поэтому с шага 2 уйти с полпути не страшно: настройку можно продолжить с карточки в «Моих досках».</p>
+    <ul class="lede">
+        <li><b>Шаг 1 — название и адрес</b>, кнопка «Создать доску»; адрес собирается из названия, свободен ли он — видно сразу. До создания вместо «Закончить позже» — «Отмена».</li>
+        <li><b>Остальные шаги — один вопрос</b> с готовым ответом по умолчанию: «Дальше» можно жать, ничего не меняя; шаги 3–6 можно пропустить.</li>
+        <li><b>Справа живое превью доски</b>: категории и статусы появляются в нём по мере выбора, на последнем шаге там же встаёт ваша первая идея. На телефоне превью — сворачиваемая полоска над шагом.</li>
+        <li><b>Последний шаг — первая идея</b> (п. 20): владелец пишет её сам и попадает на доску, где она уже есть.</li>
+    </ul>
+
+    <div class="controls">
+        <div class="group">Шаг
+            <div class="seg" data-ctl="step">
+                <button type="button" data-v="1" aria-pressed="true">1</button>
+                <button type="button" data-v="2" aria-pressed="false">2</button>
+                <button type="button" data-v="3" aria-pressed="false">3</button>
+                <button type="button" data-v="4" aria-pressed="false">4</button>
+                <button type="button" data-v="5" aria-pressed="false">5</button>
+                <button type="button" data-v="6" aria-pressed="false">6</button>
+                <button type="button" data-v="7" aria-pressed="false">Готово</button>
+            </div>
+        </div>
+        <div class="group">Экран
+            <div class="seg" data-ctl="device">
+                <button type="button" data-v="desktop" aria-pressed="true">Десктоп</button>
+                <button type="button" data-v="phone" aria-pressed="false">Телефон</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="app" id="app">
+            <header class="ob-top">
+                <span class="brand">Feedback Board<small id="brand-sub">Новая доска</small></span>
+                <div class="progress" aria-label="Прогресс настройки">
+                    <div class="progress-bars" id="bars"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                    <span class="progress-label" id="plabel"></span>
+                </div>
+                <button type="button" class="later" data-go="later" id="later">Закончить позже</button>
+            </header>
+
+            <main class="ob-main">
+                <div id="steps">
+                    <!-- 1. the name: this screen opens right on «Новая доска», the board is created on «Дальше» -->
+                    <section class="step" data-step="1">
+                        <h1>Как назовём доску?</h1>
+                        <p class="lead">Обычно — по названию продукта. Его увидят все, кто откроет доску.</p>
+                        <label class="field"><b>Название</b><input class="input" id="board-name" placeholder="Например: Demo" maxlength="80" autofocus></label>
+                        <div class="field"><b>Адрес доски</b>
+                            <span class="slug"><span>feedback.app/</span><input id="board-slug" placeholder="demo" maxlength="64" autocapitalize="off" spellcheck="false"></span>
+                            <small class="slug-hint" id="slug-hint">Соберётся из названия — можно поправить. Латиница, цифры, дефис.</small>
+                        </div>
+                    </section>
+
+                    <!-- 2. who sees the board -->
+                    <section class="step" data-step="2">
+                        <h1>Кто увидит доску?</h1>
+                        <p class="lead">Это можно поменять в любой момент в настройках.</p>
+                        <div class="choice">
+                            <label class="option"><input type="radio" name="vis" value="public" checked><b>Открытая</b><small>Любой по ссылке читает, голосует и предлагает. Подходит, чтобы собирать отзывы клиентов, в том числе через виджет на сайте.</small></label>
+                            <label class="option"><input type="radio" name="vis" value="private"><b>Закрытая</b><small>Только те, кого вы пригласите. Подходит для команды или тестовой группы.</small></label>
+                        </div>
+                    </section>
+
+                    <!-- 3. categories -->
+                    <section class="step" data-step="3" hidden>
+                        <h1>О чём будут предложения?</h1>
+                        <p class="lead">Категории помогают разбирать поток: пользователь выбирает одну в форме, вы фильтруете по ним доску.</p>
+                        <div class="chips" id="cats"></div>
+                        <p class="sub">Ещё варианты — нажмите, чтобы добавить</p>
+                        <div class="suggest" id="cat-suggest"></div>
+                        <div class="add-row"><input class="input" id="cat-new" placeholder="Своя категория"><button type="button" class="btn" data-add="cat">Добавить</button></div>
+                    </section>
+
+                    <!-- 4. statuses -->
+                    <section class="step" data-step="4" hidden>
+                        <h1>Как предложения будут двигаться?</h1>
+                        <p class="lead">Статусы — колонки доски. Автор видит, где его предложение, и получит письмо, когда оно будет готово.</p>
+                        <div class="flow" id="flow"></div>
+                        <p class="sub">Шаг между «Новое» и «Готово» — нажмите, чтобы добавить</p>
+                        <div class="suggest" id="st-suggest"></div>
+                        <div class="add-row"><input class="input" id="st-new" placeholder="Свой статус"><button type="button" class="btn" data-add="st">Добавить</button></div>
+                        <p class="note">«Новое», «Готово» и «Отклонено» есть всегда, их можно переименовать позже.</p>
+                    </section>
+
+                    <!-- 5. where to collect -->
+                    <section class="step" data-step="5" hidden>
+                        <h1 data-vis="public">Как пользователи попадут на доску?</h1>
+                        <h1 data-vis="private">Кого пригласить?</h1>
+                        <p class="lead" data-vis="public">Работают оба способа сразу. Всё, что пришлют, окажется на этой доске.</p>
+                        <p class="lead" data-vis="private">Доску увидят только приглашённые. Им придёт письмо со ссылкой.</p>
+                        <div class="where" data-vis="public">
+                            <div class="where-card">
+                                <h3>Ссылка <span class="h3-note">для чатов и писем</span></h3>
+                                <div class="share"><code>https://feedback.app/demo</code><button type="button" class="btn btn-sm" data-copy>Скопировать</button></div>
+                            </div>
+                            <div class="where-card">
+                                <h3>Кнопка на сайте <span class="h3-note">для тех, кто сейчас в продукте · можно позже</span></h3>
+                                <p class="note">Пользователь жмёт «Обратная связь» прямо в продукте и не уходит с сайта. Вставьте тег перед закрывающим &lt;/body&gt;; цвет и текст кнопки настроите потом.</p>
+                                <pre class="code">&lt;script src="https://feedback.app/widget.js" data-project="demo" defer&gt;&lt;/script&gt;</pre>
+                                <div class="add-row"><input class="input" placeholder="Сайт, где будет кнопка: https://app.ru"><button type="button" class="btn btn-sm" data-copy>Скопировать код</button></div>
+                            </div>
+                        </div>
+                        <div class="where" data-vis="private">
+                            <label class="field"><b>Почты через запятую</b><textarea class="input" placeholder="anna@company.ru, oleg@company.ru"></textarea></label>
+                            <label class="field"><b>Роль</b>
+                                <select class="input"><option>Участник — предлагает и голосует</option><option>Читатель — только смотрит</option><option>Менеджер — разбирает предложения</option></select>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- 6. first idea -->
+                    <section class="step" data-step="6" hidden>
+                        <h1>Оставьте первое предложение</h1>
+                        <p class="lead">Пустая доска выглядит заброшенной. Первая карточка покажет пользователям, как это работает, и вы сами пройдёте их путь.</p>
+                        <label class="field"><b>Категория</b><div class="chips" id="idea-cats"></div></label>
+                        <label class="field"><b>Заголовок</b><input class="input" id="idea-title" placeholder="Например: «Тёмная тема в приложении»"></label>
+                        <label class="field"><b>Подробнее</b> <textarea class="input" placeholder="Что хотите и зачем — по желанию"></textarea></label>
+                    </section>
+
+                    <!-- done -->
+                    <section class="step done" data-step="7" hidden>
+                        <span class="done-mark" aria-hidden="true">✓</span>
+                        <h1>Доска готова</h1>
+                        <p class="lead" id="done-lead"></p>
+                        <div class="where" style="width:100%">
+                            <div class="share"><code>https://feedback.app/demo</code><button type="button" class="btn btn-sm" data-copy>Скопировать</button></div>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-primary">Открыть доску →</button><button type="button" class="btn">Все настройки</button></div>
+                    </section>
+                </div>
+
+                <aside class="preview" id="preview">
+                    <div class="preview-cap"><span id="pcap">Так будет выглядеть доска</span><button type="button" class="preview-toggle" id="ptoggle">Вся доска</button></div>
+                    <div class="lens" id="lens" aria-hidden="true"></div>
+                    <div class="mini" id="mini"></div>
+                </aside>
+            </main>
+
+            <footer class="ob-bar" id="bar">
+                <button type="button" class="btn btn-ghost" data-go="back" aria-label="Назад"><span class="full">← Назад</span><span class="short">←</span></button>
+                <span class="sp"></span>
+                <button type="button" class="btn btn-ghost" data-go="skip" id="skip">Пропустить</button>
+                <button type="button" class="btn btn-primary" data-go="next" id="next">Дальше</button>
+            </footer>
+        </div>
+    </div>
+
+    <section class="resume">
+        <h2>Если ушли с полпути</h2>
+        <p>Доска уже создана, поэтому ничего не теряется (п. 13). На её карточке в «Моих досках» — плашка с прогрессом; «Продолжить» открывает онбординг на том же шаге. «Скрыть» убирает плашку навсегда, всё дальнейшее — в настройках.</p>
+        <div class="hub-card">
+            <div class="hub-card-top"><span class="hub-mark">D</span><b>Demo</b></div>
+            <div class="hub-setup">
+                <b>Настройка: шаг 3 из 6</b>
+                <div class="progress-bars"><i class="done"></i><i class="done"></i><i class="cur"></i><i></i><i></i><i></i></div>
+                <div style="display:flex;gap:8px;margin-top:4px"><button type="button" class="btn btn-sm btn-primary">Продолжить</button><button type="button" class="btn btn-sm btn-ghost">Скрыть</button></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="q">
+        <h2>Решено (6 нояб.)</h2>
+        <ol>
+            <li><b>Шесть шагов:</b> название и адрес → кто увидит → категории → статусы → как пользователи попадут на доску → первое предложение. Категории и статусы — раздельно, по одному вопросу на экран.</li>
+            <li><b>«Закончить позже»</b> (с шага 2) ведёт в «Мои доски»; на карточке доски — плашка «Настройка: шаг N из 6 · Продолжить / Скрыть». На шаге 1 доски ещё нет — там «Отмена».</li>
+            <li><b>Первое предложение</b> — от имени владельца, поля пустые; можно пропустить («Без первой идеи»).</li>
+            <li><b>Виджет в онбординге</b> — только код и один домен; цвет, текст кнопки и другие домены — потом в настройках, раздел «Виджет» (п. 42).</li>
+            <li><b>Подсказки категорий</b> — универсальные типы обратной связи («Улучшение», «Вопрос», «Жалоба», «Похвала»), «Баг» и «Идея» добавлены по умолчанию. На телефоне подсказки — одной строкой с прокруткой.</li>
+            <li><b>Превью доски</b> подсвечивает красным то, что меняет текущий шаг; на телефоне — полоска под вопросом только с этой частью, «Вся доска» раскрывает полное превью.</li>
+            <li><b>Онбординг заменяет</b> страницу «Новая доска» и нынешний заход на «Доступ» с заголовком «Доска готова».</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    const STEPS = 6
+    const TAKEN = ['admin', 'app', 'api', 'demo', 'kerr']
+    const TRANSLIT = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' }
+    const slugify = (v) => v.toLowerCase().split('').map((c) => TRANSLIT[c] ?? c).join('').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64)
+    const slugOk = () => /^[a-z0-9][a-z0-9-]{1,63}$/.test(state.slug) && !TAKEN.includes(state.slug)
+    // suggestions are kinds of feedback any product gets, not guesses about the product itself («Доставка», «Оплата»)
+    const CAT_COLORS = { 'Баг': '#f3cfc8', 'Идея': '#c9dde6', 'Улучшение': '#cce4d1', 'Вопрос': '#efe09f', 'Жалоба': '#f6d8b3', 'Похвала': '#efccd4' }
+    const state = {
+        step: 1, device: 'desktop', vis: 'public', name: '', slug: '', slugEdited: false,
+        cats: ['Баг', 'Идея'],
+        statuses: [],          // custom ones, between «Новое» and «Готово»
+        idea: { cat: 'Идея', title: '' },
+        previewFolded: true,   // phone: a lens on the changed part; «Вся доска» unfolds the whole preview
+    }
+    const app = document.getElementById('app')
+    const $ = (id) => document.getElementById(id)
+    const color = (c) => CAT_COLORS[c] ?? '#e3ebe6'
+
+    function renderCats() {
+        $('cats').innerHTML = state.cats.map((c) => `<span class="chip-ed"><span class="dot" style="background:${color(c)}"></span>${c}<button type="button" data-del-cat="${c}" aria-label="Убрать ${c}">×</button></span>`).join('')
+        $('cat-suggest').innerHTML = Object.keys(CAT_COLORS).filter((c) => !state.cats.includes(c)).map((c) => `<button type="button" data-sug-cat="${c}" aria-label="Добавить категорию ${c}"><span class="dot" style="background:${color(c)}"></span>${c}<span class="plus" aria-hidden="true">+</span></button>`).join('')
+        $('idea-cats').innerHTML = state.cats.map((c) => `<button type="button" class="btn btn-sm" data-idea-cat="${c}" aria-pressed="${state.idea.cat === c}" style="${state.idea.cat === c ? 'border-color:var(--active-line);background:var(--active)' : ''}">${c}</button>`).join('')
+    }
+    function renderFlow() {
+        const chain = [['Новое', '#e3ebe6', ''], ...state.statuses.map((s) => [s, '#cce4d1', s]), ['Готово', '#cce4d1', ''], ['Отклонено', '#f3cfc8', '']]
+        $('flow').innerHTML = chain.map(([n, c, custom], i) => (i ? '<span class="arrow">→</span>' : '') + (custom ? `<span class="chip-ed">${n}<button type="button" data-del-st="${n}" aria-label="Убрать ${n}">×</button></span>` : `<span class="pill" style="background:${c}">${n}</span>`)).join('')
+        $('st-suggest').innerHTML = ['В работе', 'Запланировано', 'На проверке', 'Обсуждаем'].filter((s) => !state.statuses.includes(s)).map((s) => `<button type="button" data-sug-st="${s}" aria-label="Добавить статус ${s}">${s}<span class="plus" aria-hidden="true">+</span></button>`).join('')
+    }
+    function renderPreview() {
+        const cols = ['Новое', ...state.statuses, 'Готово', 'Отклонено']
+        const yours = state.step >= 6 && state.idea.title.trim()
+        // step 6 shows its card as you type; until then a dashed slot marks where it will be
+        const sample = (cat) => `<div class="mini-card"><span class="tag" style="background:${color(cat)}">${cat}</span><span class="ph" style="width:90%"></span><span class="ph" style="width:60%"></span></div>`
+        // which part of the board the current step changes
+        const FOCUS = { 1: 'name', 2: 'vis', 3: 'cats', 4: 'cols', 5: 'where', 6: 'card' }
+        // step 5 (open board) is about both ways in: the address and the button
+        const focus = FOCUS[state.step]
+        const part = (name, html) => `<div data-part="${name}" class="${name === focus ? 'focus' : ''}">${html}</div>`
+        const span = (name, cls, html) => `<span data-part="${name}" class="${cls}${name === focus ? ' focus' : ''}">${html}</span>`
+        const cardTag = (cat) => `<span class="tag${focus === 'cats' ? ' focus' : ''}" data-part="cats" style="background:${color(cat)}">${cat}</span>`
+        $('mini').innerHTML = `
+            <div class="mini-head">${span('name', 'mini-tag', state.name.trim() || 'Название доски')}${span('vis', 'mini-vis', state.vis === 'public' ? 'Открытая' : 'Закрытая')}</div>
+            <span data-part="url" class="mini-url${focus === 'name' || (focus === 'where' && state.vis === 'public') ? ' focus' : ''}">feedback.app/${state.slug || '…'}</span>
+            ${part('cats', `<div class="mini-filters"><i class="on">Все</i>${state.cats.map((c) => `<i>${c}</i>`).join('')}</div>`)}
+            ${part('cols', `<div class="mini-cols">${cols.map((c, i) => `<div class="mini-col"><span class="pill" style="background:${c === 'Отклонено' ? '#f3cfc8' : c === 'Новое' ? '#e3ebe6' : '#cce4d1'}">${c}</span>${i === 0 && yours ? `<div class="mini-card yours${focus === 'card' ? ' focus' : ''}" data-part="card">${cardTag(state.idea.cat)}<b>${state.idea.title}</b></div>` : ''}${i === 0 && !yours && focus === 'card' ? `<div class="mini-card mini-card-empty focus" data-part="card">Ваше предложение появится здесь</div>` : ''}${i === 0 && !yours && focus !== 'card' ? `<div class="mini-card">${cardTag(state.cats[0] ?? 'Идея')}<span class="ph" style="width:90%"></span><span class="ph" style="width:60%"></span></div>` : ''}</div>`).join('')}</div>`)}
+            ${state.vis === 'public' ? span('where', 'mini-launcher', 'Обратная связь') : span('where', 'mini-people', '<i>А</i><i>О</i><i>+</i> участники')}`
+        $('mini').classList.toggle('focusing', !!focus)
+        // a short flash on the focused part each time it changes
+        const sig = JSON.stringify([state.name, state.slug, state.vis, state.cats, state.statuses, state.idea])
+        if (renderPreview.sig && renderPreview.sig !== sig) $('mini').querySelectorAll('.focus').forEach((el) => el.classList.add('bump'))
+        renderPreview.sig = sig
+        const CAPTIONS = {
+            name: 'Название и адрес доски',
+            vis: 'Кто видит доску — метка у названия',
+            cats: 'Категории — фильтры и метки на карточках',
+            cols: 'Статусы — колонки доски',
+            where: state.vis === 'public' ? 'Адрес доски и кнопка на вашем сайте' : 'Участники доски',
+            card: 'Ваше предложение — первая карточка',
+        }
+        $('pcap').innerHTML = focus ? `Меняется: <b>${CAPTIONS[focus]}</b>` : 'Так будет выглядеть доска'
+        $('preview').classList.toggle('folded', state.previewFolded)
+        $('ptoggle').textContent = state.previewFolded ? 'Вся доска' : 'Свернуть'
+        // the lens: copies of the focused parts only (the full preview stays the source of truth)
+        const parts = [...$('mini').querySelectorAll('.focus')].filter((el) => !el.parentElement.closest('.focus'))
+        if (focus === 'cols') {
+            // columns don't fit a phone strip: the same statuses as a chain that wraps
+            const pillColor = (c) => (c === 'Отклонено' ? '#f3cfc8' : c === 'Новое' ? '#e3ebe6' : '#cce4d1')
+            $('lens').innerHTML = `<span class="lens-flow focus">${cols.map((c, i) => (i ? '<span class="arrow">→</span>' : '') + `<span class="pill" style="background:${pillColor(c)}">${c}</span>`).join('')}</span>`
+        } else {
+            $('lens').innerHTML = parts.map((el) => el.outerHTML).join('')
+        }
+        // the visibility badge means something only next to the board's name: show the name too, unframed
+        if (focus === 'vis') $('lens').insertAdjacentHTML('afterbegin', $('mini').querySelector('.mini-tag').outerHTML)
+    }
+    function render() {
+        app.className = `app${state.device === 'phone' ? ' phone' : ''}`
+        document.querySelectorAll('[data-step]').forEach((s) => (s.hidden = Number(s.dataset.step) !== state.step))
+        document.querySelectorAll('[data-vis]').forEach((el) => (el.hidden = el.dataset.vis !== state.vis))
+        const done = state.step > STEPS
+        ;[...$('bars').children].forEach((b, i) => { b.className = i + 1 < state.step || done ? 'done' : i + 1 === state.step ? 'cur' : '' })
+        $('plabel').textContent = done ? 'Готово' : `Шаг ${state.step} из ${STEPS}`
+        $('bar').hidden = done
+        // phone, step 1: the name field goes first, the preview waits until there's a board to show
+        $('preview').hidden = done || (state.step === 1 && state.device === 'phone')
+        document.querySelector('[data-go="back"]').style.visibility = state.step === 1 ? 'hidden' : 'visible'
+        const last = state.step === STEPS
+        $('next').textContent = state.step === 1 ? 'Создать доску' : last ? (state.device === 'phone' ? 'Опубликовать' : 'Опубликовать и открыть доску') : 'Дальше'
+        $('next').disabled = state.step === 1 && !(state.name.trim() && slugOk())
+        $('skip').textContent = last ? (state.device === 'phone' ? 'Без идеи' : 'Без первой идеи') : 'Пропустить'
+        $('skip').hidden = state.step <= 2
+        // before the board exists there's nothing to finish later: step 1 offers «Отмена»
+        $('later').textContent = state.step === 1 ? 'Отмена' : 'Закончить позже'
+        $('brand-sub').textContent = state.step === 1 || !state.name.trim() ? 'Новая доска' : `Новая доска «${state.name.trim()}»`
+        $('done-lead').textContent = state.idea.title.trim()
+            ? `Ваше предложение «${state.idea.title.trim()}» уже на доске. Поделитесь ссылкой, чтобы пришли остальные.`
+            : 'Поделитесь ссылкой, чтобы пришли первые предложения.'
+        document.querySelectorAll('[data-ctl="step"] button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === state.step)))
+        renderCats(); renderFlow(); renderPreview()
+        // nothing left to suggest: the «нажмите, чтобы добавить» line goes with the empty row
+        for (const id of ['cat-suggest', 'st-suggest']) $(id).previousElementSibling.hidden = !$(id).children.length
+    }
+    function go(step) { state.step = Math.max(1, Math.min(STEPS + 1, step)); render() }
+
+    document.addEventListener('click', (e) => {
+        const t = e.target
+        const ctl = t.closest('[data-ctl] button')
+        if (ctl) {
+            const key = ctl.closest('[data-ctl]').dataset.ctl
+            if (key === 'step') go(Number(ctl.dataset.v))
+            else { state.device = ctl.dataset.v; ctl.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === ctl))); render() }
+            return
+        }
+        const nav = t.closest('[data-go]')?.dataset.go
+        if (nav === 'next' || nav === 'skip') return go(state.step + 1)
+        if (nav === 'back') return go(state.step - 1)
+        if (nav === 'later') { document.querySelector('.resume').scrollIntoView({ behavior: 'smooth' }); return }
+        const sugCat = t.closest('[data-sug-cat]')?.dataset.sugCat
+        if (sugCat) { state.cats.push(sugCat); return render() }
+        const sugSt = t.closest('[data-sug-st]')?.dataset.sugSt
+        if (sugSt) { state.statuses.push(sugSt); return render() }
+        if (t.dataset.delCat) { state.cats = state.cats.filter((c) => c !== t.dataset.delCat); if (state.idea.cat === t.dataset.delCat) state.idea.cat = state.cats[0] ?? ''; return render() }
+        if (t.dataset.delSt) { state.statuses = state.statuses.filter((s) => s !== t.dataset.delSt); return render() }
+        if (t.dataset.ideaCat) { state.idea.cat = t.dataset.ideaCat; return render() }
+        const add = t.closest('[data-add]')?.dataset.add
+        if (add) {
+            const input = $(add === 'cat' ? 'cat-new' : 'st-new')
+            const v = input.value.trim()
+            if (v) { (add === 'cat' ? state.cats : state.statuses).push(v); input.value = '' }
+            return render()
+        }
+        if (t.closest('[data-copy]')) { const b = t.closest('[data-copy]'); const old = b.textContent; b.textContent = 'Скопировано'; setTimeout(() => (b.textContent = old), 1200) }
+        if (t.id === 'ptoggle') { state.previewFolded = !state.previewFolded; renderPreview() }
+    })
+    document.addEventListener('change', (e) => { if (e.target.name === 'vis') { state.vis = e.target.value; render() } })
+    function slugHint() {
+        const h = $('slug-hint')
+        if (!state.slug) { h.className = 'slug-hint'; h.textContent = 'Соберётся из названия — можно поправить. Латиница, цифры, дефис.'; return }
+        if (TAKEN.includes(state.slug)) { h.className = 'slug-hint taken'; h.textContent = `Адрес feedback.app/${state.slug} уже занят — попробуйте другой.`; return }
+        if (!slugOk()) { h.className = 'slug-hint taken'; h.textContent = 'Только латиница, цифры и дефис, от 2 символов.'; return }
+        h.className = 'slug-hint ok'; h.textContent = `✓ feedback.app/${state.slug} свободен. Поменять потом можно в настройках.`
+    }
+    $('board-name').addEventListener('input', (e) => {
+        state.name = e.target.value
+        if (!state.slugEdited) { state.slug = slugify(state.name); $('board-slug').value = state.slug }
+        slugHint(); render()
+    })
+    $('board-slug').addEventListener('input', (e) => {
+        state.slug = e.target.value.trim().toLowerCase()
+        state.slugEdited = state.slug !== ''
+        slugHint(); render()
+    })
+    $('idea-title').addEventListener('input', (e) => { state.idea.title = e.target.value; renderPreview() })
+    render()
+</script>
+</body>
+</html>
