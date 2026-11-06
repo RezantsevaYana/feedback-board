@@ -1,0 +1,538 @@
+@use '../utils' as *;
+
+// the step + the miniature (560 + 64 + 440): the strip, the content and the bar share this width
+$onboarding-width: 1064px;
+
+// OnboardingPage.vue and its steps (pages/onboarding/components) — the new-board onboarding, TEST.md п. 20.
+// A focused screen: top strip with the progress, the step, the bottom bar with Назад / Дальше.
+.onboarding {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    background: var(--bg);
+}
+.onboarding-top {
+    border-bottom: 1px solid var(--line);
+}
+// the strip's content lives in the page's .container
+.onboarding-top-inner {
+    display: grid;
+    max-width: $onboarding-width;
+    margin-inline: auto;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding-block: 14px;
+
+    @media screen and (max-width: $mobile) {
+        grid-template-columns: 1fr auto;
+        gap: 10px 12px;
+        padding-block: 12px;
+    }
+}
+@media screen and (max-width: $tablet) {
+    .onboarding-top-inner {
+        max-width: 560px;
+    }
+}
+// phone: the «FB» tag takes only its own width in the 1fr column
+.onboarding-top-inner .app-brand-mark {
+    justify-self: start;
+}
+.onboarding-board {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @media screen and (max-width: $mobile) {
+        display: none;
+    }
+}
+.onboarding-progress {
+    display: grid;
+    gap: 6px;
+    justify-self: center;
+    width: min(420px, 100%);
+
+    @media screen and (max-width: $mobile) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+    }
+}
+.onboarding-bars {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 4px;
+
+    i {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--surface-2);
+        transition: background-color 0.25s ease-out;
+
+        &.done {
+            background: var(--accent);
+        }
+        &.cur {
+            background: color-mix(in srgb, var(--accent) 45%, var(--surface-2));
+        }
+    }
+}
+.onboarding-progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+
+    @media screen and (max-width: $mobile) {
+        text-align: left;
+    }
+}
+.onboarding-later {
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+// the step and the board's miniature as one composition in the middle of the screen: the step up to 560px,
+// the miniature 440px right next to it. The strip above and the bar below are as wide, so the brand, the progress
+// and «Дальше» line up with them. Tablet / phone: one 560px column, the miniature under the step, as wide as it
+.onboarding-main {
+    display: grid;
+    grid-template-columns: minmax(0, 560px) minmax(0, 440px);
+    justify-content: space-between;
+    max-width: $onboarding-width;
+    margin-inline: auto;
+    align-items: start;
+    align-content: start;
+    gap: 64px;
+    padding-block: 40px;
+
+    @media screen and (max-width: $tablet) {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 560px;
+        gap: 20px;
+        padding-block: 24px;
+    }
+    @media screen and (max-width: $mobile) {
+        padding-block: 20px 24px;
+    }
+}
+.onboarding-current {
+    min-width: 0;
+}
+// one step: a question, a lead, the answer
+.onboarding-step {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    max-width: 560px;
+    animation: onboarding-step-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+
+    h1 {
+        @include displayFont;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+
+        @media screen and (max-width: $mobile) {
+            font-size: 22px;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+@keyframes onboarding-step-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+.onboarding-lead {
+    margin: -8px 0 0;
+    max-width: 52ch;
+    color: var(--muted);
+}
+
+// step 1: the board's name is the hero field (the class lands on the <input>: InputComponent passes attrs through)
+.onboarding-name.input {
+    font-size: 20px;
+    font-weight: 600;
+    min-height: 52px;
+    padding: 10px 14px;
+}
+.onboarding-slug {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.onboarding-slug-hint {
+    margin: 0;
+    min-height: 18px; // always there, so «Свободен» doesn't push the form down
+    font-size: 12px;
+    color: var(--muted);
+
+    &.ok {
+        color: var(--accent-ink);
+    }
+    &.err {
+        color: var(--bug);
+    }
+}
+
+// the bottom bar: ← Назад … Дальше; sticks to the bottom on a phone, under the thumb
+.onboarding-bar {
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+
+    @media screen and (max-width: $mobile) {
+        position: sticky;
+        bottom: 0;
+    }
+}
+.onboarding-bar-inner {
+    display: flex;
+    max-width: $onboarding-width;
+    margin-inline: auto;
+
+    @media screen and (max-width: $tablet) {
+        max-width: 560px;
+    }
+    align-items: center;
+    gap: 10px;
+    padding-block: 14px;
+
+    .btn {
+        min-height: 44px;
+    }
+    @media screen and (max-width: $mobile) {
+        gap: 8px;
+        padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px));
+
+        > .spacer {
+            display: none;
+        }
+        .onboarding-next {
+            flex: 1;
+            min-width: 0;
+        }
+        .onboarding-back {
+            width: 44px;
+            padding: 0;
+        }
+    }
+}
+.onboarding-next {
+    min-width: 180px;
+}
+.onboarding-short {
+    display: none;
+}
+@media screen and (max-width: $mobile) {
+    .onboarding-full {
+        display: none;
+    }
+    .onboarding-short {
+        display: inline;
+    }
+}
+
+// steps 3–4: what the board has (chips with ×), what it could get (suggestions with +), your own name
+.onboarding-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.onboarding-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 4px 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    font-size: 14px;
+}
+.onboarding-chip-color {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--control);
+    border-radius: 4px;
+    background: var(--tag);
+
+    &.colorless {
+        background: linear-gradient(135deg, transparent 46%, var(--muted) 47%, var(--muted) 53%, transparent 54%);
+    }
+}
+.onboarding-chip-remove {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+
+    @include hover {
+        background: var(--surface-2);
+        color: var(--fg);
+    }
+}
+.onboarding-sub {
+    margin: 4px 0 -8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+}
+.onboarding-suggest {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 12px;
+        border: 1px dashed var(--control);
+        border-radius: 999px;
+        background: none;
+        font: inherit;
+        font-size: 14px;
+        color: var(--fg);
+        cursor: pointer;
+
+        @include hover {
+            border-style: solid;
+            background: var(--surface-2);
+        }
+    }
+    // phone: one row that scrolls inside, the first chip keeps the page's gutter
+    @media screen and (max-width: $mobile) {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        @include bleed;
+        padding-block: 2px 6px;
+        scroll-snap-type: x proximity;
+        scroll-padding-inline: 16px;
+        scrollbar-width: none;
+        mask-image: linear-gradient(to right, var(--fg) 85%, transparent);
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+        button {
+            flex: none;
+            scroll-snap-align: start;
+        }
+    }
+}
+.onboarding-suggest-plus {
+    margin-left: 2px;
+    font-weight: 600;
+    color: var(--accent-ink);
+}
+.onboarding-add {
+    display: flex;
+    gap: 8px;
+
+    .field {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+    }
+    .btn {
+        flex: none;
+        min-height: 44px;
+    }
+}
+// step 4: the columns in their order, «Новое → … → Готово → Отклонено»
+.onboarding-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    li + li::before {
+        content: '→';
+        color: var(--control);
+    }
+}
+// «Пропустить»: a quiet text button next to the primary one
+.onboarding-skip {
+    border-color: transparent;
+    background: none;
+    color: var(--muted);
+
+    @include hover {
+        color: var(--fg);
+        background: var(--surface-2);
+    }
+    @media screen and (max-width: $mobile) {
+        padding: 0 10px;
+    }
+}
+
+// step 5: the ways onto the board (open) — a card each
+.onboarding-way {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+
+    h2 {
+        margin: 0;
+        font-size: 16px;
+    }
+    .field {
+        margin: 0;
+    }
+}
+.onboarding-way-note {
+    margin-left: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+
+    @media screen and (max-width: $mobile) {
+        display: block;
+        margin: 2px 0 0;
+    }
+}
+.onboarding-share {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 14px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+
+    code {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .btn {
+        flex: none;
+    }
+}
+.onboarding-code {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.onboarding-copy {
+    justify-self: start;
+}
+
+// step 6: the category of the first post, one of the board's
+.onboarding-pick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        font: inherit;
+        font-size: 14px;
+        color: var(--fg);
+        cursor: pointer;
+
+        &[aria-checked='true'] {
+            border-color: var(--active-line);
+            background: var(--active);
+            color: var(--active-fg);
+        }
+    }
+}
+
+// «Доска готова»
+.onboarding-done {
+    justify-items: start;
+}
+.onboarding-done-mark {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--active);
+    color: var(--active-fg);
+}
+.onboarding-done .onboarding-share {
+    width: 100%;
+}
+.onboarding-done-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+// step 2: «Настроить потом» — the other way out of the onboarding, set apart from the two modes
+.onboarding-later-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 8px;
+    padding: 14px 16px;
+    border: 1px dashed var(--control);
+    border-radius: 12px;
+
+    b {
+        font-weight: 600;
+    }
+    .note {
+        margin: 2px 0 0;
+    }
+    .btn {
+        flex: none;
+        min-height: 44px;
+    }
+    @media screen and (max-width: $mobile) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

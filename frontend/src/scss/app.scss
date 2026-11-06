@@ -39,7 +39,8 @@
 @use 'components/auth-pages';
 @use 'components/boards-hub';
 @use 'components/board-card';
-@use 'components/board-new';
+@use 'components/onboarding';
+@use 'components/onboarding-preview';
 @use 'components/board-workspace';
 @use 'components/board-access';
 @use 'components/board-settings';

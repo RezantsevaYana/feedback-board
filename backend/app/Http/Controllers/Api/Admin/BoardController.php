@@ -21,6 +21,9 @@ use Illuminate\Validation\Rule;
  */
 class BoardController extends Controller
 {
+    /** The onboarding step a board created from the cabinet continues from (step 1 is the create form itself). */
+    private const ONBOARDING_FIRST_STEP = 2;
+
     public function index(Request $request): JsonResponse
     {
         // every board the user is on (project_user), whatever the role: the hub groups them
@@ -54,6 +57,8 @@ class BoardController extends Controller
             $data['origins'] ?? [],
             $request->user(),
         );
+        // created from the cabinet → the onboarding goes on from step 2 (step 1, name and address, is this request)
+        $board->update(['onboarding_step' => self::ONBOARDING_FIRST_STEP]);
 
         return response()->json(['data' => $this->summary($board->loadCount('members'))], 201);
     }
@@ -86,6 +91,10 @@ class BoardController extends Controller
         // null → вернуть стандартный «Обратная связь»
         if (array_key_exists('widget_launcher_text', $data)) {
             $board->widget_launcher_text = $data['widget_launcher_text'];
+        }
+        // the onboarding saves where the owner is; null — finished or «Скрыть» on the hub card
+        if (array_key_exists('onboarding_step', $data)) {
+            $board->onboarding_step = $data['onboarding_step'];
         }
         $opening = $board->isDirty('visibility') && ! $board->isPrivate();
         $board->save();
@@ -201,6 +210,8 @@ class BoardController extends Controller
             'members_count' => (int) ($p->members_count ?? 0),
             // from the pivot when listed through projects(); a board just created or restored is the owner's
             'role' => $p->pivot?->role ?? ProjectRole::Owner->value,
+            // the hub card's «Настройка: шаг N из 6 · Продолжить»; null — nothing to continue
+            'onboarding_step' => $p->onboarding_step,
         ];
     }
 
@@ -236,6 +247,7 @@ class BoardController extends Controller
             // the «Доступ» warning says how much becomes visible (or closed) when the mode changes
             'posts_count' => $p->posts()->where('is_hidden', false)->count(),
             'members_count' => $p->members()->count(),
+            'onboarding_step' => $p->onboarding_step,
         ];
     }
 

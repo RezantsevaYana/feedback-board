@@ -37,6 +37,37 @@ class BoardSettingsTest extends TestCase
             ->assertJsonPath('data.visibility', 'public');
     }
 
+    public function test_a_board_created_from_the_cabinet_carries_its_onboarding_step_until_done(): void
+    {
+        $this->actingAs($this->owner)
+            ->postJson('/api/admin/boards', ['name' => 'Новая доска', 'slug' => 'new-board'])
+            ->assertCreated()
+            ->assertJsonPath('data.onboarding_step', 2);
+
+        $this->patchJson('/api/admin/boards/new-board', ['onboarding_step' => 4])
+            ->assertOk()
+            ->assertJsonPath('data.onboarding_step', 4);
+        $hub = collect($this->getJson('/api/admin/boards')->json('data'))->keyBy('slug');
+        $this->assertSame(4, $hub['new-board']['onboarding_step']);
+
+        // finished, or «Скрыть» on the hub card: nothing to continue
+        $this->patchJson('/api/admin/boards/new-board', ['onboarding_step' => null])
+            ->assertOk()
+            ->assertJsonPath('data.onboarding_step', null);
+
+        // step 1 is the create form itself, there is no step 7
+        $this->patchJson('/api/admin/boards/new-board', ['onboarding_step' => 1])->assertUnprocessable();
+        $this->patchJson('/api/admin/boards/new-board', ['onboarding_step' => 7])->assertUnprocessable();
+    }
+
+    public function test_boards_made_outside_the_cabinet_have_no_onboarding_to_continue(): void
+    {
+        $this->actingAs($this->owner)
+            ->getJson('/api/admin/boards/my-board')
+            ->assertOk()
+            ->assertJsonPath('data.onboarding_step', null);
+    }
+
     public function test_owner_reads_and_updates_settings(): void
     {
         $this->actingAs($this->owner);

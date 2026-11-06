@@ -1,14 +1,12 @@
 <template>
-  <form class="board-new-form" novalidate @submit.prevent="submit">
-    <div class="page-head board-new-head">
-      <h1>Новая доска</h1>
-    </div>
+  <form class="onboarding-step" novalidate @submit.prevent="submit">
+    <h1>Как назовём доску?</h1>
+    <p class="onboarding-lead">Обычно — по названию продукта. Его увидят все, кто откроет доску.</p>
 
     <InputComponent
       v-model="name"
-      label="Название доски"
-      hint="пользователи увидят его в шапке"
-      class="board-new-name"
+      label="Название"
+      class="onboarding-name"
       type="text"
       maxlength="80"
       :errors="v$.name"
@@ -16,11 +14,11 @@
       autofocus
     />
 
-    <div class="board-new-slug">
+    <div class="onboarding-slug">
       <InputComponent
         v-model="slug"
         label="Адрес доски"
-        hint="латиница, цифры, дефис"
+        :prefix="`${host}/`"
         type="text"
         autocapitalize="off"
         spellcheck="false"
@@ -30,47 +28,45 @@
         validate-on-submit
         @input="onSlugInput"
       />
-      <p class="board-new-slug-hint" :class="slugHintClass">{{ slugHint }}</p>
+      <p class="onboarding-slug-hint" :class="slugHintClass">{{ slugHint }}</p>
     </div>
-
-    <div class="board-new-actions">
-      <!-- hover rolls the label into «Поехали →» (shared .cta-roll); while sending it reads «Создаём…» -->
-      <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending" :aria-label="sending ? undefined : 'Создать доску'">
-        <template v-if="sending">Создаём…</template>
-        <span v-else class="cta-roll" aria-hidden="true"><span>Создать доску</span><span>Поехали →</span></span>
-      </button>
-    </div>
+    <!-- Enter in a field submits; the visible button is in the page's bottom bar -->
+    <button type="submit" hidden />
   </form>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
 import { helpers, maxLength, minLength, required } from '@vuelidate/validators'
-import { BoardsApi, type SlugCheck } from '@/api/boards'
+import { type Board, BoardsApi, type SlugCheck } from '@/api/boards'
 import { ApiError } from '@/api/client'
-import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { slugify } from '@/shared/utils/slugify'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 
-const auth = useAuthStore()
+// Onboarding step 1 (TEST.md п. 20): the board's name and address. The board is created here, so every later step
+// works on a real board and leaving half way loses nothing. The address follows the name until edited by hand,
+// with a live availability check (the logic of the former BoardNewPage).
+const emit = defineEmits<{
+  created: [board: Board]
+  busy: [busy: boolean]
+  draft: [draft: { name: string; slug: string }]
+}>()
 const notification = useNotificationStore()
-const router = useRouter()
+// the board lives in this same app, at /<address>
+const host = window.location.host
 
 const name = ref('')
 const slug = ref('')
-// User took over the slug input: stop auto-syncing from name.
+// the user took over the address: stop following the name
 const slugDirty = ref(false)
 const slugServer = ref('')
 const slugCheck = ref<SlugCheck | null>(null)
 const slugChecking = ref(false)
-
 const sending = ref(false)
 
 const slugFormat = helpers.regex(/^[a-z0-9][a-z0-9-]{1,63}$/)
-
 const rules = {
   name: {
     required: helpers.withMessage('Назовите доску — чтобы на неё было легко сослаться.', required),
@@ -84,6 +80,8 @@ const rules = {
   },
 }
 const v$ = useVuelidate(rules, { name, slug })
+// the preview next to the form shows the name and the address as they are typed
+watch([name, slug], () => emit('draft', { name: name.value.trim(), slug: slug.value.trim() }))
 
 watch(name, (next) => {
   if (!slugDirty.value) slug.value = slugify(next)
@@ -94,7 +92,7 @@ watch(slug, (next) => {
 })
 
 function onSlugInput() {
-  // Clearing the slug input resumes auto-generation from the name field.
+  // clearing the address goes back to following the name
   slugDirty.value = slug.value.length > 0
 }
 
@@ -109,10 +107,10 @@ function scheduleSlugCheck(value: string) {
 async function runSlugCheck(value: string) {
   try {
     const res = await BoardsApi.checkSlug(value)
-    // discard the response if the user kept typing — only the last value matters
+    // only the last typed value matters
     if (slug.value === value) slugCheck.value = res.data
   } catch {
-    // network / 500 — ignore; the server validates on submit anyway
+    // network / 500: the server validates on submit anyway
   } finally {
     if (slug.value === value) slugChecking.value = false
   }
@@ -123,15 +121,15 @@ watch([slug, () => v$.value.slug.$errors.length], () => (slugError.value = ''))
 
 const slugHint = ref('')
 const slugHintClass = ref('')
-watch([slugChecking, slugCheck, slug, () => v$.value.slug.$dirty], () => {
+watch([slugChecking, slugCheck, slug], () => {
   if (!slug.value) {
-    slugHint.value = ''
+    slugHint.value = 'Соберётся из названия — можно поправить. Латиница, цифры, дефис.'
     slugHintClass.value = ''
     return
   }
   if (slugChecking.value) {
     slugHint.value = 'Проверяем…'
-    slugHintClass.value = 'muted'
+    slugHintClass.value = ''
     return
   }
   const info = slugCheck.value
@@ -140,14 +138,9 @@ watch([slugChecking, slugCheck, slug, () => v$.value.slug.$dirty], () => {
     slugHintClass.value = ''
     return
   }
-  if (info.available) {
-    slugHint.value = '✓ Свободно'
-    slugHintClass.value = 'ok'
-    return
-  }
-  slugHint.value = reasonMessage(info.reason)
-  slugHintClass.value = 'err'
-})
+  slugHint.value = info.available ? `✓ Свободен. Поменять потом можно в настройках.` : reasonMessage(info.reason)
+  slugHintClass.value = info.available ? 'ok' : 'err'
+}, { immediate: true })
 
 function reasonMessage(reason: SlugCheck['reason']): string {
   switch (reason) {
@@ -161,18 +154,13 @@ function reasonMessage(reason: SlugCheck['reason']): string {
 async function submit() {
   if (sending.value) return
   slugServer.value = ''
-  const isValid = await v$.value.$validate()
-  if (!isValid) return
+  if (!(await v$.value.$validate())) return
 
   sending.value = true
+  emit('busy', true)
   try {
-    const res = await BoardsApi.create({
-      name: name.value.trim(),
-      slug: slug.value.trim(),
-    })
-    auth.addBoard(res.data)
-    notification.success(`Доска «${res.data.name}» готова`)
-    router.push({ name: 'board-access', params: { slug: res.data.slug }, query: { created: '1' } })
+    const res = await BoardsApi.create({ name: name.value.trim(), slug: slug.value.trim() })
+    emit('created', res.data)
   } catch (e) {
     if (e instanceof ApiError) {
       slugServer.value = e.field('slug') ?? ''
@@ -184,6 +172,9 @@ async function submit() {
     v$.value.$touch()
   } finally {
     sending.value = false
+    emit('busy', false)
   }
 }
+
+defineExpose({ submit })
 </script>

@@ -25,6 +25,18 @@
         <AppIcon :name="revealed ? 'eye-off' : 'eye'" :size="18" />
       </button>
     </span>
+    <!-- a fixed part in front of what's typed, e.g. the service's host before a board's address -->
+    <span v-else-if="prefix" class="input-group" :class="{ invalid: hasError }">
+      <span class="input-prefix" aria-hidden="true">{{ prefix }}</span>
+      <input
+        v-model="model"
+        class="input"
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="hasError ? errorId : undefined"
+        v-bind="$attrs"
+        @blur="onBlur"
+      />
+    </span>
     <input
       v-else
       v-model="model"
@@ -63,6 +75,8 @@ const props = defineProps<{
   // приходит как `v$.field` — у него плотный тип vuelidate, принимаем через unknown
   errors?: unknown
   validateOnSubmit?: boolean
+  /** a fixed part shown in front of the value, inside the field (e.g. «feedback.app/» before an address) */
+  prefix?: string
 }>()
 
 const vuelidate = computed(() => props.errors as VuelidateField | undefined)

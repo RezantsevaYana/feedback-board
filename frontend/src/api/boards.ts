@@ -15,6 +15,8 @@ export interface Board {
   members_count: number
   /** the current user's role here: owner / admin go to «Я веду», the rest to «Я участник» */
   role: ProjectRole
+  /** the new-board onboarding step to continue from (2–6); null — nothing to continue */
+  onboarding_step: number | null
 }
 
 /** A board in the trash: listed on the hub until purge_at, then removed for good. */
@@ -56,6 +58,8 @@ export interface BoardSettings {
   /** visible posts and members, for the «Доступ» warning */
   posts_count: number
   members_count: number
+  /** the new-board onboarding step to continue from (2–6); null — nothing to continue */
+  onboarding_step: number | null
 }
 
 /** Live slug check — the create wizard calls this with debounce as the user types. */
@@ -90,6 +94,7 @@ export const BoardsApi = {
       origins?: string[]
       widget_color?: string | null
       widget_launcher_text?: string | null
+      onboarding_step?: number | null
       visibility?: BoardVisibility
     },
   ) {

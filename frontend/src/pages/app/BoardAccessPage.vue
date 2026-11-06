@@ -1,8 +1,5 @@
 <template>
-  <BoardWorkspace :slug="slug" page="access" :title="justCreated ? `Доска «${boardName}» готова` : undefined">
-    <template v-if="justCreated" #lead>
-      Осталось решить, кто её видит, и поделиться ссылкой — или поставить виджет на сайт.
-    </template>
+  <BoardWorkspace :slug="slug" page="access">
 
     <p v-if="loading" class="note">Загружаем…</p>
 
@@ -122,7 +119,6 @@ const route = useRoute()
 const auth = useAuthStore()
 
 const slug = computed(() => String(route.params.slug ?? ''))
-const justCreated = computed(() => route.query.created === '1')
 const settings = ref<BoardSettings | null>(null)
 const embed = ref<EmbedInfo | null>(null)
 const people = ref<ParticipantsPayload | null>(null)
@@ -132,7 +128,6 @@ const showInvite = ref(false)
 // another mode is picked on «Кто видит доску» but not applied yet
 const pending = ref(false)
 const open = computed(() => settings.value?.visibility !== 'private')
-const boardName = computed(() => settings.value?.name ?? auth.me?.projects.find((b) => b.slug === slug.value)?.name ?? slug.value)
 
 watch(slug, load, { immediate: true })
 useLostAccess(slug, () => {

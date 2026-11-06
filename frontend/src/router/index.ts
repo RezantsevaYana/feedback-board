@@ -7,7 +7,7 @@ import VerifyEmailPage from '@/pages/auth/VerifyEmailPage.vue'
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage.vue'
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage.vue'
 import BoardsHubPage from '@/pages/app/BoardsHubPage.vue'
-import BoardNewPage from '@/pages/app/BoardNewPage.vue'
+import OnboardingPage from '@/pages/onboarding/OnboardingPage.vue'
 import BoardAccessPage from '@/pages/app/BoardAccessPage.vue'
 import BoardSettingsPage from '@/pages/app/BoardSettingsPage.vue'
 import InviteAcceptPage from '@/pages/auth/InviteAcceptPage.vue'
@@ -27,6 +27,10 @@ const router = createRouter({
     { path: '/app/reset-password/:token', name: 'reset-password', component: ResetPasswordPage },
     // the link from the confirmation letter; no meta: it opens with or without a session
     { path: '/app/verify-email/:id(\\d+)/:hash', name: 'verify-email', component: VerifyEmailPage },
+    // the new-board onboarding: a focused screen of its own, outside the cabinet's frame (no side menu);
+    // «Новая доска» opens step 1, «Продолжить» on the hub card — the saved step of that board (TEST.md п. 20)
+    { path: '/app/boards/new', name: 'board-new', component: OnboardingPage, meta: { auth: true } },
+    { path: '/app/boards/:slug/setup', name: 'board-setup', component: OnboardingPage, meta: { auth: true } },
     // The signed-in cabinet: one frame (header + side menu) stays mounted while its pages change, so the menu's
     // nested sections fold in and out instead of the whole frame being rebuilt. Bare /app lands on «Мои доски»,
     // otherwise /:slug below would catch «app» as a board slug.
@@ -38,7 +42,6 @@ const router = createRouter({
         // the list is the whole page: no side menu there
         { path: 'boards', name: 'hub', component: BoardsHubPage, meta: { auth: true, noSidebar: true } },
         { path: 'account', name: 'account', component: AccountPage, meta: { auth: true } },
-        { path: 'boards/new', name: 'board-new', component: BoardNewPage, meta: { auth: true } },
         { path: 'boards/:slug/settings', name: 'board-settings', component: BoardSettingsPage, meta: { auth: true } },
         { path: 'boards/:slug/access', name: 'board-access', component: BoardAccessPage, meta: { auth: true } },
         // «Участники» and «Подключение» became one «Доступ» page (02.11.2026): old links and letters land there

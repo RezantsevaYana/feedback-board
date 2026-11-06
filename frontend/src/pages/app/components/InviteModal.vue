@@ -38,6 +38,7 @@
 import { computed, inject, ref } from 'vue'
 import { InvitationsApi, type Invitation } from '@/api/participants'
 import { errorMessage } from '@/api/client'
+import { invalidEmailsMessage, parseEmails } from '@/shared/utils/emails'
 import { ASSIGNABLE_ROLES, ROLE_HINTS, ROLE_LABELS, TEAM_ROLES, type ProjectRole } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
@@ -75,35 +76,8 @@ const sending = ref(false)
 // It doesn't block the rest — the button counts only the valid ones
 const fieldError = computed(() => {
   if (rawError.value) return rawError.value
-  const invalid = parsed.value.invalid
-  if (!invalid.length) return ''
-  const list = invalid.join(', ')
-  return invalid.length === 1
-    ? `«${list}» — не похоже на почту, сюда письмо не уйдёт. Исправьте или удалите.`
-    : `Не похожи на почту: ${list}. Сюда письма не уйдут — исправьте или удалите.`
+  return invalidEmailsMessage(parsed.value.invalid)
 })
-
-/**
- * Split the textarea into valid emails + the tokens that don't look like one.
- * Both lists come back so the UI can tell the user which pieces were ignored
- * (бага «молча пропадает» в docs/BUGS.md).
- */
-function parseEmails(input: string): { valid: string[]; invalid: string[] } {
-  const seen = new Set<string>()
-  const valid: string[] = []
-  const invalid: string[] = []
-  const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
-  for (const part of input.split(/[,\s;]+/)) {
-    const token = part.trim()
-    if (!token) continue
-    const email = token.toLowerCase()
-    if (seen.has(email)) continue
-    seen.add(email)
-    if (emailRe.test(email)) valid.push(email)
-    else invalid.push(token)
-  }
-  return { valid, invalid }
-}
 
 async function send() {
   if (sending.value) return

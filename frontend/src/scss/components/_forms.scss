@@ -43,6 +43,45 @@
         border-color: var(--bug);
     }
 }
+// InputComponent.vue with `prefix`: one frame around a grey fixed part and the field, the focus ring on the frame
+.field > .input-group {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    overflow: hidden;
+    font-size: inherit;
+    font-weight: inherit;
+    color: var(--fg);
+
+    &:focus-within {
+        border-color: var(--focus);
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
+    &.invalid {
+        border-color: var(--bug);
+    }
+    .input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        border-radius: 0;
+        outline: none;
+    }
+}
+.input-prefix {
+    display: grid;
+    place-items: center;
+    flex: none;
+    padding: 0 10px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    white-space: nowrap;
+}
 // InputComponent.vue with type="password": the field and the eye button at its right edge
 .field > .input-wrap {
     position: relative;

@@ -29,6 +29,8 @@ class UpdateBoardRequest extends FormRequest
             'widget_launcher_text' => ['sometimes', 'nullable', 'string', 'max:40'],
             // both ways: closing and opening back (02.11.2026, docs/ROLES_PLAN.md §5); the UI warns before either
             'visibility' => ['sometimes', 'string', Rule::in(array_map(fn (BoardVisibility $v) => $v->value, BoardVisibility::cases()))],
+            // the new-board onboarding: the step to continue from (2–6, step 1 creates the board); null — done or hidden
+            'onboarding_step' => ['sometimes', 'nullable', 'integer', 'between:2,6'],
         ];
     }
 
@@ -46,6 +48,7 @@ class UpdateBoardRequest extends FormRequest
             'widget_color.regex' => 'Цвет — HEX из 6 или 3 цифр, например #1d8547',
             'widget_launcher_text.max' => 'Текст кнопки — не длиннее 40 символов.',
             'visibility.in' => 'Неизвестный режим доступа.',
+            'onboarding_step.between' => 'Неизвестный шаг настройки.',
         ];
     }
 
