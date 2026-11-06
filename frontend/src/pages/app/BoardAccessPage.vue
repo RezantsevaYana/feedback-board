@@ -3,7 +3,7 @@
 
     <p v-if="loading" class="note">Загружаем…</p>
 
-    <template v-else-if="settings && embed && people">
+    <template v-else-if="settings && people">
       <section id="mode" class="board-settings-section">
         <h2>Кто видит доску</h2>
         <AccessMode :settings="settings" @saved="onModeSaved" @pending="pending = $event" />
@@ -14,48 +14,21 @@
         {{ open ? 'Блоки ниже изменятся, когда доска станет закрытой' : 'Блоки ниже изменятся, когда доска станет открытой' }}
       </p>
       <div class="board-access-rest" :class="{ pending }" :inert="pending">
-        <section id="link" class="board-settings-section">
-          <h2>Ссылка на доску</h2>
-          <p class="note">{{ open ? 'Откроет любой. Поделитесь ею в чате или письме.' : 'Откроют участники; остальные увидят экран «Запросить доступ».' }}</p>
-          <!-- until the email is confirmed the API answers visitors 403 (EnsureProjectPublished) -->
-          <p v-if="auth.me && !auth.me.email_verified" class="board-access-warn">
-            Пока почта не подтверждена, ссылка и виджет не работают для посетителей: они увидят «Доска ещё не открыта».
-          </p>
-          <pre class="board-access-code"><code>{{ embed.direct_url }}</code></pre>
-          <div class="board-access-actions">
-            <CopyButton :value="embed.direct_url" label="Скопировать ссылку" />
-            <!-- a new tab, so the settings stay open (TEST.md п. 16) -->
-            <a :href="embed.direct_url" target="_blank" rel="noopener" class="btn">Перейти на доску ↗</a>
-          </div>
-        </section>
-
-        <!-- open board: the widget with its domains and colour, then the team -->
+        <!-- open board: the team (the link is on «Общее», the widget on «Виджет», TEST.md п. 42) -->
         <template v-if="open">
-          <section id="widget" class="board-settings-section">
-            <h2>Виджет на сайте</h2>
-            <p class="note">Кнопка «Обратная связь» на сайте продукта. Вставьте тег перед закрывающим <code class="mono">&lt;/body&gt;</code>.</p>
-            <pre class="board-access-code"><code>{{ embed.script_tag }}</code></pre>
-            <CopyButton :value="embed.script_tag" label="Скопировать код" class="board-access-copy" />
-            <h3 class="board-access-subhead">Домены</h3>
-            <SettingsDomains :settings="settings" @saved="onDomainsSaved" />
-          </section>
-
-          <WidgetColorSection :slug="slug" :color="embed.widget_color" @saved="embed.widget_color = $event" />
-          <WidgetLauncherSection :slug="slug" :text="embed.widget_launcher_text" @saved="embed.widget_launcher_text = $event" />
-
-          <section id="team" class="board-settings-section">
-            <div class="participants-head-row">
-              <h2>Команда</h2>
+          <!-- on a phone it folds, the people count in its header; the requests above it never fold -->
+          <FoldSection id="team" title="Команда" class="board-settings-section" :summary="peopleSummary">
+            <div class="participants-actions">
               <button type="button" class="btn btn-add" @click="showInvite = true">+ Добавить в команду</button>
             </div>
             <p class="note">Те, кто разбирает посты и настраивает доску. Гостям приглашение не нужно: доска открыта по ссылке.</p>
             <h3 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h3>
             <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
             <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" team-only @changed="onMemberChanged" @removed="onMemberRemoved" />
-          </section>
+          </FoldSection>
         </template>
 
-        <!-- closed board: who asks to get in, who's on it; the widget isn't available -->
+        <!-- closed board: who asks to get in, who's on it -->
         <template v-else>
           <section v-if="people.requests.length" id="requests" class="board-settings-section">
             <h2>Запросы на доступ<span class="count-badge">{{ people.requests.length }}</span></h2>
@@ -63,24 +36,15 @@
             <AccessRequestsList :key="slug" :slug="slug" :requests="people.requests" @decided="onRequestDecided" />
           </section>
 
-          <section id="participants" class="board-settings-section">
-            <div class="participants-head-row">
-              <h2>Участники</h2>
+          <FoldSection id="participants" title="Участники" class="board-settings-section" :summary="peopleSummary">
+            <div class="participants-actions">
               <button type="button" class="btn btn-add" @click="showInvite = true">+ Пригласить</button>
             </div>
             <p class="note">Доску видят только люди из этого списка. Один человек — одна роль, что может каждая, видно при выборе.</p>
             <h3 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h3>
             <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
             <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" @changed="onMemberChanged" @removed="onMemberRemoved" />
-          </section>
-
-          <section id="widget" class="board-settings-section">
-            <h2>Виджет на сайте</h2>
-            <!-- widget/WidgetApp.vue renders nothing for a closed board and comes back by itself once it's open -->
-            <div class="board-access-off">
-              <p><strong>Виджет скрыт.</strong> Пока доска закрыта, кнопка «Обратная связь» на сайте не показывается. Код можно не убирать: когда снова откроете доску, виджет появится сам.</p>
-            </div>
-          </section>
+          </FoldSection>
         </template>
       </div>
     </template>
@@ -94,33 +58,30 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { type BoardSettings, BoardsApi, type EmbedInfo } from '@/api/boards'
+import { type BoardSettings, BoardsApi } from '@/api/boards'
 import { errorMessage } from '@/api/client'
 import { type Invitation, type Participant, ParticipantsApi, type ParticipantsPayload } from '@/api/participants'
 import { useAuthStore } from '@/store/auth/useAuthStore'
-import CopyButton from '@/shared/ui/CopyButton.vue'
+import { plural } from '@/shared/utils/format'
+import FoldSection from '@/shared/ui/FoldSection.vue'
 import AccessMode from './components/AccessMode.vue'
 import AccessRequestsList from './components/AccessRequestsList.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
 import InviteModal from './components/InviteModal.vue'
 import ParticipantsTable from './components/ParticipantsTable.vue'
 import PendingInvitationsList from './components/PendingInvitationsList.vue'
-import SettingsDomains from './components/SettingsDomains.vue'
-import WidgetColorSection from './components/WidgetColorSection.vue'
-import WidgetLauncherSection from './components/WidgetLauncherSection.vue'
 import { boardLoadError } from './composables/boardLoadError'
 import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 
-// «Доступ» — who sees the board and how they get in. The mode (open / closed) is at the top and the rest shows only
-// what works in it: an open board has the link, the widget (code, domains, colour) and its team; a closed one has
-// the link, access requests, participants and a note instead of the widget (TEST.md п. 11, 27; prototype
-// frontend/demo/board-pages-prototype.html). The lists are patched locally as rows change, no refetch.
+// «Доступ» — who sees the board and who's on it. The mode (open / closed) is at the top and the rest shows only
+// what works in it: an open board has its team; a closed one has access requests and participants
+// (TEST.md п. 11, 27). The link moved to «Общее» and the widget to «Виджет» (п. 42; the router sends the old
+// /access#widget and #link there). The lists are patched locally as rows change, no refetch.
 const route = useRoute()
 const auth = useAuthStore()
 
 const slug = computed(() => String(route.params.slug ?? ''))
 const settings = ref<BoardSettings | null>(null)
-const embed = ref<EmbedInfo | null>(null)
 const people = ref<ParticipantsPayload | null>(null)
 const loading = ref(true)
 const loadError = ref('')
@@ -128,6 +89,13 @@ const showInvite = ref(false)
 // another mode is picked on «Кто видит доску» but not applied yet
 const pending = ref(false)
 const open = computed(() => settings.value?.visibility !== 'private')
+// the folded team / participants block says how many: «3 человека · 1 ждёт приглашения»
+const peopleSummary = computed(() => {
+  const members = people.value?.members.length ?? 0
+  const waiting = people.value?.invitations.length ?? 0
+  return `${members} ${plural(members, 'человек', 'человека', 'человек')}`
+    + (waiting ? ` · ${waiting} ${plural(waiting, 'ждёт', 'ждут', 'ждут')} приглашения` : '')
+})
 
 watch(slug, load, { immediate: true })
 useLostAccess(slug, () => {
@@ -139,9 +107,8 @@ async function load() {
   loading.value = true
   loadError.value = ''
   try {
-    const [s, e, p] = await Promise.all([BoardsApi.show(slug.value), BoardsApi.embed(slug.value), ParticipantsApi.list(slug.value)])
+    const [s, p] = await Promise.all([BoardsApi.show(slug.value), ParticipantsApi.list(slug.value)])
     settings.value = s.data
-    embed.value = e.data
     people.value = p.data
     // the page has the fresh count, the badges may be a few minutes old
     auth.setPendingRequests(slug.value, p.data.requests.length)
@@ -161,14 +128,8 @@ async function load() {
 async function onModeSaved(next: BoardSettings) {
   pending.value = false
   settings.value = next
-  if (embed.value) embed.value.visibility = next.visibility
   const p = await ParticipantsApi.list(slug.value).catch(() => null)
   if (p) people.value = p.data
-}
-
-function onDomainsSaved(next: BoardSettings) {
-  settings.value = next
-  if (embed.value) embed.value.allowed_origins = next.allowed_origins
 }
 
 function onMemberChanged(next: Participant) {

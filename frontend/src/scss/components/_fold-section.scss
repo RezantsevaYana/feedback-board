@@ -1,0 +1,91 @@
+@use '../utils' as *;
+
+// shared/ui/FoldSection.vue — a settings block: a plain section with a heading on a wide screen, a fold with its
+// state in the header on a tablet / phone (prototype frontend/demo/settings-rework-prototype.html).
+.fold-section {
+    > .fold-section-head {
+        list-style: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+    }
+}
+.fold-section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    // the title row has a fixed height and the chevron sits on it: opening only removes the line under it,
+    // so neither the title nor the chevron jumps
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 10px;
+    margin-bottom: 12px;
+
+    .foldable > & {
+        grid-template-rows: 32px auto;
+        margin: 0;
+        padding: 10px 0;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    &:focus:not(:focus-visible) {
+        outline: none;
+    }
+    &:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+        border-radius: 8px;
+    }
+}
+.fold-section-title {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+}
+.fold-section-summary {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+}
+// a soft round pad: points right while folded, turns down and goes green when open
+.fold-section-chevron {
+    grid-column: 2;
+    grid-row: 1;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--muted);
+    transform: rotate(-90deg);
+    transition:
+        transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1),
+        background-color 0.18s ease-out,
+        color 0.18s ease-out;
+
+    [open] > .fold-section-head & {
+        transform: none;
+        background: var(--active);
+        color: var(--active-fg);
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+.fold-section-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+
+    .foldable[open] > & {
+        padding-bottom: 16px;
+    }
+}

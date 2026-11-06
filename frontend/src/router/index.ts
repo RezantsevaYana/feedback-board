@@ -10,6 +10,8 @@ import BoardsHubPage from '@/pages/app/BoardsHubPage.vue'
 import OnboardingPage from '@/pages/onboarding/OnboardingPage.vue'
 import BoardAccessPage from '@/pages/app/BoardAccessPage.vue'
 import BoardSettingsPage from '@/pages/app/BoardSettingsPage.vue'
+import BoardStructurePage from '@/pages/app/BoardStructurePage.vue'
+import BoardWidgetPage from '@/pages/app/BoardWidgetPage.vue'
 import InviteAcceptPage from '@/pages/auth/InviteAcceptPage.vue'
 import AccountPage from '@/pages/account/AccountPage.vue'
 import AppShell from '@/shared/components/AppShell.vue'
@@ -42,8 +44,31 @@ const router = createRouter({
         // the list is the whole page: no side menu there
         { path: 'boards', name: 'hub', component: BoardsHubPage, meta: { auth: true, noSidebar: true } },
         { path: 'account', name: 'account', component: AccountPage, meta: { auth: true } },
-        { path: 'boards/:slug/settings', name: 'board-settings', component: BoardSettingsPage, meta: { auth: true } },
-        { path: 'boards/:slug/access', name: 'board-access', component: BoardAccessPage, meta: { auth: true } },
+        // the board's settings: four sections with an address each (TEST.md п. 42). The old anchors of the two former
+        // pages («Настройки» with categories and statuses, «Доступ» with the link and the widget) land in the new ones
+        {
+          path: 'boards/:slug/settings',
+          name: 'board-settings',
+          component: BoardSettingsPage,
+          meta: { auth: true },
+          beforeEnter: (to) => {
+            if (to.hash === '#categories' || to.hash === '#statuses') return { name: 'board-structure', params: to.params, hash: to.hash }
+            if (to.hash === '#domains') return { name: 'board-widget', params: to.params }
+            if (to.hash === '#access') return { name: 'board-access', params: to.params }
+          },
+        },
+        {
+          path: 'boards/:slug/access',
+          name: 'board-access',
+          component: BoardAccessPage,
+          meta: { auth: true },
+          beforeEnter: (to) => {
+            if (to.hash === '#widget') return { name: 'board-widget', params: to.params }
+            if (to.hash === '#link') return { name: 'board-settings', params: to.params, hash: '#link' }
+          },
+        },
+        { path: 'boards/:slug/structure', name: 'board-structure', component: BoardStructurePage, meta: { auth: true } },
+        { path: 'boards/:slug/widget', name: 'board-widget', component: BoardWidgetPage, meta: { auth: true } },
         // «Участники» and «Подключение» became one «Доступ» page (02.11.2026): old links and letters land there
         { path: 'boards/:slug/participants', redirect: (to) => ({ name: 'board-access', params: to.params, hash: '#participants' }) },
         { path: 'boards/:slug/embed', redirect: (to) => ({ name: 'board-access', params: to.params, query: to.query }) },

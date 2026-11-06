@@ -3,17 +3,10 @@
 // BoardParticipantsPage.vue + ParticipantsTable.vue, PendingInvitationsList.vue, InviteModal.vue.
 // Frame reuses .board-settings-section — the blocks live on BoardAccessPage («Команда», «Участники»).
 
-// a block's heading with its add action on the right
-.participants-head-row {
+// the block's add action, first thing inside it (the heading is FoldSection's switch on a phone, no buttons in it)
+.participants-actions {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px 12px;
-
-    h2 {
-        margin: 0;
-    }
+    justify-content: flex-start;
 }
 
 // --- Table of members ------------------------------------------------------

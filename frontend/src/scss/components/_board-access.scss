@@ -264,6 +264,36 @@
 
 // AccessMode.vue — the mode cards, then (once changed) what the switch does to posts, votes and people
 .access-mode {
+    // phone: the two modes as plain radios — the round mark, the name, one line of hint — not two tall cards
+    // (prototype frontend/demo/settings-rework-prototype.html); the onboarding keeps its cards
+    @media screen and (max-width: $mobile) {
+        .radio-cards {
+            gap: 12px;
+        }
+        .radio-card {
+            align-items: start;
+            padding: 0;
+            border: 0;
+            background: none;
+
+            &.on {
+                background: none;
+            }
+        }
+        .radio-card-input {
+            width: 18px;
+            height: 18px;
+            margin-top: 1px;
+
+            &:checked {
+                border-width: 5px;
+            }
+        }
+        .radio-card-title {
+            font-weight: 500;
+        }
+    }
+
     display: grid;
     gap: 12px;
 
@@ -304,6 +334,17 @@
     }
     @media (prefers-reduced-motion: reduce) {
         transition: none;
+    }
+    // phone: the sections inside part with the mode block above by the same hairline as any two sections
+    // (they're in this wrapper, so the «section + section» rule of _board-settings.scss doesn't reach them)
+    @media screen and (max-width: $mobile) {
+        > .board-settings-section:first-child {
+            border-top: 1px solid var(--line);
+
+            &:not(.foldable) {
+                padding-top: 16px;
+            }
+        }
     }
 }
 .board-access-pending {

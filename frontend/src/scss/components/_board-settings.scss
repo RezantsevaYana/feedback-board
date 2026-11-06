@@ -39,6 +39,14 @@
         h2 {
             font-size: 16px;
         }
+        // a fold (FoldSection) brings its own spacing in its header: no extra padding on top, no gap under it
+        &.foldable {
+            gap: 0;
+        }
+        // only the fold itself: a plain section after a fold keeps its usual air above the hairline
+        & + &.foldable {
+            padding-top: 0;
+        }
     }
 }
 

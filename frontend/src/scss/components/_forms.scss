@@ -28,6 +28,12 @@
     border-radius: 10px;
     padding: 9px 12px;
     font: inherit;
+    // a value or a placeholder longer than the field ends with «…», not cut mid-letter
+    text-overflow: ellipsis;
+
+    &::placeholder {
+        text-overflow: ellipsis;
+    }
 
     // touch screens: iOS Safari zooms the page into any field under 16px on focus
     @media (pointer: coarse) {

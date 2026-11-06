@@ -1,5 +1,5 @@
 <template>
-  <header class="app-shell-header">
+  <header ref="header" class="app-shell-header">
     <div class="container app-shell-header-inner">
       <div class="app-shell-nav">
         <RouterLink :to="brandTarget" class="app-brand">Feedback Board</RouterLink>
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import AccountMenu from '@/shared/components/AccountMenu.vue'
@@ -37,6 +37,7 @@ import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
 import BurgerIcon from '@/shared/ui/BurgerIcon.vue'
 import type { MenuItem } from '@/shared/ui/MenuComponent.vue'
 import { canConfigure } from '@/shared/utils/roles'
+import { boardPageOf } from '@/shared/constants/boardPages'
 
 // Top bar of every /app/* page: the board switcher and the account. Inside the cabinet (AppShell) the side menu
 // sits under it with the board's places; `menu` adds the button that opens that menu on tablet and phone.
@@ -51,17 +52,32 @@ const emit = defineEmits<{
 const auth = useAuthStore()
 const route = useRoute()
 
+// the header is sticky; what sticks under it (the settings tabs) needs its height, which differs by breakpoint
+// and by the verify banner — published as --app-header-h on the page
+const header = ref<HTMLElement | null>(null)
+let resize: ResizeObserver | null = null
+onMounted(() => {
+  if (!header.value || typeof ResizeObserver === 'undefined') return
+  resize = new ResizeObserver(([entry]) => {
+    if (entry) document.documentElement.style.setProperty('--app-header-h', `${Math.round(entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height)}px`)
+  })
+  resize.observe(header.value)
+})
+onBeforeUnmount(() => {
+  resize?.disconnect()
+  document.documentElement.style.removeProperty('--app-header-h')
+})
+
 const brandTarget = computed(() => (auth.isAuth ? '/app/boards' : '/'))
 
 // on a board's page the switcher names that board and keeps the same page for the next one (access →
 // access); elsewhere it reads «Доски» and opens the chosen board's settings (TEST.md п. 17).
 // A board the user can't configure opens as the board itself.
-const PLACES: Record<string, string> = { 'board-settings': 'settings', 'board-access': 'access' }
 const currentSlug = computed(() => (route.params.slug ? String(route.params.slug) : null))
 const switcherLabel = computed(() => auth.boardSummaries.find((b) => b.slug === currentSlug.value)?.name ?? 'Доски')
 function switchLink(slug: string) {
   const board = auth.boardSummaries.find((b) => b.slug === slug)
   if (!canConfigure(board?.role)) return `/${slug}`
-  return `/app/boards/${slug}/${PLACES[String(route.name)] ?? 'settings'}`
+  return `/app/boards/${slug}/${boardPageOf(route.name) ?? 'settings'}`
 }
 </script>

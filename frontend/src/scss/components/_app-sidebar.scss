@@ -233,57 +233,6 @@
         color: var(--fg);
     }
 }
-// a page's sections under its item (SectionLinks.vue): both lists stay in the DOM and the open one unfolds,
-// rows 0fr → 1fr, the list clipped while it grows; a quick fade so the text doesn't slide in half-cut
-.app-sidebar-sub {
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transition:
-        grid-template-rows 0.26s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.2s ease-out;
-
-    > .section-links {
-        min-height: 0;
-        overflow: hidden;
-    }
-    &.open {
-        grid-template-rows: 1fr;
-        opacity: 1;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        transition: none;
-    }
-}
-// smaller rows with a hairline on the left that ties them to their item
-.section-links {
-    display: grid;
-    gap: 1px;
-    margin-left: 18px;
-    padding-left: 8px;
-    border-left: 1px solid var(--line);
-
-    .app-sidebar-sub.open & {
-        margin-block: 2px 6px;
-    }
-}
-.section-links-item {
-    padding: 5px 8px;
-    border-radius: 6px;
-    color: var(--muted);
-    font-size: 13px;
-    text-decoration: none;
-
-    @include hover {
-        color: var(--fg);
-        background: var(--surface-2);
-    }
-    // the section on screen: ink and weight, not a second green block under the green item
-    &[aria-current='location'] {
-        color: var(--fg);
-        font-weight: 600;
-    }
-}
 .app-sidebar-foot {
     display: grid;
     gap: 10px;

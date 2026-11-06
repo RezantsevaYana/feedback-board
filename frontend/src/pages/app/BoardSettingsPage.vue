@@ -3,21 +3,28 @@
     <p v-if="loading" class="note">Загружаем…</p>
 
     <template v-else-if="settings">
+      <!-- no «Общее» heading here: the page is called that already -->
       <section id="general" class="board-settings-section">
-        <h2>Общее</h2>
         <SettingsGeneral :settings="settings" @saved="onSaved" />
       </section>
 
-      <section id="categories" class="board-settings-section">
-        <h2>Категории</h2>
-        <CategoriesEditor v-if="projectReady" />
-        <p v-else class="note">{{ board.loadError || 'Загружаем…' }}</p>
-      </section>
-
-      <section id="statuses" class="board-settings-section">
-        <h2>Статусы</h2>
-        <StatusesEditor v-if="projectReady" />
-        <p v-else class="note">{{ board.loadError || 'Загружаем…' }}</p>
+      <!-- the link is what the board is for: here, not inside «Доступ» (TEST.md п. 42) -->
+      <section id="link" class="board-settings-section">
+        <h2>Ссылка на доску</h2>
+        <p class="note">
+          {{ settings.visibility === 'private'
+            ? 'Откроют участники; остальные увидят экран «Запросить доступ». Кого пустить — в «Доступе».'
+            : 'Откроет любой — поделитесь ею в чате или письме. Кто ещё может голосовать и предлагать — в «Доступе».' }}
+        </p>
+        <!-- until the email is confirmed the API answers visitors 403 (EnsureProjectPublished) -->
+        <p v-if="auth.me && !auth.me.email_verified" class="board-access-warn">
+          Пока почта не подтверждена, ссылка и виджет не работают для посетителей: они увидят «Доска ещё не открыта».
+        </p>
+        <pre class="board-access-code"><code>{{ boardUrl }}</code></pre>
+        <div class="board-access-actions">
+          <CopyButton :value="boardUrl" label="Скопировать ссылку" />
+          <a :href="boardUrl" target="_blank" rel="noopener" class="btn">Перейти на доску ↗</a>
+        </div>
       </section>
 
       <!-- not a section of the nav: an action on the whole board, set apart below everything; owner only -->
@@ -33,24 +40,21 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { type BoardSettings, BoardsApi } from '@/api/boards'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
-import CategoriesEditor from '@/shared/components/CategoriesEditor.vue'
-import StatusesEditor from '@/shared/components/StatusesEditor.vue'
+import CopyButton from '@/shared/ui/CopyButton.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
 import SettingsGeneral from './components/SettingsGeneral.vue'
 import { boardLoadError } from './composables/boardLoadError'
 import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 import { useDeleteBoard } from './composables/useDeleteBoard'
 
-// «Настройки» — what the board is: sections with anchors (#general, #categories, #statuses), deletion below them
-// (useDeleteBoard). Domains belong to the widget, so they're on «Доступ»; the old /settings#access and #domains go there.
-// Name and domains go through BoardsApi; categories and columns reuse the board's editors,
-// so the board store opens this project the same way BoardPage does.
+// «Общее» — what the board is: its name and address, the link to share, deletion set apart below (useDeleteBoard).
+// One of the board's four settings sections (TEST.md п. 42); the router sends the old /settings#categories,
+// #statuses, #domains and #access to their new sections. The board store is kept in sync on a rename.
 const route = useRoute()
-const router = useRouter()
 const auth = useAuthStore()
 const board = useBoardStore()
 const { deleteBoard } = useDeleteBoard()
@@ -59,12 +63,10 @@ const slug = computed(() => String(route.params.slug ?? ''))
 const settings = ref<BoardSettings | null>(null)
 const loading = ref(true)
 const loadError = ref('')
-const projectReady = computed(() => board.project?.slug === slug.value)
+// the board lives in this same app, at /<slug>
+const boardUrl = computed(() => `${window.location.origin}/${slug.value}`)
 // admins open settings too, but deleting the board stays with its owner (the API checks owner_id)
 const isOwner = computed(() => auth.me?.projects.find((b) => b.slug === slug.value)?.role === 'owner')
-if (route.hash === '#access' || route.hash === '#domains') {
-  void router.replace({ name: 'board-access', params: { slug: slug.value }, hash: route.hash === '#domains' ? '#widget' : '#mode' })
-}
 
 watch(slug, load, { immediate: true })
 useLostAccess(slug, () => {
@@ -79,13 +81,12 @@ async function load() {
   try {
     const res = await BoardsApi.show(slug.value)
     settings.value = res.data
-    void board.open(slug.value)
   } catch (e) {
     loadError.value = boardLoadError(e)
   } finally {
     loading.value = false
   }
-  // the sections exist only now — scroll to the anchor we arrived with (e.g. /settings#domains)
+  // the sections exist only now — scroll to the anchor we arrived with (e.g. /settings#link)
   if (settings.value && route.hash) {
     await nextTick()
     document.querySelector(route.hash)?.scrollIntoView()

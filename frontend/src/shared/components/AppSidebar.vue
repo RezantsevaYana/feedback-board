@@ -25,18 +25,17 @@
         </component>
 
         <div class="app-sidebar-board-pages" :inert="b.slug !== shownSlug">
-          <nav class="app-sidebar-nav" :aria-label="`Страницы доски ${b.name}`">
-            <RouterLink :to="`/app/boards/${b.slug}/settings`" class="nav-item" :aria-current="b.slug === currentSlug && onSettings ? 'page' : undefined">Настройки</RouterLink>
-            <!-- the open page's sections fold out under it; both lists stay in the DOM so the switch animates -->
-            <div v-if="!drawer && b.slug === currentSlug" class="app-sidebar-sub" :class="{ open: onSettings }" :inert="!onSettings">
-              <SectionLinks :path="`/app/boards/${b.slug}/settings`" :sections="SETTINGS_SECTIONS" :active="onSettings" />
-            </div>
-            <RouterLink :to="`/app/boards/${b.slug}/access`" class="nav-item" :aria-current="b.slug === currentSlug && onAccess ? 'page' : undefined">
-              Доступ<span v-if="b.pending_requests" class="count-badge" :aria-label="`запросов на доступ: ${b.pending_requests}`">{{ b.pending_requests }}</span>
+          <!-- the board's four sections (TEST.md п. 42): a page each, the pending requests counted on «Доступ» -->
+          <nav class="app-sidebar-nav" :aria-label="`Настройки доски ${b.name}`">
+            <RouterLink
+              v-for="p in BOARD_PAGES"
+              :key="p.page"
+              :to="`/app/boards/${b.slug}/${p.page}`"
+              class="nav-item"
+              :aria-current="b.slug === currentSlug && currentPage === p.page ? 'page' : undefined"
+            >
+              {{ p.label }}<span v-if="p.page === 'access' && b.pending_requests" class="count-badge" :aria-label="`запросов на доступ: ${b.pending_requests}`">{{ b.pending_requests }}</span>
             </RouterLink>
-            <div v-if="!drawer && b.slug === currentSlug" class="app-sidebar-sub" :class="{ open: onAccess }" :inert="!onAccess">
-              <SectionLinks :key="b.visibility" :path="`/app/boards/${b.slug}/access`" :sections="accessSections(b)" :active="onAccess" />
-            </div>
           </nav>
         </div>
       </div>
@@ -69,7 +68,7 @@ import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useLogout } from '@/shared/composables/useLogout'
 import { canConfigure } from '@/shared/utils/roles'
 import { boardMark } from '@/shared/utils/format'
-import SectionLinks, { type SectionLink } from '@/shared/components/SectionLinks.vue'
+import { BOARD_PAGES, boardPageOf } from '@/shared/constants/boardPages'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 
@@ -87,18 +86,12 @@ const auth = useAuthStore()
 const route = useRoute()
 const { logout, busy } = useLogout()
 
-const SETTINGS_SECTIONS: SectionLink[] = [
-  { hash: '#general', label: 'Общее' },
-  { hash: '#categories', label: 'Категории' },
-  { hash: '#statuses', label: 'Статусы' },
-]
-
 // up to this many rows, the current board always among them; one more than that is shown rather than «Ещё 1»
 const VISIBLE = 6
 
 const atHub = computed(() => route.name === 'hub' || route.name === 'board-new')
-const onSettings = computed(() => route.name === 'board-settings')
-const onAccess = computed(() => route.name === 'board-access')
+// the board's section on screen (Общее / Доступ / Категории и статусы / Виджет), if any
+const currentPage = computed(() => boardPageOf(route.name))
 const onAccount = computed(() => route.name === 'account')
 const currentSlug = computed(() => (route.params.slug ? String(route.params.slug) : null))
 
@@ -126,27 +119,11 @@ function peek(slug: string) {
   peeked.value = shownSlug.value === slug ? null : slug
 }
 
-// a click on another board keeps the page: «Доступ» → «Доступ»; from the account it's the board's settings
+// a click on another board keeps the section: «Виджет» → «Виджет»; from the account it's the board's «Общее»
 function samePage(slug: string): string {
-  return `/app/boards/${slug}/${onAccess.value ? 'access' : 'settings'}`
+  return `/app/boards/${slug}/${currentPage.value ?? 'settings'}`
 }
 
-// «Доступ» shows what works in the board's mode: the widget and the team on an open board, people on a closed one
-function accessSections(b: BoardSummary): SectionLink[] {
-  return b.visibility === 'private'
-    ? [
-        { hash: '#mode', label: 'Режим' },
-        { hash: '#link', label: 'Ссылка' },
-        ...(b.pending_requests ? [{ hash: '#requests', label: 'Запросы' }] : []),
-        { hash: '#participants', label: 'Участники' },
-      ]
-    : [
-        { hash: '#mode', label: 'Режим' },
-        { hash: '#link', label: 'Ссылка' },
-        { hash: '#widget', label: 'Виджет' },
-        { hash: '#team', label: 'Команда' },
-      ]
-}
 
 function rowTag(b: BoardSummary) {
   if (props.drawer) return 'button'

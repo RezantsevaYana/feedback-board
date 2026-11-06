@@ -8,6 +8,10 @@
     gap: 16px;
     min-width: 0;
 
+    @media screen and (max-width: $mobile) {
+        gap: 12px;
+    }
+
     // cards keep a readable width instead of stretching across a wide screen
     > * {
         max-width: 680px;
@@ -29,13 +33,25 @@
     flex-wrap: wrap;
     gap: 12px;
 
+    // phone: the title and its two small actions on one row
+    @media screen and (max-width: $mobile) {
+        flex-wrap: nowrap;
+        gap: 8px;
+
+        h1 {
+            flex: 1;
+        }
+    }
+
     h1 {
         min-width: 0;
         margin: 0;
         overflow-wrap: anywhere;
 
+        // phone: the section's name is also on its tab right below — the heading needn't shout
         @media screen and (max-width: $mobile) {
-            font-size: 24px;
+            font-size: 20px;
+            line-height: 1.25;
         }
     }
 }
@@ -45,13 +61,36 @@
     align-items: center;
     gap: 8px;
 }
-// «Перейти на доску»; on a phone a 40px square with just the arrow
+// «Перейти на доску»; on a phone a 36px outlined square with «↗» (opens in a new tab), as quiet as the copy button
 .app-page-open {
     @media screen and (max-width: $mobile) {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
+        min-height: 36px;
         padding: 0;
-        font-size: 17px;
+        border-color: var(--line);
+        background: var(--surface);
+        color: var(--fg);
+        font-size: 16px;
+    }
+}
+// «Скопировать ссылку»; on a phone just the icon (the label stays for screen readers)
+.app-page-copy {
+    @media screen and (max-width: $mobile) {
+        width: 36px;
+        height: 36px;
+        min-height: 36px;
+        padding: 0;
+        justify-content: center;
+
+        > span {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
     }
 }
 .app-page-open-short {
@@ -63,5 +102,51 @@
     }
     .app-page-open-short {
         display: inline;
+    }
+}
+// BoardWorkspace.vue — the board's settings sections as tabs where the side menu is hidden behind «Меню»
+// (tablet / phone): one scrolling row that sticks to the top while the section scrolls
+.app-page-tabs {
+    display: none;
+
+    @media screen and (max-width: $tablet) {
+        position: sticky;
+        // right under the sticky AppHeader (it publishes its height)
+        top: var(--app-header-h, 0px);
+        z-index: 5;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        @include bleed;
+        // pulled up a little to the title, the page's 12px gap stays under it
+        margin-block: -4px 0;
+        padding-block: 6px;
+        background: var(--bg);
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+}
+.app-page-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--fg);
+    font-size: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &[aria-current='page'] {
+        border-color: var(--active-line);
+        background: var(--active);
+        color: var(--active-fg);
+        font-weight: 600;
     }
 }
