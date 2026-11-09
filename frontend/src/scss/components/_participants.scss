@@ -1,185 +1,176 @@
 @use '../utils' as *;
 
-// BoardParticipantsPage.vue + ParticipantsTable.vue, PendingInvitationsList.vue, InviteModal.vue.
-// Frame reuses .board-settings-section — the blocks live on BoardAccessPage («Команда», «Участники»).
+// ParticipantsTable.vue + InviteModal.vue. One table for both active members and pending invitations
+// (test.md п. 23). Dense and compact on every screen — the prototype keeps a plain table even on the phone,
+// no card-per-row stacking. Frame: .board-access-group on BoardAccessPage («Команда», «Участники»).
 
-// the block's add action, first thing inside it (the heading is FoldSection's switch on a phone, no buttons in it)
+// the block's add action, first thing inside it (the fold's title has no buttons on a phone).
+// «+ Пригласить» is a compact .btn-sm — the prototype keeps it neutral and small so it doesn't
+// out-shout the mode picker above it (frontend/demo/settings-rework-prototype.html, Команда / Участники).
 .participants-actions {
     display: flex;
     justify-content: flex-start;
 }
 
-// --- Table of members ------------------------------------------------------
+// --- Unified table: members + pending invitations in one list -------------
 .participants-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
 
-    th,
     td {
-        padding: 10px 12px;
-        text-align: left;
+        padding: 9px 0;
+        border-top: 1px solid var(--line);
         vertical-align: middle;
-        border-bottom: 1px solid var(--line);
     }
-    th {
-        font-weight: 500;
-        color: var(--muted);
-        font-size: 13px;
-    }
-    tr:last-child td {
-        border-bottom: 0;
-    }
-    .participants-table-actions {
-        width: 44px;
+    // the «Роль» column is quiet by default: muted colour, aligned to the right of the row.
+    // nowrap keeps member rows (select + remove icon) on a single line — invite rows override below
+    // so «Отправить ещё раз · Отменить» can wrap under the role text on a narrow screen.
+    td.participants-role-cell {
         text-align: right;
+        color: var(--muted);
+        padding-left: 12px;
+        white-space: nowrap;
+    }
+    // first row has a hairline too, so the table reads as a list framed above and below (like the prototype)
+    tr:first-child td {
+        border-top: 1px solid var(--line);
     }
 
-    // the select inside a row sits flush with the text
-    .field {
-        margin: 0;
-    }
-
-    // phone: no columns, each person is a block — name and email with the remove button on the right,
-    // the role select under them; «Добавлен» is left out
     @media screen and (max-width: $mobile) {
-        display: block;
+        font-size: 13px;
 
-        thead {
-            display: none;
-        }
-        tbody {
-            display: block;
-        }
-        // rows, their lines and the owner's tint run to the screen's edges
-        tr {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            grid-template-areas:
-                'person action'
-                'role role';
-            gap: 6px;
-            padding-block: 10px;
-            border-top: 1px solid var(--line);
-            @include bleed;
-        }
-        tr:last-child {
-            border-bottom: 1px solid var(--line);
-        }
         td {
-            display: block;
-            padding: 0;
-            border: 0;
-        }
-        td:nth-child(1) {
-            grid-area: person;
-        }
-        td:nth-child(2) {
-            grid-area: role;
-            justify-self: start;
-        }
-        td:nth-child(3) {
-            display: none;
-        }
-        .participants-table-actions {
-            grid-area: action;
-            width: auto;
-        }
-        .participants-person-email {
-            overflow-wrap: anywhere;
+            padding: 8px 0;
         }
     }
 }
-.participants-source {
-    color: var(--muted);
-    font-size: 13px;
-    white-space: nowrap;
-}
 
-.participants-person {
-    display: grid;
-    gap: 2px;
+// Person cell: name (or email) + optional chip on the first line, email / meta as a muted block below
+.participants-person-cell {
+    overflow-wrap: anywhere;
 }
 .participants-person-name {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    color: var(--fg);
     font-weight: 500;
 }
-.participants-person-email {
+.participants-sub {
+    display: block;
+    margin-top: 2px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
 }
 .participants-you {
     color: var(--muted);
     font-weight: 400;
-    margin-left: 6px;
 }
 
-// Role pill for owner — matches the select's visual weight without being a control.
-.role-chip {
+// «не зарегистрирована» chip next to the email on an invitation row — warm amber signals «waiting»
+.participants-chip {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 1px 8px;
     border-radius: 999px;
     background: var(--surface-2);
-    color: var(--fg);
-    font-size: 13px;
-
-    &.owner {
-        background: var(--active);
-        color: var(--fg);
-        font-weight: 500;
-    }
-}
-
-// --- Pending invitations list ----------------------------------------------
-.pending-invites {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 10px;
-
-    @media screen and (max-width: $mobile) {
-        gap: 0;
-        border-bottom: 1px solid var(--line);
-        @include bleed;
-        padding-inline: 0;
-    }
-}
-.pending-invite {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--surface);
-
-    // phone: a list row to the screen's edges, not a box in a box
-    @media screen and (max-width: $mobile) {
-        flex-wrap: wrap;
-        gap: 8px;
-        // the list already runs to the edges (.pending-invites), the row only pads its content back in
-        padding: 10px 16px;
-        border-width: 1px 0 0;
-        border-radius: 0;
-    }
-}
-.pending-invite-main {
-    flex: 1;
-    min-width: 0;
-    display: grid;
-    gap: 2px;
-}
-.pending-invite-email {
-    font-weight: 500;
-}
-.pending-invite-meta {
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &.pending {
+        background: color-mix(in srgb, #e2b33c 28%, var(--surface));
+        color: #6b531a;
+    }
 }
-.pending-invite-actions {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+
+// Role cell innards: select + remove on member rows, plain text + inline actions on invitation rows
+.participants-role-cell {
+    .select-wrap,
+    .select {
+        display: inline-block;
+        vertical-align: middle;
+    }
+}
+// Member row's role + remove: inline-flex so the «×» sits next to the select instead of dropping
+// to its own line (SelectComponent's root is a block `.field`, and `.icon-btn` is block-level grid).
+.participants-member-controls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+}
+.participants-role-select {
+    min-width: 128px;
+    text-align: left;
+}
+.participants-role-text {
+    color: var(--muted);
+}
+.participants-action-sep {
+    margin: 0 4px;
+    color: var(--muted);
+    user-select: none;
+}
+.participants-action-link {
+    font-size: 13px;
+    color: var(--accent-ink);
+    text-decoration: none;
+
+    @include hover {
+        text-decoration: underline;
+    }
+}
+// «Отменить» stays a quiet link until needed — turns into the error colour on hover
+.participants-action-danger {
+    color: var(--muted);
+
+    @include hover {
+        color: var(--bug);
+    }
+}
+.participants-action-remove {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    color: var(--muted);
+
+    @include hover {
+        color: var(--bug);
+    }
+}
+
+// Invitation row's actions: on desktop sit inline with the role («Менеджер · Отправить ещё раз · Отменить»),
+// on a phone they move to a new line under the role so the cell doesn't force horizontal scroll.
+.participants-row-invite {
+    td.participants-role-cell {
+        white-space: normal;
+    }
+}
+.participants-invite-actions {
+    display: inline;
+    white-space: nowrap;
+
+    @media screen and (max-width: $mobile) {
+        display: block;
+        margin-top: 2px;
+        white-space: normal;
+        line-height: 1.45;
+
+        // «·» before the first link reads as a connector to the role above — hide it, the new line is the separator
+        > .participants-action-sep:first-child {
+            display: none;
+        }
+    }
+}
+
+// Owner's row — a subtle tint, no special controls (the «Владелец» pill is cosmetic)
+.participants-row-owner .participants-role-text {
+    color: var(--fg);
+    font-weight: 500;
 }
 
 // --- Invite modal ----------------------------------------------------------
@@ -206,12 +197,6 @@
             }
         }
     }
-
-}
-
-// Owner's untouchable row — subtle visual separation
-.participants-table tr:has(.role-chip.owner) {
-    background: color-mix(in srgb, var(--surface-2) 50%, transparent);
 }
 
 .visually-hidden {

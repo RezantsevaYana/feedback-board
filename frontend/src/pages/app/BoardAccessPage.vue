@@ -28,12 +28,19 @@
             <!-- on a phone it folds, the people count in its header; the requests above it never fold -->
             <FoldSection id="team" title="Команда" class="board-access-group" :summary="peopleSummary">
               <div class="participants-actions">
-                <button type="button" class="btn btn-add" @click="showInvite = true">+ Добавить в команду</button>
+                <button type="button" class="btn btn-sm" @click="showInvite = true">+ Пригласить</button>
               </div>
               <p class="note">Те, кто разбирает посты и настраивает доску. Гостям приглашение не нужно: доска открыта по ссылке.</p>
-              <h4 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h4>
-              <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
-              <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" team-only @changed="onMemberChanged" @removed="onMemberRemoved" />
+              <ParticipantsTable
+                :slug="slug"
+                :members="people.members"
+                :invitations="people.invitations"
+                :me-id="auth.me?.id ?? 0"
+                team-only
+                @changed="onMemberChanged"
+                @removed="onMemberRemoved"
+                @invite-cancelled="onInviteCancelled"
+              />
             </FoldSection>
           </template>
 
@@ -47,12 +54,18 @@
 
             <FoldSection id="participants" title="Участники" class="board-access-group" :summary="peopleSummary">
               <div class="participants-actions">
-                <button type="button" class="btn btn-add" @click="showInvite = true">+ Пригласить</button>
+                <button type="button" class="btn btn-sm" @click="showInvite = true">+ Пригласить</button>
               </div>
               <p class="note">Доску видят только люди из этого списка. Один человек — одна роль, что может каждая, видно при выборе.</p>
-              <h4 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h4>
-              <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
-              <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" @changed="onMemberChanged" @removed="onMemberRemoved" />
+              <ParticipantsTable
+                :slug="slug"
+                :members="people.members"
+                :invitations="people.invitations"
+                :me-id="auth.me?.id ?? 0"
+                @changed="onMemberChanged"
+                @removed="onMemberRemoved"
+                @invite-cancelled="onInviteCancelled"
+              />
             </FoldSection>
           </template>
         </div>
@@ -81,7 +94,6 @@ import GuestsSection from './components/GuestsSection.vue'
 import SearchIndexingSection from './components/SearchIndexingSection.vue'
 import InviteModal from './components/InviteModal.vue'
 import ParticipantsTable from './components/ParticipantsTable.vue'
-import PendingInvitationsList from './components/PendingInvitationsList.vue'
 import { boardLoadError } from './composables/boardLoadError'
 import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 

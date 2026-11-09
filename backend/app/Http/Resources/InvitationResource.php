@@ -24,6 +24,9 @@ class InvitationResource extends JsonResource
                 'id' => $this->resource->invited_by,
                 'name' => $this->resource->inviter?->name,
             ],
+            // когда отправили (не путать с expires_at — срок действия): «приглашение отправлено DD MMM»
+            // в объединённой таблице участников (test.md п. 23)
+            'sent_at' => $this->resource->created_at,
             'expires_at' => $this->resource->expires_at,
             'accepted_at' => $this->resource->accepted_at,
             'is_pending' => $this->resource->isPending(),

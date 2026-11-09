@@ -199,8 +199,10 @@
     &:active .emo {
         transform: scale(0.88);
     }
-    // a reader: the count is still readable, the button just doesn't react (VoteButtons.vue says why in the title)
-    &:disabled {
+    // a reader or a guest where the owner hid voting (test.md п. 40): the count is still readable, the button
+    // doesn't reward the click — one tap brings up a toast that says why (VoteButtons.vue). aria-disabled (not
+    // the native attribute) keeps the click reachable so mobile can show the same reason as hover does on desktop
+    &[aria-disabled='true'] {
         cursor: default;
         color: var(--muted);
         background: var(--surface-2);
@@ -237,7 +239,7 @@
                 transform: rotate(8deg) scale(1.1);
             }
         }
-        &:disabled {
+        &[aria-disabled='true'] {
             @include hover {
                 .emo {
                     transform: none;

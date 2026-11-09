@@ -70,10 +70,13 @@ const props = defineProps<{
 }>()
 const board = useBoardStore()
 const voters = useVotersStore()
+const notification = useNotificationStore()
+const route = useRoute()
+const router = useRouter()
 
 const KINDS: VoteValue[] = ['like', 'dislike']
 const READ_ONLY = 'Ваша роль на доске — читатель: можно смотреть, голосовать нельзя'
-const GUEST_CANT_VOTE = 'Войдите в аккаунт, чтобы проголосовать'
+const GUEST_CANT_VOTE = 'Войдите, чтобы проголосовать'
 const POP_SIZE = 8
 const canVote = computed(() => board.canVote)
 // why the buttons are disabled: a reader on a closed board, or a guest on an open one where the owner hid voting
@@ -82,6 +85,24 @@ const voteBlockedTitle = computed(() => {
   if (canVote.value) return undefined
   return board.me ? READ_ONLY : GUEST_CANT_VOTE
 })
+
+// aria-disabled lets the click through so we can explain WHY on tap (mobile has no hover for the title tooltip).
+// A reader meets a dead end — a quiet toast with the same label. A guest meets a way out — the toast carries
+// a «Войти →» action that routes to login and comes back to this board (test.md п. 40).
+function onClick(kind: VoteValue) {
+  if (canVote.value) {
+    void board.vote(props.post, kind)
+    return
+  }
+  if (board.me) {
+    notification.show('success', READ_ONLY)
+    return
+  }
+  notification.show('success', GUEST_CANT_VOTE, {
+    label: 'Войти →',
+    run: () => router.push({ path: '/app/login', query: { next: route.fullPath } }),
+  })
+}
 const canSeeVoters = computed(() => board.role === 'owner' || board.role === 'admin' || board.role === 'manager')
 
 const total = computed(() => props.post.likes_count + props.post.dislikes_count)

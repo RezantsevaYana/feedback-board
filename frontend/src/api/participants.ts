@@ -22,6 +22,8 @@ export interface Invitation {
   email: string
   role: Exclude<ProjectRole, 'owner'>
   invited_by: { id: number; name: string }
+  /** когда отправили — «приглашение отправлено DD MMM» в объединённой таблице участников (test.md п. 23) */
+  sent_at: string
   expires_at: string
   accepted_at: string | null
   is_pending: boolean
