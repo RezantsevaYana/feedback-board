@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateBoardRequest;
 use App\Http\Requests\Admin\UpdateBoardRequest;
 use App\Models\Project;
+use App\Models\ProjectSlugHistory;
 use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -107,8 +109,21 @@ class BoardController extends Controller
         if (array_key_exists('onboarding_step', $data)) {
             $board->onboarding_step = $data['onboarding_step'];
         }
+        // test.md п. 24: смена адреса — старый slug уходит в project_slug_history, виджеты и ссылки по нему
+        // продолжают работать (резолвер подменит, фронт сделает router.replace). Транзакция — чтобы история
+        // и projects.slug не разошлись при падении посередине.
+        $slugChanged = array_key_exists('slug', $data) && $data['slug'] !== $board->slug;
         $opening = $board->isDirty('visibility') && ! $board->isPrivate();
-        $board->save();
+        DB::transaction(function () use ($board, $slugChanged, $data): void {
+            if ($slugChanged) {
+                $oldSlug = $board->slug;
+                $board->slug = $data['slug'];
+                $board->save();
+                ProjectSlugHistory::create(['project_id' => $board->id, 'old_slug' => $oldSlug]);
+            } else {
+                $board->save();
+            }
+        });
         // on an open board an invitation as Участник / Читатель means nothing: the link already lets anyone in
         if ($opening) {
             $board->invitations()->pending()
@@ -160,12 +175,15 @@ class BoardController extends Controller
     }
 
     /**
-     * Live slug check for the create form. The frontend debounces ~400ms before calling.
-     * Returns {available, reason} so the UI can tailor the message.
+     * Live slug check for the create form and the rename field (test.md п. 24).
+     * The frontend debounces ~400ms before calling. Returns {available, reason} so the UI can
+     * tailor the message. `except` — текущий slug доски, по которому идёт переименование: своё поле
+     * заполнено текущим значением и не должно считаться «занятым».
      */
     public function checkSlug(Request $request): JsonResponse
     {
         $slug = Str::lower(trim((string) $request->input('slug', '')));
+        $except = Str::lower(trim((string) $request->input('except', '')));
 
         if ($slug === '' || ! preg_match('/^[a-z0-9][a-z0-9-]{1,63}$/', $slug)) {
             return response()->json(['data' => ['available' => false, 'reason' => 'format']]);
@@ -173,7 +191,13 @@ class BoardController extends Controller
         if (in_array($slug, (array) config('feedback.reserved_slugs'), true)) {
             return response()->json(['data' => ['available' => false, 'reason' => 'reserved']]);
         }
+        if ($slug === $except) {
+            return response()->json(['data' => ['available' => true, 'reason' => null]]);
+        }
         if (Project::withTrashed()->where('slug', $slug)->exists()) {
+            return response()->json(['data' => ['available' => false, 'reason' => 'taken']]);
+        }
+        if (ProjectSlugHistory::where('old_slug', $slug)->exists()) {
             return response()->json(['data' => ['available' => false, 'reason' => 'taken']]);
         }
 

@@ -356,6 +356,19 @@ watch(searchInput, (v) => {
 
 watch(slug, (s) => board.open(s), { immediate: true })
 
+// test.md п. 24: пришли по старому адресу — API вернёт проект под новым slug, адресную строку меняем в SPA
+// (кеш vite-роутер, без перезагрузки). Проверяем именно project.slug, потому что это уже актуальное значение
+// после резолвера; redirect_slug на эту же цель, но project.slug достаточно.
+watch(() => board.project?.slug, (actual) => {
+  if (!actual || actual === slug.value) return
+  void router.replace({
+    name: route.name === 'post' ? 'post' : 'board',
+    params: { ...route.params, slug: actual },
+    query: route.query,
+    hash: route.hash,
+  })
+})
+
 // «/» or ⌘K / Ctrl+K puts the cursor into the search (by `code`, so «/» works in the Russian layout too);
 // Esc in the field leaves it, so J / K work again
 const searchField = ref<InstanceType<typeof SearchComponent> | null>(null)

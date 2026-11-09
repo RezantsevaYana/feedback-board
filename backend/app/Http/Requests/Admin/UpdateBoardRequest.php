@@ -3,13 +3,16 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\BoardVisibility;
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * Board settings: rename, the widget domains and the widget colour. Each field is optional so the
- * "General", "Domains" and "Подключение" sections can save independently. Slug is read-only
- * after creation — changing it would break connected widgets and shared links.
+ * Board settings: rename, slug, the widget domains and the widget colour. Each field is optional so the
+ * "General", "Domains" and "Подключение" sections can save independently. Slug is editable
+ * (test.md п. 24) — старый адрес записывается в project_slug_history, виджеты и ссылки по нему
+ * продолжают работать (резолвер подменит, фронт сделает router.replace).
  */
 class UpdateBoardRequest extends FormRequest
 {
@@ -18,8 +21,24 @@ class UpdateBoardRequest extends FormRequest
      */
     public function rules(): array
     {
+        $board = $this->route('board');
+        $boardId = $board instanceof Project ? $board->id : null;
+
         return [
             'name' => ['sometimes', 'required', 'string', 'max:80'],
+            'slug' => [
+                'sometimes',
+                'required',
+                'string',
+                'alpha_dash:ascii',
+                'min:2',
+                'max:64',
+                Rule::notIn(config('feedback.reserved_slugs')),
+                // занят среди активных и в корзине (unique считает физические строки, soft-delete не учитывает)
+                Rule::unique('projects', 'slug')->ignore($boardId),
+                // занят в истории — нельзя увести отданный когда-то кому-то slug, иначе старые ссылки сломаются
+                Rule::unique('project_slug_history', 'old_slug'),
+            ],
             'origins' => ['sometimes', 'array', 'max:20'],
             // same format as on create: scheme + host (+ optional :port), "*" allowed, no path
             'origins.*' => ['string', 'distinct', 'regex:#^https?://[^/\s]+$#'],
@@ -48,6 +67,12 @@ class UpdateBoardRequest extends FormRequest
         return [
             'name.required' => 'Назовите доску — чтобы на неё было легко сослаться.',
             'name.max' => 'Название — не длиннее 80 символов.',
+            'slug.required' => 'Введите адрес доски.',
+            'slug.alpha_dash' => 'Адрес — только латиница, цифры и дефис.',
+            'slug.min' => 'Адрес — хотя бы 2 символа.',
+            'slug.max' => 'Адрес — не длиннее 64 символов.',
+            'slug.not_in' => 'Этот адрес зарезервирован. Выберите другой.',
+            'slug.unique' => 'Этот адрес уже занят. Попробуйте другой.',
             'origins.max' => 'Не больше 20 доменов.',
             'origins.*.distinct' => 'Этот домен уже есть в списке.',
             'origins.*.regex' => 'Домен — схема и хост без пути, например https://app.example.com',
@@ -62,6 +87,9 @@ class UpdateBoardRequest extends FormRequest
     {
         if ($this->has('name')) {
             $this->merge(['name' => is_string($this->name) ? trim($this->name) : $this->name]);
+        }
+        if ($this->has('slug')) {
+            $this->merge(['slug' => is_string($this->slug) ? Str::lower(trim($this->slug)) : $this->slug]);
         }
         if ($this->has('widget_color')) {
             $this->merge(['widget_color' => $this->normalizeColor($this->widget_color)]);

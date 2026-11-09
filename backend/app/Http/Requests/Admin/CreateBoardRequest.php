@@ -28,6 +28,8 @@ class CreateBoardRequest extends FormRequest
                 'max:64',
                 Rule::notIn(config('feedback.reserved_slugs')),
                 'unique:projects,slug',
+                // test.md п. 24: освобождённый адрес занят ссылками и виджетами, переоформить его нельзя
+                Rule::unique('project_slug_history', 'old_slug'),
             ],
             'origins' => ['nullable', 'array', 'max:20'],
             // Scheme + host (+ optional :port). No path. Wildcard * is allowed inside the host part — "http://localhost:*" is used in local dev.

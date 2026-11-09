@@ -90,12 +90,14 @@ export const BoardsApi = {
     return request<Item<BoardSettings>>(`${BASE_URL}/${slug}`)
   },
 
-  // rename the board, replace its widget domains, set the widget colour (null = default), set the
-  // widget launcher text (null = default «Обратная связь») or flip visibility — send only what changed
+  // rename the board, change its slug (test.md п. 24: старый адрес уходит в history и продолжает работать),
+  // replace its widget domains, set the widget colour (null = default), set the widget launcher text
+  // (null = default «Обратная связь») or flip visibility — send only what changed
   update(
     slug: string,
     body: {
       name?: string
+      slug?: string
       origins?: string[]
       widget_color?: string | null
       widget_launcher_text?: string | null
@@ -124,8 +126,9 @@ export const BoardsApi = {
     return request<Item<EmbedInfo>>(`${BASE_URL}/${slug}/embed`)
   },
 
-  // live uniqueness/format check during slug entry
-  checkSlug(slug: string) {
-    return request<Item<SlugCheck>>(`${BASE_URL}/check-slug`, { method: 'POST', body: { slug } })
+  // live uniqueness/format check during slug entry — `except` is the board's current slug so renaming
+  // in place (field pre-filled with the current value) isn't flagged as «taken»
+  checkSlug(slug: string, except?: string) {
+    return request<Item<SlugCheck>>(`${BASE_URL}/check-slug`, { method: 'POST', body: { slug, except } })
   },
 }

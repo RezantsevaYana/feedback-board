@@ -7,14 +7,22 @@ use App\Models\Category;
 use App\Models\Project;
 use App\Models\Status;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
-    public function show(Project $project): JsonResponse
+    public function show(Request $request, Project $project): JsonResponse
     {
+        // test.md п. 24: зашли по старому slug (резолвер подменил из project_slug_history) — отдадим и новый
+        // адрес, SPA вызовет router.replace. Виджет на чужом сайте redirect_slug игнорирует: `data-project`
+        // в скрипте неизменяем, но дальнейшие запросы по старому slug резолвер прозрачно подменит.
+        $requested = (string) $request->attributes->get('project_redirect_from', '');
+
         return response()->json(['data' => [
             'name' => $project->name,
             'slug' => $project->slug,
+            // присутствует только при переходе со старого адреса; на фронте — сигнал к router.replace
+            'redirect_slug' => $requested !== '' && $requested !== $project->slug ? $project->slug : null,
             // false only reaches the team: everyone else gets 403 from EnsureProjectPublished
             'published' => $project->isPublished(),
             // the widget and the board check this to decide whether to show the login prompt

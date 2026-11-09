@@ -60,6 +60,12 @@ export interface Post {
 export interface Project {
   name: string
   slug: string
+  /**
+   * test.md п. 24: if the request came by an old slug (resolved from project_slug_history), this holds
+   * the project's actual current slug. SPA does router.replace on it. The widget on a third-party site
+   * ignores it: data-project in the <script> is immutable, and the resolver swaps old → new on every call.
+   */
+  redirect_slug?: string | null
   /** false until the owner confirms the email; only the team ever gets it, everyone else gets 403 */
   published: boolean
   /** public → anyone with the URL; private → только участники (project_user). V1 flip is one-way. */

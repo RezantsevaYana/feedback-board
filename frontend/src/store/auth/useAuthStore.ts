@@ -100,6 +100,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /** Slug changed in settings (test.md п. 24): update the hub card, switcher and /me summaries in place. */
+  function renameBoardSlug(oldSlug: string, newSlug: string): void {
+    if (oldSlug === newSlug) return
+    for (const b of [...boards.value, ...(me.value?.boards ?? []), ...(me.value?.projects ?? [])]) {
+      if (b.slug === oldSlug) b.slug = newSlug
+    }
+    for (const b of trashed.value) {
+      if (b.slug === oldSlug) b.slug = newSlug
+    }
+  }
+
   /** Boards where access requests wait for my decision — «Ждут решения на ваших досках» in the hub. */
   const awaitingDecision = computed(() => (me.value?.projects ?? []).filter((b) => (b.pending_requests ?? 0) > 0))
 
@@ -213,7 +224,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     me, loaded, loading, isAuth, boardSummaries, awaitingDecision, setPendingRequests, setVisibility,
     boards, trashed, boardsLoaded, boardsLoading, incoming,
-    fetchMe, fetchBoards, fetchIncoming, acceptIncoming, declineIncoming, addBoard, renameBoard, trashBoard, restoreBoard,
+    fetchMe, fetchBoards, fetchIncoming, acceptIncoming, declineIncoming, addBoard, renameBoard, renameBoardSlug, trashBoard, restoreBoard,
     register, login, logout, verifyEmail, resendVerification, forgotPassword, checkResetToken, resetPassword, changePassword, updateName,
   }
 })

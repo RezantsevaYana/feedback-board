@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Project;
+use App\Models\ProjectSlugHistory;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -30,6 +32,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // test.md п. 24: публичный роут {project:slug}. Если slug не найден среди активных — ищем в
+        // project_slug_history и возвращаем актуальный проект. SPA сравнит запрошенный slug с pr.slug
+        // и сделает router.replace; виджет на чужом сайте просто получит данные под новым slug.
+        // Admin binds {board:slug} — его не трогаем, переименование идёт через явный PATCH.
+        Route::bind('project', function (string $value): Project {
+            $project = Project::where('slug', $value)->first();
+            if ($project) {
+                return $project;
+            }
+            $historic = ProjectSlugHistory::where('old_slug', $value)->first();
+            if ($historic && ($project = Project::find($historic->project_id))) {
+                request()->attributes->set('project_redirect_from', $value);
+
+                return $project;
+            }
+            abort(404);
+        });
+
         // Role-aware abilities on one board, see the table in docs/ROLES_PLAN.md §1.
         // triage = posts, statuses of cards, hiding, replies; configure = categories, columns, settings, team.
         $roleOn = fn (User $user, Project $project) => $user->roleOn($project);

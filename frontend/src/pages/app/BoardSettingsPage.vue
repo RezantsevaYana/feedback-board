@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { type BoardSettings, BoardsApi } from '@/api/boards'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useBoardStore } from '@/store/board/useBoardStore'
@@ -54,6 +54,7 @@ import { useDeleteBoard } from './composables/useDeleteBoard'
 // One of the board's four settings sections (TEST.md п. 42); the router sends the old /settings#categories,
 // #statuses, #domains and #access to their new sections. The board store is kept in sync on a rename.
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const board = useBoardStore()
 const { deleteBoard } = useDeleteBoard()
@@ -93,11 +94,20 @@ async function load() {
 }
 
 function onSaved(next: BoardSettings) {
-  if (settings.value && next.name !== settings.value.name) {
-    auth.renameBoard(next.slug, next.name)
-    if (board.project?.slug === next.slug) board.project.name = next.name
-  }
+  const prev = settings.value
   settings.value = next
+  if (!prev) return
+  if (next.name !== prev.name) {
+    auth.renameBoard(prev.slug, next.name)
+    if (board.project?.slug === prev.slug) board.project.name = next.name
+  }
+  // test.md п. 24: slug изменился — обновляем кеши и адресную строку. Старый адрес будет
+  // продолжать работать через project_slug_history и redirect в публичном резолвере.
+  if (next.slug !== prev.slug) {
+    auth.renameBoardSlug(prev.slug, next.slug)
+    if (board.project?.slug === prev.slug) board.project.slug = next.slug
+    void router.replace({ name: 'board-settings', params: { slug: next.slug }, hash: route.hash })
+  }
 }
 </script>
 <style lang="scss">

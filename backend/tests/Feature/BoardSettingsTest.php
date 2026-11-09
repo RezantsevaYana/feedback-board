@@ -216,10 +216,18 @@ class BoardSettingsTest extends TestCase
         $this->assertNull($this->board->refresh()->widget_color);
     }
 
-    public function test_slug_cannot_be_changed(): void
+    public function test_slug_validation(): void
     {
-        $this->actingAs($this->owner)
-            ->patchJson('/api/admin/boards/my-board', ['slug' => 'other', 'name' => 'Доска'])
+        $this->actingAs($this->owner);
+
+        // формат, длина, зарезервированные — те же сообщения, что и при создании
+        $this->patchJson('/api/admin/boards/my-board', ['slug' => 'Bad Slug'])->assertJsonValidationErrors('slug');
+        $this->patchJson('/api/admin/boards/my-board', ['slug' => 'a'])->assertJsonValidationErrors('slug');
+        $this->patchJson('/api/admin/boards/my-board', ['slug' => str_repeat('a', 65)])->assertJsonValidationErrors('slug');
+        $this->patchJson('/api/admin/boards/my-board', ['slug' => 'admin'])->assertJsonValidationErrors('slug');
+
+        // свой текущий slug — не «занят», просто ничего не меняет (переименование по своему же полю)
+        $this->patchJson('/api/admin/boards/my-board', ['slug' => 'my-board'])
             ->assertOk()
             ->assertJsonPath('data.slug', 'my-board');
     }
