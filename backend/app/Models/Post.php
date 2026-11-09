@@ -198,6 +198,7 @@ class Post extends Model
     public function scopeSorted(Builder $query, string $sort): void
     {
         match ($sort) {
+            'manual' => $query->orderByRaw('kanban_position is null desc')->orderBy('kanban_position')->latest('id'),
             'new' => $query->latest('id'),
             'priority' => $query
                 ->orderByRaw("case priority when 'critical' then 4 when 'high' then 3 when 'medium' then 2 when 'low' then 1 else 0 end desc")

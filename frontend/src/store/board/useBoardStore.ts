@@ -13,10 +13,11 @@ import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useVotersStore } from '@/store/modals/useVotersStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { canConfigure, canTriage } from '@/shared/utils/roles'
+import { readBoardPreferences, saveBoardPreferences, type BoardPreferences } from '@/shared/utils/boardPreferences'
 
 export type Section = 'posts' | 'top' | 'authors' | 'weekly'
 export type Layout = 'kanban' | 'list'
-export type Sort = 'top' | 'new' | 'priority'
+export type Sort = 'top' | 'new' | 'priority' | 'manual'
 /** a category id, or 'none' for posts left without a category */
 export type CategoryFilter = number | 'none'
 /** a priority, or 'none' for posts without one */
@@ -96,6 +97,40 @@ export const useBoardStore = defineStore('board', () => {
     showHidden: true,
   })
 
+  function preferences(): BoardPreferences {
+    return {
+      layout: view.layout, category: view.category, status: view.status,
+      search: view.search, sort: view.sort, priority: view.priority, showHidden: view.showHidden,
+    }
+  }
+
+  let preferencesKey = ''
+  let restoringPreferences = false
+  watch(
+    [() => project.value?.slug, () => me.value?.id, () => team.value],
+    () => {
+      preferencesKey = ''
+      if (!project.value) return
+      const key = `fb-board-view:v1:${encodeURIComponent(project.value.slug)}:${me.value?.id ?? 'guest'}`
+      const defaults: BoardPreferences = {
+        layout: defaultLayout, category: [], status: [], search: '',
+        sort: team.value ? 'manual' : 'new', priority: [], showHidden: true,
+      }
+      restoringPreferences = true
+      Object.assign(view, readBoardPreferences(key, defaults, {
+        categories: categories.value.map(c => c.id),
+        statuses: statuses.value.map(s => s.id),
+        team: team.value,
+      }))
+      restoringPreferences = false
+      preferencesKey = key
+    },
+    { flush: 'sync' },
+  )
+  watch(preferences, (next) => {
+    if (preferencesKey && !restoringPreferences) saveBoardPreferences(preferencesKey, next)
+  }, { deep: true, flush: 'sync' })
+
   /** Something narrows the board (search, category, status, priority, hidden posts left out). */
   const filtered = computed(
     () =>
@@ -138,8 +173,8 @@ export const useBoardStore = defineStore('board', () => {
     const user = AuthApi.me().then((r) => r.data).catch(() => null)
     try {
       const [p, u] = await Promise.all([ProjectsApi.get(slug), user])
-      project.value = p.data
       me.value = u
+      project.value = p.data
       await refresh()
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) {
@@ -187,7 +222,7 @@ export const useBoardStore = defineStore('board', () => {
         category: view.category.join(','),
         status_id: view.layout === 'list' ? view.status.join(',') : '',
         q: view.search.trim(),
-        sort: !team.value && view.sort === 'priority' ? 'top' : view.sort,
+        sort: !team.value && (view.sort === 'priority' || view.sort === 'manual') ? 'top' : view.sort,
         // the list view without a column filter: «Новое» first, a line before the rest (PostList)
         new_first: view.layout === 'list' && !view.status.length ? 1 : undefined,
         page: nextPage,
@@ -599,7 +634,7 @@ export const useBoardStore = defineStore('board', () => {
     // through the cabinet store, so /app/* doesn't keep the session it cached
     await auth.logout()
     me.value = null
-    if (view.sort === 'priority') view.sort = 'top'
+    if (view.sort === 'priority' || view.sort === 'manual') view.sort = 'top'
     // on a private board's gate the outsider becomes a guest: same gate, with name and email fields
     if (noAccess.value) {
       noAccess.value = false

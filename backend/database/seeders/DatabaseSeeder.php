@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         if (Project::where('slug', 'demo')->exists()) {
+            $this->call(FeedbackBoardSeeder::class);
+
             return;
         }
 
@@ -37,6 +39,7 @@ class DatabaseSeeder extends Seeder
             'permissions' => Dashboard::getAllowAllPermission()->all(),
         ]);
         $admin->markEmailAsVerified();
+        $this->call(FeedbackBoardSeeder::class);
 
         // owner_id so ParticipantController marks this row as «создал доску» (source = created),
         // not «добавлен вручную». Pivot role must match: ProjectRole::Owner.

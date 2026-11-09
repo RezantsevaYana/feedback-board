@@ -51,6 +51,7 @@ const priorityOptions: { value: PriorityFilter; label: string }[] = [
   ...PRIORITIES.map((p) => ({ value: p, label: PRIORITY[p] })),
 ]
 const sortOptions = computed(() => [
+  ...(board.team ? [{ value: 'manual' as Sort, label: 'Ручной порядок' }] : []),
   { value: 'new' as Sort, label: 'Сначала новые' },
   { value: 'top' as Sort, label: 'Сначала популярные' },
   ...(board.team ? [{ value: 'priority' as Sort, label: 'По приоритету' }] : []),

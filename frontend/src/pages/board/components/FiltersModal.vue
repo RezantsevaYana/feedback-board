@@ -7,7 +7,7 @@
     <BoardFilters stacked />
     <div class="row filters-modal-actions">
       <button type="button" class="btn btn-primary" @click="close()">{{ showLabel }}</button>
-      <button type="button" class="btn" :disabled="!board.filtered && board.view.sort === 'new'" @click="reset">Сбросить</button>
+      <button type="button" class="btn" :disabled="!board.filtered && board.view.sort === (board.team ? 'manual' : 'new')" @click="reset">Сбросить</button>
     </div>
   </BaseModal>
 </template>

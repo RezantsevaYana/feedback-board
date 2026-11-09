@@ -18,6 +18,10 @@ export type PostPatch = Partial<Pick<Post, 'title' | 'description' | 'priority' 
 }
 
 export const PostsApi = {
+  // Move within the current status; null places the card at the end.
+  reorder(id: number, statusId: number, beforeId: number | null) {
+    return request<void>(`${ADMIN_URL}/posts/${id}/order`, { method: 'PATCH', body: { status_id: statusId, before_id: beforeId } })
+  },
   // posts on the public board; new_first=1 puts «Новое» on top and adds new_count
   list(slug: string, query: PostsQuery) {
     return request<Paginated<Post>>(`${PUBLIC_URL}/${projectPath(slug)}`, { query })

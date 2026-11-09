@@ -39,7 +39,7 @@ class PostController extends Controller
             'priority' => ['nullable', "regex:/^({$priorities})(,({$priorities}))*$/"],
             'hidden' => ['nullable', Rule::in(['include', 'exclude'])],
             'q' => ['nullable', 'string', 'max:120'],
-            'sort' => ['nullable', Rule::in(['top', 'new', 'priority'])],
+            'sort' => ['nullable', Rule::in(['top', 'new', 'priority', 'manual'])],
             'new_first' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
@@ -65,6 +65,32 @@ class PostController extends Controller
 
         return AdminPostResource::collection($posts)
             ->additional($newStatusId !== null ? ['new_count' => (clone $filtered)->where('status_id', $newStatusId)->count()] : []);
+    }
+
+    public function reorder(Request $request, Post $post): Response
+    {
+        Gate::authorize('board.triage', $post->project);
+
+        DB::transaction(function () use ($request, $post) {
+            Project::whereKey($post->project_id)->lockForUpdate()->firstOrFail();
+            $post->refresh();
+            $data = $request->validate([
+                'status_id' => ['required', 'integer', Rule::in([$post->status_id])],
+                'before_id' => ['present', 'nullable', 'integer', Rule::exists('posts', 'id')
+                    ->where('project_id', $post->project_id)->where('status_id', $post->status_id)
+                    ->whereNot('id', $post->id)],
+            ]);
+            $ids = $post->project->posts()->where('status_id', $post->status_id)
+                ->whereKeyNot($post->id)->sorted('manual')->pluck('id')->all();
+            $index = $data['before_id'] === null ? count($ids) : array_search((int) $data['before_id'], $ids, true);
+            array_splice($ids, $index, 0, [$post->id]);
+
+            foreach ($ids as $position => $id) {
+                $post->project->posts()->whereKey($id)->update(['kanban_position' => $position]);
+            }
+        });
+
+        return response()->noContent();
     }
 
     public function show(Request $request, Post $post): AdminPostResource

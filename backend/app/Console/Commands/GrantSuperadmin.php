@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use Database\Seeders\FeedbackBoardSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use Orchid\Support\Facades\Dashboard;
@@ -29,6 +30,10 @@ class GrantSuperadmin extends Command
         // Collection → массив, чтобы 'array' каст на permissions положил его в jsonb как есть.
         $user->permissions = $grant ? Dashboard::getAllowAllPermission()->all() : null;
         $user->save();
+
+        if ($grant) {
+            (new FeedbackBoardSeeder)->run();
+        }
 
         $this->info($grant
             ? "{$user->email} теперь админ сервиса: /admin"

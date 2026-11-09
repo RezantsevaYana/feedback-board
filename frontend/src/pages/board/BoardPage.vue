@@ -246,7 +246,6 @@ import { ROLE_LABELS } from '@/api/types'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { type Section, useBoardStore } from '@/store/board/useBoardStore'
 import AppIcon from '@/shared/ui/AppIcon.vue'
-import VerifyEmailBanner from '@/shared/components/VerifyEmailBanner.vue'
 import VisibilityBadge from '@/shared/components/VisibilityBadge.vue'
 import MenuComponent, { type MenuItem } from '@/shared/ui/MenuComponent.vue'
 import SearchComponent from '@/shared/ui/SearchComponent.vue'
@@ -324,7 +323,7 @@ function composeFromSearch() {
 function resetFilters() {
   searchInput.value = ''
   board.resetFilters()
-  board.view.sort = 'new'
+  board.view.sort = board.team ? 'manual' : 'new'
 }
 // phone: filters sit in a bottom sheet behind «Фильтры · N»
 const filtersOpen = ref(false)
@@ -335,14 +334,9 @@ const activeFilters = computed(
       board.view.layout === 'list' && board.view.status.length > 0,
       board.team && board.view.priority.length > 0,
       board.team && !board.view.showHidden,
-      board.view.sort !== 'new',
+      board.view.sort !== (board.team ? 'manual' : 'new'),
     ].filter(Boolean).length,
 )
-// team mode: every board this user is on is one click away; owner / admin also get the board's settings
-// access requests waiting on this board (owner / admin only; /me sends 0 to everyone else)
-const pendingRequests = computed(() => board.me?.projects.find((p) => p.slug === slug.value)?.pending_requests ?? 0)
-// the role on this board under the name in the account block; «вы вошли» for someone signed in but not on it
-const whoChip = computed(() => (board.role ? `роль ${ROLE_LABELS[board.role].toLowerCase()}` : 'вы вошли'))
 // Локальная модель для поля поиска: каждый ввод — тик дебаунса в 300мс,
 // чтобы не стрелять запросом на каждую букву. Основной watcher в самом сторе
 // уже перезагружает список, когда board.view.search меняется.
@@ -350,7 +344,12 @@ const searchInput = ref(board.view.search)
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 watch(searchInput, (v) => {
   if (searchTimer) clearTimeout(searchTimer)
+  if (v.trim() === board.view.search) return
   searchTimer = setTimeout(() => (board.view.search = v.trim()), 300)
+})
+watch(() => board.view.search, (value) => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchInput.value = value
 })
 
 

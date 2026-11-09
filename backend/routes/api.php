@@ -96,6 +96,7 @@ Route::prefix('admin')->group(function () {
         Route::get('posts/{post}', [Admin\PostController::class, 'show']);
         Route::get('posts/{post}/voters', [Admin\PostController::class, 'voters']);
         Route::patch('posts/{post}', [Admin\PostController::class, 'update']);
+        Route::patch('posts/{post}/order', [Admin\PostController::class, 'reorder']);
         Route::delete('posts/{post}', [Admin\PostController::class, 'destroy']);
 
         Route::get('attachments/{attachment}', [Admin\AttachmentController::class, 'show']);

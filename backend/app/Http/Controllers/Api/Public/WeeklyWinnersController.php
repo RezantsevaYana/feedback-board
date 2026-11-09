@@ -12,7 +12,7 @@ use Illuminate\Http\JsonResponse;
 /**
  * «Пост недели» в каждой категории проекта: по одному победителю на категорию,
  * отобранному среди постов текущей ISO-недели (пн 00:00 — вс 23:59) по разнице
- * лайков и дизлайков. Категории без постов за неделю возвращаются с post=null,
+ * лайков и дизлайков, только с положительным рейтингом. Категории без победителя возвращаются с post=null,
  * чтобы список не «прыгал» от недели к неделе.
  */
 class WeeklyWinnersController extends Controller
@@ -31,7 +31,9 @@ class WeeklyWinnersController extends Controller
         $winners = Post::where('project_id', $project->id)
             ->whereNotNull('category_id')
             ->where('is_hidden', false)
+            ->whereColumn('likes_count', '>', 'dislikes_count')
             ->where('created_at', '>=', $weekStart)
+            ->where('created_at', '<=', $weekEnd)
             ->orderBy('category_id')
             ->orderByRaw('likes_count - dislikes_count desc')
             ->orderBy('id', 'desc')

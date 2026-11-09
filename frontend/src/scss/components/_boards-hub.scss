@@ -15,6 +15,31 @@
     gap: 16px;
     margin-bottom: 8px;
 }
+.boards-hub-service {
+    margin-top: 24px;
+    padding: 20px;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+
+    h2 {
+        margin: 0;
+        font-size: 16px;
+        color: var(--accent-ink);
+    }
+    p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: var(--muted);
+    }
+    .boards-grid {
+        margin-top: 16px;
+        max-width: 560px;
+    }
+    @media screen and (max-width: $mobile) {
+        padding: 14px;
+    }
+}
 // phone: pinned to the bottom under the thumb, same as «Предложить» on the board (.board-cta)
 .boards-hub-new {
     @media screen and (max-width: $mobile) {

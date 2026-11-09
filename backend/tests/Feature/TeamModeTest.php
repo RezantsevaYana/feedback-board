@@ -181,7 +181,7 @@ class TeamModeTest extends TestCase
             'category_id' => $this->project->categories()->first()->id,
             'files' => [UploadedFile::fake()->image('a.png')],
         ], ['Accept' => 'application/json'])->assertCreated();
-        $post = Post::firstOrFail();
+        $post = $this->project->posts()->firstOrFail();
         $post->update(['is_hidden' => true]);
         $attachment = $post->attachments()->firstOrFail();
 
