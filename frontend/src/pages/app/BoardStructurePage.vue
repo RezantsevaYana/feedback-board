@@ -2,21 +2,44 @@
   <BoardWorkspace :slug="slug" page="structure">
     <p v-if="loading" class="note">Загружаем…</p>
 
-    <template v-else-if="allowed">
-      <!-- on a phone both fold; folded, they show the tags / the chain of columns themselves -->
-      <FoldSection id="categories" title="Категории" class="board-settings-section">
+    <section v-else-if="allowed" class="board-settings-section structure-settings">
+      <!-- Shared card, stacked groups; compact screens show the tags / status chain while folded. -->
+      <FoldSection id="categories" title="Категории" class="structure-section" hint-aria-label="Где видны категории на доске">
+        <template #hint>
+          <span class="hint-cap">На доске — метка на карточке и фильтр</span>
+          <span class="hint-mini-filters"><i class="on">Все</i><i>Баг</i><i>Идея</i></span>
+          <span class="hint-mini-card">
+            <span class="hint-tag hl" data-color="red">Баг</span>
+            <b>Не прикрепляется файл больше 20 МБ</b>
+            <em></em>
+          </span>
+        </template>
         <template #summary>
           <CategoryTag v-for="c in board.categories" :key="c.id" :category="c" />
         </template>
-        <CategoriesEditor v-if="projectReady" />
+        <CategoriesEditor v-if="projectReady" settings-layout />
         <p v-else class="note">{{ board.loadError || 'Загружаем…' }}</p>
       </FoldSection>
 
-      <FoldSection id="statuses" title="Статусы" class="board-settings-section" :summary="board.statuses.map((s) => s.name).join(' → ')">
-        <StatusesEditor v-if="projectReady" />
+      <FoldSection
+        id="statuses"
+        title="Статусы"
+        class="structure-section"
+        hint-aria-label="Где видны статусы на доске"
+        :summary="board.statuses.map((s) => s.name).join(' → ')"
+      >
+        <template #hint>
+          <span class="hint-cap">На доске — колонки канбана и метка в списке</span>
+          <span class="hint-mini-kanban">
+            <i><span class="hint-pill hl" data-color="none">Новое</span><em></em><em></em></i>
+            <i><span class="hint-pill hl" data-color="green">В работе</span><em></em></i>
+            <i><span class="hint-pill hl" data-color="green">Готово</span><em></em></i>
+          </span>
+        </template>
+        <StatusesEditor v-if="projectReady" settings-layout />
         <p v-else class="note">{{ board.loadError || 'Загружаем…' }}</p>
       </FoldSection>
-    </template>
+    </section>
 
     <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
   </BoardWorkspace>
@@ -73,3 +96,86 @@ async function load() {
   }
 }
 </script>
+
+<style lang="scss">
+@use '@/scss/utils' as *;
+
+.structure-settings {
+  min-width: 0;
+  max-width: 760px;
+  gap: 14px;
+  .structure-section { min-width: 0; }
+  .structure-section + .structure-section {
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .structure-section:not(.foldable) { display: grid; gap: 10px; }
+  .fold-section-title { font-size: 15px; }
+  .fold-section-body { gap: 10px; }
+  .note { margin: 0; }
+  .cat-list { grid-template-columns: minmax(0, 1fr); }
+  .cat-list > li > .cat-row:not(form) { padding: 7px 10px; }
+  .cat-list > li > .cat-edit {
+    margin: 0;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  }
+  .cat-row > .field { margin: 0; }
+  .cat-add { margin-top: 0; }
+  .cat-add > .cat-row {
+    flex-wrap: nowrap;
+    > .field { flex: 1 1 0; min-width: 0; }
+    > .entity-color { order: 0; flex: none; }
+    > .btn { flex: none; }
+  }
+  .entity-color-compact {
+    display: block;
+    .entity-color-trigger { width: var(--settings-control-size, 40px); padding: 0; }
+    .entity-color-trigger .entity-color-text,
+    .entity-color-trigger > .ico { display: none; }
+  }
+  .cat-add-icon { display: none; }
+
+  @media screen and (max-width: $mobile) {
+    gap: 0;
+    .structure-section + .structure-section {
+      @include bleed;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .fold-section-title { font-size: 17px; }
+    .fold-section-body { gap: 8px; }
+    .cat-list {
+      gap: 0;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .cat-list > li {
+      border-bottom: 1px solid var(--line);
+      &:first-child { border-radius: 11px 11px 0 0; }
+      &:last-child { border-radius: 0 0 11px 11px; border-bottom: 0; }
+      > .cat-row:not(form) {
+        min-height: var(--settings-control-size, 44px);
+        padding: 4px 8px 4px 12px;
+        border: 0;
+        border-radius: inherit;
+        flex-wrap: nowrap;
+        > .type, > .pill { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        > .cat-more, > .cat-grip, > .chip { flex: none; }
+      }
+      > .cat-edit { padding: 10px 12px 12px; border: 0; border-radius: inherit; }
+      &.note { padding: 12px; }
+    }
+    .cat-add .input { min-height: var(--settings-control-size, 44px); font-size: 16px; }
+    .cat-add > .cat-row > .btn,
+    .cat-add .entity-color-trigger { width: var(--settings-control-size, 44px); height: var(--settings-control-size, 44px); padding: 0; }
+    .cat-add-word { display: none; }
+    .cat-add-icon { display: inline; font-size: 18px; }
+  }
+}
+</style>

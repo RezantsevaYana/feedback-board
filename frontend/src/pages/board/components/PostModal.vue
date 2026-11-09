@@ -87,7 +87,7 @@
       <div class="meta">
         <span>{{ post.author_name || TEXT.anonymous }}</span>
         <span>Создано {{ fmtDate(post.created_at) }}</span>
-        <span v-if="post.status.slug !== 'new'">{{ post.status.name }} {{ fmtDate(post.status_changed_at) }}</span>
+        <span>{{ post.status.name }} {{ fmtDate(post.status_changed_at) }}</span>
         <span class="mono">#{{ post.id }}</span>
       </div>
       <p class="desc">{{ post.description }}</p>

@@ -85,6 +85,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   saved: [color: string | null]
+  preview: [color: string]
 }>()
 const notification = useNotificationStore()
 
@@ -140,6 +141,7 @@ watch(() => props.color, (next) => {
 
 // ColorPicker гарантирует валидный hex, но на всякий случай пропускаем через normalizeHex (lowercase).
 const parsed = computed(() => normalizeHex(input.value) ?? DEFAULT_WIDGET_COLOR)
+watch(parsed, (color) => emit('preview', color), { immediate: true })
 const palette = computed(() => widgetPalette(parsed.value))
 const darkText = computed(() => textOn(parsed.value) !== '#ffffff')
 

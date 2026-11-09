@@ -1,0 +1,72 @@
+@use '../utils' as *;
+
+// shared/ui/RadioGroupComponent.vue — plain radio rows with a label and a consequence line under it (prototype
+// frontend/demo/settings-rework-prototype.html: «Доступ» → «Гости», п. 40).
+.radio-group {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 14px;
+
+    &:disabled {
+        opacity: 0.5;
+    }
+}
+.radio-group-legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+.radio-group-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    cursor: pointer;
+
+    input {
+        appearance: none;
+        flex: none;
+        width: 18px;
+        height: 18px;
+        margin: 2px 0 0;
+        border-radius: 50%;
+        border: 1.5px solid var(--control);
+        background: var(--surface);
+        cursor: pointer;
+        transition:
+            border-width 0.12s ease-out,
+            border-color 0.12s ease-out;
+
+        &:checked {
+            border: 5px solid var(--accent);
+        }
+        &:focus:not(:focus-visible) {
+            outline: none;
+        }
+        &:focus-visible {
+            outline: 2px solid var(--focus, var(--active-line));
+            outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
+    }
+    &:has(input:disabled) {
+        cursor: not-allowed;
+    }
+}
+.radio-group-text {
+    display: grid;
+}
+.radio-group-label {
+    font-weight: 500;
+}
+.radio-group-hint {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+}

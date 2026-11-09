@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -33,6 +34,28 @@ class VotesTest extends TestCase
         $this->deleteJson($url, [], $me)->assertJsonPath('data.dislikes_count', 1);
 
         $this->postJson($url, ['value' => 'love'], $me)->assertJsonValidationErrors('value');
+    }
+
+    public function test_open_board_can_hide_voting_from_guests(): void
+    {
+        $post = Post::factory()->create();
+        $post->project->update(['guests_can_vote' => false]);
+        $url = "/api/public/posts/{$post->id}/vote";
+        $me = ['X-Voter-Token' => (string) Str::uuid()];
+
+        // guest tries to vote → 403 with a stable reason
+        $this->postJson($url, ['value' => 'like'], $me)
+            ->assertStatus(403)
+            ->assertJsonPath('reason', 'guest_vote_disabled')
+            ->assertJsonPath('message', 'Войдите в аккаунт, чтобы проголосовать.');
+
+        // signed-in users still pass
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson($url, ['value' => 'like'])->assertOk()->assertJsonPath('data.my_vote', 'like');
+
+        // withdrawing an old vote stays open — switching the toggle off shouldn't lock guests out of their own
+        // past activity (they may have voted before the owner tightened the rules)
+        $this->deleteJson($url, [], $me)->assertOk();
     }
 
     public function test_my_vote_is_reported_per_browser(): void

@@ -49,11 +49,13 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   saved: [text: string | null]
+  preview: [text: string]
 }>()
 const notification = useNotificationStore()
 
 const saved = ref(props.text)
 const input = ref(props.text ?? '')
+watch(input, (text) => emit('preview', text), { immediate: true })
 const error = ref('')
 const saving = ref(false)
 

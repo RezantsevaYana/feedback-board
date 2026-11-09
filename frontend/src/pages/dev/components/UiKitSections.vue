@@ -75,7 +75,7 @@
       <span class="pill" data-color="none">Новое</span>
       <span class="pill" data-color="green">Готово</span>
       <span class="pill" data-color="red">Отклонено</span>
-      <span class="chip">базовый</span>
+      <span class="chip">метка</span>
       <span class="count-badge">2</span>
     </div>
     <div class="ui-kit-row">

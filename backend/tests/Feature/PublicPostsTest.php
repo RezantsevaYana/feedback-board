@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\PostPriority;
 use App\Models\Post;
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -128,6 +129,23 @@ class PublicPostsTest extends TestCase
             Storage::disk('local')->assertExists($attachment->path);
             $this->assertStringNotContainsString('shot', $attachment->path); // random name on disk
         }
+    }
+
+    public function test_open_board_can_hide_the_form_from_guests(): void
+    {
+        $this->project->update(['guests_can_post' => false]);
+
+        // guest from the widget: 403 with a stable reason the SPA can switch on
+        $guest = $this->postJson('/api/public/projects/demo/posts', $this->validPayload(['author_name' => 'Аноним']), ['Origin' => 'https://app.example.com']);
+        $guest->assertStatus(403)
+            ->assertJsonPath('reason', 'guest_post_disabled')
+            ->assertJsonPath('message', 'Войдите в аккаунт, чтобы предложить идею.');
+
+        // signed-in members still pass (regardless of the switch)
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->postJson('/api/public/projects/demo/posts', $this->validPayload(), ['Origin' => 'https://app.example.com'])
+            ->assertCreated();
     }
 
     public function test_validation_messages_are_in_russian(): void

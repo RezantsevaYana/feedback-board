@@ -19,11 +19,10 @@
     grid-template-rows: auto auto;
     align-items: center;
     column-gap: 10px;
-    margin-bottom: 12px;
+    position: relative;
 
     .foldable > & {
         grid-template-rows: 32px auto;
-        margin: 0;
         padding: 10px 0;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -41,6 +40,10 @@
     grid-column: 1;
     grid-row: 1;
     margin: 0;
+    // inline «?» next to the title sits in a flex row so it doesn't line-break
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .fold-section-summary {
     grid-column: 1;
@@ -87,5 +90,190 @@
 
     .foldable[open] > & {
         padding-bottom: 16px;
+    }
+}
+
+// «?» next to a settings heading opens a small example of where the thing shows on the board (п. 33, prototype
+// frontend/demo/settings-rework-prototype.html): a floating tooltip on a click, same on every screen size
+.fold-section-hint-anchor {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: default;
+
+    @media screen and (max-width: $tablet) {
+        // static here, so the popover is positioned against .fold-section-head (summary) and stays inside the viewport
+        position: static;
+    }
+}
+.fold-section-hint-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--control);
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: help;
+
+    &:focus:not(:focus-visible) {
+        outline: none;
+    }
+    &:focus-visible {
+        outline: 2px solid var(--focus, var(--active-line));
+        outline-offset: 2px;
+    }
+}
+// a floating tooltip opens by a click on the «?» (closes by click outside or Esc). The anchor's `position: relative`
+// pins it on a wide screen; on a narrow one the anchor becomes static so the popover falls back to the summary
+// as the positioned ancestor and stays inside the viewport
+.fold-section-hint-popover {
+    position: absolute;
+    left: -8px;
+    top: calc(100% + 8px);
+    z-index: 4;
+    width: min(304px, calc(100vw - 32px));
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgb(16 37 40 / 16%);
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--fg);
+    text-align: left;
+    cursor: default;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition:
+        opacity 0.18s cubic-bezier(0.2, 0.9, 0.3, 1),
+        transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1),
+        visibility 0s linear 0.18s;
+
+    @media screen and (max-width: $tablet) {
+        // positioned relative to .fold-section-head (summary), pinned to the left of the heading row
+        left: 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+
+    &.open {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition-delay: 0s;
+    }
+}
+// Mini-mockups inside a hint: the filter chips, the card and the mini-kanban columns are plain CSS so dark / light
+// theme and font sizes pick up the tokens, like the rest of the UI.
+.hint-cap {
+    font-size: 12px;
+    color: var(--muted);
+}
+.hint-mini-filters {
+    display: flex;
+    gap: 4px;
+
+    i {
+        display: inline-block;
+        padding: 1px 7px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--surface);
+        font-style: normal;
+        font-size: 11px;
+        color: var(--muted);
+
+        &.on {
+            background: var(--active);
+            border-color: var(--active-line);
+            color: var(--active-fg);
+        }
+    }
+}
+.hint-mini-card {
+    display: grid;
+    gap: 5px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    justify-items: start;
+    background: var(--surface);
+
+    b {
+        font-size: 12px;
+        font-weight: 600;
+    }
+    em {
+        display: block;
+        width: 80%;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--surface-2);
+    }
+}
+.hint-mini-kanban {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+
+    i {
+        display: grid;
+        gap: 4px;
+        align-content: start;
+        padding: 5px;
+        border-radius: 6px;
+        background: var(--surface);
+        font-style: normal;
+    }
+    em {
+        display: block;
+        width: 100%;
+        height: 14px;
+        border-radius: 4px;
+        background: var(--surface-2);
+    }
+}
+.hint-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--fg);
+
+    &[data-color='none']  { background: var(--surface-2); }
+    &[data-color='red']   { background: #f3cfc8; color: #8f3029; }
+    &[data-color='green'] { background: #cce4d1; color: #14623a; }
+
+    &.hl {
+        outline: 2px solid #e2b33c;
+        outline-offset: 2px;
+    }
+}
+.hint-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--fg);
+
+    &[data-color='red']   { background: #f3cfc8; color: #8f3029; }
+    &[data-color='green'] { background: #cce4d1; color: #14623a; }
+    &[data-color='blue']  { background: #c9dde6; color: #2a4e6a; }
+
+    &.hl {
+        outline: 2px solid #e2b33c;
+        outline-offset: 2px;
     }
 }

@@ -53,6 +53,11 @@ export interface BoardSettings {
   allowed_origins: string[]
   widget_color: string | null
   widget_launcher_text: string | null
+  /** show the board page in search engines; false → noindex meta + robots.txt Disallow (test.md п. 19) */
+  search_indexable: boolean
+  /** test.md п. 40 — guests on an open board: may they post / vote. false → «Войдите, чтобы …» */
+  guests_can_post: boolean
+  guests_can_vote: boolean
   /** how long a deleted board stays in the trash (feedback.trash_retention_days) */
   trash_retention_days: number
   /** visible posts and members, for the «Доступ» warning */
@@ -94,6 +99,9 @@ export const BoardsApi = {
       origins?: string[]
       widget_color?: string | null
       widget_launcher_text?: string | null
+      search_indexable?: boolean
+      guests_can_post?: boolean
+      guests_can_vote?: boolean
       onboarding_step?: number | null
       visibility?: BoardVisibility
     },

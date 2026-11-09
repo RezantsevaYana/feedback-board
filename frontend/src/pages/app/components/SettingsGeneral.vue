@@ -3,15 +3,14 @@
     <InputComponent
       v-model="name"
       label="Название доски"
-      hint="пользователи увидят его в шапке"
       type="text"
       maxlength="80"
       :error="error"
       @input="error = ''"
     />
-    <InputComponent :model-value="settings.slug" label="Адрес доски" hint="не меняется" type="text" readonly />
+    <InputComponent :model-value="settings.slug" :prefix="addressPrefix" label="Адрес доски" type="text" readonly />
     <p class="note">
-      Адрес нельзя поменять после создания: по нему работают подключённые виджеты и ссылки на доску.
+      Изменение адреса пока недоступно. По нему работают ссылки на доску и подключённые виджеты.
     </p>
     <div class="settings-actions">
       <button class="btn btn-primary" type="submit" :disabled="!changed || saving" :aria-busy="saving">
@@ -36,6 +35,7 @@ const emit = defineEmits<{
   saved: [settings: BoardSettings]
 }>()
 const notification = useNotificationStore()
+const addressPrefix = `${window.location.host}/`
 
 const name = ref(props.settings.name)
 const error = ref('')

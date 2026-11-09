@@ -5,16 +5,15 @@
 
     <ol class="onboarding-flow" aria-label="Статусы доски по порядку">
       <li v-for="s in board.statuses" :key="s.id">
-        <span v-if="s.is_system" class="pill" :data-color="s.color ?? 'none'" :style="entityColorStyle(s.color)">{{ s.name }}</span>
-        <span v-else class="onboarding-chip">
+        <span class="onboarding-chip">
           {{ s.name }}
-          <button type="button" class="onboarding-chip-remove" :aria-label="`Убрать статус ${s.name}`" :disabled="busy" @click="remove(s.id)">×</button>
+          <button type="button" class="onboarding-chip-remove" :aria-label="`Убрать статус ${s.name}`" :disabled="busy || board.statuses.length <= 1" @click="deleting = s">×</button>
         </span>
       </li>
     </ol>
 
     <template v-if="suggestions.length">
-      <p class="onboarding-sub">Шаг между «Новое» и «Готово» — нажмите, чтобы добавить</p>
+      <p class="onboarding-sub">Добавьте ещё один этап — нажмите на подходящий статус</p>
       <div class="onboarding-suggest">
         <button v-for="s in suggestions" :key="s.name" type="button" :disabled="busy" :aria-label="`Добавить статус ${s.name}`" @click="add(s.name, s.color)">
           {{ s.name }}<span class="onboarding-suggest-plus" aria-hidden="true">+</span>
@@ -26,25 +25,26 @@
       <InputComponent v-model="own" placeholder="Свой статус" aria-label="Свой статус" maxlength="40" />
       <button type="submit" class="btn" :disabled="!own.trim() || busy">Добавить</button>
     </form>
-    <p class="note">«Новое», «Готово» и «Отклонено» есть всегда, их можно переименовать позже в настройках.</p>
+    <p class="note">Переименовать статусы, изменить их порядок и выбрать статус для новых предложений можно в настройках доски.</p>
+    <StatusDeleteModal v-if="deleting" :key="deleting.id" :status="deleting" @close="deleting = null" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { errorMessage } from '@/api/client'
-import type { PaletteColor } from '@/api/types'
+import type { PaletteColor, Status } from '@/api/types'
 import { useBoardStore } from '@/store/board/useBoardStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
-import { entityColorStyle } from '@/shared/utils/entityColor'
+import StatusDeleteModal from '@/shared/components/StatusDeleteModal.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 
-// Onboarding step 4: the columns. The three system ones stay; custom ones land between «Новое» and «Готово»
-// (the server places them), removable right here. Saved at once, as in StatusesEditor.
+// Statuses are saved at once; the same dialog handles deletion in settings.
 const board = useBoardStore()
 const notification = useNotificationStore()
 const busy = ref(false)
 const own = ref('')
+const deleting = ref<Status | null>(null)
 
 const SUGGESTED: { name: string; color: PaletteColor }[] = [
   { name: 'В работе', color: 'blue' },
@@ -68,7 +68,6 @@ async function run(action: () => Promise<void>) {
   }
 }
 const add = (name: string, color: PaletteColor | null) => run(() => board.addStatus(name, color))
-const remove = (id: number) => run(() => board.deleteStatus(id))
 async function addOwn() {
   const name = own.value.trim()
   if (!name) return

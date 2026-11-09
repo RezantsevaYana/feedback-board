@@ -29,6 +29,14 @@ class VoteController extends Controller
         // a member whose role can't vote (Читатель) is refused on a closed board; on an open one they're a guest
         // like anyone with the link. Taking a vote back stays open, see destroy()
         abort_if($post->project->isPrivate() && $user?->roleOn($post->project)?->canVote() === false, 403, 'Читатель на этой доске не голосует — только читает.');
+        // open board + owner hid voting from guests (test.md п. 40). Members get through regardless of this flag;
+        // destroy() stays open — withdrawing an old vote isn't new activity
+        if (! $post->project->isPrivate() && $user === null && ! $post->project->guests_can_vote) {
+            return response()->json([
+                'message' => 'Войдите в аккаунт, чтобы проголосовать.',
+                'reason' => 'guest_vote_disabled',
+            ], 403);
+        }
         // Signed-in users identify themselves by account, so the cookie is optional for them;
         // anonymous callers still need it (otherwise there's no way to deduplicate votes).
         $token = $user === null ? VoterToken::require($request) : VoterToken::from($request);

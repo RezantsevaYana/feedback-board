@@ -311,6 +311,18 @@ textarea.input {
     top: auto;
     bottom: calc(100% + 4px);
 }
+.select-list.portaled {
+    position: fixed;
+    z-index: 40;
+    min-width: 0;
+    max-width: calc(100vw - 16px);
+    &.with-hints { min-width: 0; }
+
+    .select-option {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
 .select-list.with-hints {
     min-width: max(100%, 280px);
 

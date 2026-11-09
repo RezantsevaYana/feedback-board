@@ -3,35 +3,34 @@
     <p v-if="loading" class="note">Загружаем…</p>
 
     <template v-else-if="settings">
-      <!-- no «Общее» heading here: the page is called that already -->
-      <section id="general" class="board-settings-section">
+      <section id="general" class="board-settings-section general-settings">
         <SettingsGeneral :settings="settings" @saved="onSaved" />
+
+        <section id="link" class="general-settings-link">
+          <h2>Ссылка на доску</h2>
+          <div class="general-settings-share">
+            <code :title="boardUrl">{{ boardUrl }}</code>
+            <CopyButton :value="boardUrl" label="Скопировать" />
+            <a :href="boardUrl" target="_blank" rel="noopener" class="btn">Открыть ↗</a>
+          </div>
+          <p class="note">
+            {{ settings.visibility === 'private'
+              ? 'Откроют участники; остальные увидят экран «Запросить доступ». Кого пустить — в «Доступе».'
+              : 'Откроет любой — поделитесь ею в чате или письме. Кто ещё может голосовать и предлагать — в «Доступе».' }}
+          </p>
+          <p v-if="auth.me && !auth.me.email_verified" class="board-access-warn">
+            Пока почта не подтверждена, ссылка и виджет не работают для посетителей: они увидят «Доска ещё не открыта».
+          </p>
+        </section>
       </section>
 
-      <!-- the link is what the board is for: here, not inside «Доступ» (TEST.md п. 42) -->
-      <section id="link" class="board-settings-section">
-        <h2>Ссылка на доску</h2>
-        <p class="note">
-          {{ settings.visibility === 'private'
-            ? 'Откроют участники; остальные увидят экран «Запросить доступ». Кого пустить — в «Доступе».'
-            : 'Откроет любой — поделитесь ею в чате или письме. Кто ещё может голосовать и предлагать — в «Доступе».' }}
-        </p>
-        <!-- until the email is confirmed the API answers visitors 403 (EnsureProjectPublished) -->
-        <p v-if="auth.me && !auth.me.email_verified" class="board-access-warn">
-          Пока почта не подтверждена, ссылка и виджет не работают для посетителей: они увидят «Доска ещё не открыта».
-        </p>
-        <pre class="board-access-code"><code>{{ boardUrl }}</code></pre>
-        <div class="board-access-actions">
-          <CopyButton :value="boardUrl" label="Скопировать ссылку" />
-          <a :href="boardUrl" target="_blank" rel="noopener" class="btn">Перейти на доску ↗</a>
+      <section v-if="isOwner" class="board-settings-section general-settings-danger">
+        <h2>Удалить доску</h2>
+        <p class="note">Доска уйдёт в корзину, из списка досок её можно будет восстановить.</p>
+        <div>
+          <button type="button" class="btn" @click="deleteBoard(settings.slug, settings.name)">Удалить доску</button>
         </div>
       </section>
-
-      <!-- not a section of the nav: an action on the whole board, set apart below everything; owner only -->
-      <div v-if="isOwner" class="board-settings-delete">
-        <p class="note">Доска уйдёт в корзину, из списка досок её можно будет восстановить.</p>
-        <button type="button" class="btn btn-danger" @click="deleteBoard(settings.slug, settings.name)">Удалить доску</button>
-      </div>
     </template>
 
     <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
@@ -101,3 +100,72 @@ function onSaved(next: BoardSettings) {
   settings.value = next
 }
 </script>
+<style lang="scss">
+@use '@/scss/utils' as *;
+
+.general-settings,
+.general-settings-danger {
+  min-width: 0;
+  max-width: 760px;
+  gap: 14px;
+  .note { margin: 0; }
+}
+.general-settings {
+  .settings-general { gap: 14px; }
+  .field { margin: 0; min-width: 0; }
+  .settings-actions { justify-content: start; }
+  .input[readonly] { background: var(--surface); color: var(--fg); }
+  .input-group input[readonly] { font-family: var(--font-mono); }
+}
+.general-settings-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+  scroll-margin-top: 80px;
+  > h2 { font-size: 15px; }
+}
+.general-settings-share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  > code {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  > .btn { flex: none; }
+}
+.general-settings-danger {
+  border-color: color-mix(in srgb, var(--bug) 30%, var(--line));
+  > h2 { color: var(--bug); font-size: 18px; }
+  .btn { color: var(--bug); border-color: color-mix(in srgb, var(--bug) 40%, var(--line)); }
+}
+@media screen and (max-width: $mobile) {
+  .general-settings {
+    .general-settings-link { @include bleed; gap: 8px; }
+    .settings-actions .btn { flex: none; }
+    .input, .btn { min-height: var(--settings-control-size, 44px); }
+    .input { font-size: 16px; }
+  }
+  .general-settings-share {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    > code { flex-basis: 100%; }
+  }
+  .general-settings-danger {
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    .btn { min-height: var(--settings-control-size, 44px); }
+  }
+}
+</style>

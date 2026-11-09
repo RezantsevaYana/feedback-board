@@ -34,7 +34,6 @@ class PostResource extends JsonResource
                 'name' => $this->status->name,
                 'color' => $this->status->color,
                 'position' => $this->status->position,
-                'is_system' => $this->status->is_system,
             ] : null,
             'likes_count' => $this->likes_count,
             'dislikes_count' => $this->dislikes_count,

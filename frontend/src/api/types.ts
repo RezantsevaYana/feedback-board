@@ -19,13 +19,12 @@ export interface Category {
 export const PALETTE_COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'pink'] as const
 export type PaletteColor = (typeof PALETTE_COLORS)[number] | `#${string}`
 
-/** Колонка канбана. Три системных создаются вместе с проектом, остальные — команда сама. */
+/** Равноправный статус доски; начальный статус хранится отдельно в Project. */
 export interface Status {
   id: number
   slug: string
   name: string
   position: number
-  is_system: boolean
   // Palette slug chosen by the admin; drives pill colour and column accent.
   color: PaletteColor | null
 }
@@ -69,8 +68,14 @@ export interface Project {
   widget_color: string | null
   /** custom launcher button label; null = the default «Обратная связь» */
   widget_launcher_text: string | null
+  /** false → BoardPage injects <meta name="robots" content="noindex, nofollow"> (test.md п. 19) */
+  search_indexable: boolean
+  /** test.md п. 40 — what a guest may do on an open board. false → UI swaps the form / vote buttons for «Войдите, чтобы …» */
+  guests_can_post: boolean
+  guests_can_vote: boolean
   categories: Category[]
   statuses: Status[]
+  default_status_id: number | null
 }
 
 /** Short board descriptor returned in Me and in the hub list. */

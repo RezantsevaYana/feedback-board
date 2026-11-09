@@ -1,5 +1,5 @@
 <template>
-  <div class="app-page">
+  <div class="app-page board-workspace">
     <div class="app-page-head">
       <div class="app-page-title">
         <h1>{{ title ?? PAGE_TITLES[page] }}</h1>

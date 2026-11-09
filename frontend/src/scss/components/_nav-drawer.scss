@@ -102,3 +102,28 @@
         padding-top: 8px;
     }
 }
+
+// Cabinet menu: keep the same 36px rhythm as its settings pages.
+@media screen and (max-width: $tablet) {
+    .nav-drawer:has(.app-sidebar) { padding: 8px; border-radius: 10px; }
+    .nav-drawer .app-sidebar {
+        gap: 4px;
+        .nav-item,
+        .app-sidebar-board-row,
+        .sidebar-link {
+            min-height: 36px;
+            padding: 5px 8px;
+            font-size: 13px;
+            line-height: 20px;
+        }
+        .app-sidebar-nav { gap: 0; }
+        .app-sidebar-boards,
+        .app-sidebar-group { padding-top: 6px; gap: 0; }
+        .app-sidebar-board.open { margin-block: 0; padding: 3px; border-radius: 10px; }
+        .app-sidebar-board-row { gap: 8px; }
+        .app-sidebar-board-mark { width: 22px; height: 22px; border-radius: 6px; }
+        .app-sidebar-board-role { font-size: 11px; line-height: 14px; }
+        .app-sidebar-foot { padding-top: 6px; gap: 6px; }
+        .app-sidebar-more { min-height: 32px; padding-block: 4px; }
+    }
+}

@@ -32,8 +32,10 @@
         <server name="MAIL_MAILER" value="array" force="true"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
-        <env name="FRONTEND_URL" value="http://localhost:5173"/>
-        <env name="SANCTUM_STATEFUL_DOMAINS" value="localhost:5173"/>
+        <env name="FRONTEND_URL" value="http://localhost:5173" force="true"/>
+        <server name="FRONTEND_URL" value="http://localhost:5173" force="true"/>
+        <env name="SANCTUM_STATEFUL_DOMAINS" value="localhost:5173" force="true"/>
+        <server name="SANCTUM_STATEFUL_DOMAINS" value="localhost:5173" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

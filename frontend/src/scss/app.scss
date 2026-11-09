@@ -42,6 +42,8 @@
 @use 'components/onboarding';
 @use 'components/onboarding-preview';
 @use 'components/fold-section';
+@use 'components/switch';
+@use 'components/radio-group';
 @use 'components/board-workspace';
 @use 'components/board-access';
 @use 'components/board-settings';
@@ -60,3 +62,6 @@
 @use 'components/board-footer';
 @use 'components/board-top-menu';
 @use 'components/ui-kit';
+
+@use 'components/settings-density';
+@use 'components/picker-popover';

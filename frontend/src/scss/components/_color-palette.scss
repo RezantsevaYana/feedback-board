@@ -73,8 +73,8 @@
         margin: 0;
 
         .input {
-            height: 40px;
-            min-height: 40px;
+            height: var(--settings-control-size, 40px);
+            min-height: var(--settings-control-size, 40px);
             font-family: var(--font-mono);
         }
     }
@@ -83,12 +83,12 @@
         display: block;
 
         .field .input {
-            height: 44px;
-            min-height: 44px;
+            height: var(--settings-control-size, 44px);
+            min-height: var(--settings-control-size, 44px);
             font-size: 16px;
         }
         .btn {
-            min-height: 44px;
+            min-height: var(--settings-control-size, 44px);
         }
     }
 }
@@ -104,7 +104,7 @@
     }
     // phone: the trigger is a bare 44×44 swatch at the start of the name row
     @media screen and (max-width: $mobile) {
-        width: 44px;
+        width: var(--settings-control-size, 44px);
         padding: 0;
 
         .entity-color-swatch {
@@ -130,11 +130,11 @@
     }
 }
 .entity-color-clear {
-    width: 40px;
+    width: var(--settings-control-size, 40px);
     padding: 0;
 
     @media screen and (max-width: $mobile) {
-        width: 44px;
+        width: var(--settings-control-size, 44px);
     }
 }
 .entity-color-popup {
@@ -151,32 +151,16 @@
     box-shadow: 0 8px 24px rgba(16, 37, 40, 0.16);
     transform-origin: top left;
 
-    .color-palette {
-        justify-content: space-between;
-        margin-bottom: 10px;
-        gap: 6px;
-    }
-    .color-swatch[aria-pressed='true'] {
-        outline: 2px solid var(--active-line);
-        outline-offset: 2px;
-    }
     .vc-colorpicker {
         max-width: 100%;
         box-shadow: none;
     }
-    // phone: wider popup, finger-sized preset dots, HEX row between presets and the picker
+    // HEX and clearing remain available above the picker on compact screens.
     @media screen and (max-width: $mobile) {
         width: 300px;
         max-width: calc(100vw - 32px);
         padding: 12px;
 
-        .color-palette {
-            margin-bottom: 12px;
-        }
-        .color-swatch {
-            width: 32px;
-            height: 32px;
-        }
         .vc-colorpicker {
             width: 100%;
         }

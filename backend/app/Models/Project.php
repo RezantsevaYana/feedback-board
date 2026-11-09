@@ -18,7 +18,7 @@ use Orchid\Filters\Types\Where;
 use Orchid\Filters\Types\WhereDateStartEnd;
 use Orchid\Screen\AsSource;
 
-#[Fillable(['name', 'slug', 'owner_id', 'visibility', 'allowed_origins', 'widget_color', 'widget_launcher_text', 'onboarding_step'])]
+#[Fillable(['name', 'slug', 'owner_id', 'visibility', 'allowed_origins', 'widget_color', 'widget_launcher_text', 'search_indexable', 'guests_can_post', 'guests_can_vote', 'onboarding_step', 'default_status_id'])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
@@ -74,6 +74,10 @@ class Project extends Model
         return [
             'allowed_origins' => 'array',
             'visibility' => BoardVisibility::class,
+            'default_status_id' => 'integer',
+            'search_indexable' => 'boolean',
+            'guests_can_post' => 'boolean',
+            'guests_can_vote' => 'boolean',
             'onboarding_step' => 'integer',
         ];
     }
@@ -116,27 +120,29 @@ class Project extends Model
     }
 
     /**
-     * Три системных статуса на канбане: Новое → …кастомные команды… → Готово / Отклонено.
-     * Между 100 и 9000 есть «воздух» для кастомных позиций.
+     * Начальный порядок колонок; после создания все статусы можно переставлять.
      */
     public function createDefaultStatuses(): void
     {
         $defaults = [
             ['slug' => 'new', 'name' => 'Новое', 'position' => 100],
-            ['slug' => 'done', 'name' => 'Готово', 'position' => 9000],
-            ['slug' => 'rejected', 'name' => 'Отклонено', 'position' => 9100],
+            ['slug' => 'done', 'name' => 'Готово', 'position' => 200],
+            ['slug' => 'rejected', 'name' => 'Отклонено', 'position' => 300],
         ];
         foreach ($defaults as $s) {
-            $this->statuses()->create([...$s, 'color' => Status::DEFAULT_COLORS[$s['slug']], 'is_system' => true]);
+            $status = $this->statuses()->create([...$s, 'color' => Status::DEFAULT_COLORS[$s['slug']]]);
+            if ($s['slug'] === 'new') {
+                $this->forceFill(['default_status_id' => $status->id])->save();
+            }
         }
     }
 
     /**
-     * Куда класть новые посты по умолчанию и куда возвращаются посты при удалении кастомного столбца.
+     * Начальный статус предложений выбирается отдельно от порядка колонок.
      */
     public function defaultStatus(): ?Status
     {
-        return $this->statuses()->where('slug', Status::FALLBACK_SLUG)->first();
+        return $this->statuses()->whereKey($this->default_status_id)->first();
     }
 
     /**

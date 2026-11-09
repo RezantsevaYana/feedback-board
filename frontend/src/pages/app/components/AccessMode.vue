@@ -1,21 +1,23 @@
 <template>
   <form class="access-mode" novalidate :aria-busy="saving" @submit.prevent="save">
-    <!-- picking a card only picks: what changes is listed under it, the button says what it will do -->
+    <!-- picking a card only picks: what changes is listed below, inside the warm panel, with the action button -->
     <RadioCardsComponent v-model="choice" name="visibility" :options="options" />
-    <!-- before switching, the list says what happens to posts, votes and people — both ways -->
+    <!-- before switching: the list of consequences AND the action buttons live inside one amber panel (prototype
+         .mode-confirm). This tells people «this is one careful decision» — not «here are some facts over here,
+         and some buttons over there». Primary first, cancel after it. -->
     <div v-if="changed" class="access-mode-effects" aria-live="polite">
-      <p class="access-mode-effects-title">{{ choice === 'private' ? 'Что изменится, если закрыть' : 'Что изменится, если открыть' }}</p>
+      <p class="access-mode-effects-title">{{ choice === 'private' ? 'Что изменится, если закрыть доску' : 'Что изменится, если открыть доску' }}</p>
       <ul>
         <li v-for="line in effects" :key="line">{{ line }}</li>
       </ul>
+      <div class="access-mode-actions">
+        <button class="btn btn-primary" type="submit" :disabled="saving" :aria-busy="saving">
+          {{ saving ? 'Сохраняем…' : choice === 'private' ? 'Сделать закрытой' : 'Открыть для всех' }}
+        </button>
+        <button type="button" class="btn" :disabled="saving" @click="cancel">Отмена</button>
+      </div>
     </div>
     <p v-else class="note">Режим можно сменить в любую сторону — перед этим покажем, что изменится.</p>
-    <div v-if="changed" class="settings-actions">
-      <button type="button" class="btn" :disabled="saving" @click="cancel">Отмена</button>
-      <button class="btn btn-primary" type="submit" :disabled="saving" :aria-busy="saving">
-        {{ saving ? 'Сохраняем…' : choice === 'private' ? 'Сделать закрытой' : 'Открыть для всех' }}
-      </button>
-    </div>
   </form>
 </template>
 

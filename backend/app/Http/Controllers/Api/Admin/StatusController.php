@@ -8,7 +8,6 @@ use App\Models\Status;
 use App\Support\EntityColor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -16,9 +15,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Кастомные столбцы канбана: команда может добавлять/переименовывать/удалять
- * свои между системными «Новое» и «Готово/Отклонено». Системные статусы
- * (slug в Status::SYSTEM_SLUGS) защищены от удаления.
+ * Статусы доски: порядок всех статусов задаёт колонки канбана.
+ * Начальный статус выбирается отдельно, удалять можно любой, кроме последнего.
  */
 class StatusController extends Controller
 {
@@ -26,24 +24,24 @@ class StatusController extends Controller
     {
         Gate::authorize('board.configure', $project);
 
-        if ($project->statuses()->count() >= Status::MAX_PER_PROJECT) {
-            throw ValidationException::withMessages(['name' => 'Не больше '.Status::MAX_PER_PROJECT.' столбцов в проекте.']);
-        }
+        $status = DB::transaction(function () use ($request, $project) {
+            $project = Project::query()->lockForUpdate()->findOrFail($project->id);
+            if ($project->statuses()->count() >= Status::MAX_PER_PROJECT) {
+                throw ValidationException::withMessages(['name' => 'Не больше '.Status::MAX_PER_PROJECT.' статусов на доске.']);
+            }
 
-        $data = $this->validateFields($request, $project);
+            $data = $this->validateFields($request, $project);
 
-        // Новые кастомные статусы встают между «Новое» (pos ≈ 100) и «Готово» (pos ≈ 9000):
-        // позиция = max(позиций кастомных) + 100, но строго меньше позиции «Готово».
-        $maxCustom = (int) $project->statuses()->where('is_system', false)->max('position');
-        $position = $maxCustom === 0 ? 200 : $maxCustom + 100;
+            $position = (int) $project->statuses()->max('position') + 100;
 
-        $status = $project->statuses()->create([
-            'slug' => $this->uniqueSlug($project, $data['name']),
-            'name' => $data['name'],
-            'color' => $data['color'] ?? null,
-            'position' => $position,
-            'is_system' => false,
-        ]);
+            return $project->statuses()->create([
+                'slug' => $this->uniqueSlug($project, $data['name']),
+                'name' => $data['name'],
+                'color' => $data['color'] ?? null,
+                'position' => $position,
+            ]);
+
+        });
 
         return response()->json(['data' => $this->present($status)], 201);
     }
@@ -58,35 +56,32 @@ class StatusController extends Controller
     }
 
     /**
-     * Переупорядочивание кастомных столбцов между системными «Новое» и «Готово».
-     * Принимает полный список id кастомных статусов в новом порядке; системные
-     * (slug в Status::SYSTEM_SLUGS) остаются на своих местах и в payload не участвуют.
-     * Раздаём position с шагом 100, начиная с 200, — «воздух» между 100 и 9000 хватает
-     * на MAX_PER_PROJECT - 3 кастомных.
+     * Полный список всех статусов в новом порядке колонок канбана.
+     * Сортировка предложений в списке и статус для новых постов не меняются.
      */
     public function reorder(Request $request, Project $project): JsonResponse
     {
         Gate::authorize('board.configure', $project);
 
-        $customIds = $project->statuses()->where('is_system', false)->pluck('id')->all();
+        $allIds = $project->statuses()->pluck('id')->all();
 
         $data = $request->validate([
-            'ids' => ['present', 'array', 'size:'.count($customIds)],
-            'ids.*' => ['integer', Rule::in($customIds)],
+            'ids' => ['present', 'array', 'size:'.count($allIds)],
+            'ids.*' => ['integer', Rule::in($allIds)],
         ], [
-            'ids.size' => 'Передайте полный список кастомных столбцов в новом порядке.',
-            'ids.*.in' => 'Нельзя переставить системный или чужой столбец.',
+            'ids.size' => 'Передайте полный список статусов в новом порядке.',
+            'ids.*.in' => 'Можно переставлять только статусы этой доски.',
         ]);
 
         /** @var array<int, int> $ids */
         $ids = $data['ids'];
         if (count(array_unique($ids)) !== count($ids)) {
-            throw ValidationException::withMessages(['ids' => 'Один и тот же столбец повторяется.']);
+            throw ValidationException::withMessages(['ids' => 'Один и тот же статус повторяется.']);
         }
 
         DB::transaction(function () use ($ids, $project) {
             foreach ($ids as $index => $id) {
-                $project->statuses()->where('id', $id)->update(['position' => 200 + $index * 100]);
+                $project->statuses()->where('id', $id)->update(['position' => 100 + $index * 100]);
             }
         });
 
@@ -95,27 +90,67 @@ class StatusController extends Controller
         return response()->json(['data' => $fresh]);
     }
 
-    /**
-     * Системные нельзя удалить; посты удалённого кастомного столбца переносятся
-     * в дефолтный (slug='new').
-     */
-    public function destroy(Status $status): Response
+    public function setDefault(Request $request, Project $project): JsonResponse
+    {
+        Gate::authorize('board.configure', $project);
+
+        $id = DB::transaction(function () use ($request, $project) {
+            $project = Project::query()->lockForUpdate()->findOrFail($project->id);
+            $data = $request->validate([
+                'status_id' => ['required', 'integer', Rule::exists('statuses', 'id')->where('project_id', $project->id)],
+            ], ['status_id.exists' => 'Выберите статус этой доски.']);
+            $project->update(['default_status_id' => $data['status_id']]);
+
+            return $project->default_status_id;
+        });
+
+        return response()->json(['data' => ['default_status_id' => $id]]);
+    }
+
+    public function deletionInfo(Status $status): JsonResponse
     {
         Gate::authorize('board.configure', $status->project);
 
-        if ($status->is_system) {
-            throw ValidationException::withMessages(['status' => 'Этот столбец нельзя удалить.']);
-        }
+        return response()->json(['data' => [
+            'posts_count' => $status->posts()->count(),
+            'default_status_id' => $status->project->default_status_id,
+            'statuses' => $status->project->statuses()->whereKeyNot($status->id)->get()
+                ->map(fn (Status $s) => $this->present($s))->all(),
+        ]]);
+    }
 
-        $fallback = $status->project->defaultStatus();
-        abort_unless($fallback, 500, 'default status missing');
+    public function destroy(Request $request, Status $status): JsonResponse
+    {
+        Gate::authorize('board.configure', $status->project);
 
-        DB::transaction(function () use ($status, $fallback) {
-            $status->posts()->update(['status_id' => $fallback->id]);
+        $result = DB::transaction(function () use ($request, $status) {
+            $project = Project::query()->lockForUpdate()->findOrFail($status->project_id);
+            $status = $project->statuses()->findOrFail($status->id);
+            if ($project->statuses()->count() <= 1) {
+                throw ValidationException::withMessages(['status' => 'Нельзя удалить последний статус.']);
+            }
+            $data = $request->validate([
+                'replacement_status_id' => ['required', 'integer', Rule::exists('statuses', 'id')
+                    ->where('project_id', $project->id)->whereNot('id', $status->id)],
+            ], [
+                'replacement_status_id.required' => 'Выберите статус для переноса предложений.',
+                'replacement_status_id.exists' => 'Выберите другой статус этой доски.',
+            ]);
+            $replacementId = (int) $data['replacement_status_id'];
+            if ($project->default_status_id === $status->id) {
+                $project->update(['default_status_id' => $replacementId]);
+            }
+            $moved = $status->posts()->update(['status_id' => $replacementId, 'status_changed_at' => now()]);
             $status->delete();
+
+            return [
+                'default_status_id' => $project->default_status_id,
+                'replacement_status_id' => $replacementId,
+                'moved_posts_count' => $moved,
+            ];
         });
 
-        return response()->noContent();
+        return response()->json(['data' => $result]);
     }
 
     /**
@@ -136,9 +171,9 @@ class StatusController extends Controller
             // null is a valid pick: the pill falls back to the neutral --s-new look.
             'color' => ['nullable', 'string', EntityColor::RULE],
         ], [
-            'name.required' => 'Назовите столбец.',
+            'name.required' => 'Назовите статус.',
             'name.max' => 'Название — не длиннее 40 символов.',
-            'name.unique' => 'Такой столбец уже есть.',
+            'name.unique' => 'Такой статус уже есть.',
             'color.regex' => 'Такой цвет недоступен.',
         ]);
     }
@@ -170,7 +205,6 @@ class StatusController extends Controller
             'name' => $status->name,
             'color' => $status->color,
             'position' => $status->position,
-            'is_system' => $status->is_system,
         ];
     }
 }

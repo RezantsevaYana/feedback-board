@@ -228,6 +228,29 @@
         }
     }
 }
+// test.md п. 40 — guest who can't post: the «Предложить» CTA stays in its slot but reads as locked. Outline
+// style, a lock icon on the left, hover brings it to life — one click takes the visitor to the login page.
+.board-cta-locked {
+    text-decoration: none;
+
+    svg {
+        color: var(--muted);
+        transition: color 0.15s ease-out;
+    }
+    @include hover {
+        border-color: var(--active-line);
+        background: color-mix(in srgb, var(--active) 20%, var(--surface));
+
+        svg {
+            color: var(--active-line);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        svg {
+            transition: none;
+        }
+    }
+}
 .team-menu-btn {
     align-items: center;
     gap: 6px;

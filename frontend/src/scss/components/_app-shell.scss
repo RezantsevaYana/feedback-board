@@ -129,3 +129,23 @@
         display: none;
     }
 }
+
+// Match the compact settings controls without changing the desktop header.
+@media screen and (max-width: $tablet) {
+    .app-shell-header { padding-top: 8px; }
+    .app-shell-header-inner { gap: 8px; padding: 6px 8px 6px 10px; border-radius: 10px; }
+    .app-shell-user { gap: 6px; }
+    .app-shell-header .menu-trigger.account-menu,
+    .app-shell-header .app-shell-nav .menu-trigger.board-switcher {
+        min-height: 32px;
+        padding: 3px 6px;
+    }
+    .app-shell-header .account-menu-initials { width: 26px; height: 26px; font-size: 12px; }
+    .btn.app-shell-menu { min-height: 32px; height: 32px; padding-inline: 8px; border-radius: 8px; }
+}
+@media screen and (max-width: $mobile) {
+    .app-shell-nav { gap: 4px; }
+    .app-shell-header .app-shell-nav .menu-trigger.board-switcher { font-size: 14px; }
+    .app-brand-mark { padding: 3px 8px 3px 12px; font-size: 12px; }
+    .btn.app-shell-menu { width: 32px; padding: 0; }
+}

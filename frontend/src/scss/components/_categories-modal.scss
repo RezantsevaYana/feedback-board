@@ -88,19 +88,19 @@
             }
             > .btn {
                 flex: none;
-                min-height: 40px;
-                height: 40px;
+                min-height: var(--settings-control-size, 40px);
+                height: var(--settings-control-size, 40px);
             }
             > .btn-primary {
                 padding: 0 12px;
             }
             .entity-color-trigger,
             > .field .input {
-                min-height: 40px;
-                height: 40px;
+                min-height: var(--settings-control-size, 40px);
+                height: var(--settings-control-size, 40px);
             }
             .entity-color-trigger {
-                width: 40px;
+                width: var(--settings-control-size, 40px);
             }
         }
     }
@@ -133,7 +133,7 @@
 
     @media screen and (max-width: $mobile) {
         width: 32px;
-        height: 40px;
+        height: var(--settings-control-size, 40px);
         margin-left: -8px;
         padding: 0;
 
@@ -195,7 +195,7 @@
 }
 @media screen and (max-width: $mobile) {
     .cat-list > li > .cat-row:not(form) {
-        min-height: 44px;
+        min-height: var(--settings-control-size, 44px);
         padding-block: 2px;
         padding-right: 2px;
 
@@ -223,7 +223,7 @@
 }
 @media screen and (max-width: $mobile) {
     .cat-cancel {
-        width: 40px;
+        width: var(--settings-control-size, 40px);
         padding: 0;
     }
     .cat-cancel-word {

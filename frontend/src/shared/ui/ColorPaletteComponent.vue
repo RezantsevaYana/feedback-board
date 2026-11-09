@@ -1,5 +1,5 @@
 <template>
-  <div ref="root" class="entity-color" :aria-label="label" @keydown.esc.stop.prevent="close(true)">
+  <div ref="root" class="entity-color" :class="{ 'entity-color-compact': compactTrigger }" :aria-label="label" @keydown.esc.stop.prevent="close(true)">
     <div class="entity-color-dropdown">
       <button ref="trigger" type="button" class="btn entity-color-trigger" :class="{ invalid: !valid }" :aria-label="`Выбрать: ${label.toLowerCase()}`" :aria-expanded="open" :aria-controls="uid" @click="open = !open">
         <span class="entity-color-swatch" :class="{ colorless: selected === null }" :style="swatchStyle" aria-hidden="true" />
@@ -8,9 +8,6 @@
       </button>
       <Transition name="entity-palette">
         <div v-if="open" :id="uid" ref="popup" class="entity-color-popup" role="region" :aria-label="label">
-          <div class="color-palette" :class="`v-${variant}`" role="group" aria-label="Готовые цвета">
-            <button v-for="color in PALETTE_COLORS" :key="color" type="button" class="color-swatch" :data-color="color" :aria-label="LABELS[color]" :title="LABELS[color]" :aria-pressed="selected === color" @click="selectPreset(color)" />
-          </div>
           <!-- on a phone the HEX field and «Без цвета» live here, so the form row keeps only the swatch button -->
           <div v-if="compact" class="entity-color-hex">
             <InputComponent v-model="hex" :aria-label="`${label}: HEX`" placeholder="HEX" maxlength="7" autocomplete="off" spellcheck="false" :error="error" @input="error = ''" @blur="validate" />
@@ -31,7 +28,7 @@
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
-import { PALETTE_COLORS, type PaletteColor } from '@/api/types'
+import type { PaletteColor } from '@/api/types'
 import { useMediaQuery } from '@/shared/composables/useMediaQuery'
 import { entityColorHex } from '@/shared/utils/entityColor'
 import { DEFAULT_WIDGET_COLOR, normalizeHex } from '@/shared/utils/widgetColor'
@@ -41,6 +38,7 @@ import InputComponent from './InputComponent.vue'
 const props = withDefaults(defineProps<{
   label: string
   variant?: 'category' | 'status'
+  compactTrigger?: boolean
   clearable?: boolean
 }>(), { variant: 'category', clearable: true })
 const selected = defineModel<PaletteColor | null>({ default: null })
@@ -54,15 +52,12 @@ const trigger = ref<HTMLButtonElement | null>(null)
 const popup = ref<HTMLElement | null>(null)
 const uid = useId()
 // same as $mobile in scss/utils/_variables.scss
-const compact = useMediaQuery('(max-width: 767px)')
+const mobile = useMediaQuery('(max-width: 767px)')
+const compact = computed(() => mobile.value || !!props.compactTrigger)
 const swatchStyle = computed(() => {
   const color = entityColorHex(selected.value, props.variant)
   return color ? { backgroundColor: color } : {}
 })
-const LABELS: Record<(typeof PALETTE_COLORS)[number], string> = {
-  red: 'Красный', orange: 'Оранжевый', yellow: 'Жёлтый', green: 'Зелёный', blue: 'Синий', pink: 'Розовый',
-}
-
 watch(hex, (value) => {
   const normalized = normalizeHex(value)
   valid.value = !!normalized || (props.clearable && value.trim() === '')
@@ -84,12 +79,6 @@ function pickCustom(color: unknown) {
   if (next) hex.value = next.toUpperCase()
 }
 
-function selectPreset(color: PaletteColor) {
-  selected.value = color
-  hex.value = entityColorHex(color, props.variant).toUpperCase()
-  valid.value = true
-  error.value = ''
-}
 function clear() {
   selected.value = null
   hex.value = ''

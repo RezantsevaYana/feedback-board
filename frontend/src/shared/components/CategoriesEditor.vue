@@ -31,11 +31,11 @@
     <li v-if="!board.categories.length" class="note">Категорий нет — форма отправки будет без выбора.</li>
   </ul>
 
-  <form class="cat-edit" @submit.prevent="add">
+  <form class="cat-edit cat-add" @submit.prevent="add">
     <div class="cat-row">
-      <ColorPaletteComponent v-model="newColor" v-model:valid="newColorValid" label="Цвет новой категории" variant="category" />
-      <InputComponent v-model="newName" maxlength="40" placeholder="Новая категория, например «Доставка»" aria-label="Новая категория" @input="addError = ''" />
-      <button class="btn btn-add" type="submit" :disabled="!newName.trim() || !newColorValid">Добавить</button>
+      <ColorPaletteComponent v-model="newColor" v-model:valid="newColorValid" :compact-trigger="settingsLayout" label="Цвет новой категории" variant="category" />
+      <InputComponent v-model="newName" maxlength="40" :placeholder="settingsLayout ? 'Новая категория' : 'Новая категория, например «Доставка»'" aria-label="Новая категория" @input="addError = ''" />
+      <button class="btn btn-add" type="submit" :disabled="!newName.trim() || !newColorValid" :aria-label="settingsLayout ? 'Добавить' : undefined"><span class="cat-add-word">Добавить</span><span v-if="settingsLayout" class="cat-add-icon" aria-hidden="true">+</span></button>
     </div>
     <div v-if="newName.trim()" class="cat-preview">
       <span class="label">Как будет выглядеть:</span>
@@ -61,6 +61,7 @@ import CategoryTag from './CategoryTag.vue'
 
 // Team settings: what posts can be about. Shown in the widget form, on the board filters and on cards.
 // Works on the project opened in useBoardStore; rendered in the board modal and on the settings page.
+defineProps<{ settingsLayout?: boolean }>()
 const board = useBoardStore()
 const notification = useNotificationStore()
 const confirm = useConfirmStore()

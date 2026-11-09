@@ -56,9 +56,25 @@ export const useBoardStore = defineStore('board', () => {
   const configure = computed(() => canConfigure(role.value))
   // Читатель only reads on a closed board; on an open one they're a guest by the link like anyone (the API agrees)
   const readOnly = computed(() => role.value === 'reader' && project.value?.visibility === 'private')
+  // Can the current visitor post / vote (test.md п. 40). Members (any non-reader role) pass regardless of the flags;
+  // guests on an open board follow project.guests_can_post / _vote. Readers are already blocked by readOnly above.
+  const isGuest = computed(() => me.value === null)
+  const canSubmit = computed(() => {
+    if (readOnly.value) return false
+    if (role.value && role.value !== 'reader') return true
+    // guest or outsider on a closed board: the gate blocks them earlier — here they wouldn't have the project
+    if (project.value?.visibility === 'private') return !isGuest.value
+    return project.value?.guests_can_post !== false
+  })
+  const canVote = computed(() => {
+    if (readOnly.value) return false
+    if (role.value && role.value !== 'reader') return true
+    if (project.value?.visibility === 'private') return !isGuest.value
+    return project.value?.guests_can_vote !== false
+  })
   const categories = computed<Category[]>(() => project.value?.categories ?? [])
   const statuses = computed<Status[]>(() => project.value?.statuses ?? [])
-  const defaultStatus = computed<Status | undefined>(() => statuses.value.find((s) => s.slug === 'new'))
+  const defaultStatus = computed<Status | undefined>(() => statuses.value.find((s) => s.id === project.value?.default_status_id))
 
   // На мобиле (≤767) по умолчанию — список: канбан-колонки съедают весь экран.
   const defaultLayout: Layout =
@@ -546,23 +562,37 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  /** Переупорядочивание кастомных столбцов (drag&drop); системные остаются на своих позициях. */
+  /** Порядок всех колонок канбана. Сортировка предложений в списке не меняется. */
   async function reorderStatuses(ids: number[]) {
     const res = await StatusesApi.reorder(currentSlug(), ids)
     if (project.value) project.value.statuses = res.data.sort((a, b) => a.position - b.position || a.id - b.id)
   }
 
-  /** Удаление кастомного столбца: сервер переносит посты в «Новое», локально делаем то же. */
-  async function deleteStatus(id: number) {
-    await StatusesApi.remove(id)
-    const fallback = defaultStatus.value
-    if (project.value) project.value.statuses = project.value.statuses.filter((s) => s.id !== id)
-    view.status = view.status.filter((s) => s !== id)
-    if (fallback) {
+  async function setDefaultStatus(id: number) {
+    const slug = currentSlug()
+    const res = await StatusesApi.setDefault(slug, id)
+    if (project.value?.slug !== slug) return
+    if (project.value) project.value.default_status_id = res.data.default_status_id
+    await loadPosts()
+  }
+
+  async function deleteStatus(id: number, replacementStatusId: number) {
+    const slug = currentSlug()
+    const res = await StatusesApi.remove(id, replacementStatusId)
+    if (project.value?.slug !== slug) return res.data
+    const replacement = statuses.value.find(s => s.id === res.data.replacement_status_id)
+    if (project.value) {
+      project.value.default_status_id = res.data.default_status_id
+      project.value.statuses = project.value.statuses.filter(s => s.id !== id)
+    }
+    view.status = view.status.filter(s => s !== id)
+    if (replacement) {
       for (const post of [...posts.value, ...topPosts.value]) {
-        if (post.status.id === id) post.status = { ...fallback }
+        if (post.status.id === id) post.status = { ...replacement }
       }
     }
+    await loadPosts()
+    return res.data
   }
 
   async function logout() {
@@ -578,10 +608,10 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    project, notFound, unpublished, privateLocked, noAccess, gateName, me, role, team, configure, readOnly, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, postsTotal, newCount, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
+    project, notFound, unpublished, privateLocked, noAccess, gateName, me, role, team, configure, readOnly, canSubmit, canVote, categories, statuses, defaultStatus, view, filtered, resetFilters, posts, page, lastPage, postsTotal, newCount, loading, loadingMore, postsLoaded, loadError, ranking, leaderboard, weeklyWinners, weeklyWinnersMeta,
     open, refresh, refreshMe, loadPosts, loadWeeklyWinners, vote, updatePost, deletePost,
     addCategory, updateCategory, deleteCategory,
-    addStatus, updateStatus, deleteStatus, reorderStatuses,
+    addStatus, updateStatus, deleteStatus, reorderStatuses, setDefaultStatus,
     logout,
     startPolling, stopPolling,
     selectionMode, selectedIds, selectionCount, hasSelection, isSelected, selectedPosts, allSelectedHidden,

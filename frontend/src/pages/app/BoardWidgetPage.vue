@@ -11,21 +11,29 @@
         </div>
       </section>
 
-      <template v-else>
-        <!-- on a phone the code and the domains fold; the colour and the label below stay open -->
-        <FoldSection id="widget" title="Установка" class="board-settings-section" summary="Код для сайта продукта">
-          <p class="note">Кнопка «Обратная связь» на сайте продукта. Вставьте тег перед закрывающим <code class="mono">&lt;/body&gt;</code>.</p>
+      <section v-else class="board-settings-section widget-settings">
+        <WidgetPreview embedded :color="previewColor" :text="previewText" />
+
+        <WidgetAppearanceSection
+          :slug="slug" :color="embed.widget_color" :text="embed.widget_launcher_text"
+          @preview="previewColor = $event.color; previewText = $event.text"
+          @saved="embed.widget_color = $event.color; embed.widget_launcher_text = $event.text"
+        />
+
+        <!-- The preview and appearance stay visible; installation and domains fold on mobile. -->
+        <FoldSection id="widget" title="Установка" class="widget-subsection" summary="Код для сайта продукта">
+          <p class="note">Вставьте тег перед закрывающим <code class="mono">&lt;/body&gt;</code>.</p>
           <pre class="board-access-code"><code>{{ embed.script_tag }}</code></pre>
-          <CopyButton :value="embed.script_tag" label="Скопировать код" class="board-access-copy" />
+          <div class="board-access-actions">
+            <CopyButton :value="embed.script_tag" label="Скопировать код" class="board-access-copy" />
+          </div>
         </FoldSection>
 
-        <FoldSection id="domains" title="Домены" class="board-settings-section" :summary="domainsSummary">
+        <FoldSection id="domains" title="Домены" class="widget-subsection" :summary="domainsSummary">
           <SettingsDomains :settings="settings" @saved="onDomainsSaved" />
         </FoldSection>
 
-        <WidgetColorSection :slug="slug" :color="embed.widget_color" @saved="embed.widget_color = $event" />
-        <WidgetLauncherSection :slug="slug" :text="embed.widget_launcher_text" @saved="embed.widget_launcher_text = $event" />
-      </template>
+      </section>
     </template>
 
     <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
@@ -40,8 +48,8 @@ import CopyButton from '@/shared/ui/CopyButton.vue'
 import FoldSection from '@/shared/ui/FoldSection.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
 import SettingsDomains from './components/SettingsDomains.vue'
-import WidgetColorSection from './components/WidgetColorSection.vue'
-import WidgetLauncherSection from './components/WidgetLauncherSection.vue'
+import WidgetAppearanceSection from './components/WidgetAppearanceSection.vue'
+import WidgetPreview from './components/WidgetPreview.vue'
 import { boardLoadError } from './composables/boardLoadError'
 import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 
@@ -54,6 +62,8 @@ const settings = ref<BoardSettings | null>(null)
 const embed = ref<EmbedInfo | null>(null)
 const loading = ref(true)
 const loadError = ref('')
+const previewColor = ref<string | null>(null)
+const previewText = ref('')
 // folded «Домены»: the sites themselves, or why the widget won't work without one
 const domainsSummary = computed(() => {
   const list = settings.value?.allowed_origins ?? []
@@ -90,3 +100,74 @@ function onDomainsSaved(next: BoardSettings) {
   if (embed.value) embed.value.allowed_origins = next.allowed_origins
 }
 </script>
+
+<style lang="scss">
+@use '@/scss/utils' as *;
+
+.widget-settings {
+  gap: 14px;
+  min-width: 0;
+  width: 100%;
+  max-width: 760px;
+
+  .widget-overview > h2 { font-size: 18px; }
+  .fold-section-title { font-size: 15px; }
+  .fold-section-body { gap: 10px; }
+  .fold-section-body > .note { margin: 0; }
+  .widget-subsection:not(.foldable) {
+    display: grid;
+    gap: 10px;
+  }
+
+  .widget-overview { display: grid; gap: 14px; }
+  .widget-subsection {
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    min-width: 0;
+  }
+  .widget-appearance {
+    display: grid;
+    gap: 10px;
+    h3 { margin: 0; font-size: 15px; }
+    fieldset {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+      min-width: 0;
+      padding: 0;
+      margin: 0;
+      border: 0;
+    }
+    .field { margin: 0; min-width: 0; }
+    .note { margin: 0; }
+  }
+  .widget-appearance-label { font-size: 13px; font-weight: 500; }
+  .widget-appearance-colors {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    gap: 8px;
+    > .field { width: 120px; }
+    .btn { gap: 8px; }
+    .input { font-family: var(--font-mono); }
+  }
+  .widget-appearance-actions { display: flex; justify-content: end; }
+
+  @media screen and (max-width: $mobile) {
+    width: auto;
+    .widget-subsection { @include bleed; padding-top: 14px; }
+    .widget-subsection.foldable { padding-top: 0; }
+    .fold-section-body { gap: 8px; }
+    .board-access-actions .btn { min-height: var(--settings-control-size, 44px); }
+    .widget-appearance { gap: 8px; }
+    .widget-appearance-colors {
+      flex-wrap: nowrap;
+      > .field { flex: 1; width: auto; }
+      > .btn, .widget-color-dropdown { flex: none; }
+    }
+    .widget-appearance .btn,
+    .widget-appearance .input { min-height: var(--settings-control-size, 44px); }
+    .widget-appearance .input { font-size: 16px; }
+  }
+}
+</style>

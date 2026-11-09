@@ -66,9 +66,17 @@ class PostController extends Controller
         // Читатель only reads on a closed board; on an open one they're a guest like anyone with the link.
         // Guests and outsiders follow the board's visibility
         abort_if($project->isPrivate() && $user?->roleOn($project)?->canSubmit() === false, 403, 'Читатель на этой доске не предлагает — только читает.');
+        // open board + owner hid the form from guests (test.md п. 40). Members get through regardless of this flag.
+        if (! $project->isPrivate() && $user === null && ! $project->guests_can_post) {
+            return response()->json([
+                'message' => 'Войдите в аккаунт, чтобы предложить идею.',
+                'reason' => 'guest_post_disabled',
+            ], 403);
+        }
         $authorName = $user?->name ?? $request->validated('author_name');
 
         $post = DB::transaction(function () use ($request, $project, $authorToken, $authorName, $user) {
+            $project = Project::query()->lockForUpdate()->findOrFail($project->id);
             $attributes = $request->safe()->only(['category_id', 'title', 'description']);
             $attributes['author_name'] = $authorName;
             $attributes['author_token'] = $authorToken;

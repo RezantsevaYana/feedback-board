@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Внешний вид виджета — прототип</title>
+<style>
+:root{font-family:Onest,system-ui,sans-serif;color:#0f2224;background:#f3f6f4;font-size:14px;line-height:1.5;--accent:#1643c9;--accent-fg:white}
+*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.45}button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid #1d8547;outline-offset:3px}
+.doc{max-width:920px;margin:auto;padding:30px 24px 70px}.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px}.toolbar span{margin-right:auto;color:#4c5d60}.btn{border:1px solid #d8e1db;border-radius:10px;background:white;color:#0f2224;padding:9px 14px;min-height:40px}.toolbar [aria-pressed=true]{background:#cfe7d7;border-color:#1d8547}.screen{max-width:760px;margin:auto;padding:24px;background:white;border:1px solid #d8e1db;border-radius:14px}.screen.phone{max-width:390px;padding:16px}.screen h1{font-size:24px;margin:0 0 18px}.tabs{display:flex;gap:18px;border-bottom:1px solid #d8e1db;margin-bottom:22px;padding-bottom:10px;color:#4c5d60;white-space:nowrap;overflow:auto}.tabs strong{color:#1d8547}.card{padding:20px;border:1px solid #d8e1db;border-radius:10px;margin-top:16px}h2{font-size:16px;margin:0 0 6px}p{margin:0 0 14px}.note{color:#4c5d60;font-size:13px}.cases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.case{height:170px;position:relative;border:1px solid #d8e1db;border-radius:12px;overflow:hidden;background:repeating-linear-gradient(0deg,#f3f6f4,#f3f6f4 14px,#e2e9e4 14px,#e2e9e4 15px)}.case small{position:absolute;left:10px;top:8px;color:#4c5d60;font-size:12px}.launcher{position:absolute;right:12px;bottom:12px;padding:8px 14px 8px 20px;max-width:calc(100% - 24px);white-space:nowrap;text-overflow:ellipsis;overflow:hidden;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%);background:var(--accent);color:var(--accent-fg);font-weight:600;font-size:13px}.panel{position:absolute;right:12px;bottom:12px;width:65%;height:132px;padding:10px;border:1px solid #d8e1db;border-radius:12px;background:white;display:grid;align-content:start;gap:7px}.panel b{font-size:13px}.panel span{height:16px;background:#e8eee9;border-radius:5px}.panel .send{background:var(--accent);width:50%;justify-self:end}.fields{display:grid;gap:18px;margin-top:18px}.field{display:grid;gap:6px}.field>span{font-weight:500}.hint{font-size:12px;font-weight:400;color:#4c5d60}.color-row{display:flex;gap:10px;align-items:center}.picker{display:flex;gap:8px;align-items:center;position:relative}.picker input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.swatch{width:20px;height:20px;border-radius:4px;background:var(--accent);border:1px solid #a9bcb0}.input{border:1px solid #a9bcb0;border-radius:10px;padding:10px 12px;min-height:44px;min-width:0;width:100%;background:white;color:#0f2224}.hex{width:150px;font-family:ui-monospace,monospace}.text{max-width:360px}.actions{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:22px}.reset{border:0;background:none;color:#4c5d60;text-decoration:underline;min-height:44px;padding:0}.primary{background:#1d8547;color:white;border-color:#1d8547;font-weight:600}.status{font-size:12px;color:#4c5d60;margin:0;min-height:18px}.error{color:#b0423a;font-size:12px;margin:0}details{margin-top:20px;padding-top:16px;border-top:1px solid #d8e1db}summary{cursor:pointer;font-weight:600;min-height:40px}code{font-size:12px;overflow-wrap:anywhere}.phone h1{font-size:20px}.phone .card{padding:16px 0;border:0;border-top:1px solid #d8e1db;border-radius:0}.phone .cases{gap:8px}.phone .case{height:104px;border-radius:10px}.phone .case small{font-size:11px;top:5px;left:8px}.phone .launcher{right:8px;bottom:8px;padding:4px 9px 4px 11px;font-size:10px;max-width:calc(100% - 16px)}.phone .panel{right:8px;bottom:8px;width:78%;height:74px;padding:7px;gap:4px;border-radius:8px}.phone .panel b{font-size:10px}.phone .panel span{height:9px}.phone .hex{width:120px}.phone .actions{justify-content:space-between}.phone .text{max-width:none}
+@media(max-width:600px){.doc{padding:16px 10px 40px}.screen{padding:16px}.toolbar{font-size:12px}.toolbar .btn{padding:8px}.screen:not(.phone) .cases{grid-template-columns:1fr}}
+</style>
+<main class="doc">
+  <div class="toolbar"><span>Прототип · изменения не сохраняются на сервере</span><button class="btn" data-view="desktop" aria-pressed="true">Десктоп</button><button class="btn" data-view="phone" aria-pressed="false">Телефон</button></div>
+  <div class="screen" id="screen">
+    <h1>Виджет</h1>
+    <nav class="tabs" aria-label="Разделы настроек"><span>Общее</span><span>Доступ</span><span>Категории и статусы</span><strong>Виджет</strong></nav>
+    <section class="card">
+      <h2>Виджет на сайте</h2>
+      <p class="note">Виджет — кнопка «Обратная связь» на сайте вашего продукта. По нажатию открывается форма: посетитель отправляет предложение, и оно появляется на этой доске.</p>
+      <div class="cases">
+        <div class="case"><small>На вашем сайте</small><span class="launcher" id="launcher">Обратная связь</span></div>
+        <div class="case"><small>После нажатия</small><div class="panel" role="img" aria-label="Пример формы обратной связи"><b>Обратная связь</b><span></span><span></span><span class="send"></span></div></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Внешний вид</h2>
+      <p class="note">Цвет и текст кнопки на вашем сайте. Изменения видны в примере выше.</p>
+      <form id="appearance">
+        <div class="fields">
+          <div class="field"><span>Цвет кнопки</span><div class="color-row"><label class="btn picker"><span class="swatch"></span>Выбрать цвет⌄<input type="color" id="color" value="#1643c9" aria-label="Выбрать цвет кнопки"></label><input class="input hex" id="hex" value="#1643C9" maxlength="7" aria-label="Цвет в формате HEX" spellcheck="false"></div><p id="error" class="error" aria-live="polite"></p></div>
+          <label class="field"><span>Текст кнопки <span class="hint">· до 40 символов</span></span><input class="input text" id="text" maxlength="40" value="Обратная связь" placeholder="Обратная связь"></label>
+        </div>
+        <div class="actions"><button class="reset" type="button" id="reset">Вернуть стандартные</button><button class="btn primary" type="submit" id="save" disabled>Сохранить</button></div>
+        <p class="status" id="status" role="status"></p>
+      </form>
+    </section>
+    <details><summary>Установка</summary><p class="note">Вставьте код перед закрывающим &lt;/body&gt;.</p><code>&lt;script src="https://feedback.app/widget.js" data-project="demo" defer&gt;&lt;/script&gt;</code></details>
+    <details><summary>Домены</summary><p class="note">Сайты, на которых виджет может работать.</p><p>app.example.com</p></details>
+  </div>
+</main>
+<script>
+const screen=document.getElementById('screen'),color=document.getElementById('color'),hex=document.getElementById('hex'),text=document.getElementById('text'),save=document.getElementById('save'),status=document.getElementById('status'),error=document.getElementById('error');
+let savedColor=color.value,savedText=text.value;
+function update(){
+  const valid=/^#[0-9a-f]{6}$/i.test(hex.value);
+  error.textContent=valid?'':'Введите HEX, например #1643C9';
+  hex.setAttribute('aria-invalid',String(!valid));
+  if(valid){color.value=hex.value;screen.style.setProperty('--accent',hex.value);const rgb=[1,3,5].map(i=>parseInt(hex.value.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);const l=.2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];screen.style.setProperty('--accent-fg',1.05/(l+.05)>=4.5?'#fff':'#0f2224');}
+  document.getElementById('launcher').textContent=text.value.trim()||'Обратная связь';
+  const dirty=color.value!==savedColor||text.value!==savedText;
+  save.disabled=!valid||!dirty;status.textContent=dirty?'Есть несохранённые изменения':'';
+}
+color.addEventListener('input',()=>{hex.value=color.value.toUpperCase();update()});hex.addEventListener('input',update);text.addEventListener('input',update);
+document.getElementById('reset').addEventListener('click',()=>{hex.value='#1D8547';text.value='Обратная связь';update()});
+document.getElementById('appearance').addEventListener('submit',e=>{e.preventDefault();if(save.disabled)return;savedColor=color.value;savedText=text.value;update();status.textContent='Цвет и текст сохранены в прототипе'});
+function view(phone){screen.classList.toggle('phone',phone);document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.view==='phone')===phone)));document.querySelectorAll('details').forEach(d=>d.open=!phone)}
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.view==='phone')));view(innerWidth<600);update();
+</script>
+</html>

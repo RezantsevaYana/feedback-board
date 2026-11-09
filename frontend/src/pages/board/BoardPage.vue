@@ -117,14 +117,27 @@
           </MenuComponent>
         </div>
         <!-- hover rolls the label up to a question; screen readers always hear «Предложить» -->
-        <!-- a reader on a closed board only reads: no «Предложить» (the API refuses it too) -->
-        <button v-if="!board.readOnly" type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
+        <!-- a reader on a closed board only reads: no «Предложить» (the API refuses it too).
+             A guest on an open board where the owner turned off guest posts (test.md п. 40): the same CTA slot
+             turns into an outline «locked» button — lock icon + «Предложить», click goes to login. One element,
+             the familiar shape, the lock says «нужна авторизация». -->
+        <button v-if="board.canSubmit" type="button" class="btn btn-primary board-cta" aria-label="Предложить" @click="compose()">
           <span class="cta-roll" aria-hidden="true"><span>Предложить</span><span>Есть идея?</span></span>
         </button>
+        <RouterLink
+          v-else-if="!board.me"
+          :to="{ path: '/app/login', query: { next: route.fullPath } }"
+          class="btn board-cta board-cta-locked"
+          aria-label="Войдите, чтобы предложить"
+          title="Войдите в аккаунт, чтобы оставить идею"
+        >
+          <AppIcon name="lock" :size="16" />
+          <span>Предложить</span>
+        </RouterLink>
         <!-- a guest reads, votes and posts without an account; signing in is for the team of an open board,
              through the one login page that brings them back here (a closed board has the gate with its own «Войти»).
              For signed-in users the whole admin / account block lives in AppHeader above — see test.md п. 14, п. 7. -->
-        <RouterLink v-if="!board.me" :to="{ path: '/app/login', query: { next: route.fullPath } }" class="link-btn team-login">Войти</RouterLink>
+        <RouterLink v-if="!board.me && board.canSubmit" :to="{ path: '/app/login', query: { next: route.fullPath } }" class="link-btn team-login">Войти</RouterLink>
         <!-- theme toggle lives at the bottom of the sidebar; the account menu's own «Выйти» is in AppHeader -->
         <ThemeToggle class="board-nav-theme" />
       </nav>
@@ -376,11 +389,34 @@ onBeforeUnmount(() => {
   board.stopPolling()
   document.removeEventListener('visibilitychange', onVisibility)
   document.removeEventListener('keydown', onSearchKey)
+  // leaving the board: drop the noindex tag so it doesn't leak into other routes
+  setRobotsNoindex(false)
 })
 watch(
   () => board.project?.name,
   (name) => (document.title = name ? `${name} · предложения` : 'Feedback Board'),
 )
+// test.md п. 19: a private board or an open board the owner hid from search engines gets <meta robots noindex>.
+// Dynamic robots.txt (42.10.2.4) handles the bulk crawler case; this tag keeps a bot that already has the URL out.
+watch(
+  () => [board.project?.visibility, board.project?.search_indexable],
+  ([visibility, indexable]) => {
+    setRobotsNoindex(!!visibility && (visibility === 'private' || indexable === false))
+  },
+  { immediate: true },
+)
+function setRobotsNoindex(noindex: boolean): void {
+  const existing = document.head.querySelector<HTMLMetaElement>('meta[name="robots"][data-board]')
+  if (!noindex) {
+    existing?.remove()
+    return
+  }
+  const tag = existing ?? document.createElement('meta')
+  tag.setAttribute('name', 'robots')
+  tag.setAttribute('content', 'noindex, nofollow')
+  tag.dataset.board = ''
+  if (!existing) document.head.appendChild(tag)
+}
 // any change of what is shown reloads from the server; team mode switches endpoints
 watch(
   () => [board.view.section, board.view.layout, board.view.category, board.view.status, board.view.search, board.view.sort, board.view.priority, board.view.showHidden, board.view.leaderboardScope, board.view.leaderboardMetric, board.team],

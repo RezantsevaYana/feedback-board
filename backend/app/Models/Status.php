@@ -7,19 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * Колонка на канбане. Три системных статуса (new/done/rejected) создаются
- * вместе с проектом и защищены от удаления; остальные команда добавляет сама.
- */
+/** Все статусы доски равноправны; is_system оставлен только для совместимости старых данных. */
 #[Fillable(['name', 'slug', 'color', 'position', 'is_system'])]
 class Status extends Model
 {
-    /** Защищены от удаления; у каждого проекта всегда есть эти три. */
-    public const SYSTEM_SLUGS = ['new', 'done', 'rejected'];
-
-    /** Куда возвращаются посты, если удалили кастомный столбец. */
-    public const FALLBACK_SLUG = 'new';
-
     /** Shared palette with App\Models\Category: slug → CSS token in scss/base/_tokens.scss. */
     public const PALETTE = ['red', 'orange', 'yellow', 'green', 'blue', 'pink'];
 

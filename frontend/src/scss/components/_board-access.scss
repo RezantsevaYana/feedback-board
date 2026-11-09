@@ -1,11 +1,49 @@
 @use '../utils' as *;
 
-// BoardAccessPage.vue + WidgetColorSection.vue — «Доступ»: a board page inside BoardWorkspace (frame: _board-workspace.scss).
-// Its blocks are settings cards (.board-settings-section), the rules below only add what's inside them.
+// BoardAccessPage.vue + WidgetColorSection.vue — «Доступ»: one card (settings-rework-prototype.html, variant B),
+// mode picker on top, then sub-blocks separated by hairlines (Гости, Поисковики, Команда / Участники).
 .board-access-section {
     // the card is a grid: the compact copy button keeps its own width instead of stretching
     .copy-btn {
         justify-self: start;
+    }
+}
+
+// a hairline-separated section inside the outer .board-access-section card — the mode picker and all its
+// sub-blocks (Гости, Поисковики, Команда / Участники, Запросы на доступ) are split by the same thin line.
+.board-access-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+
+    > h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+    // phone: the fold-section brings its own breathing room in the summary; the group should sit tight on
+    // the hairline, not stack another 14px on top of it (prototype has no extra padding on fold sub-blocks)
+    @media screen and (max-width: $mobile) {
+        @include bleed;
+        gap: 8px;
+        padding-top: 0;
+
+        // tighter clickable summary: 28px title row and smaller chevron so the folded card stays compact
+        &.foldable > .fold-section-head {
+            padding: 8px 0;
+            grid-template-rows: 28px auto;
+
+            > .fold-section-chevron {
+                width: 28px;
+                height: 28px;
+            }
+        }
+        // a plain (non-fold) group keeps a bit of air above its heading
+        &:not(.foldable) {
+            padding-top: 12px;
+        }
     }
 }
 .board-access-section-head {
@@ -264,11 +302,20 @@
 
 // AccessMode.vue — the mode cards, then (once changed) what the switch does to posts, votes and people
 .access-mode {
+    display: grid;
+    gap: 12px;
+
+    .note {
+        margin: 0;
+    }
+
     // phone: the two modes as plain radios — the round mark, the name, one line of hint — not two tall cards
     // (prototype frontend/demo/settings-rework-prototype.html); the onboarding keeps its cards
     @media screen and (max-width: $mobile) {
+        gap: 10px;
+
         .radio-cards {
-            gap: 12px;
+            gap: 8px;
         }
         .radio-card {
             align-items: start;
@@ -291,33 +338,65 @@
         }
         .radio-card-title {
             font-weight: 500;
+            font-size: 14px;
+        }
+        .radio-card-hint {
+            font-size: 12.5px;
+            line-height: 1.4;
         }
     }
-
-    display: grid;
-    gap: 12px;
-
-    .note {
-        margin: 0;
-    }
 }
+// warm amber panel (prototype .mode-confirm): the kind of «careful, this changes things» tone, not a neutral
+// grey note. Border matches so the panel reads as one chip even on the dark theme
 .access-mode-effects {
+    display: grid;
+    gap: 10px;
     padding: 12px 14px;
-    border-radius: var(--radius);
-    background: var(--surface-2);
+    border-radius: 12px;
+    background: color-mix(in srgb, #e2b33c 14%, var(--surface));
+    border: 1px solid color-mix(in srgb, #e2b33c 45%, var(--line));
     font-size: 14px;
     line-height: 1.5;
 
     ul {
         display: grid;
-        gap: 6px;
+        gap: 4px;
         margin: 0;
         padding-left: 18px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    @media screen and (max-width: $mobile) {
+        gap: 8px;
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.45;
+
+        ul {
+            gap: 3px;
+            padding-left: 16px;
+            font-size: 12.5px;
+        }
     }
 }
 .access-mode-effects-title {
-    margin: 0 0 8px;
+    margin: 0;
     font-weight: 600;
+}
+// action buttons inside the same warm panel; primary first, left-aligned on desktop; on a phone they share
+// the row evenly but keep the standard .btn height (40px) — no need to grow for the thumb
+.access-mode-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    @media screen and (max-width: $mobile) {
+        .btn {
+            flex: 1;
+        }
+    }
 }
 
 // BoardAccessPage.vue — another mode picked on «Кто видит доску» but not applied: the blocks below are muted
@@ -334,17 +413,6 @@
     }
     @media (prefers-reduced-motion: reduce) {
         transition: none;
-    }
-    // phone: the sections inside part with the mode block above by the same hairline as any two sections
-    // (they're in this wrapper, so the «section + section» rule of _board-settings.scss doesn't reach them)
-    @media screen and (max-width: $mobile) {
-        > .board-settings-section:first-child {
-            border-top: 1px solid var(--line);
-
-            &:not(.foldable) {
-                padding-top: 16px;
-            }
-        }
     }
 }
 .board-access-pending {

@@ -1,104 +1,121 @@
 <template>
-  <form class="settings-domains" novalidate @submit.prevent="save">
-    <p class="note">
-      Сайты, где стоит виджет: схема и хост, без пути. Для локальной разработки подойдёт <code class="mono">http://localhost:*</code>.
-      Без доменов виджет не сможет отправлять предложения.
-    </p>
-    <div v-for="(row, idx) in rows" :key="row.key" class="settings-domains-row">
-      <InputComponent
-        v-model="row.value"
-        type="text"
-        autocapitalize="off"
-        spellcheck="false"
-        :placeholder="ORIGIN_EXAMPLE"
-        aria-label="Домен"
-        :error="errors[idx]"
-        @input="clearError(idx)"
-      />
-      <button type="button" class="icon-btn" aria-label="Удалить домен" @click="remove(idx)">
-        <AppIcon name="close" />
-      </button>
-    </div>
-    <div class="settings-actions">
-      <button type="button" class="btn btn-add" @click="add">+ Добавить домен</button>
-      <span class="spacer" />
-      <button class="btn btn-primary" type="submit" :disabled="!changed || saving" :aria-busy="saving">
-        {{ saving ? 'Сохраняем…' : 'Сохранить домены' }}
-      </button>
-    </div>
-  </form>
+  <div class="widget-domains">
+    <p class="note">Сайты, на которых виджет может работать.</p>
+    <ul v-if="settings.allowed_origins.length" class="widget-domains-list">
+      <li v-for="origin in settings.allowed_origins" :key="origin">
+        <span class="widget-domains-origin">{{ origin }}</span>
+        <button class="link-btn" type="button" :disabled="saving" :aria-label="`Убрать домен ${origin}`" @click="remove(origin)">Убрать</button>
+      </li>
+    </ul>
+    <p v-else class="note">Домены не указаны — виджет не сможет отправлять предложения.</p>
+    <form class="widget-domains-add" novalidate @submit.prevent="add">
+      <InputComponent v-model="input" type="text" placeholder="https://site.ru" aria-label="Домен сайта" autocomplete="url" autocapitalize="off" spellcheck="false" :disabled="saving" :error="error" @input="error = ''" />
+      <button class="btn" type="submit" :disabled="saving || !input.trim()" :aria-busy="saving" aria-label="Добавить домен"><span class="widget-domains-full">Добавить</span><span class="widget-domains-short" aria-hidden="true">+</span></button>
+    </form>
+    <p class="note widget-domains-hint">Укажите адрес со схемой, без пути: например, https://site.ru. Для локальной разработки — <code class="mono">http://localhost:*</code>.</p>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { type BoardSettings, BoardsApi } from '@/api/boards'
 import { ApiError, errorMessage } from '@/api/client'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
-import AppIcon from '@/shared/ui/AppIcon.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
 
-// Widget domains (allowed_origins). The list is edited locally and saved in one PATCH;
-// an empty list is valid — the board then works by direct link only.
-const props = defineProps<{
-  settings: BoardSettings
-}>()
-const emit = defineEmits<{
-  saved: [settings: BoardSettings]
-}>()
+const props = defineProps<{ settings: BoardSettings }>()
+const emit = defineEmits<{ saved: [settings: BoardSettings] }>()
 const notification = useNotificationStore()
-// kept out of the template: a literal "//" there trips vue-tsc and drops the v-for scope
-const ORIGIN_EXAMPLE = 'https://app.example.com'
-
-let nextKey = 0
-const toRows = (list: string[]) => (list.length ? list : ['']).map((value) => ({ key: nextKey++, value }))
-
-const rows = ref(toRows(props.settings.allowed_origins))
-const errors = ref<Record<number, string>>({})
+const input = ref('')
+const error = ref('')
 const saving = ref(false)
+watch(() => props.settings.slug, () => { input.value = ''; error.value = '' })
 
-const clean = computed(() => rows.value.map((o) => o.value.trim().replace(/\/+$/, '')).filter((v) => v.length > 0))
-const changed = computed(() => clean.value.join('\n') !== props.settings.allowed_origins.join('\n'))
-
-watch(() => props.settings.allowed_origins, (next) => (rows.value = toRows(next)))
-
-function add() {
-  rows.value.push({ key: nextKey++, value: '' })
+async function add() {
+  if (saving.value) return
+  const origin = input.value.trim().replace(/\/+$/, '')
+  if (!origin) return
+  if (props.settings.allowed_origins.includes(origin)) {
+    error.value = 'Этот домен уже добавлен'
+    return
+  }
+  const list = [...props.settings.allowed_origins, origin]
+  if (await persist(list, list.length - 1)) input.value = ''
 }
 
-function clearError(idx: number) {
-  if (errors.value[idx]) errors.value = { ...errors.value, [idx]: '' }
+async function remove(origin: string) {
+  if (saving.value) return
+  await persist(props.settings.allowed_origins.filter(value => value !== origin))
 }
 
-function remove(idx: number) {
-  rows.value.splice(idx, 1)
-  if (!rows.value.length) add()
-  errors.value = {}
-}
-
-async function save() {
-  errors.value = {}
+async function persist(origins: string[], addedIndex?: number) {
   saving.value = true
+  error.value = ''
   try {
-    const res = await BoardsApi.update(props.settings.slug, { origins: clean.value })
+    const res = await BoardsApi.update(props.settings.slug, { origins })
     emit('saved', res.data)
-    notification.success(res.data.allowed_origins.length ? 'Домены сохранены' : 'Домены убраны — доска работает по прямой ссылке')
+    notification.success(addedIndex === undefined ? 'Домен убран' : 'Домен добавлен')
+    return true
   } catch (e) {
-    if (e instanceof ApiError && Object.keys(e.errors).length) {
-      // the server indexes the cleaned list, so map "origins.N" back onto the non-empty rows
-      const filled = rows.value.map((o, idx) => ({ idx, empty: !o.value.trim() })).filter((r) => !r.empty)
-      const next: Record<number, string> = {}
-      for (const [key, messages] of Object.entries(e.errors)) {
-        const match = key.match(/^origins\.(\d+)$/)
-        const row = match ? filled[Number(match[1])] : undefined
-        if (row && messages[0]) next[row.idx] = messages[0]
-      }
-      errors.value = next
-      if (!Object.keys(next).length) notification.error(e.field('origins') ?? e.message)
-    } else {
-      notification.error(errorMessage(e))
-    }
+    const field = e instanceof ApiError && addedIndex !== undefined
+      ? e.field(`origins.${addedIndex}`) ?? e.field('origins')
+      : null
+    if (field) error.value = field
+    else notification.error(errorMessage(e))
+    return false
   } finally {
     saving.value = false
   }
 }
 </script>
+
+<style scoped lang="scss">
+@use '@/scss/utils' as *;
+.widget-domains { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.note { margin: 0; }
+.widget-domains-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .link-btn { flex: none; margin-left: auto; }
+}
+.widget-domains-origin { min-width: 0; overflow-wrap: anywhere; }
+.widget-domains-add {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  > .field { flex: 1 1 0; min-width: 0; margin: 0; }
+  > .btn { flex: none; }
+}
+.widget-domains-short { display: none; }
+.widget-domains-hint { font-size: 12px; }
+@media screen and (max-width: $mobile) {
+  .widget-domains { gap: 8px; }
+  .widget-domains-list {
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    li { min-height: var(--settings-control-size, 44px); padding: 4px 8px 4px 12px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+    li:first-child { border-radius: 11px 11px 0 0; }
+    li:last-child { border-radius: 0 0 11px 11px; border-bottom: 0; }
+    .link-btn { min-height: 36px; }
+  }
+  .widget-domains-add {
+    :deep(.input) { min-height: var(--settings-control-size, 44px); font-size: 16px; }
+    > .btn { width: var(--settings-control-size, 44px); height: var(--settings-control-size, 44px); padding: 0; }
+  }
+  .widget-domains-full { display: none; }
+  .widget-domains-short { display: inline; font-size: 18px; line-height: 1; }
+}
+</style>

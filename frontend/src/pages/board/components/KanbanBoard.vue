@@ -33,7 +33,7 @@
         <div class="card-body">
           <h3><button type="button" class="card-open" @click="open(post)">{{ post.title }}</button></h3>
           <div v-if="post.description" class="excerpt">{{ post.description }}</div>
-          <p v-if="post.status.slug !== 'new' && post.team_comment" class="kcard-reply" :data-s="post.status.slug">{{ post.team_comment }}</p>
+          <p v-if="post.team_comment" class="kcard-reply" :data-s="post.status.slug">{{ post.team_comment }}</p>
         </div>
         <!-- who, when and the votes share one ruled line at the bottom -->
         <div class="kcard-foot" :class="{ liked: post.likes_count > 0 }">
@@ -43,7 +43,7 @@
       </article>
       <template v-if="!col.posts.length">
         <!-- the team cleared the queue: a small win instead of an empty tray -->
-        <div v-if="board.team && col.status.slug === 'new' && !board.filtered" class="col-empty col-cleared">
+        <div v-if="board.team && col.status.id === board.defaultStatus?.id && !board.filtered" class="col-empty col-cleared">
           <span class="col-cleared-mark" aria-hidden="true"><AppIcon name="check" :size="18" /></span>
           <b>Всё разобрано</b>
           <span>Новые предложения появятся здесь</span>
@@ -71,7 +71,7 @@ import PostTags from './PostTags.vue'
 import StatusReplyModal from './StatusReplyModal.vue'
 import VoteButtons from './VoteButtons.vue'
 
-// Columns come from the project's statuses (3 системных + добавленные командой).
+// Columns follow the board's configured status order.
 // The team moves cards by drag, by the card menu or by keys 1–9; «Готово» / «Отклонено» ask for a reply first.
 const emit = defineEmits<{
   open: [post: Post]

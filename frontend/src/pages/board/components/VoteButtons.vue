@@ -25,9 +25,9 @@
         :class="{ dislike: kind === 'dislike' }"
         :aria-pressed="post.my_vote === kind"
         :aria-label="label(kind)"
-        :title="readOnly ? READ_ONLY : undefined"
-        :disabled="readOnly"
-        @click.stop="board.vote(post, kind)"
+        :title="voteBlockedTitle"
+        :aria-disabled="!canVote"
+        @click.stop="onClick(kind)"
       >
         <span class="emo" aria-hidden="true">{{ kind === 'like' ? '👍' : '💩' }}</span>
         <span>{{ kind === 'like' ? post.likes_count : post.dislikes_count }}</span>
@@ -51,8 +51,10 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import type { Post, Voter, VoteValue } from '@/api/types'
 import { useBoardStore } from '@/store/board/useBoardStore'
+import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import { useVotersStore } from '@/store/modals/useVotersStore'
 import { initials } from '@/shared/utils/format'
 
@@ -71,8 +73,15 @@ const voters = useVotersStore()
 
 const KINDS: VoteValue[] = ['like', 'dislike']
 const READ_ONLY = 'Ваша роль на доске — читатель: можно смотреть, голосовать нельзя'
+const GUEST_CANT_VOTE = 'Войдите в аккаунт, чтобы проголосовать'
 const POP_SIZE = 8
-const readOnly = computed(() => board.readOnly)
+const canVote = computed(() => board.canVote)
+// why the buttons are disabled: a reader on a closed board, or a guest on an open one where the owner hid voting
+// from guests (test.md п. 40). Guests see a prompt that names the way out, readers see a dead-end label.
+const voteBlockedTitle = computed(() => {
+  if (canVote.value) return undefined
+  return board.me ? READ_ONLY : GUEST_CANT_VOTE
+})
 const canSeeVoters = computed(() => board.role === 'owner' || board.role === 'admin' || board.role === 'manager')
 
 const total = computed(() => props.post.likes_count + props.post.dislikes_count)

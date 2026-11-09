@@ -22,16 +22,21 @@ services:
     # SESSION_*) живут в backend/.env, который копируется из .env.example при первом старте.
     environment:
       DB_CONNECTION: pgsql
+      APP_URL: http://${VITE_HOST:-localhost}:8000
+      FRONTEND_URL: http://${VITE_HOST:-localhost}:5176
+      SANCTUM_STATEFUL_DOMAINS: localhost:5176,127.0.0.1:5176,${VITE_HOST:-localhost}:5176
       DB_HOST: db
       DB_PORT: 5432
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+    # --no-reload preserves Docker environment variables in the PHP HTTP process;
+    # otherwise artisan serve drops the LAN Sanctum domains and reloads backend/.env.
     command: >
       sh -c "composer install
       && ([ -f .env ] || (cp .env.example .env && php artisan key:generate))
       && php artisan migrate --force && php artisan db:seed --force
-      && php artisan serve --host=0.0.0.0 --port=8000"
+      && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
     ports:
       - "8000:8000"
     volumes:
@@ -52,6 +57,7 @@ services:
       && npm run dev -- --host 0.0.0.0 --port 5176"
     environment:
       API_PROXY_TARGET: http://backend:8000
+      VITE_HOST: ${VITE_HOST:-localhost}
     ports:
       - "5176:5176"
     volumes:

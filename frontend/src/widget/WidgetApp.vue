@@ -110,6 +110,12 @@ async function loadCategories() {
       closed.value = true
       return
     }
+    // test.md п. 40: owner forbade guests from posting. The widget runs on someone else's site — there's no way
+    // to log in from here (cross-origin session), so there's nothing useful left to do; hide the launcher.
+    if (!res.data.guests_can_post) {
+      closed.value = true
+      return
+    }
     categories.value = res.data.categories
     projectName.value = res.data.name
     color.value = res.data.widget_color

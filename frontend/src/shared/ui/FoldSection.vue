@@ -1,8 +1,21 @@
 <template>
   <!-- a native <details>: keyboard and screen readers get the folding for free -->
-  <details :id="id" ref="root" class="fold-section" :class="{ foldable: compact }" :open="open" @toggle="onToggle">
+  <details :id="id" ref="root" class="fold-section" :class="{ foldable: compact, 'has-hint': hasHint }" :open="open" @toggle="onToggle">
     <summary ref="head" class="fold-section-head" :tabindex="compact ? undefined : -1" @click="onSummaryClick">
-      <h2 class="fold-section-title"><slot name="title">{{ title }}</slot></h2>
+      <h2 class="fold-section-title">
+        <span class="fold-section-title-text"><slot name="title">{{ title }}</slot></span>
+        <span v-if="hasHint" ref="hintAnchor" class="fold-section-hint-anchor">
+          <button
+            type="button"
+            class="fold-section-hint-btn"
+            :aria-expanded="hintOpen"
+            :aria-label="hintAriaLabel || 'Пример на доске'"
+            @click.prevent.stop="toggleHint"
+            @keydown.esc.stop="closeHint"
+          >?</button>
+          <span class="fold-section-hint-popover" :class="{ open: hintOpen }" role="tooltip"><slot name="hint" /></span>
+        </span>
+      </h2>
       <!-- folded: what's inside in one line, so there's no need to open it just to see the state -->
       <span v-if="compact && !expanded && ($slots.summary || summary)" class="fold-section-summary"><slot name="summary">{{ summary }}</slot></span>
       <span v-if="compact" class="fold-section-chevron" aria-hidden="true"><AppIcon name="chevron" :size="18" /></span>
@@ -14,13 +27,15 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useSlots, watch } from 'vue'
 import { useMediaQuery } from '@/shared/composables/useMediaQuery'
 import AppIcon from './AppIcon.vue'
 
 // A settings block that folds on a tablet / phone (TEST.md п. 42, prototype frontend/demo/settings-rework-prototype.html):
 // folded by default with the state in its header («2 человека · 1 ждёт приглашения»), a round chevron on the title
 // row. On a wide screen it's always open and reads as a plain section with a heading.
+// A `#hint` slot (п. 33) adds a «?» next to the title that opens a small example of where the thing shows on the
+// board — desktop as a hover popover, phone as an inline block below the title (nothing in the page jumps).
 const props = defineProps<{
   title?: string
   /** one line of state shown while folded; the `summary` slot takes rich content (tags) instead */
@@ -28,7 +43,12 @@ const props = defineProps<{
   id?: string
   /** start open on a phone too — for what waits for a decision */
   initiallyOpen?: boolean
+  /** aria-label on the «?» button when the `#hint` slot is used */
+  hintAriaLabel?: string
 }>()
+
+const slots = useSlots()
+const hasHint = computed(() => !!slots.hint)
 
 // same as $tablet in scss/utils/_variables.scss: the side menu is behind «Меню» from there down
 const compact = useMediaQuery('(max-width: 1023px)')
@@ -44,7 +64,28 @@ watch(compact, (isCompact) => {
 
 const root = ref<HTMLDetailsElement | null>(null)
 const head = ref<HTMLElement | null>(null)
+const hintAnchor = ref<HTMLElement | null>(null)
 let running: Animation | null = null
+
+// «?» click opens an example — independent of the fold itself
+const hintOpen = ref(false)
+function toggleHint() {
+  if (hintOpen.value) closeHint()
+  else openHint()
+}
+function openHint() {
+  hintOpen.value = true
+  document.addEventListener('pointerdown', onOutsideHint, true)
+}
+function closeHint() {
+  if (!hintOpen.value) return
+  hintOpen.value = false
+  document.removeEventListener('pointerdown', onOutsideHint, true)
+}
+function onOutsideHint(e: PointerEvent) {
+  if (!hintAnchor.value?.contains(e.target as Node)) closeHint()
+}
+onBeforeUnmount(() => document.removeEventListener('pointerdown', onOutsideHint, true))
 
 function onToggle(event: Event) {
   // keyboard / find-in-page may toggle it without our click: keep the state in step

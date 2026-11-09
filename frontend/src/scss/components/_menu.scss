@@ -71,7 +71,8 @@
     }
     &:disabled {
         color: var(--muted);
-        cursor: default;
+        opacity: 0.4;
+        cursor: not-allowed;
         background: none;
     }
     &.danger {

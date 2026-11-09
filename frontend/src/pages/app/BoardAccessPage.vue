@@ -4,49 +4,59 @@
     <p v-if="loading" class="note">Загружаем…</p>
 
     <template v-else-if="settings && people">
-      <section id="mode" class="board-settings-section">
-        <h2>Кто видит доску</h2>
-        <AccessMode :settings="settings" @saved="onModeSaved" @pending="pending = $event" />
+      <!-- Variant B from the prototype (frontend/demo/settings-rework-prototype.html): one outer card, inside —
+           the mode picker as a direct child, then sub-blocks separated by hairlines. Keeps the page compact on
+           desktop and on phone it reads as a single list of sections. -->
+      <section class="board-settings-section board-access-section">
+        <AccessMode id="mode" :settings="settings" @saved="onModeSaved" @pending="pending = $event" />
+
+        <!-- while another mode is picked but not applied, the rest is muted and inert: it changes after the switch -->
+        <p v-if="pending" class="board-access-pending">
+          {{ open ? 'Блоки ниже изменятся, когда доска станет закрытой' : 'Блоки ниже изменятся, когда доска станет открытой' }}
+        </p>
+        <div class="board-access-rest" :class="{ pending }" :inert="pending">
+          <!-- open board: guests (TEST.md п. 40), search-engine toggle (п. 19), then the team (ссылка — в «Общем», виджет — в «Виджете», п. 42). -->
+          <template v-if="open">
+            <GuestsSection
+              :slug="slug"
+              :guests-can-post="settings.guests_can_post"
+              :guests-can-vote="settings.guests_can_vote"
+              @saved="onGuestsSaved"
+            />
+            <SearchIndexingSection :slug="slug" :search-indexable="settings.search_indexable" @saved="onSearchIndexableSaved" />
+
+            <!-- on a phone it folds, the people count in its header; the requests above it never fold -->
+            <FoldSection id="team" title="Команда" class="board-access-group" :summary="peopleSummary">
+              <div class="participants-actions">
+                <button type="button" class="btn btn-add" @click="showInvite = true">+ Добавить в команду</button>
+              </div>
+              <p class="note">Те, кто разбирает посты и настраивает доску. Гостям приглашение не нужно: доска открыта по ссылке.</p>
+              <h4 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h4>
+              <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
+              <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" team-only @changed="onMemberChanged" @removed="onMemberRemoved" />
+            </FoldSection>
+          </template>
+
+          <!-- closed board: who asks to get in, who's on it -->
+          <template v-else>
+            <div v-if="people.requests.length" id="requests" class="board-access-group">
+              <h3>Запросы на доступ<span class="count-badge">{{ people.requests.length }}</span></h3>
+              <p class="note">Просят пустить на доску. После одобрения человек получит письмо со ссылкой на вход.</p>
+              <AccessRequestsList :key="slug" :slug="slug" :requests="people.requests" @decided="onRequestDecided" />
+            </div>
+
+            <FoldSection id="participants" title="Участники" class="board-access-group" :summary="peopleSummary">
+              <div class="participants-actions">
+                <button type="button" class="btn btn-add" @click="showInvite = true">+ Пригласить</button>
+              </div>
+              <p class="note">Доску видят только люди из этого списка. Один человек — одна роль, что может каждая, видно при выборе.</p>
+              <h4 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h4>
+              <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
+              <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" @changed="onMemberChanged" @removed="onMemberRemoved" />
+            </FoldSection>
+          </template>
+        </div>
       </section>
-
-      <!-- while another mode is picked but not applied, the rest is muted and inert: it changes after the switch -->
-      <p v-if="pending" class="board-access-pending">
-        {{ open ? 'Блоки ниже изменятся, когда доска станет закрытой' : 'Блоки ниже изменятся, когда доска станет открытой' }}
-      </p>
-      <div class="board-access-rest" :class="{ pending }" :inert="pending">
-        <!-- open board: the team (the link is on «Общее», the widget on «Виджет», TEST.md п. 42) -->
-        <template v-if="open">
-          <!-- on a phone it folds, the people count in its header; the requests above it never fold -->
-          <FoldSection id="team" title="Команда" class="board-settings-section" :summary="peopleSummary">
-            <div class="participants-actions">
-              <button type="button" class="btn btn-add" @click="showInvite = true">+ Добавить в команду</button>
-            </div>
-            <p class="note">Те, кто разбирает посты и настраивает доску. Гостям приглашение не нужно: доска открыта по ссылке.</p>
-            <h3 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h3>
-            <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
-            <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" team-only @changed="onMemberChanged" @removed="onMemberRemoved" />
-          </FoldSection>
-        </template>
-
-        <!-- closed board: who asks to get in, who's on it -->
-        <template v-else>
-          <section v-if="people.requests.length" id="requests" class="board-settings-section">
-            <h2>Запросы на доступ<span class="count-badge">{{ people.requests.length }}</span></h2>
-            <p class="note">Просят пустить на доску. После одобрения человек получит письмо со ссылкой на вход.</p>
-            <AccessRequestsList :key="slug" :slug="slug" :requests="people.requests" @decided="onRequestDecided" />
-          </section>
-
-          <FoldSection id="participants" title="Участники" class="board-settings-section" :summary="peopleSummary">
-            <div class="participants-actions">
-              <button type="button" class="btn btn-add" @click="showInvite = true">+ Пригласить</button>
-            </div>
-            <p class="note">Доску видят только люди из этого списка. Один человек — одна роль, что может каждая, видно при выборе.</p>
-            <h3 v-if="people.invitations.length" class="board-access-subhead">Ждут приглашения</h3>
-            <PendingInvitationsList v-if="people.invitations.length" :slug="slug" :invitations="people.invitations" @cancel="onInviteCancelled" />
-            <ParticipantsTable :slug="slug" :members="people.members" :me-id="auth.me?.id ?? 0" @changed="onMemberChanged" @removed="onMemberRemoved" />
-          </FoldSection>
-        </template>
-      </div>
     </template>
 
     <p v-else class="note">{{ loadError || 'Доску не удалось загрузить.' }} Вернитесь к <RouterLink to="/app/boards">списку досок</RouterLink>.</p>
@@ -67,6 +77,8 @@ import FoldSection from '@/shared/ui/FoldSection.vue'
 import AccessMode from './components/AccessMode.vue'
 import AccessRequestsList from './components/AccessRequestsList.vue'
 import BoardWorkspace from './components/BoardWorkspace.vue'
+import GuestsSection from './components/GuestsSection.vue'
+import SearchIndexingSection from './components/SearchIndexingSection.vue'
 import InviteModal from './components/InviteModal.vue'
 import ParticipantsTable from './components/ParticipantsTable.vue'
 import PendingInvitationsList from './components/PendingInvitationsList.vue'
@@ -122,6 +134,16 @@ async function load() {
     await nextTick()
     document.querySelector(route.hash)?.scrollIntoView()
   }
+}
+
+// the Поисковики section flipped the «Показывать в поисковиках» switch (test.md п. 19)
+function onSearchIndexableSaved(next: boolean) {
+  if (settings.value) settings.value = { ...settings.value, search_indexable: next }
+}
+
+// the Гости section flipped «кто может предлагать» / «кто может голосовать» (test.md п. 40)
+function onGuestsSaved(next: { guestsCanPost: boolean; guestsCanVote: boolean }) {
+  if (settings.value) settings.value = { ...settings.value, guests_can_post: next.guestsCanPost, guests_can_vote: next.guestsCanVote }
 }
 
 // the mode changed: what the page shows changes with it (the team vs participants), so the lists are reloaded

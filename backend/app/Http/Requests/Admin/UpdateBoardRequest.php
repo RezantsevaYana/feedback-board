@@ -27,6 +27,12 @@ class UpdateBoardRequest extends FormRequest
             'widget_color' => ['sometimes', 'nullable', 'string', 'regex:/^#[0-9a-f]{6}$/'],
             // custom label on the widget launcher button; null brings back the default «Обратная связь»
             'widget_launcher_text' => ['sometimes', 'nullable', 'string', 'max:40'],
+            // let search engines index the board page (test.md п. 19). Off → <meta robots noindex> + robots.txt Disallow
+            'search_indexable' => ['sometimes', 'boolean'],
+            // guest permissions on an open board (test.md п. 40). Off → 403 on the public endpoint; if guests can't
+            // post, the widget on the site is hidden (there's no way to log in from there)
+            'guests_can_post' => ['sometimes', 'boolean'],
+            'guests_can_vote' => ['sometimes', 'boolean'],
             // both ways: closing and opening back (02.11.2026, docs/ROLES_PLAN.md §5); the UI warns before either
             'visibility' => ['sometimes', 'string', Rule::in(array_map(fn (BoardVisibility $v) => $v->value, BoardVisibility::cases()))],
             // the new-board onboarding: the step to continue from (2–6, step 1 creates the board); null — done or hidden

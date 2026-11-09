@@ -1,0 +1,32 @@
+@use '../utils' as *;
+
+// Every picker already has an accessible HEX field and a reset outside the
+// third-party picker. Show just its colour plane and hue control inside the popup.
+:is(.entity-color-popup, .widget-color-palette) {
+    width: 240px;
+    max-width: calc(100vw - 48px);
+    padding: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow); // floating colour picker
+    .vc-colorpicker {
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+        background: transparent;
+    }
+    .vc-colorpicker .vc-colorpicker--container { width: 100%; padding: 0; }
+    .vc-colorpicker .vc-chrome-colorPicker { width: 100%; padding: 0; box-shadow: none; }
+    .vc-colorpicker .vc-display { display: none; }
+    .vc-colorpicker .vc-chrome-colorPicker-body { padding: 8px 0 0; }
+    .vc-colorpicker .chrome-controls { margin: 0; }
+
+    @media screen and (max-width: $tablet) {
+        width: 224px;
+        .vc-colorpicker .vc-saturation__chrome { height: 104px; padding-bottom: 0; }
+        .entity-color-hex { gap: 6px; margin-bottom: 8px; }
+        .entity-color-hex .input { height: 36px; min-height: 36px; padding: 5px 8px; font-size: 16px; }
+        .entity-color-hex .entity-color-clear { width: 36px; height: 36px; min-height: 36px; }
+    }
+}

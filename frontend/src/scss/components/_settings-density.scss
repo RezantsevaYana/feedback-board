@@ -1,0 +1,98 @@
+@use '../utils' as *;
+
+// One compact scale for all four board settings sections. Other app pages and
+// board dialogs keep their own dimensions; the 16px input text prevents iOS focus zoom.
+@media screen and (max-width: $tablet) {
+    .board-workspace {
+        --settings-control-size: 36px;
+        --settings-preview-height: 96px;
+        --settings-preview-panel-height: 68px;
+        --settings-preview-panel-gap: 3px;
+        --settings-group-gap: 8px;
+        --settings-section-gap: 12px;
+        gap: var(--settings-group-gap);
+
+        .btn {
+            min-height: var(--settings-control-size);
+            padding-inline: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .input {
+            min-height: var(--settings-control-size);
+            height: var(--settings-control-size);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 24px;
+        }
+        .input-group { border-radius: 8px; }
+        .input-group > .input {
+            min-height: calc(var(--settings-control-size) - 2px);
+            height: calc(var(--settings-control-size) - 2px);
+            border-radius: 0;
+        }
+        .field { gap: 4px; }
+        .note { line-height: 1.4; }
+        .app-page-title { gap: 8px; }
+        .app-page-title h1 { font-size: 18px; }
+        .app-page-tabs { padding-block: 4px; }
+        .app-page-tab { min-height: 32px; padding-inline: 10px; font-size: 13px; }
+        .app-page-actions { gap: 6px; }
+
+        .board-settings-section,
+        .general-settings .settings-general,
+        .widget-settings .widget-overview {
+            gap: var(--settings-group-gap);
+        }
+        .general-settings-link,
+        .widget-settings .widget-subsection,
+        .structure-settings .structure-section + .structure-section {
+            padding-top: var(--settings-section-gap);
+        }
+        .general-settings-share { padding: 8px 10px; gap: 6px; }
+        .general-settings-danger { padding-top: var(--settings-section-gap); }
+        .general-settings-danger > h2,
+        .widget-settings .widget-overview > h2 { font-size: 16px; }
+
+        .widget-settings .widget-appearance fieldset { gap: var(--settings-group-gap); }
+        .widget-settings .widget-appearance-colors { gap: 6px; }
+        .widget-settings .widget-color-swatch { width: 18px; height: 18px; }
+        .widget-settings .widget-color-dropdown .btn { gap: 6px; }
+        .widget-settings .widget-appearance-label { font-size: 13px; }
+        .board-access-code { padding: 8px 10px; font-size: 12px; line-height: 1.45; }
+
+        .board-settings-section .foldable > .fold-section-head {
+            grid-template-rows: 24px auto;
+            padding-block: 6px;
+            column-gap: 8px;
+        }
+        .board-settings-section .fold-section-title { font-size: 15px; }
+        .board-settings-section .fold-section-chevron { width: 24px; height: 24px; }
+        .board-settings-section .fold-section-body { gap: var(--settings-group-gap); }
+        .board-settings-section .foldable[open] > .fold-section-body { padding-bottom: 12px; }
+        .board-settings-section .fold-section-summary { font-size: 12px; line-height: 1.35; }
+        .board-access-group.foldable > .fold-section-head > .fold-section-chevron { width: 24px; height: 24px; }
+
+        .board-access-rest { gap: var(--settings-group-gap); }
+        .access-mode { gap: var(--settings-group-gap); }
+        .radio-group { gap: 6px; }
+        .radio-group-legend { margin-bottom: 6px; }
+        .radio-group-hint { font-size: 12px; }
+        .participants-table tr { padding-block: 8px; }
+
+        .structure-settings .structure-section + .structure-section { margin-top: 12px; }
+        .structure-settings .foldable[open] > .fold-section-body { padding-bottom: 0; }
+        .structure-settings .cat-list > li > .cat-row:not(form) { min-height: 40px; padding-block: 2px; }
+        .structure-settings .cat-list > li > .cat-edit { padding-block: 8px; }
+        .structure-settings .cat-edit { gap: var(--settings-group-gap); }
+        .structure-settings .cat-row.editing > .btn { padding-inline: 8px; }
+    }
+}
+
+@media screen and (max-width: $mobile) {
+    .board-workspace {
+        .app-page-copy, .app-page-open { min-height: 32px; height: 32px; width: 32px; padding: 0; }
+    }
+}

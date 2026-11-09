@@ -30,8 +30,8 @@ class BoardController extends Controller
         // into «Я веду» (owner / admin) and «Я участник» by the role in the summary
         $boards = $request->user()->projects()
             ->withCount([
-                // "в очереди" = posts whose status is the system "new" one; same slug drives the public widget.
-                'posts as queue_count' => fn ($q) => $q->whereHas('status', fn ($s) => $s->where('slug', 'new')),
+                // The queue follows the configured initial status, independently of names and column order.
+                'posts as queue_count' => fn ($q) => $q->whereColumn('posts.status_id', 'projects.default_status_id'),
                 'members',
             ])
             ->withMax('posts as last_post_at', 'created_at')
@@ -92,6 +92,17 @@ class BoardController extends Controller
         if (array_key_exists('widget_launcher_text', $data)) {
             $board->widget_launcher_text = $data['widget_launcher_text'];
         }
+        // test.md п. 19: разрешить / запретить поисковикам индексировать открытую доску
+        if (array_key_exists('search_indexable', $data)) {
+            $board->search_indexable = $data['search_indexable'];
+        }
+        // test.md п. 40: что может гость на открытой доске — предложить / проголосовать
+        if (array_key_exists('guests_can_post', $data)) {
+            $board->guests_can_post = $data['guests_can_post'];
+        }
+        if (array_key_exists('guests_can_vote', $data)) {
+            $board->guests_can_vote = $data['guests_can_vote'];
+        }
         // the onboarding saves where the owner is; null — finished or «Скрыть» on the hub card
         if (array_key_exists('onboarding_step', $data)) {
             $board->onboarding_step = $data['onboarding_step'];
@@ -141,7 +152,7 @@ class BoardController extends Controller
         }
 
         $board->loadCount([
-            'posts as queue_count' => fn ($q) => $q->whereHas('status', fn ($s) => $s->where('slug', 'new')),
+            'posts as queue_count' => fn ($q) => $q->whereColumn('posts.status_id', 'projects.default_status_id'),
             'members',
         ])->loadMax('posts as last_post_at', 'created_at');
 
@@ -238,10 +249,16 @@ class BoardController extends Controller
             'id' => $p->id,
             'name' => $p->name,
             'slug' => $p->slug,
+            'default_status_id' => $p->default_status_id,
             'visibility' => $p->visibility->value,
             'allowed_origins' => $p->allowed_origins ?? [],
             'widget_color' => $p->widget_color,
             'widget_launcher_text' => $p->widget_launcher_text,
+            // test.md п. 19: shown as a switch in «Доступ» → «Поисковики», meaningful only for open boards
+            'search_indexable' => $p->search_indexable,
+            // test.md п. 40: guest-only permissions on an open board; two radio groups in «Доступ» → «Гости»
+            'guests_can_post' => $p->guests_can_post,
+            'guests_can_vote' => $p->guests_can_vote,
             // the delete section says how long the board stays recoverable
             'trash_retention_days' => (int) config('feedback.trash_retention_days'),
             // the «Доступ» warning says how much becomes visible (or closed) when the mode changes

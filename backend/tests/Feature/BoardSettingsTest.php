@@ -145,6 +145,65 @@ class BoardSettingsTest extends TestCase
             ->assertJsonValidationErrors(['widget_launcher_text' => 'Текст кнопки — не длиннее 40 символов.']);
     }
 
+    public function test_search_indexable_defaults_to_true_and_can_be_toggled(): void
+    {
+        $this->actingAs($this->owner);
+
+        // fresh board — visible to search engines by default
+        $this->getJson('/api/admin/boards/my-board')
+            ->assertOk()
+            ->assertJsonPath('data.search_indexable', true);
+        $this->getJson('/api/public/projects/my-board')->assertJsonPath('data.search_indexable', true);
+
+        // turn it off — stored, and reaches the public endpoint that BoardPage uses to set <meta robots noindex>
+        $this->patchJson('/api/admin/boards/my-board', ['search_indexable' => false])
+            ->assertOk()
+            ->assertJsonPath('data.search_indexable', false);
+        $this->getJson('/api/public/projects/my-board')->assertJsonPath('data.search_indexable', false);
+
+        // back on
+        $this->patchJson('/api/admin/boards/my-board', ['search_indexable' => true])
+            ->assertOk()
+            ->assertJsonPath('data.search_indexable', true);
+
+        // не bool → 422
+        $this->patchJson('/api/admin/boards/my-board', ['search_indexable' => 'maybe'])
+            ->assertJsonValidationErrors(['search_indexable']);
+    }
+
+    public function test_guest_permissions_default_to_everyone_and_toggle(): void
+    {
+        $this->actingAs($this->owner);
+
+        // fresh board — guests may both post and vote
+        $this->getJson('/api/admin/boards/my-board')
+            ->assertOk()
+            ->assertJsonPath('data.guests_can_post', true)
+            ->assertJsonPath('data.guests_can_vote', true);
+        $this->getJson('/api/public/projects/my-board')
+            ->assertJsonPath('data.guests_can_post', true)
+            ->assertJsonPath('data.guests_can_vote', true);
+
+        // flip posts off — reaches both admin and public (widget reads the public one)
+        $this->patchJson('/api/admin/boards/my-board', ['guests_can_post' => false])
+            ->assertOk()
+            ->assertJsonPath('data.guests_can_post', false)
+            ->assertJsonPath('data.guests_can_vote', true);
+        $this->getJson('/api/public/projects/my-board')->assertJsonPath('data.guests_can_post', false);
+
+        // flip votes off, posts back on — independent switches
+        $this->patchJson('/api/admin/boards/my-board', ['guests_can_post' => true, 'guests_can_vote' => false])
+            ->assertOk()
+            ->assertJsonPath('data.guests_can_post', true)
+            ->assertJsonPath('data.guests_can_vote', false);
+
+        // не bool → 422 на обоих полях
+        $this->patchJson('/api/admin/boards/my-board', ['guests_can_post' => 'maybe'])
+            ->assertJsonValidationErrors(['guests_can_post']);
+        $this->patchJson('/api/admin/boards/my-board', ['guests_can_vote' => 'yes please'])
+            ->assertJsonValidationErrors(['guests_can_vote']);
+    }
+
     public function test_widget_color_rejects_what_is_not_hex(): void
     {
         $this->actingAs($this->owner);

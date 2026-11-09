@@ -105,6 +105,8 @@ Route::prefix('admin')->group(function () {
 
         Route::post('projects/{project:slug}/statuses', [Admin\StatusController::class, 'store']);
         Route::patch('projects/{project:slug}/statuses/reorder', [Admin\StatusController::class, 'reorder']);
+        Route::patch('projects/{project:slug}/statuses/default', [Admin\StatusController::class, 'setDefault']);
+        Route::get('statuses/{status}/deletion', [Admin\StatusController::class, 'deletionInfo']);
         Route::patch('statuses/{status}', [Admin\StatusController::class, 'update']);
         Route::delete('statuses/{status}', [Admin\StatusController::class, 'destroy']);
     });
