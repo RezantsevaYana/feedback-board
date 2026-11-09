@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import BoardPage from '@/pages/board/BoardPage.vue'
 import HomePage from '@/pages/home/HomePage.vue'
+import LegalDocumentPage from '@/pages/legal/LegalDocumentPage.vue'
 import RegisterPage from '@/pages/auth/RegisterPage.vue'
 import LoginPage from '@/pages/auth/LoginPage.vue'
 import VerifyEmailPage from '@/pages/auth/VerifyEmailPage.vue'
@@ -21,6 +22,9 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: HomePage },
+    { path: '/privacy', name: 'privacy', component: LegalDocumentPage, props: { documentKey: 'privacy' } },
+    { path: '/terms', name: 'terms', component: LegalDocumentPage, props: { documentKey: 'terms' } },
+    { path: '/personal-data-consent', name: 'personal-data-consent', component: LegalDocumentPage, props: { documentKey: 'personal_data' } },
     { path: '/app/register', name: 'register', component: RegisterPage, meta: { guest: true } },
     { path: '/app/login', name: 'login', component: LoginPage, meta: { guest: true } },
     // no meta: the «Пароль изменён» letter links here, and the owner may still be logged in on this device

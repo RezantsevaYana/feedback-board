@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\LegalDocuments;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -19,6 +20,7 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:80'],
             'email' => ['required', 'email', 'max:160', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'max:72'],
+            ...app(LegalDocuments::class)->rules(),
         ];
     }
 
@@ -36,6 +38,7 @@ class RegisterRequest extends FormRequest
             'password.required' => 'Придумайте пароль.',
             'password.min' => 'Пароль — хотя бы 8 символов.',
             'password.max' => 'Пароль — не длиннее 72 символов.',
+            ...app(LegalDocuments::class)->messages(),
         ];
     }
 

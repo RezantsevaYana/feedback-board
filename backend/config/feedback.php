@@ -25,7 +25,7 @@ return [
         'register', 'login', 'logout', 'signup', 'signin',
         'settings', 'account', 'billing',
         'about', 'help', 'docs', 'support', 'contact',
-        'privacy', 'terms', 'legal',
+        'privacy', 'terms', 'legal', 'personal-data-consent',
     ],
 
     /*

@@ -73,6 +73,12 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot(Project::PIVOT_FIELDS);
     }
 
+    /** @return HasMany<LegalAcceptance, $this> */
+    public function legalAcceptances(): HasMany
+    {
+        return $this->hasMany(LegalAcceptance::class);
+    }
+
     /**
      * Boards this admin created from the self-serve UI.
      *

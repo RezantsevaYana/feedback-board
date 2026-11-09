@@ -36,6 +36,7 @@
         :errors="v$.password"
         validate-on-submit
       />
+      <LegalConfirmations v-model="legal" :errors="documentErrors" />
       <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">
         {{ sending ? 'Создаём…' : 'Создать доску' }}
       </button>
@@ -56,6 +57,8 @@ import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
+import LegalConfirmations from '@/shared/components/LegalConfirmations.vue'
+import { legalErrors, type LegalPayload } from '@/api/legal'
 
 const auth = useAuthStore()
 const notification = useNotificationStore()
@@ -64,6 +67,9 @@ const router = useRouter()
 const name = ref('')
 const email = ref('')
 const password = ref('')
+const legal = ref<LegalPayload | null>(null)
+const documentErrors = ref<Record<string, string>>({})
+watch(legal, () => { documentErrors.value = {} })
 const sending = ref(false)
 const nameServer = ref('')
 const emailServer = ref('')
@@ -98,19 +104,21 @@ async function submit() {
   emailServer.value = ''
   passwordServer.value = ''
   const isValid = await v$.value.$validate()
-  if (!isValid) return
+  documentErrors.value = legalErrors(legal.value)
+  if (!isValid || Object.keys(documentErrors.value).length || !legal.value) return
 
   sending.value = true
   try {
-    await auth.register(name.value.trim(), email.value.trim(), password.value)
+    await auth.register(name.value.trim(), email.value.trim(), password.value, legal.value)
     notification.success('Аккаунт создан — создайте первую доску')
     router.push('/app/boards')
   } catch (e) {
     if (e instanceof ApiError) {
+      documentErrors.value = Object.fromEntries(Object.entries(e.errors).filter(([key]) => key.startsWith('legal.')).map(([key, values]) => [key, values[0] ?? 'Проверьте подтверждение.']))
       nameServer.value = e.field('name') ?? ''
       emailServer.value = e.field('email') ?? ''
       passwordServer.value = e.field('password') ?? ''
-      if (!nameServer.value && !emailServer.value && !passwordServer.value) emailServer.value = e.message
+      if (!nameServer.value && !emailServer.value && !passwordServer.value && !Object.keys(documentErrors.value).length) emailServer.value = e.message
     } else {
       emailServer.value = String(e)
     }

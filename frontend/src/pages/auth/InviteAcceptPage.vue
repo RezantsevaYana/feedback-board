@@ -70,6 +70,7 @@
           autocomplete="new-password"
           :error="passwordError"
         />
+        <LegalConfirmations v-model="legal" :errors="documentErrors" />
         <button class="btn btn-primary" type="submit" :disabled="sending" :aria-busy="sending">
           {{ sending ? 'Присоединяемся…' : 'Присоединиться' }}
         </button>
@@ -79,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { InviteAcceptApi, type InvitationPreview } from '@/api/participants'
 import { ApiError, errorMessage } from '@/api/client'
@@ -89,6 +90,8 @@ import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
+import LegalConfirmations from '@/shared/components/LegalConfirmations.vue'
+import { legalErrors, type LegalPayload } from '@/api/legal'
 import { broadcastAuthChange } from '@/shared/composables/useAuthBroadcast'
 
 // Public page (/app/invite/:token). The token is the credential — no auth required to read it.
@@ -109,6 +112,9 @@ const loadError = ref('')
 
 const name = ref('')
 const password = ref('')
+const legal = ref<LegalPayload | null>(null)
+const documentErrors = ref<Record<string, string>>({})
+watch(legal, () => { documentErrors.value = {} })
 const nameError = ref('')
 const passwordError = ref('')
 const sending = ref(false)
@@ -153,13 +159,15 @@ async function accept() {
   nameError.value = ''
   passwordError.value = ''
 
-  const body: { name?: string; password?: string } = {}
+  const body: { name?: string; password?: string; legal?: LegalPayload } = {}
   if (scenario.value === 'new-user') {
     const trimmed = name.value.trim()
     if (!trimmed) nameError.value = 'Введите имя.'
     if (!password.value) passwordError.value = 'Придумайте пароль.'
     else if (password.value.length < 8) passwordError.value = 'Пароль — хотя бы 8 символов.'
-    if (nameError.value || passwordError.value) return
+    documentErrors.value = legalErrors(legal.value)
+    if (nameError.value || passwordError.value || Object.keys(documentErrors.value).length || !legal.value) return
+    body.legal = legal.value
     body.name = trimmed
     body.password = password.value
   }
@@ -174,13 +182,14 @@ async function accept() {
     router.push(`/${res.data.board.slug}`)
   } catch (e) {
     if (e instanceof ApiError) {
+      documentErrors.value = Object.fromEntries(Object.entries(e.errors).filter(([key]) => key.startsWith('legal.')).map(([key, values]) => [key, values[0] ?? 'Проверьте подтверждение.']))
       if (e.status === 409 && (e as unknown as { data?: unknown })) {
         notification.error(e.message)
         return
       }
       nameError.value = e.field('name') ?? ''
       passwordError.value = e.field('password') ?? ''
-      if (!nameError.value && !passwordError.value) notification.error(e.message)
+      if (!nameError.value && !passwordError.value && !Object.keys(documentErrors.value).length) notification.error(e.message)
     } else {
       notification.error(errorMessage(e))
     }

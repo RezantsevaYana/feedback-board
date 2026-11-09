@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import type { LegalPayload } from '@/api/legal'
 import { AuthApi } from '@/api/auth'
 import { type Board, BoardsApi, type TrashedBoard } from '@/api/boards'
 import { ApiError } from '@/api/client'
@@ -164,8 +165,8 @@ export const useAuthStore = defineStore('auth', () => {
     if (changed) broadcastAuthChange(next.id)
   }
 
-  async function register(name: string, email: string, password: string): Promise<void> {
-    const res = await AuthApi.register(name, email, password)
+  async function register(name: string, email: string, password: string, legal: LegalPayload): Promise<void> {
+    const res = await AuthApi.register(name, email, password, legal)
     signedIn(res.data)
   }
 

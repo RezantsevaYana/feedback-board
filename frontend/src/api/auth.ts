@@ -1,3 +1,4 @@
+import type { LegalPayload } from './legal'
 import { request } from './client'
 import type { Item, Me } from './types'
 
@@ -15,8 +16,8 @@ export const AuthApi = {
   },
 
   // self-serve registration — creates a user and logs in in the same request
-  register(name: string, email: string, password: string) {
-    return request<Item<Me>>(`${BASE_URL}/register`, { method: 'POST', body: { name, email, password } })
+  register(name: string, email: string, password: string, legal: LegalPayload) {
+    return request<Item<Me>>(`${BASE_URL}/register`, { method: 'POST', body: { name, email, password, legal } })
   },
 
   logout() {

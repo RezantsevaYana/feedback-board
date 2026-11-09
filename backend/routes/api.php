@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 // EnsureProjectPublished closes a board until its owner confirms the email; it goes after AllowProjectOrigin,
 // so the widget's 403 still carries CORS headers. The preflight (OPTIONS) stays open.
 Route::prefix('public')->group(function () {
+    Route::get('legal-documents', [Public\LegalDocumentController::class, 'index']);
     Route::get('projects/{project:slug}', [Public\ProjectController::class, 'show'])->middleware([AllowProjectOrigin::class, EnsureProjectPublished::class]);
     Route::options('projects/{project:slug}/posts', fn (Project $project) => response()->noContent())->middleware(AllowProjectOrigin::class);
     Route::post('projects/{project:slug}/posts', [Public\PostController::class, 'store'])->middleware([AllowProjectOrigin::class, EnsureProjectPublished::class, 'throttle:posts']);

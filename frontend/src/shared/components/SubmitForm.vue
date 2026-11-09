@@ -60,6 +60,7 @@
 
     <div v-if="serverError" class="alert" role="alert">{{ serverError }}</div>
 
+    <LegalLinks v-if="origin" :origin="origin" />
     <div class="fb-foot">
       <p class="note">Предложение и скриншоты увидят все на доске</p>
       <slot name="secondary" />
@@ -75,6 +76,7 @@ import { PostsApi } from '@/api/posts'
 import type { Category, Post } from '@/api/types'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
+import LegalLinks from '@/shared/components/LegalLinks.vue'
 import TextAreaComponent from '@/shared/ui/TextAreaComponent.vue'
 import { voterToken } from '@/shared/utils/voter'
 

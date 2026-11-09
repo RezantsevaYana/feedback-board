@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -93,7 +94,7 @@ class InvitationsTest extends TestCase
         ])->assertStatus(201);
 
         $this->assertSame(1, ProjectInvitation::where('email', 'twice@acme.com')->count());
-        $this->assertSame('manager', \Illuminate\Support\Facades\DB::table('project_invitations')
+        $this->assertSame('manager', DB::table('project_invitations')
             ->where('email', 'twice@acme.com')->value('role'));
     }
 
@@ -168,6 +169,7 @@ class InvitationsTest extends TestCase
         $this->postJson("/api/admin/invitations/{$invitation->token}/accept", [
             'name' => 'Новичок',
             'password' => 'strong-pass-123',
+            'legal' => $this->legalPayload(),
         ])->assertOk();
 
         $user = User::where('email', 'new@acme.com')->firstOrFail();
@@ -231,7 +233,7 @@ class InvitationsTest extends TestCase
     public function test_accept_410_after_first_accept(): void
     {
         $invitation = $this->makeInvite(['email' => 'once@acme.com']);
-        $this->postJson("/api/admin/invitations/{$invitation->token}/accept", ['name' => 'X', 'password' => 'strong-pass-123'])->assertOk();
+        $this->postJson("/api/admin/invitations/{$invitation->token}/accept", ['name' => 'X', 'password' => 'strong-pass-123', 'legal' => $this->legalPayload()])->assertOk();
         $this->assertNotNull($invitation->fresh()->accepted_at);
 
         $this->postJson("/api/admin/invitations/{$invitation->token}/accept", ['name' => 'Y'])

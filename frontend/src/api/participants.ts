@@ -1,4 +1,5 @@
 import type { AccessRequest } from './accessRequests'
+import type { LegalPayload } from './legal'
 import { request } from './client'
 import type { Collection, Item, ProjectRole } from './types'
 
@@ -111,7 +112,7 @@ export const InviteAcceptApi = {
 
   // public: accept. For a new account — name and password are required.
   // 409 means an account already exists — the UI tells the person to log in and come back.
-  accept(token: string, body: { name?: string; password?: string } = {}) {
+  accept(token: string, body: { name?: string; password?: string; legal?: LegalPayload } = {}) {
     return request<Item<AcceptResult>>(`/admin/invitations/${token}/accept`, { method: 'POST', body })
   },
 }

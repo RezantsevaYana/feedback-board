@@ -41,7 +41,7 @@ class EmailVerificationTest extends TestCase
     {
         Notification::fake();
 
-        $this->fromCabinet()->postJson('/api/admin/register', ['name' => 'Анна', 'email' => 'anna@example.com', 'password' => 'secret-pass'])
+        $this->fromCabinet()->postJson('/api/admin/register', ['name' => 'Анна', 'email' => 'anna@example.com', 'password' => 'secret-pass', 'legal' => $this->legalPayload()])
             ->assertOk()
             ->assertJsonPath('data.email_verified', false);
 

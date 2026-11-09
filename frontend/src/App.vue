@@ -1,6 +1,7 @@
 <template>
   <ImpersonationBanner />
   <RouterView />
+  <footer class="container legal-footer" :class="{ 'legal-footer-board': route.name === 'board' }"><LegalLinks /></footer>
   <ThemeToggle v-if="isAuthRoute" class="auth-theme-toggle" />
   <ConfirmModal />
   <AuthChangedModal />
@@ -17,6 +18,7 @@
 import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import AppIcon from '@/shared/ui/AppIcon.vue'
+import LegalLinks from '@/shared/components/LegalLinks.vue'
 import ConfirmModal from '@/shared/ui/ConfirmModal.vue'
 import ThemeToggle from '@/shared/ui/ThemeToggle.vue'
 import AuthChangedModal from '@/shared/components/AuthChangedModal.vue'

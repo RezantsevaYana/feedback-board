@@ -171,7 +171,7 @@ class AccessRequestsTest extends TestCase
         $token = $this->board->invitations()->pending()->firstOrFail()->token;
         $this->app['auth']->forgetGuards();
 
-        $this->postJson("/api/admin/invitations/{$token}/accept", ['name' => 'Клиент', 'password' => 'secret-pass'])->assertOk();
+        $this->postJson("/api/admin/invitations/{$token}/accept", ['name' => 'Клиент', 'password' => 'secret-pass', 'legal' => $this->legalPayload()])->assertOk();
 
         $this->actingAs($this->admin)->getJson('/api/admin/boards/closed/participants')
             ->assertJsonFragment(['email' => 'client@external.com', 'role' => 'reader', 'source' => 'request'])
@@ -260,7 +260,7 @@ class AccessRequestsTest extends TestCase
         $this->app['auth']->forgetGuards();
 
         $this->postJson("/api/admin/invitations/{$invitation->token}/accept", [
-            'name' => 'Клиент', 'password' => 'secret-pass',
+            'name' => 'Клиент', 'password' => 'secret-pass', 'legal' => $this->legalPayload(),
         ])->assertOk();
         $this->assertSame(AccessRequestStatus::Approved, $this->request()->status);
     }

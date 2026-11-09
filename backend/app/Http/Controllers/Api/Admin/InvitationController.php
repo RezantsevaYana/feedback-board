@@ -12,6 +12,7 @@ use App\Mail\InvitationMail;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
+use App\Services\LegalDocuments;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -162,7 +163,7 @@ class InvitationController extends Controller
      *      and password. The email auto-counts as verified
      *      (plan §: opening the letter is proof of ownership).
      */
-    public function accept(AcceptInvitationRequest $request, string $token): JsonResponse
+    public function accept(AcceptInvitationRequest $request, string $token, LegalDocuments $documents): JsonResponse
     {
         $invitation = ProjectInvitation::where('token', $token)->first();
         if (! $invitation) {
@@ -176,6 +177,8 @@ class InvitationController extends Controller
         }
 
         $currentUser = $request->user('sanctum') ?? Auth::guard('web')->user();
+        $user = null;
+        $newUserData = null;
 
         if ($currentUser && Str::lower($currentUser->email) === Str::lower($invitation->email)) {
             $user = $currentUser;
@@ -208,15 +211,20 @@ class InvitationController extends Controller
                 ], 422);
             }
 
-            $user = User::create([
-                'name' => $name,
-                'email' => $invitation->email,
-                'password' => $password,
-            ]);
-            $user->markEmailAsVerified();
+            $request->validate($documents->rules(), $documents->messages());
+            $newUserData = ['name' => $name, 'email' => $invitation->email, 'password' => $password];
         }
 
-        $invitation->acceptFor($user);
+        $user = DB::transaction(function () use ($user, $newUserData, $documents, $invitation) {
+            if ($newUserData !== null) {
+                $user = User::create($newUserData);
+                $user->markEmailAsVerified();
+                $documents->record($user, 'invitation');
+            }
+            $invitation->acceptFor($user);
+
+            return $user;
+        });
 
         // Session is present when the request came through Sanctum's stateful group (browser,
         // Origin matches). Direct API hits without a session still succeed and let the client
