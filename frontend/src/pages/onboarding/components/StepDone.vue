@@ -11,7 +11,7 @@
       <CopyButton :value="boardUrl" label="Скопировать" />
     </div>
     <div class="onboarding-done-actions">
-      <RouterLink :to="`/${slug}`" class="btn btn-primary">Открыть доску →</RouterLink>
+      <a :href="boardUrl" target="_blank" rel="noopener" class="btn btn-primary" aria-label="Открыть доску в новой вкладке">Открыть доску ↗</a>
       <RouterLink :to="{ name: 'board-settings', params: { slug } }" class="btn">Все настройки</RouterLink>
     </div>
   </div>

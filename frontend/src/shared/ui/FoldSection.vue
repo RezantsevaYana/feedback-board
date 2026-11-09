@@ -4,16 +4,23 @@
     <summary ref="head" class="fold-section-head" :tabindex="compact ? undefined : -1" @click="onSummaryClick">
       <h2 class="fold-section-title">
         <span class="fold-section-title-text"><slot name="title">{{ title }}</slot></span>
-        <span v-if="hasHint" ref="hintAnchor" class="fold-section-hint-anchor">
+        <span
+          v-if="hasHint" ref="hintAnchor" class="fold-section-hint-anchor"
+          @pointerenter="onHintPointerEnter"
+          @pointerleave="hintHovered = false"
+          @focusin="hintFocused = !!hintOnHover"
+          @focusout="hintFocused = false"
+        >
           <button
             type="button"
             class="fold-section-hint-btn"
-            :aria-expanded="hintOpen"
+            :aria-expanded="hintVisible"
+            :aria-describedby="hintVisible ? hintId : undefined"
             :aria-label="hintAriaLabel || 'Пример на доске'"
             @click.prevent.stop="toggleHint"
             @keydown.esc.stop="closeHint"
           >?</button>
-          <span class="fold-section-hint-popover" :class="{ open: hintOpen }" role="tooltip"><slot name="hint" /></span>
+          <span :id="hintId" class="fold-section-hint-popover" :class="{ open: hintVisible }" role="tooltip"><slot name="hint" /></span>
         </span>
       </h2>
       <!-- folded: what's inside in one line, so there's no need to open it just to see the state -->
@@ -27,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, useSlots, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useId, useSlots, watch } from 'vue'
 import { useMediaQuery } from '@/shared/composables/useMediaQuery'
 import AppIcon from './AppIcon.vue'
 
@@ -45,6 +52,8 @@ const props = defineProps<{
   initiallyOpen?: boolean
   /** aria-label on the «?» button when the `#hint` slot is used */
   hintAriaLabel?: string
+  /** Also show the hint on mouse hover and keyboard focus. */
+  hintOnHover?: boolean
 }>()
 
 const slots = useSlots()
@@ -69,6 +78,13 @@ let running: Animation | null = null
 
 // «?» click opens an example — independent of the fold itself
 const hintOpen = ref(false)
+const hintHovered = ref(false)
+const hintFocused = ref(false)
+const hintId = useId()
+const hintVisible = computed(() => hintOpen.value || hintHovered.value || hintFocused.value)
+function onHintPointerEnter(event: PointerEvent) {
+  if (props.hintOnHover && event.pointerType === 'mouse') hintHovered.value = true
+}
 function toggleHint() {
   if (hintOpen.value) closeHint()
   else openHint()
@@ -78,6 +94,8 @@ function openHint() {
   document.addEventListener('pointerdown', onOutsideHint, true)
 }
 function closeHint() {
+  hintHovered.value = false
+  hintFocused.value = false
   if (!hintOpen.value) return
   hintOpen.value = false
   document.removeEventListener('pointerdown', onOutsideHint, true)

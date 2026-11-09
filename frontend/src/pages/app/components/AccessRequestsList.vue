@@ -29,6 +29,7 @@
         <SelectComponent
           :model-value="roles[req.id] ?? 'voter'"
           :options="roleOptions"
+          portal
           @update:model-value="(role) => (roles[req.id] = role as Assignable)" class="access-request-role" aria-label="Роль на доске" />
         <!-- the answers: «Отклонить» in clay red, «Одобрить» filled; on a phone one row of two equal buttons -->
         <div class="access-request-answers">
@@ -77,7 +78,7 @@ async function approve(req: AccessRequest) {
   busyId.value = req.id
   try {
     const res = await AccessRequestsApi.approve(props.slug, req.id, role)
-    notification.success(`${req.name} получит письмо со ссылкой. Роль: ${ROLE_LABELS[role]}`)
+    notification.success(res.data.is_pending ? `${req.name} получит письмо со ссылкой. Роль: ${ROLE_LABELS[role]}` : `Доступ открыт для ${req.name}. Роль: ${ROLE_LABELS[role]}`)
     emit('decided', req.id, res.data)
   } catch (e) {
     notification.error(errorMessage(e))

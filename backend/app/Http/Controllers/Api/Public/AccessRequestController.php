@@ -66,6 +66,7 @@ class AccessRequestController extends Controller
     {
         return $project->isPublished()
             && $project->visibility === BoardVisibility::Private
+            && ! $project->invitations()->pending()->where('email', $email)->exists()
             && ! $project->members()->whereRaw('lower(email) = ?', [$email])->exists()
             && ! $project->accessRequests()
                 ->where('email', $email)

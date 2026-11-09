@@ -31,7 +31,7 @@
 
     <!-- 403 reason=login_required (guest) or no_access (signed in, not on the board): the gate with «Запросить доступ» -->
     <div v-else-if="board.privateLocked || board.noAccess" class="center-page access-gate-page">
-      <AccessGate :key="slug" :slug="slug" :name="board.gateName" :me="board.noAccess ? board.me : null" @logout="board.logout()" />
+      <AccessGate :key="slug" :slug="slug" :name="board.gateName" :me="board.noAccess ? board.me : null" @logout="board.logout()" @granted="board.open(slug)" />
     </div>
 
     <!-- 500 / network / anything that isn't 404 or 403: a giant brand «Упс» with a red indicator dot,

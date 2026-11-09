@@ -13,7 +13,7 @@
           По ссылке доска открывается как обычно.
         </small>
       </span>
-      <SwitchComponent v-model="searchIndexable" aria-label="Показывать в поисковиках" :disabled="saving" />
+      <SwitchComponent v-model="searchIndexable" ariaLabel="Показывать в поисковиках" :disabled="saving" />
     </label>
   </FoldSection>
 </template>

@@ -67,11 +67,36 @@
     line-height: 1.35;
 }
 .participants-you {
-    color: var(--muted);
-    font-weight: 400;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.participants-row-you {
+    > td {
+        background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+    }
+    > td:first-child {
+        padding-left: 12px;
+        box-shadow: inset 3px 0 0 var(--accent);
+    }
+    > td:last-child {
+        padding-right: 12px;
+    }
+    .participants-person-name {
+        font-weight: 600;
+    }
 }
 
-// «не зарегистрирована» chip next to the email on an invitation row — warm amber signals «waiting»
+// «Приглашение не принято» chip next to the email on an invitation row — warm amber signals «waiting»
 .participants-chip {
     display: inline-block;
     padding: 1px 8px;

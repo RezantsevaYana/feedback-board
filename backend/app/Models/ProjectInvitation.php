@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AccessRequestStatus;
 use App\Enums\ProjectRole;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -62,6 +63,12 @@ class ProjectInvitation extends Model
         DB::transaction(function () use ($user) {
             $this->project->members()->syncWithoutDetaching([
                 $user->id => ['role' => $this->role->value],
+            ]);
+            $this->project->accessRequests()->pending()->where('email', $this->email)->update([
+                'status' => AccessRequestStatus::Approved->value,
+                'role_on_approve' => $this->role->value,
+                'decided_by' => $this->invited_by,
+                'decided_at' => now(),
             ]);
             $this->accepted_at = now();
             $this->save();

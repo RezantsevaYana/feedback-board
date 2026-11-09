@@ -85,6 +85,11 @@ class AuthController extends Controller
 
         // waiting access requests, one query for all boards; brief() shows them only where this user decides
         $pending = AccessRequest::pending()
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('project_invitations')
+                ->whereColumn('project_invitations.project_id', 'access_requests.project_id')
+                ->whereColumn('project_invitations.email', 'access_requests.email')
+                ->whereNull('project_invitations.accepted_at')
+                ->where('project_invitations.expires_at', '>', now()))
             ->whereIn('project_id', $pivotIds->merge($boards->pluck('id'))->unique())
             ->selectRaw('project_id, count(*) as total')->groupBy('project_id')
             ->pluck('total', 'project_id');
@@ -146,7 +151,7 @@ class AuthController extends Controller
             'role' => $role,
             // the cabinet's side menu lists the «Доступ» sections of this mode
             'visibility' => $p->visibility->value,
-            'pending_requests' => $decides ? (int) ($pending[$p->id] ?? 0) : 0,
+            'pending_requests' => $decides && $p->isPrivate() ? (int) ($pending[$p->id] ?? 0) : 0,
         ];
     }
 }

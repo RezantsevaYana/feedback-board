@@ -23,7 +23,7 @@ services:
     environment:
       DB_CONNECTION: pgsql
       APP_URL: http://${VITE_HOST:-localhost}:8000
-      FRONTEND_URL: http://${VITE_HOST:-localhost}:5176
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5176}
       SANCTUM_STATEFUL_DOMAINS: localhost:5176,127.0.0.1:5176,${VITE_HOST:-localhost}:5176
       DB_HOST: db
       DB_PORT: 5432
@@ -35,7 +35,7 @@ services:
     command: >
       sh -c "composer install
       && ([ -f .env ] || (cp .env.example .env && php artisan key:generate))
-      && php artisan migrate --force && php artisan db:seed --force
+      && php artisan migrate --force
       && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
     ports:
       - "8000:8000"

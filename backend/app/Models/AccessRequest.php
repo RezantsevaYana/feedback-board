@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * «Запросить доступ» on a private board. One pending row per (board, email) — see the migration.
- * Approving doesn't put the person on the board by itself: it issues an invitation with the chosen role,
- * and the letter's link goes through the usual acceptance screen (name and password, or «Присоединиться»).
+ * Verified authenticated applicants join on approval. Others receive an invitation and prove
+ * ownership of their email through its link before joining.
  */
 #[Fillable(['project_id', 'email', 'name', 'message', 'user_id', 'status', 'role_on_approve', 'reject_reason', 'decided_by', 'decided_at'])]
 class AccessRequest extends Model

@@ -34,7 +34,10 @@ class AccessApprovedMail extends Mailable
         return new Content(
             markdown: 'mail.access-approved',
             with: [
-                'url' => $frontend.'/app/invite/'.$this->invitation->token,
+                'url' => $this->invitation->accepted_at
+                    ? $frontend.'/'.$this->invitation->project->slug
+                    : $frontend.'/app/invite/'.$this->invitation->token,
+                'joined' => $this->invitation->accepted_at !== null,
                 'boardName' => $this->invitation->project->name,
                 'approverName' => $this->invitation->inviter->name,
                 'roleLabel' => InvitationMail::roleLabelFor($this->invitation->role),

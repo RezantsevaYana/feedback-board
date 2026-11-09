@@ -48,7 +48,7 @@
           <template v-else>
             <div v-if="people.requests.length" id="requests" class="board-access-group">
               <h3>Запросы на доступ<span class="count-badge">{{ people.requests.length }}</span></h3>
-              <p class="note">Просят пустить на доску. После одобрения человек получит письмо со ссылкой на вход.</p>
+              <p class="note">Просят пустить на доску. После одобрения доступ подтверждённого аккаунта откроется сразу. Остальные получат письмо с приглашением.</p>
               <AccessRequestsList :key="slug" :slug="slug" :requests="people.requests" @decided="onRequestDecided" />
             </div>
 
@@ -95,6 +95,7 @@ import SearchIndexingSection from './components/SearchIndexingSection.vue'
 import InviteModal from './components/InviteModal.vue'
 import ParticipantsTable from './components/ParticipantsTable.vue'
 import { boardLoadError } from './composables/boardLoadError'
+import { useVisiblePolling } from '@/shared/composables/useVisiblePolling'
 import { NO_CONFIGURE_TEXT, useLostAccess } from './composables/useLostAccess'
 
 // «Доступ» — who sees the board and who's on it. The mode (open / closed) is at the top and the rest shows only
@@ -148,6 +149,17 @@ async function load() {
   }
 }
 
+// Refresh the actual rows as well as the sidebar badge, including invitations accepted elsewhere.
+async function refreshPeople() {
+  if (loading.value || !settings.value) return
+  const currentSlug = slug.value
+  const result = await ParticipantsApi.list(currentSlug)
+  if (slug.value !== currentSlug) return
+  people.value = result.data
+  auth.setPendingRequests(currentSlug, result.data.requests.length)
+}
+useVisiblePolling(refreshPeople)
+
 // the Поисковики section flipped the «Показывать в поисковиках» switch (test.md п. 19)
 function onSearchIndexableSaved(next: boolean) {
   if (settings.value) settings.value = { ...settings.value, search_indexable: next }
@@ -182,12 +194,13 @@ function onInviteCancelled(id: number) {
   people.value.invitations = people.value.invitations.filter((i) => i.id !== id)
 }
 
-// an approved request turns into a pending invitation (it's the letter's link), a rejected one just goes;
+// Approval either adds the verified applicant or sends an invitation; rejection removes the request;
 // the badge in the menu and in the hub follows the list
 function onRequestDecided(id: number, invitation: Invitation | null) {
   if (!people.value) return
   people.value.requests = people.value.requests.filter((r) => r.id !== id)
-  if (invitation) onInvitesSent([invitation])
+  if (invitation?.is_pending) onInvitesSent([invitation])
+  void refreshPeople().catch(() => undefined)
   auth.setPendingRequests(slug.value, people.value.requests.length)
 }
 
@@ -196,5 +209,6 @@ function onInvitesSent(created: Invitation[]) {
   // created rows go to the top, replacing any pending slot the server updated in place
   const createdIds = new Set(created.map((i) => i.id))
   people.value.invitations = [...created, ...people.value.invitations.filter((i) => !createdIds.has(i.id))]
+  void refreshPeople().catch(() => undefined)
 }
 </script>

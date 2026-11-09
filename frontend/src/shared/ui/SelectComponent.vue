@@ -78,6 +78,7 @@ const root = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLButtonElement | null>(null)
 const list = ref<HTMLElement | null>(null)
 const portalStyle = ref<CSSProperties>({ visibility: 'hidden' })
+let portalAnchor: { top: number; left: number } | null = null
 const open = ref(false)
 const active = ref(-1)
 // the list opens upward when there's no room under the field (a select at the bottom of a modal):
@@ -142,19 +143,20 @@ function positionPortal() {
   const box = trigger.value?.getBoundingClientRect()
   const menu = list.value
   if (!box || !menu || !open.value) return
+  portalAnchor = { top: box.top, left: box.left }
   const frame = window.visualViewport
   const top = frame?.offsetTop ?? 0
   const left = frame?.offsetLeft ?? 0
   const width = frame?.width ?? window.innerWidth
   const height = frame?.height ?? window.innerHeight
-  const menuWidth = Math.min(box.width, width - 16)
+  const menuWidth = Math.min(Math.max(box.width, hasHints.value ? 340 : box.width), width - 16)
   portalStyle.value = { width: `${menuWidth}px` }
   menu.style.width = `${menuWidth}px`
   const above = Math.max(0, box.top - top - 8)
   const below = Math.max(0, top + height - box.bottom - 8)
-  const desired = Math.min(280, menu.scrollHeight)
+  const desired = menu.scrollHeight
   up.value = below < desired && above > below
-  const maxHeight = Math.min(280, up.value ? above : below)
+  const maxHeight = Math.max(0, (up.value ? above : below) - 4)
   portalStyle.value = {
     width: `${menuWidth}px`,
     left: `${Math.max(left + 8, Math.min(box.left, left + width - menuWidth - 8))}px`,
@@ -177,7 +179,11 @@ function onOutside(e: PointerEvent) {
   if (!root.value?.contains(e.target as Node) && !list.value?.contains(e.target as Node)) close()
 }
 function onScroll(e: Event) {
-  if (!list.value?.contains(e.target as Node)) close()
+  if (list.value?.contains(e.target as Node)) return
+  const box = trigger.value?.getBoundingClientRect()
+  // Opening an upward list can emit a document scroll event without moving its anchor.
+  // Only dismiss when the page actually moves the field; option scrolling stays local.
+  if (!box || !portalAnchor || Math.abs(box.top - portalAnchor.top) > 0.5 || Math.abs(box.left - portalAnchor.left) > 0.5) close()
 }
 function removeListeners() {
   document.removeEventListener('pointerdown', onOutside, true)

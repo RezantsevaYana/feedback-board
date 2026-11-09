@@ -17,8 +17,13 @@
         max-width: 680px;
     }
 }
+.board-workspace > * {
+    max-width: 760px;
+}
 .app-page-head {
     display: grid;
+    width: 100%;
+    min-width: 0;
     gap: 4px;
     margin-bottom: 8px;
 
@@ -57,7 +62,10 @@
 }
 .app-page-actions {
     display: flex;
-    flex: none;
+    flex: 0 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+    margin-left: auto;
     align-items: center;
     gap: 8px;
 }

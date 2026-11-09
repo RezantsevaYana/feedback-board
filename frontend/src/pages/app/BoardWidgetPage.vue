@@ -29,7 +29,10 @@
           </div>
         </FoldSection>
 
-        <FoldSection id="domains" title="Домены" class="widget-subsection" :summary="domainsSummary">
+        <FoldSection id="domains" title="Домены" class="widget-subsection" :summary="domainsSummary" hint-on-hover hint-aria-label="Как работают домены и CORS">
+          <template #hint>
+            Это список сайтов, с которых виджету разрешено отправлять запросы к серверу доски: получать настройки и отправлять предложения. Сервер сообщает браузеру, разрешён ли обмен данными с этого сайта — это CORS. Доступ пользователей к самой доске настраивается отдельно.
+          </template>
           <SettingsDomains :settings="settings" @saved="onDomainsSaved" />
         </FoldSection>
 

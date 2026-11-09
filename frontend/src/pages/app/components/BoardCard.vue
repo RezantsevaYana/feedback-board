@@ -1,7 +1,7 @@
 <template>
   <article class="board-card">
     <!-- the whole card opens the board (a stretched link under everything); the chips and the cabinet's buttons sit above it -->
-    <RouterLink :to="`/${board.slug}`" class="board-card-link" :aria-label="`Перейти на доску ${board.name}`" />
+    <a :href="`/${board.slug}`" target="_blank" rel="noopener" class="board-card-link" :aria-label="`Открыть доску ${board.name} в новой вкладке`" />
 
     <div class="board-card-top">
       <h3 class="board-card-name">{{ board.name }}</h3>
@@ -46,7 +46,7 @@ import { fmtTimeAgo, plural } from '@/shared/utils/format'
 import { canConfigure } from '@/shared/utils/roles'
 import VisibilityBadge from '@/shared/components/VisibilityBadge.vue'
 
-// A board on «Мои доски» (prototype frontend/demo/boards-hub-prototype.html): the card opens the board in this tab,
+// A board on «Мои доски» (prototype frontend/demo/boards-hub-prototype.html): the card opens the board in a new tab,
 // «Настройки» and «Доступ» are its own buttons for owner / admin. What needs attention is the loudest thing on it.
 const props = defineProps<{
   board: Board

@@ -112,12 +112,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /** Boards where access requests wait for my decision — «Ждут решения на ваших досках» in the hub. */
-  const awaitingDecision = computed(() => (me.value?.projects ?? []).filter((b) => (b.pending_requests ?? 0) > 0))
+  const awaitingDecision = computed(() => (me.value?.projects ?? []).filter((b) => b.visibility === 'private' && (b.pending_requests ?? 0) > 0))
 
   /** The participants page knows the fresh count; the hub block and the «Участники» badge follow it. */
   function setPendingRequests(slug: string, count: number): void {
     for (const b of [...(me.value?.boards ?? []), ...(me.value?.projects ?? [])]) {
-      if (b.slug === slug) b.pending_requests = count
+      if (b.slug === slug) b.pending_requests = b.visibility === 'public' ? 0 : count
     }
   }
 
@@ -126,6 +126,7 @@ export const useAuthStore = defineStore('auth', () => {
     for (const b of [...(me.value?.boards ?? []), ...(me.value?.projects ?? []), ...boards.value]) {
       if (b.slug === slug) b.visibility = visibility
     }
+    if (visibility === 'public') setPendingRequests(slug, 0)
   }
 
   /** Delete to the trash; the board disappears from the hub, the switcher and team mode at once. */

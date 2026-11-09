@@ -68,6 +68,8 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { ProjectsApi } from '@/api/projects'
+import { useVisiblePolling } from '@/shared/composables/useVisiblePolling'
 import { AccessRequestsApi } from '@/api/accessRequests'
 import { ApiError, errorMessage } from '@/api/client'
 import type { Me } from '@/api/types'
@@ -86,6 +88,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   logout: []
+  granted: []
 }>()
 const route = useRoute()
 const notification = useNotificationStore()
@@ -94,6 +97,12 @@ const form = reactive({ name: '', email: '', message: '' })
 const errors = reactive({ name: '', email: '', message: '' })
 const sending = ref(false)
 const sentTo = ref('')
+
+useVisiblePolling(async () => {
+  if (!props.me) return
+  await ProjectsApi.get(props.slug)
+  emit('granted')
+}, 5000)
 
 async function submit() {
   if (sending.value) return

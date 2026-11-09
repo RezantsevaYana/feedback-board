@@ -10,6 +10,7 @@ use App\Mail\AccessRejectedMail;
 use App\Mail\AccessRequestedMail;
 use App\Models\AccessRequest;
 use App\Models\Project;
+use App\Models\ProjectInvitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -177,6 +178,93 @@ class AccessRequestsTest extends TestCase
             ->assertJsonCount(0, 'data.requests');
     }
 
+    public function test_verified_authenticated_applicant_gets_access_immediately_after_approval(): void
+    {
+        $user = User::factory()->create(['email' => 'client@external.com']);
+        $this->actingAs($user)->ask()->assertStatus(202);
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/boards/closed/access-requests/{$this->request()->id}/approve", ['role' => 'reader'])
+            ->assertOk()->assertJsonPath('data.is_pending', false);
+
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($user)->getJson('/api/public/projects/closed')->assertOk();
+        $this->assertSame(ProjectRole::Reader, $user->roleOn($this->board));
+        Mail::assertSent(AccessApprovedMail::class, fn (AccessApprovedMail $mail) => str_contains($mail->render(), '/closed') && ! str_contains($mail->render(), '/app/invite/'));
+    }
+
+    public function test_guest_cannot_get_existing_account_added_without_email_proof(): void
+    {
+        $user = User::factory()->create(['email' => 'client@external.com']);
+        $this->ask()->assertStatus(202);
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/boards/closed/access-requests/{$this->request()->id}/approve", ['role' => 'voter'])
+            ->assertOk()->assertJsonPath('data.is_pending', true);
+
+        $this->assertNull($user->roleOn($this->board));
+    }
+
+    public function test_unverified_authenticated_applicant_still_needs_invitation_link(): void
+    {
+        $user = User::factory()->unverified()->create(['email' => 'client@external.com']);
+        $this->actingAs($user)->ask()->assertStatus(202);
+        $this->app['auth']->forgetGuards();
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/boards/closed/access-requests/{$this->request()->id}/approve", ['role' => 'voter'])
+            ->assertOk()->assertJsonPath('data.is_pending', true);
+
+        $this->assertNull($user->roleOn($this->board));
+    }
+
+    public function test_inviting_applicant_resolves_the_pending_request(): void
+    {
+        $this->ask()->assertStatus(202);
+        $this->actingAs($this->admin)->postJson('/api/admin/boards/closed/invitations', [
+            'role' => 'reader', 'invitees' => [['email' => 'client@external.com']],
+        ])->assertCreated();
+
+        $this->getJson('/api/admin/boards/closed/participants')->assertOk()
+            ->assertJsonCount(0, 'data.requests')->assertJsonCount(1, 'data.invitations');
+        $this->assertSame(AccessRequestStatus::Approved, $this->request()->status);
+    }
+
+    public function test_invited_person_does_not_create_a_second_pending_request(): void
+    {
+        $this->actingAs($this->admin)->postJson('/api/admin/boards/closed/invitations', [
+            'role' => 'voter', 'invitees' => [['email' => 'client@external.com']],
+        ])->assertCreated();
+        $this->app['auth']->forgetGuards();
+
+        $this->ask()->assertStatus(202);
+        $this->assertSame(0, $this->board->accessRequests()->pending()->count());
+        Mail::assertNotSent(AccessRequestedMail::class);
+    }
+
+    public function test_legacy_invitation_and_request_overlap_is_hidden_from_list_and_badge(): void
+    {
+        $this->ask()->assertStatus(202);
+        $invitation = $this->board->invitations()->create([
+            'email' => 'client@external.com',
+            'role' => ProjectRole::Reader,
+            'token' => ProjectInvitation::newToken(),
+            'expires_at' => ProjectInvitation::defaultExpiry(),
+            'invited_by' => $this->admin->id,
+        ]);
+
+        $this->actingAs($this->admin)->getJson('/api/admin/boards/closed/participants')
+            ->assertOk()->assertJsonCount(0, 'data.requests')->assertJsonCount(1, 'data.invitations');
+        $this->getJson('/api/admin/me')->assertOk()->assertJsonPath('data.projects.0.pending_requests', 0);
+        $this->app['auth']->forgetGuards();
+
+        $this->postJson("/api/admin/invitations/{$invitation->token}/accept", [
+            'name' => 'Клиент', 'password' => 'secret-pass',
+        ])->assertOk();
+        $this->assertSame(AccessRequestStatus::Approved, $this->request()->status);
+    }
+
     public function test_rejection_sends_the_reason_without_who_decided(): void
     {
         $this->ask();
@@ -273,6 +361,29 @@ class AccessRequestsTest extends TestCase
 
         $this->actingAs($this->admin)->postJson("/api/admin/boards/{$other->slug}/access-requests/{$this->request()->id}/approve", ['role' => 'voter'])
             ->assertNotFound();
+    }
+
+    public function test_opening_a_board_hides_pending_requests_and_counts_until_closed_again(): void
+    {
+        $this->ask()->assertStatus(202);
+        $this->actingAs($this->owner)->getJson('/api/admin/me')
+            ->assertOk()
+            ->assertJsonPath('data.projects.0.pending_requests', 1)
+            ->assertJsonPath('data.boards.0.pending_requests', 1);
+
+        $this->patchJson('/api/admin/boards/closed', ['visibility' => 'public'])->assertOk();
+        $this->getJson('/api/admin/me')->assertOk()
+            ->assertJsonPath('data.projects.0.pending_requests', 0)
+            ->assertJsonPath('data.boards.0.pending_requests', 0);
+        $this->getJson('/api/admin/boards/closed/participants')->assertOk()
+            ->assertJsonCount(0, 'data.requests');
+
+        $this->patchJson('/api/admin/boards/closed', ['visibility' => 'private'])->assertOk();
+        $this->getJson('/api/admin/me')->assertOk()
+            ->assertJsonPath('data.projects.0.pending_requests', 1)
+            ->assertJsonPath('data.boards.0.pending_requests', 1);
+        $this->getJson('/api/admin/boards/closed/participants')->assertOk()
+            ->assertJsonCount(1, 'data.requests');
     }
 
     public function test_me_counts_waiting_requests_only_where_i_decide(): void

@@ -42,7 +42,11 @@ class ParticipantController extends Controller
             $invitations = $invitations->filter(fn ($i) => in_array($i->role->value, $team, true))->values();
         }
 
-        $requests = $board->accessRequests()->pending()->orderBy('created_at')->get();
+        $requests = $board->isPrivate()
+            ? $board->accessRequests()->pending()
+                ->whereNotIn('email', $board->invitations()->pending()->select('email'))
+                ->orderBy('created_at')->get()
+            : collect();
 
         // «Добавлен» column: created the board / asked by the URL and got approved / came by invitation /
         // anything else (added before roles, by the CLI). An approved request also goes through an invitation,

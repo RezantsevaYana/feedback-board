@@ -11,6 +11,7 @@ use App\Mail\AccessRejectedMail;
 use App\Models\AccessRequest;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,9 +27,8 @@ use Illuminate\Validation\Rule;
 class AccessRequestController extends Controller
 {
     /**
-     * Approval issues an invitation with the chosen role (or refreshes a pending one for the same address),
-     * and the «Доступ открыт» letter carries its link. The person lands on the board through the usual
-     * acceptance screen, so there is one way onto a board and no second login path.
+     * Approval grants verified authenticated applicants access immediately. Guest applicants
+     * receive an invitation to prove email ownership before joining.
      */
     public function approve(Request $request, Project $board, AccessRequest $accessRequest): JsonResponse
     {
@@ -59,11 +59,17 @@ class AccessRequestController extends Controller
             $pending = $board->invitations()->pending()->where('email', $accessRequest->email)->first();
             if ($pending) {
                 $pending->update($fields);
+            }
+            $invitation = $pending ?? $board->invitations()->create(['email' => $accessRequest->email] + $fields);
 
-                return $pending;
+            // Guest requests still need the email link, even when an account exists.
+            $applicant = $accessRequest->user_id ? User::find($accessRequest->user_id) : null;
+            if ($applicant && $applicant->hasVerifiedEmail()
+                && strcasecmp($applicant->email, $accessRequest->email) === 0) {
+                $invitation->acceptFor($applicant);
             }
 
-            return $board->invitations()->create(['email' => $accessRequest->email] + $fields);
+            return $invitation;
         });
 
         rescue(fn () => Mail::send(new AccessApprovedMail($invitation->load(['project', 'inviter']))));

@@ -28,8 +28,14 @@
         <div><dt>Роль</dt><dd>{{ roleLabel(preview.role) }}</dd></div>
       </dl>
 
+      <template v-if="scenario === 'other-user'">
+        <p>Сейчас вы вошли как <strong>{{ auth.me?.email }}</strong>, а приглашение отправлено на <strong>{{ preview.email }}</strong>.</p>
+        <p class="note">Вкладки этого браузера используют один аккаунт. Выход изменит сессию во всех вкладках. Для двух аккаунтов одновременно используйте разные профили браузера.</p>
+        <button type="button" class="btn btn-primary" :disabled="sending" @click="switchAccount">Выйти и продолжить</button>
+      </template>
+
       <!-- Залогинен и email совпал — одна кнопка. -->
-      <template v-if="scenario === 'current-user-matches'">
+      <template v-else-if="scenario === 'current-user-matches'">
         <p class="note">Вы уже вошли как <strong>{{ auth.me?.email }}</strong>.</p>
         <button type="button" class="btn btn-primary" :disabled="sending" :aria-busy="sending" @click="accept">
           {{ sending ? 'Присоединяемся…' : 'Присоединиться' }}
@@ -78,10 +84,12 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { InviteAcceptApi, type InvitationPreview } from '@/api/participants'
 import { ApiError, errorMessage } from '@/api/client'
 import { ROLE_LABELS, type ProjectRole } from '@/api/types'
+import { useBoardStore } from '@/store/board/useBoardStore'
 import { useAuthStore } from '@/store/auth/useAuthStore'
 import { useNotificationStore } from '@/store/modals/useNotificationStore'
 import AppHeader from '@/shared/components/AppHeader.vue'
 import InputComponent from '@/shared/ui/InputComponent.vue'
+import { broadcastAuthChange } from '@/shared/composables/useAuthBroadcast'
 
 // Public page (/app/invite/:token). The token is the credential — no auth required to read it.
 // Three UI branches, computed from the server's `account_exists` flag + the current user:
@@ -105,18 +113,19 @@ const nameError = ref('')
 const passwordError = ref('')
 const sending = ref(false)
 
-const scenario = computed<'current-user-matches' | 'account-exists' | 'new-user'>(() => {
+const scenario = computed<'other-user' | 'current-user-matches' | 'account-exists' | 'new-user'>(() => {
   if (!preview.value) return 'new-user'
   if (auth.me && auth.me.email.toLowerCase() === preview.value.email.toLowerCase()) {
     return 'current-user-matches'
   }
+  if (auth.me) return 'other-user'
   if (preview.value.account_exists) return 'account-exists'
   return 'new-user'
 })
 
 onMounted(async () => {
   // Знаем ли мы, кто сейчас открыл страницу? Нужно для сценария current-user-matches.
-  await auth.fetchMe().catch(() => undefined)
+  await auth.fetchMe(true).catch(() => undefined)
   try {
     const res = await InviteAcceptApi.show(token.value)
     preview.value = res.data
@@ -131,6 +140,12 @@ onMounted(async () => {
 
 function roleLabel(role: ProjectRole) {
   return ROLE_LABELS[role]
+}
+
+async function switchAccount() {
+  sending.value = true
+  try { await useBoardStore().logout() }
+  finally { sending.value = false }
 }
 
 async function accept() {
@@ -155,6 +170,7 @@ async function accept() {
     notification.success(`Вы в доске «${res.data.board.name}»`)
     // The server set the session cookie on success — refetch /me so the hub sees the new membership.
     await auth.fetchMe(true).catch(() => undefined)
+    broadcastAuthChange(auth.me?.id ?? null)
     router.push(`/${res.data.board.slug}`)
   } catch (e) {
     if (e instanceof ApiError) {

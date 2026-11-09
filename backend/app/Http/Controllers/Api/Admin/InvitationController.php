@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Enums\AccessRequestStatus;
 use App\Enums\ProjectRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AcceptInvitationRequest;
@@ -52,6 +53,13 @@ class InvitationController extends Controller
 
                     continue;
                 }
+
+                $board->accessRequests()->pending()->where('email', $email)->update([
+                    'status' => AccessRequestStatus::Approved->value,
+                    'role_on_approve' => $role->value,
+                    'decided_by' => $inviter->id,
+                    'decided_at' => now(),
+                ]);
 
                 $existing = $pendingByEmail->get($email);
                 if ($existing) {

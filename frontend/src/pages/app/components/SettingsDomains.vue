@@ -1,6 +1,6 @@
 <template>
   <div class="widget-domains">
-    <p class="note">Сайты, на которых виджет может работать.</p>
+    <p class="note">Укажите сайты, на которых установлен ваш виджет. Сервер разрешит виджету получать настройки и отправлять предложения только с этих адресов.</p>
     <ul v-if="settings.allowed_origins.length" class="widget-domains-list">
       <li v-for="origin in settings.allowed_origins" :key="origin">
         <span class="widget-domains-origin">{{ origin }}</span>
@@ -12,7 +12,7 @@
       <InputComponent v-model="input" type="text" placeholder="https://site.ru" aria-label="Домен сайта" autocomplete="url" autocapitalize="off" spellcheck="false" :disabled="saving" :error="error" @input="error = ''" />
       <button class="btn" type="submit" :disabled="saving || !input.trim()" :aria-busy="saving" aria-label="Добавить домен"><span class="widget-domains-full">Добавить</span><span class="widget-domains-short" aria-hidden="true">+</span></button>
     </form>
-    <p class="note widget-domains-hint">Укажите адрес со схемой, без пути: например, https://site.ru. Для локальной разработки — <code class="mono">http://localhost:*</code>.</p>
+    <p class="note widget-domains-hint">Укажите адрес сайта с https:// или http://, без названия страницы. Например: https://site.ru, а не https://site.ru/contacts. Адреса с www и без www добавляйте отдельно. Эти настройки не ограничивают вход на саму доску. Для локальной разработки — <code class="mono">http://localhost:*</code>.</p>
   </div>
 </template>
 
