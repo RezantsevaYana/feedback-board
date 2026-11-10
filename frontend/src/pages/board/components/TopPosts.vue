@@ -2,16 +2,13 @@
   <div class="board-head">
     <div class="board-title">
       <h1>Топ</h1>
-      <p>Предложения по голосам: лайки минус дизлайки. Команда видит, что нужно в первую очередь.</p>
+      <p>Рейтинг по голосам: лайки минус дизлайки. При одинаковом результате выше более раннее обращение.</p>
     </div>
   </div>
   <div class="filters">
     <CategoryChips />
     <span class="spacer" />
-    <div class="chips">
-      <button type="button" :aria-pressed="board.view.topScope === 'open'" @click="board.view.topScope = 'open'">Ещё не сделаны</button>
-      <button type="button" :aria-pressed="board.view.topScope === 'all'" @click="board.view.topScope = 'all'">Все, включая готовые</button>
-    </div>
+    <CheckboxComponent v-model="includeDone" label="Включая готовые" />
   </div>
   <BoardSkeleton v-if="board.loading && !board.ranking.length" layout="rows" />
   <div v-else class="rank">
@@ -46,6 +43,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import CheckboxComponent from '@/shared/ui/CheckboxComponent.vue'
 import { entityColorStyle } from '@/shared/utils/entityColor'
 import type { Post } from '@/api/types'
 import { TEXT } from '@/shared/constants/dict'
@@ -63,5 +62,9 @@ const emit = defineEmits<{
   open: [post: Post]
 }>()
 const board = useBoardStore()
+const includeDone = computed({
+  get: () => board.view.topScope === 'all',
+  set: (value: boolean) => { board.view.topScope = value ? 'all' : 'open' },
+})
 const { onCardClick, onCardEnter } = useCardOpen(emit)
 </script>

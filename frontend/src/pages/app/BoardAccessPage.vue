@@ -48,7 +48,7 @@
           <template v-else>
             <div v-if="people.requests.length" id="requests" class="board-access-group">
               <h3>Запросы на доступ<span class="count-badge">{{ people.requests.length }}</span></h3>
-              <p class="note">Просят пустить на доску. После одобрения доступ подтверждённого аккаунта откроется сразу. Остальные получат письмо с приглашением.</p>
+              <p class="note">Если запрос отправлен из аккаунта с подтверждённой почтой, после одобрения доска станет доступна сразу. Если запрос отправлен без входа или почта не подтверждена, для доступа нужно перейти по ссылке в письме.</p>
               <AccessRequestsList :key="slug" :slug="slug" :requests="people.requests" @decided="onRequestDecided" />
             </div>
 

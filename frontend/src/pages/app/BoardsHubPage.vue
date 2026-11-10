@@ -24,13 +24,6 @@
           <span class="cta-roll" aria-hidden="true"><span>+ Новая доска</span><span>Поехали →</span></span>
         </RouterLink>
       </div>
-      <section v-if="serviceBoard" class="boards-hub-service" aria-labelledby="service-boards-title">
-        <h2 id="service-boards-title">Развитие сервиса</h2>
-        <p>Бэклог багов и улучшений Feedback Board.</p>
-        <div class="boards-grid">
-          <BoardCard :board="serviceBoard" />
-        </div>
-      </section>
       <!-- the two groups get headings only when both exist: an owner with their own boards sees one plain grid -->
       <h2 v-if="leading.length && (split || serviceBoard)" class="boards-hub-group">Я веду · {{ leading.length }}</h2>
       <div v-if="leading.length" class="boards-grid">
@@ -41,6 +34,13 @@
         <BoardCard v-for="b in taking" :key="b.id" :board="b" />
       </div>
     </template>
+    <section v-if="serviceBoard" class="boards-hub-service" aria-labelledby="service-boards-title">
+      <h2 id="service-boards-title">Развитие сервиса</h2>
+      <p>Бэклог багов и улучшений Feedback Board.</p>
+      <div class="boards-grid">
+        <BoardCard :board="serviceBoard" />
+      </div>
+    </section>
     <TrashSection v-if="auth.boardsLoaded && auth.trashed.length" :boards="auth.trashed" />
   </div>
 

@@ -1,7 +1,7 @@
 <template>
   <ImpersonationBanner />
   <RouterView />
-  <footer class="container legal-footer" :class="{ 'legal-footer-board': route.name === 'board' }">
+  <footer v-if="route.name !== 'home'" class="container legal-footer" :class="{ 'legal-footer-board': route.name === 'board' }">
     <ServiceFeedback />
     <LegalLinks />
   </footer>

@@ -15,7 +15,7 @@
         >
           {{ pending }} {{ plural(pending, 'запрос', 'запроса', 'запросов') }} доступа
         </RouterLink>
-        <span v-if="board.queue_count > 0" class="board-card-need fresh">{{ board.queue_count }} новых</span>
+        <span v-if="board.queue_count > 0" class="board-card-need fresh">{{ board.queue_count }} ждут разбора</span>
         <span v-if="!pending && board.queue_count === 0" class="board-card-calm">{{ board.last_post_at ? 'всё разобрано' : 'постов пока нет' }}</span>
       </div>
     </div>
